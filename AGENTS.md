@@ -48,12 +48,13 @@ Three pillars:
 | Local infra            | Docker Compose (PostgreSQL)                                        |
 | CI                     | GitHub Actions                                                     |
 
-Exact versions are pinned by the boilerplate work-spec, not here. Adding, removing or
+Exact versions are pinned in `package.json` by the work-spec that adds each dependency, not
+here. Adding, removing or
 swapping a dependency in this table requires a canonical doc change first.
 
 ## 3. Directory conventions
 
-Target layout (created by the boilerplate work-track; does not exist yet):
+Layout (created by the boilerplate work-track, WT-01):
 
 ```
 AGENTS.md               This file

@@ -10,14 +10,21 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 Updated at the end of every work-item, so that a new session can start from here.
 
 - **Last finished:** WI-018 (account management API), the eighth item of WT-02.
-- **Next:** WI-019, accepting an invitation or reset link: set a password (API and page).
-  Links already exist (`<APP_URL>/accept#<token>`, hash only in `account_tokens`); this
-  item redeems them. Draft its work-item and work-spec as `Proposed`, then stop for the
-  owner's approval.
+- **Awaiting the owner's approval:** two items that came out of the review of 2026-11-12,
+  both `Proposed`, each with questions for the owner in its work-spec:
+  - WI-022 / WS-022, sign-in hardening. **Do this one first:** it closes a way for
+    someone who is not signed in to grow the append-only audit log without limit.
+  - WI-023 / WS-023, API guard rails: authentication declared in the OpenAPI document, and
+    a test that fails when a route handler forgets a check.
+- **Next in the track after those:** WI-019, accepting an invitation or reset link: set a
+  password (API and page). Links already exist (`<APP_URL>/accept#<token>`, hash only in
+  `account_tokens`); this item redeems them. Draft its work-item and work-spec as
+  `Proposed`, then stop for the owner's approval.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
-- **Nothing is awaiting an owner decision.**
+- **Planning gaps awaiting an owner decision** are listed first under
+  [Follow-ups](#follow-ups).
 
 ## Canonical docs (`canonical/`)
 
@@ -50,26 +57,28 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
-| Item                                                            | Title                                                   | Item status | Spec                                                            | Spec status |
-| --------------------------------------------------------------- | ------------------------------------------------------- | ----------- | --------------------------------------------------------------- | ----------- |
-| [WI-001](work-items/WI-001-app-skeleton.md)                     | App skeleton: Next.js, strict TypeScript, Vitest        | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)                     | Done        |
-| [WI-002](work-items/WI-002-lint-and-format.md)                  | ESLint and Prettier                                     | Done        | [WS-002](work-specs/WS-002-lint-and-format.md)                  | Done        |
-| [WI-003](work-items/WI-003-validated-env.md)                    | Validated environment variables                         | Done        | [WS-003](work-specs/WS-003-validated-env.md)                    | Done        |
-| [WI-004](work-items/WI-004-database.md)                         | PostgreSQL, Drizzle and the integration test harness    | Done        | [WS-004](work-specs/WS-004-database.md)                         | Done        |
-| [WI-005](work-items/WI-005-health-endpoint.md)                  | Health endpoint: the first vertical slice               | Done        | [WS-005](work-specs/WS-005-health-endpoint.md)                  | Done        |
-| [WI-006](work-items/WI-006-openapi.md)                          | OpenAPI document generated from Zod                     | Done        | [WS-006](work-specs/WS-006-openapi.md)                          | Done        |
-| [WI-007](work-items/WI-007-e2e.md)                              | Playwright end-to-end tests                             | Done        | [WS-007](work-specs/WS-007-e2e.md)                              | Done        |
-| [WI-008](work-items/WI-008-ui-foundation.md)                    | UI foundation: Tailwind, shadcn/ui and the app shell    | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)                    | Done        |
-| [WI-009](work-items/WI-009-ci.md)                               | Continuous integration                                  | Done        | [WS-009](work-specs/WS-009-ci.md)                               | Done        |
-| [WI-010](work-items/WI-010-contributor-docs.md)                 | Contributor docs: README and CONTRIBUTING               | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)                 | Done        |
-| [WI-011](work-items/WI-011-api-foundations.md)                  | API foundations: errors, validation helpers, request id | Done        | [WS-011](work-specs/WS-011-api-foundations.md)                  | Done        |
-| [WI-012](work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type  | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)            | Done        |
-| [WI-013](work-items/WI-013-accounts-and-better-auth.md)         | Accounts, sessions schema and Better Auth               | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)         | Done        |
-| [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                              | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
-| [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter          | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
-| [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                 | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
-| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu             | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
-| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                  | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
+| Item                                                            | Title                                                     | Item status | Spec                                                            | Spec status |
+| --------------------------------------------------------------- | --------------------------------------------------------- | ----------- | --------------------------------------------------------------- | ----------- |
+| [WI-001](work-items/WI-001-app-skeleton.md)                     | App skeleton: Next.js, strict TypeScript, Vitest          | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)                     | Done        |
+| [WI-002](work-items/WI-002-lint-and-format.md)                  | ESLint and Prettier                                       | Done        | [WS-002](work-specs/WS-002-lint-and-format.md)                  | Done        |
+| [WI-003](work-items/WI-003-validated-env.md)                    | Validated environment variables                           | Done        | [WS-003](work-specs/WS-003-validated-env.md)                    | Done        |
+| [WI-004](work-items/WI-004-database.md)                         | PostgreSQL, Drizzle and the integration test harness      | Done        | [WS-004](work-specs/WS-004-database.md)                         | Done        |
+| [WI-005](work-items/WI-005-health-endpoint.md)                  | Health endpoint: the first vertical slice                 | Done        | [WS-005](work-specs/WS-005-health-endpoint.md)                  | Done        |
+| [WI-006](work-items/WI-006-openapi.md)                          | OpenAPI document generated from Zod                       | Done        | [WS-006](work-specs/WS-006-openapi.md)                          | Done        |
+| [WI-007](work-items/WI-007-e2e.md)                              | Playwright end-to-end tests                               | Done        | [WS-007](work-specs/WS-007-e2e.md)                              | Done        |
+| [WI-008](work-items/WI-008-ui-foundation.md)                    | UI foundation: Tailwind, shadcn/ui and the app shell      | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)                    | Done        |
+| [WI-009](work-items/WI-009-ci.md)                               | Continuous integration                                    | Done        | [WS-009](work-specs/WS-009-ci.md)                               | Done        |
+| [WI-010](work-items/WI-010-contributor-docs.md)                 | Contributor docs: README and CONTRIBUTING                 | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)                 | Done        |
+| [WI-011](work-items/WI-011-api-foundations.md)                  | API foundations: errors, validation helpers, request id   | Done        | [WS-011](work-specs/WS-011-api-foundations.md)                  | Done        |
+| [WI-012](work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type    | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)            | Done        |
+| [WI-013](work-items/WI-013-accounts-and-better-auth.md)         | Accounts, sessions schema and Better Auth                 | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)         | Done        |
+| [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                                | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
+| [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter            | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
+| [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                   | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
+| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu               | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
+| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
+| [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Proposed    | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Proposed    |
+| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Proposed    | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Proposed    |
 
 WI-019 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
@@ -77,13 +86,29 @@ WI-019 to WI-021 are outlined in WT-02 and get their own files when they are sta
 
 Deferred decisions that need a work-item before they are acted on.
 
-- Optional `SETUP_TOKEN` for the first-run setup: if set, the form and endpoint require it,
-  so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
-  question 1).
-- Update the data model sketch in doc 0001 section 7 when WS-013 is approved: the password
-  hash moves from `accounts` to a `credentials` table (WT-02, design decision 2).
-- Declare the security schemes (session cookie, bearer token) in the OpenAPI document
-  when the first authenticated endpoint is added (WI-015).
+Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
+
+- **No way back in if the only Admin loses their password.** A reset link can only be
+  created by another Admin (WT-02 decision 6). Candidate: a command-line script, run on
+  the server, that issues a reset link for an Admin.
+- **An email can be neither corrected nor freed.** There is no email change and no account
+  deletion, only deactivation, so an invitation sent to a mistyped address keeps that
+  address taken. Decide when drafting WI-020 (the People page), where it shows.
+- **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
+  the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
+  its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
+  https are documented for operators.
+- **Optional `SETUP_TOKEN` for the first-run setup:** if set, the form and endpoint require
+  it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
+  question 1). Needed before any install is reachable from the internet.
+
+Other follow-ups:
+
+- Weigh moving authentication, permission and origin checks into the `route()` wrapper at
+  the start of WT-03 (see WS-023, question 1).
+- Make `pnpm typecheck` independent of a stale `.next` directory (for example by
+  generating route types first). Until then see the note in `CONTRIBUTING.md`.
+- Declare the bearer-token security scheme in the OpenAPI document with WT-05.
 - Add a browsable API documentation page once there are real endpoints (see WS-006).
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
