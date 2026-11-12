@@ -27,7 +27,7 @@ async function createHuman(email = "ada@example.com", role: "admin" | "member" =
 
 describe("Better Auth on Opanel's tables", () => {
   it("has telemetry disabled", () => {
-    expect(getAuth().options.telemetry?.enabled).toBe(false);
+    expect(getAuth().options.telemetry.enabled).toBe(false);
   });
 
   it("signs in, creates a 7-day session and returns kind and role", async () => {
@@ -67,7 +67,10 @@ describe("Better Auth on Opanel's tables", () => {
       body: { email: "ada@example.com", password },
       returnHeaders: true,
     });
-    const cookie = (headers.getSetCookie()).map((c) => c.split(";")[0]).join("; ");
+    const cookie = headers
+      .getSetCookie()
+      .map((c) => c.split(";")[0])
+      .join("; ");
     expect(await getDb().select().from(sessions)).toHaveLength(1);
 
     await getAuth().api.signOut({ headers: new Headers({ cookie }) });
