@@ -1,6 +1,6 @@
 # AGENTS.md — Opanel project constitution
 
-> Status: **DRAFT, awaiting owner review.** Nothing here is final until the owner approves it.
+> Status: **Approved** by the owner on 2026-11-12. Changes require owner approval.
 > This file is the first thing every contributor (human or AI) reads. Keep it under 300 lines.
 
 ## 1. Purpose
@@ -36,7 +36,7 @@ Three pillars:
 | Database        | PostgreSQL                                                    |
 | Human auth      | Better Auth (email + password, sessions in PostgreSQL)        |
 | Agent auth      | Custom scoped API tokens (canonical doc 0001)                 |
-| Live sync       | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (doc 0002, proposed) |
+| Live sync       | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (canonical doc 0002) |
 | ORM, migrations | Drizzle ORM + drizzle-kit                                     |
 | Validation      | Zod (single source for runtime validation, types and OpenAPI) |
 | UI              | React, Tailwind CSS, shadcn/ui                                |

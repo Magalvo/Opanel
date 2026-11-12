@@ -1,6 +1,6 @@
 # 0002 — Real-time board sync
 
-- Status: **Proposed** (awaiting owner review)
+- Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
 
@@ -13,7 +13,7 @@ must also appear on open boards as they are created.
 Constraints from earlier decisions: a single Next.js monolith, PostgreSQL, self-hosted via
 Docker Compose, no extra infrastructure unless it is clearly needed.
 
-## 2. Decision (proposed)
+## 2. Decision
 
 **Server-Sent Events (SSE) for server-to-client push, PostgreSQL `LISTEN/NOTIFY` as the
 event bus, and the existing REST API for all writes.**

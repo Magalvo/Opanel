@@ -1,6 +1,6 @@
 # 0001 — AI QA agents: identity, authentication and automated triage
 
-- Status: **Proposed** (awaiting owner review)
+- Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
 
