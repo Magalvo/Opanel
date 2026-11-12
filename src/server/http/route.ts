@@ -70,14 +70,25 @@ export function route<Context = unknown>(
   };
 }
 
-/** A JSON success response. */
-export function json(body: unknown, status = 200): Response {
-  return Response.json(body, { status });
+/** Copies only the `Set-Cookie` headers of `source` onto `response`, which must be mutable. */
+function withCookies(response: Response, source: Headers | undefined): Response {
+  for (const cookie of source?.getSetCookie() ?? []) {
+    response.headers.append("Set-Cookie", cookie);
+  }
+  return response;
 }
 
-/** A `204 No Content` response. */
-export function noContent(): Response {
-  return new Response(null, { status: 204 });
+/**
+ * A JSON success response. `cookies` is a set of headers (for example from Better Auth)
+ * whose `Set-Cookie` entries are added to the response; nothing else is copied.
+ */
+export function json(body: unknown, status = 200, cookies?: Headers): Response {
+  return withCookies(Response.json(body, { status }), cookies);
+}
+
+/** A `204 No Content` response, with the `Set-Cookie` entries of `cookies` if given. */
+export function noContent(cookies?: Headers): Response {
+  return withCookies(new Response(null, { status: 204 }), cookies);
 }
 
 function dotted(path: readonly PropertyKey[]): string {

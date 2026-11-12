@@ -20,6 +20,8 @@ function isHttpUrl(value: string): boolean {
   return protocol === "http:" || protocol === "https:";
 }
 
+const HEADER_NAME = /^[A-Za-z0-9-]+$/;
+
 const envSchema = z.object({
   NODE_ENV: z
     .enum(NODE_ENVS, { error: `must be one of ${NODE_ENVS.join(", ")}` })
@@ -37,6 +39,16 @@ const envSchema = z.object({
     .string({ error: "required" })
     .min(1, { error: "required" })
     .refine(isHttpUrl, { error: "must be an http:// or https:// URL" }),
+  // Name of the request header in which Opanel's own reverse proxy puts the client address,
+  // for example `x-forwarded-for`. Optional: when it is not set, the sign-in limiter works
+  // per email only, because no header is trusted to be genuine.
+  CLIENT_IP_HEADER: z
+    .string()
+    .optional()
+    .transform((value) => (value === "" ? undefined : value))
+    .refine((value) => value === undefined || HEADER_NAME.test(value), {
+      error: "must be an HTTP header name, for example x-forwarded-for",
+    }),
 });
 
 export type Env = Readonly<z.infer<typeof envSchema>>;

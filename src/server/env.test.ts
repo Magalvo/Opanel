@@ -126,6 +126,26 @@ describe("APP_URL", () => {
   });
 });
 
+describe("CLIENT_IP_HEADER", () => {
+  it("is optional", () => {
+    expect(parseEnv(base).CLIENT_IP_HEADER).toBeUndefined();
+  });
+
+  it("treats an empty value as not set", () => {
+    expect(parseEnv({ ...base, CLIENT_IP_HEADER: "" }).CLIENT_IP_HEADER).toBeUndefined();
+  });
+
+  it.each(["x-forwarded-for", "CF-Connecting-IP"])("accepts the header name %s", (value) => {
+    expect(parseEnv({ ...base, CLIENT_IP_HEADER: value }).CLIENT_IP_HEADER).toBe(value);
+  });
+
+  it.each(["bad header!", "x forwarded", "a:b"])("rejects %j and names the variable", (value) => {
+    expect(captureError({ ...base, CLIENT_IP_HEADER: value }).variables).toEqual([
+      "CLIENT_IP_HEADER",
+    ]);
+  });
+});
+
 describe("createEnvAccessor", () => {
   it("parses once and returns the same object on later calls", () => {
     let reads = 0;

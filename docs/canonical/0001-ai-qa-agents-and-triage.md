@@ -184,6 +184,7 @@ Not a final schema; work-specs define columns and migrations.
 accounts(id, kind, name, email?, role, disabled_at, last_seen_at, created_by?, ...)
 credentials(id, account_id, provider_id, provider_account_id, password_hash?, ...)
 verification(id, identifier, value, expires_at, ...)   unused in v1, required by Better Auth
+rate_limits(key, count, window_started_at)             sign-in limiter counters
 agent_scopes(account_id, scope)            agent_projects(account_id, project_id)
 api_tokens(id, account_id, public_id, secret_hash, expires_at?, revoked_at?, last_used_at)
 sessions(id, account_id, token, expires_at, ...)
