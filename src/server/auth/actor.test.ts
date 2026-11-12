@@ -29,9 +29,9 @@ describe("can", () => {
 
 describe("requirePermission", () => {
   it("returns when the permission is held", () => {
-    expect(() =>
-      requirePermission(humanActor({ accountId: "a", role: "admin" }), "agents:manage"),
-    ).not.toThrow();
+    expect(() => {
+      requirePermission(humanActor({ accountId: "a", role: "admin" }), "agents:manage");
+    }).not.toThrow();
   });
 
   it("throws a 403 forbidden ApiError otherwise", () => {

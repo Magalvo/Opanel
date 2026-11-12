@@ -64,7 +64,9 @@ project. All projects are visible to all signed-in humans.
 | Create and manage agent accounts and API tokens                    |        |        |         |   ✓   |
 | Organization settings                                              |        |        |         |   ✓   |
 
-Internally each row is a permission checked by the service layer, the same mechanism as
+Internally each row is a permission (the catalogue is `src/lib/schemas/permissions.ts`;
+some rows are split in two, e.g. delete own and any task, labels write and manage)
+checked by the service layer, the same mechanism as
 agent scopes in doc 0001. A human role is a fixed bundle of permissions. Agents are not
 affected by this table: they keep their own scopes.
 

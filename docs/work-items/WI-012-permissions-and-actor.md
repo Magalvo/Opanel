@@ -1,6 +1,6 @@
 # WI-012 — Permission catalogue, human roles and the `Actor` type
 
-- Status: Approved (by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: none
 - Work-spec: [WS-012](../work-specs/WS-012-permissions-and-actor.md)
@@ -18,25 +18,25 @@ first, with no dependency.
 
 ## Acceptance criteria
 
-- [ ] There is one Zod schema listing every permission, and one listing the four human
+- [x] There is one Zod schema listing every permission, and one listing the four human
       roles (`admin`, `manager`, `member`, `viewer`); their TypeScript types are inferred
       from them.
-- [ ] The role-to-permission mapping reproduces the table in doc 0003 section 3 exactly:
+- [x] The role-to-permission mapping reproduces the table in doc 0003 section 3 exactly:
       a test encodes that table and fails if any role gains or loses a permission.
-- [ ] Roles are cumulative: every permission of Viewer is held by Member, of Member by
+- [x] Roles are cumulative: every permission of Viewer is held by Member, of Member by
       Manager, of Manager by Admin.
-- [ ] A human `Actor` can be built from an account id and a role, and carries exactly the
+- [x] A human `Actor` can be built from an account id and a role, and carries exactly the
       permissions of that role. An unknown role is rejected, never given a default.
-- [ ] `can(actor, permission)` answers whether the actor holds the permission.
-- [ ] `requirePermission(actor, permission)` returns normally when allowed and throws the
+- [x] `can(actor, permission)` answers whether the actor holds the permission.
+- [x] `requirePermission(actor, permission)` returns normally when allowed and throws the
       `forbidden` API error of doc 0004 when not. The error does not reveal which
       permissions the actor holds.
-- [ ] The "Members may delete only tasks they reported; Managers and Admins any" rule of
+- [x] The "Members may delete only tasks they reported; Managers and Admins any" rule of
       doc 0003 section 3 is one tested function.
-- [ ] The permission an agent will need for bug reports (`reports:write`) is in the
+- [x] The permission an agent will need for bug reports (`reports:write`) is in the
       catalogue but in no human role.
-- [ ] Docs 0001 and 0003 describe the catalogue and the `Actor` shape as implemented.
-- [ ] The full quality gate passes.
+- [x] Docs 0001 and 0003 describe the catalogue and the `Actor` shape as implemented.
+- [x] The full quality gate passes.
 
 ## Notes
 

@@ -1,6 +1,6 @@
 # WS-012 — Permission catalogue, human roles and the `Actor` type
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-012](../work-items/WI-012-permissions-and-actor.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4,
   [0003](../canonical/0003-task-management.md) section 3,
@@ -138,3 +138,10 @@ For the owner's decision before approval:
 5. **Error detail.** `requirePermission` says only that the action is not permitted,
    without naming the missing permission. This is safer, but gives agent developers less
    to debug with. Naming it is a one-line change if preferred.
+
+## Implementation record
+
+- Red: three new test files failed on missing modules (commit before the code).
+- Green: 25 new unit tests pass. Test 12 (catalogue guard) is the "admin has every
+  permission except the agent-only ones" case in `roles.test.ts`.
+- The owner accepted all five open questions as proposed.

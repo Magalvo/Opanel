@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { HUMAN_ROLES, PERMISSIONS, type HumanRole, type Permission } from "@/lib/schemas/permissions";
+import {
+  HUMAN_ROLES,
+  type HumanRole,
+  type Permission,
+  PERMISSIONS,
+} from "@/lib/schemas/permissions";
 
 import { HUMAN_ROLE_PERMISSIONS, permissionsForRole } from "./roles";
 
@@ -32,10 +37,14 @@ describe("HUMAN_ROLE_PERMISSIONS", () => {
   });
 
   it("is cumulative: viewer ⊂ member ⊂ manager ⊂ admin", () => {
-    const order: HumanRole[] = ["viewer", "member", "manager", "admin"];
-    for (let i = 1; i < order.length; i++) {
-      const lower = HUMAN_ROLE_PERMISSIONS[order[i - 1]!];
-      const higher = HUMAN_ROLE_PERMISSIONS[order[i]!];
+    const pairs: [HumanRole, HumanRole][] = [
+      ["viewer", "member"],
+      ["member", "manager"],
+      ["manager", "admin"],
+    ];
+    for (const [lowerRole, higherRole] of pairs) {
+      const lower = HUMAN_ROLE_PERMISSIONS[lowerRole];
+      const higher = HUMAN_ROLE_PERMISSIONS[higherRole];
       for (const permission of lower) expect(higher.has(permission)).toBe(true);
       expect(higher.size).toBeGreaterThan(lower.size);
     }

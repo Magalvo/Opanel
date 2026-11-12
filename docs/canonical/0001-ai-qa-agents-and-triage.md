@@ -61,7 +61,10 @@ accounts or tokens.
 
 ### Roles and scopes
 
-A role is a named bundle of scopes; scopes are what endpoints check.
+A role is a named bundle of permissions; permissions (also called scopes when held by an
+agent) are what endpoints check. The single catalogue of all permissions, and the human
+roles built from them, is `src/lib/schemas/permissions.ts` and `src/server/auth/roles.ts`
+(WI-012). The table below lists the ones agents use.
 
 | Scope            | Allows                                  |
 | ---------------- | --------------------------------------- |
@@ -98,7 +101,7 @@ An agent can additionally be restricted to specific projects.
 Email + password, password hashed with Argon2id, server-side sessions in PostgreSQL,
 `HttpOnly` `Secure` `SameSite=Lax` cookie, implemented with Better Auth.
 
-Both paths resolve to the same internal `Actor { accountId, kind, role, scopes }`, and
+Both paths resolve to the same internal `Actor { accountId, kind, role, permissions }`, and
 every service function takes an `Actor`. There is one permission system, not two.
 
 ## 5. Bug report contract

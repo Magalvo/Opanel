@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { humanRoleSchema, permissionSchema, PERMISSIONS } from "./permissions";
+import { humanRoleSchema, PERMISSIONS, permissionSchema } from "./permissions";
 
 describe("permissionSchema", () => {
   it("accepts every listed permission", () => {
