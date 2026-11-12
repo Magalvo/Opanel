@@ -10,6 +10,7 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 | Doc | Title | Status |
 | --- | ----- | ------ |
 | [0001](canonical/0001-ai-qa-agents-and-triage.md) | AI QA agents: identity, authentication and automated triage | Proposed |
+| [0002](canonical/0002-realtime-sync.md) | Real-time board sync | Proposed |
 
 ## Work-tracks (`work-tracks/`)
 
@@ -18,8 +19,9 @@ None yet. Proposed order once the canonical docs are approved:
 1. WT-01 Project boilerplate (tooling, quality gate, CI, Docker Compose, empty app)
 2. WT-02 Accounts and human auth
 3. WT-03 Projects, teams, columns, epics, tasks (kanban core)
-4. WT-04 Agent accounts and API tokens
-5. WT-05 Bug reports and automated triage
+4. WT-04 Real-time board sync
+5. WT-05 Agent accounts and API tokens
+6. WT-06 Bug reports and automated triage
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 

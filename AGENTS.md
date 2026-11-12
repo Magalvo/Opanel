@@ -24,6 +24,7 @@ Three pillars:
   public API. Opanel contains no LLM calls.
 - Self-hosted, **one organization per install**, many teams and projects.
 - Human sign-in is email + password. No OAuth/SSO in v1.
+- Boards sync live between members. No file attachments and no notifications in v1.
 
 ## 2. Tech stack
 
@@ -33,6 +34,9 @@ Three pillars:
 | App             | Next.js (App Router) monolith: UI + API route handlers        |
 | API             | Versioned REST under `/api/v1`, OpenAPI generated from Zod    |
 | Database        | PostgreSQL                                                    |
+| Human auth      | Better Auth (email + password, sessions in PostgreSQL)        |
+| Agent auth      | Custom scoped API tokens (canonical doc 0001)                 |
+| Live sync       | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (doc 0002, proposed) |
 | ORM, migrations | Drizzle ORM + drizzle-kit                                     |
 | Validation      | Zod (single source for runtime validation, types and OpenAPI) |
 | UI              | React, Tailwind CSS, shadcn/ui                                |

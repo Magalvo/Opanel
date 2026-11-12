@@ -94,7 +94,7 @@ An agent can additionally be restricted to specific projects.
 ### Humans: session cookie
 
 Email + password, password hashed with Argon2id, server-side sessions in PostgreSQL,
-`HttpOnly` `Secure` `SameSite=Lax` cookie. The library choice is an open question (8.1).
+`HttpOnly` `Secure` `SameSite=Lax` cookie, implemented with Better Auth.
 
 Both paths resolve to the same internal `Actor { accountId, kind, role, scopes }`, and
 every service function takes an `Actor`. There is one permission system, not two.
@@ -130,7 +130,7 @@ Responses:
 - `200` `{ "outcome": "deduplicated", "taskId", "occurrences" }`
 - `400` invalid payload, `401`/`403` auth, `404` unknown project, `429` rate limited.
 
-Evidence is text/JSON only in v1, size-capped. File attachments are an open question (8.3).
+Evidence is text/JSON only in v1, size-capped. File attachments are out of v1.
 
 ### Origin layers
 
@@ -196,26 +196,26 @@ audit_log(id, actor_account_id, action, entity, entity_id, data, created_at)
 A **project** is the unit under test. Dogfooding means creating a project named "Opanel"
 with its own routing rules. No separate "test target" entity is introduced.
 
-## 8. Open questions for the owner
+## 8. Resolved questions
 
-1. **Human auth library.** Options: Better Auth (recommended: typed, Drizzle adapter,
-   email/password built in), or hand-rolled sessions (fewer dependencies, more security
-   surface to own). Agent tokens are custom either way.
-2. **Agents testing Opanel's own UI.** Agents have tokens only, so they cannot sign in to
-   Opanel's web UI as themselves. For dogfooding, the proposal is that the agent operator
-   uses an ordinary human test account on a staging install for browser flows, and the
-   agent token only for filing reports. Acceptable, or should agents get a UI login?
-3. **Attachments.** Screenshots and traces are valuable evidence but need file storage
-   (local volume or S3-compatible). Proposal: text-only in v1, attachments as a later
+Decided with the owner on 2026-11-12:
+
+1. **Human auth library:** Better Auth (email/password, Drizzle adapter, sessions in
+   PostgreSQL). Agent API tokens remain a custom implementation as described in section 4.
+2. **Agents testing Opanel's own UI:** agents get no UI login. For dogfooding, the agent
+   operator uses an ordinary human test account on a staging install for browser flows,
+   and the agent token only for filing reports.
+3. **Attachments:** evidence is text/JSON only in v1. File attachments are a later
    work-track.
-4. **Live board updates.** Proposal: refresh/polling in v1, no WebSockets.
-5. **Columns.** Proposal: per-project configurable columns with one flagged as "done".
-   Alternative: a fixed global status set (simpler).
-6. **Notifications** when an agent files a ticket (email, webhook)? Proposal: out of v1.
+4. **Live board updates:** required in v1 so several members can work on a board at the
+   same time. Design in canonical doc [0002](0002-realtime-sync.md).
+5. **Columns:** configurable per project, with one or more flagged as "done".
+6. **Notifications:** out of v1.
 
 ## 9. Explicitly out of scope
 
 - Running, scheduling or hosting agents; any LLM call inside Opanel.
 - Server-side classification of the origin layer.
 - Multi-organization tenancy, OAuth/SSO.
+- File attachments, notifications (email, webhooks).
 - A reference QA agent implementation (can become its own work-track later).
