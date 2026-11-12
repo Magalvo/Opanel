@@ -45,8 +45,9 @@ WT-07 to WT-10 and the detail of WT-02 and WT-03 come from canonical doc 0003.
 | [WI-006](work-items/WI-006-openapi.md)         | OpenAPI document generated from Zod                  | Done        | [WS-006](work-specs/WS-006-openapi.md)         | Done        |
 | [WI-007](work-items/WI-007-e2e.md)             | Playwright end-to-end tests                          | Done        | [WS-007](work-specs/WS-007-e2e.md)             | Done        |
 | [WI-008](work-items/WI-008-ui-foundation.md)   | UI foundation: Tailwind, shadcn/ui and the app shell | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)   | Done        |
+| [WI-009](work-items/WI-009-ci.md)              | Continuous integration                               | Proposed    | [WS-009](work-specs/WS-009-ci.md)              | Proposed    |
 
-WI-009 and WI-010 are outlined in WT-01 and get their own files when they are started.
+WI-010 is outlined in WT-01 and get their own files when they are started.
 
 ## Follow-ups
 
