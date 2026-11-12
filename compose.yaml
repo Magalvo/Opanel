@@ -1,0 +1,24 @@
+# Local development and CI only. The credentials below are local defaults, not secrets.
+name: opanel
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: opanel
+      POSTGRES_PASSWORD: opanel
+      POSTGRES_DB: opanel
+    ports:
+      - "127.0.0.1:${OPANEL_DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opanel -d opanel"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db-data:

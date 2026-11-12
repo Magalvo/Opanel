@@ -18,6 +18,7 @@ blob-report
 # env files
 .env*
 !.env.example
+!.env.test
 
 # misc
 .DS_Store

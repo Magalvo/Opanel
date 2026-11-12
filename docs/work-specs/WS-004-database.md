@@ -1,6 +1,6 @@
 # WS-004 — PostgreSQL, Drizzle and the integration test harness
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-004](../work-items/WI-004-database.md)
 - Canonical docs: `AGENTS.md` sections 2, 3, 5 and hard rule 5; [0002](../canonical/0002-realtime-sync.md) (driver choice)
 
@@ -112,6 +112,45 @@ None.
 | 7   | manual, once | `pnpm db:generate` and `pnpm db:migrate` succeed with an empty schema                                       | commands wired                       |
 | 8   | manual, once | `docker compose up -d` from a clean volume reports healthy with both databases present                      | compose                              |
 | 9   | gate         | `typecheck`, `lint`, `format:check`, `test`, `build` (build with the database stopped)                      | gate; no DB at build                 |
+
+## Resolved questions
+
+Decided with the owner on 2026-11-12: PostgreSQL 18; no placeholder table (first real
+migration in WT-02); `.env.test` is committed.
+
+## Deviations from the approved spec
+
+1. **`@next/env` is not used.** It is a CommonJS package whose `loadEnvConfig` could not be
+   imported the same way by tsx (ES modules), drizzle-kit (CommonJS) and Vitest. It is
+   replaced by `src/server/env-files.ts`, a 15-line helper around Node's built-in
+   `process.loadEnvFile`: `.env.test` under `NODE_ENV=test`, otherwise `.env.local` then
+   `.env`; variables already set always win. One dependency fewer. The file is exempt
+   from the `process.env` lint rule.
+2. **Migration logic lives in `src/server/db/migrate.ts`** (`runMigrations`), which both
+   `scripts/migrate.ts` and the integration global setup call, instead of being inside
+   the script.
+3. **Two Vitest setup files instead of one:** `vitest.integration.global.ts` (once: guard,
+   reachability, migrations) and `vitest.integration.setup.ts` (per worker: load
+   `.env.test`, `resetDatabase()` before each test, close the pool afterwards).
+4. **The data volume is mounted at `/var/lib/postgresql`**, the location the PostgreSQL
+   18 image expects, rather than the `/var/lib/postgresql/data` of older images.
+
+## Implementation record
+
+- Red: both new test files failed on missing modules.
+- Green: 27 tests pass (20 unit, 7 integration against `opanel_test`).
+- `drizzle-kit generate` with an empty schema writes an empty journal
+  (`migrations/meta/_journal.json`, committed) and the migrator accepts it, so risk 4 did
+  not materialise; `runMigrations` still tolerates a missing journal.
+- Manual checks, all as expected:
+  - pointing integration tests at the development database is refused by the guard;
+  - with the database stopped, `pnpm test:integration` fails with "Cannot reach the test
+    database. Start it with `docker compose up -d`", while `pnpm test:unit` and
+    `pnpm build` pass;
+  - `docker compose down -v` then `up -d --wait` reports healthy with both databases;
+  - `pnpm db:generate` and `pnpm db:migrate` succeed. Migrations ran only where pointed:
+    the development database via `db:migrate`, the test database via the test setup.
+- `typecheck`, `lint`, `format:check`, `test`, `build` pass.
 
 ## Risks and open questions
 

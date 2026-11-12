@@ -59,7 +59,7 @@ export default defineConfig([
   // AGENTS.md hard rule 4: configuration is read only through the validated env module.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/server/env.ts", "src/instrumentation.ts"],
+    ignores: ["src/server/env.ts", "src/server/env-files.ts", "src/instrumentation.ts"],
     rules: {
       "no-restricted-properties": [
         "error",
