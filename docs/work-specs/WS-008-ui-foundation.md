@@ -1,6 +1,6 @@
 # WS-008 — UI foundation: Tailwind, shadcn/ui and the app shell
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-008](../work-items/WI-008-ui-foundation.md)
 - Canonical docs: `AGENTS.md` sections 2 and 3
 
@@ -143,6 +143,59 @@ None.
 | 11  | e2e          | the existing home and API tests still pass                                                            | nothing regressed       |
 | 12  | manual, once | screenshots of `/` in light and dark, desktop and phone, reviewed by eye for layout and contrast      | it actually looks right |
 | 13  | gate         | the five gate commands                                                                                | gate                    |
+
+## Resolved questions
+
+Decided with the owner on 2026-11-12: the system font stack is used; a narrowly scoped
+lint adjustment for `src/components/ui/` was allowed as a fallback. It was not needed.
+
+## Deviations from the approved spec
+
+1. **shadcn's current CLI differs from what the spec assumed.** Version 4 has no
+   "new-york" style; it asks for a base library and a preset. Chosen: base `radix`,
+   preset `nova`, neutral base colour (`components.json` records `radix-nova`). Radix
+   comes as the single `radix-ui` package, pinned at 1.8.1.
+2. **The CLI's output was corrected in four places:**
+   - it wrote `import { cn } from "cn"` in the components and in `src/lib/utils.ts`, and
+     installed an unrelated npm package named `cn`. The imports now point at
+     `@/lib/utils`, which holds the usual `clsx` + `tailwind-merge` helper, and the `cn`
+     package is removed;
+   - it added the `shadcn` CLI itself as a runtime dependency, only so `globals.css`
+     could import one stylesheet from it. That stylesheet is copied to
+     `src/styles/shadcn.css` instead and the dependency removed;
+   - it added the Geist font through `next/font/google` in the root layout. Reverted, per
+     the system-font decision;
+   - it wrote `^` version ranges. All are pinned exactly.
+3. **Lint fixes made by hand in copied code** (no rule was relaxed):
+   - `src/hooks/use-mobile.ts` rewritten around `useSyncExternalStore`, replacing a
+     `setState` call inside an effect that the React lint rules reject;
+   - `src/components/ui/sidebar.tsx`: a ternary used as a statement became `if`/`else`,
+     three template literals got explicit `String()` conversions, the cookie gained
+     `SameSite=Lax`, and the "Toggle Sidebar" label became "Toggle sidebar";
+   - import and export order auto-fixed in all eight component files.
+4. **The shell does not use shadcn's `SidebarInset`.** That component renders `<main>`
+   around everything, which would put the top bar inside `main`. The shell renders
+   `<header>` and `<main>` as siblings so each is a proper landmark.
+5. **`reuseExistingServer` is now always `false` in `playwright.config.ts`**, changing
+   WS-007. While verifying this item, a leftover server on port 3100 was silently reused
+   and two runs tested an old build. Now a busy port fails the run with "address already
+   in use" instead.
+6. **Extra dev dependency:** `@testing-library/user-event` 14.6.10, to drive the dropdown
+   menu in the theme toggle's unit tests.
+7. **Network:** the CLI downloads from `ui.shadcn.com`, which the development
+   environment blocked. The owner approved a personal environment that allows that host.
+
+## Implementation record
+
+- Red: the two new unit test files failed on missing modules; the new end-to-end specs
+  were written before the components existed.
+- Green: 61 Vitest tests (51 unit, 10 integration) and 11 end-to-end tests pass.
+- The accessibility test was shown to bite: lowering the contrast of the muted text
+  colour in the light theme failed it with `color-contrast`; restored.
+- Screenshots of `/` in light and dark, at 1280x720 and 390x844, were reviewed: sidebar,
+  top bar and content render correctly in both themes, and the phone layout shows the
+  sidebar as an overlay.
+- All five gate commands pass.
 
 ## Risks and open questions
 

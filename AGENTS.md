@@ -59,7 +59,10 @@ AGENTS.md               This file
 docs/                   All specs (see section 4)
 src/
   app/                  Next.js routes: pages and /api/v1 route handlers
-  components/           React components
+  components/           React components (app-specific)
+    ui/                 shadcn/ui components, copied in and owned by this repo
+  hooks/                Shared React hooks
+  styles/               Vendored CSS that globals.css imports
   server/
     db/                 Drizzle schema, migrations, DB client
     services/           Domain logic (the only layer that touches the DB)

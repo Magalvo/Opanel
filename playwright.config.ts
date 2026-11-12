@@ -27,7 +27,9 @@ export default defineConfig({
     command: `tsx tests/e2e/prepare.ts && next build && next start -p ${String(E2E_PORT)}`,
     url: `${E2E_BASE_URL}/api/v1/health`,
     env: { DATABASE_URL: E2E_DATABASE_URL },
-    reuseExistingServer: !isCI,
+    // Never reuse a server that is already listening: it could be serving an older build,
+    // and the tests would pass or fail against the wrong code.
+    reuseExistingServer: false,
     timeout: 180_000,
     stdout: "ignore",
     stderr: "pipe",

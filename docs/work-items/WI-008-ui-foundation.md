@@ -1,6 +1,6 @@
 # WI-008 — UI foundation: Tailwind, shadcn/ui and the app shell
 
-- Status: Proposed
+- Status: Done
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: WI-002, WI-007
 - Work-spec: [WS-008](../work-specs/WS-008-ui-foundation.md)
@@ -13,22 +13,22 @@ frame instead of each inventing layout, colours and spacing.
 
 ## Acceptance criteria
 
-- [ ] Tailwind CSS and shadcn/ui are installed; shared components live in
+- [x] Tailwind CSS and shadcn/ui are installed; shared components live in
       `src/components/ui`.
-- [ ] The theme is defined once as CSS variables: neutral greys with a blue accent, in a
+- [x] The theme is defined once as CSS variables: neutral greys with a blue accent, in a
       light and a dark variant.
-- [ ] The app follows the operating system's light/dark setting by default, offers a
+- [x] The app follows the operating system's light/dark setting by default, offers a
       toggle (light, dark, system), and remembers the choice across reloads without a
       flash of the wrong theme.
-- [ ] The default density is compact (14px base text).
-- [ ] The app shell has a collapsible left sidebar and a slim top bar, with the page
+- [x] The default density is compact (14px base text).
+- [x] The app shell has a collapsible left sidebar and a slim top bar, with the page
       content in a `main` region. On narrow screens the sidebar becomes an overlay.
-- [ ] The shell contains no dead links or fake navigation: only what works today.
-- [ ] The home page renders inside the shell and still shows the "Opanel" heading.
-- [ ] Automated accessibility checks (axe) pass on the home page in both themes.
-- [ ] Vendored shadcn/ui components pass the project's lint, type-check and format rules
+- [x] The shell contains no dead links or fake navigation: only what works today.
+- [x] The home page renders inside the shell and still shows the "Opanel" heading.
+- [x] Automated accessibility checks (axe) pass on the home page in both themes.
+- [x] Vendored shadcn/ui components pass the project's lint, type-check and format rules
       without blanket exemptions.
-- [ ] The full five-command quality gate passes.
+- [x] The full five-command quality gate passes.
 
 ## Notes
 
