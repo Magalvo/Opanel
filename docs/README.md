@@ -64,7 +64,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-010](work-items/WI-010-contributor-docs.md)         | Contributor docs: README and CONTRIBUTING               | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)         | Done        |
 | [WI-011](work-items/WI-011-api-foundations.md)          | API foundations: errors, validation helpers, request id | Done        | [WS-011](work-specs/WS-011-api-foundations.md)          | Done        |
 | [WI-012](work-items/WI-012-permissions-and-actor.md)    | Permission catalogue, human roles and the `Actor` type  | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)    | Done        |
-| [WI-013](work-items/WI-013-accounts-and-better-auth.md) | Accounts, sessions schema and Better Auth               | Proposed    | [WS-013](work-specs/WS-013-accounts-and-better-auth.md) | Proposed    |
+| [WI-013](work-items/WI-013-accounts-and-better-auth.md) | Accounts, sessions schema and Better Auth               | Approved | [WS-013](work-specs/WS-013-accounts-and-better-auth.md) | Approved |
 
 WI-014 to WI-021 are outlined in WT-02 and get their own files when they are started.
 

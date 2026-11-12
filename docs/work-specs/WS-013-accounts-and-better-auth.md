@@ -1,6 +1,6 @@
 # WS-013 — Accounts, credentials and sessions schema; Better Auth installed; auth env
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-013](../work-items/WI-013-accounts-and-better-auth.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 3, 4, 7;
   [0004](../canonical/0004-api-conventions.md) section 7;

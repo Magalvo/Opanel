@@ -3,6 +3,13 @@ import { describe, expect, it } from "vitest";
 import { createEnvAccessor, EnvValidationError, parseEnv } from "./env";
 
 const validUrl = "postgres://opanel:opanel@localhost:5432/opanel";
+const validSecret = "test-secret-test-secret-test-secret-0123";
+const validAppUrl = "http://localhost:3000";
+const base = {
+  DATABASE_URL: validUrl,
+  BETTER_AUTH_SECRET: validSecret,
+  APP_URL: validAppUrl,
+};
 
 function captureError(source: Record<string, string | undefined>): EnvValidationError {
   try {
@@ -18,13 +25,13 @@ function captureError(source: Record<string, string | undefined>): EnvValidation
 
 describe("parseEnv", () => {
   it("returns typed values for a valid record", () => {
-    const env = parseEnv({ NODE_ENV: "production", DATABASE_URL: validUrl });
+    const env = parseEnv({ ...base, NODE_ENV: "production" });
 
-    expect(env).toEqual({ NODE_ENV: "production", DATABASE_URL: validUrl });
+    expect(env).toEqual({ ...base, NODE_ENV: "production" });
   });
 
   it("defaults NODE_ENV to development", () => {
-    const env = parseEnv({ DATABASE_URL: validUrl });
+    const env = parseEnv(base);
 
     expect(env.NODE_ENV).toBe("development");
   });
@@ -32,26 +39,26 @@ describe("parseEnv", () => {
   it("accepts the postgresql scheme", () => {
     const url = "postgresql://opanel:opanel@localhost:5432/opanel";
 
-    expect(parseEnv({ DATABASE_URL: url }).DATABASE_URL).toBe(url);
+    expect(parseEnv({ ...base, DATABASE_URL: url }).DATABASE_URL).toBe(url);
   });
 
   it("rejects a missing DATABASE_URL and names it", () => {
-    const error = captureError({ NODE_ENV: "test" });
+    const error = captureError({ ...base, DATABASE_URL: undefined });
 
     expect(error.variables).toEqual(["DATABASE_URL"]);
     expect(error.message).toContain("DATABASE_URL: required");
   });
 
   it("rejects an empty DATABASE_URL", () => {
-    expect(captureError({ DATABASE_URL: "" }).variables).toEqual(["DATABASE_URL"]);
+    expect(captureError({ ...base, DATABASE_URL: "" }).variables).toEqual(["DATABASE_URL"]);
   });
 
   it("rejects a DATABASE_URL that is not a URL", () => {
-    expect(captureError({ DATABASE_URL: "not a url" }).variables).toEqual(["DATABASE_URL"]);
+    expect(captureError({ ...base, DATABASE_URL: "not a url" }).variables).toEqual(["DATABASE_URL"]);
   });
 
   it("rejects a DATABASE_URL with a non-Postgres scheme", () => {
-    const error = captureError({ DATABASE_URL: "mysql://user:pw@localhost:3306/db" });
+    const error = captureError({ ...base, DATABASE_URL: "mysql://user:pw@localhost:3306/db" });
 
     expect(error.variables).toEqual(["DATABASE_URL"]);
   });
@@ -59,7 +66,7 @@ describe("parseEnv", () => {
   it("lists every invalid variable in a single error", () => {
     const error = captureError({ NODE_ENV: "staging" });
 
-    expect(error.variables).toEqual(["DATABASE_URL", "NODE_ENV"]);
+    expect(error.variables).toEqual(["APP_URL", "BETTER_AUTH_SECRET", "DATABASE_URL", "NODE_ENV"]);
     expect(error.message).toContain("DATABASE_URL");
     expect(error.message).toContain("NODE_ENV: must be one of development, test, production");
     expect(error.message).toContain(".env.example");
@@ -67,17 +74,53 @@ describe("parseEnv", () => {
 
   it("never includes a rejected value in the error message", () => {
     const error = captureError({
+      ...base,
       NODE_ENV: "staging-secret-mode",
+      BETTER_AUTH_SECRET: "short-secret-value",
+      APP_URL: "ftp://internal.example/secret-path",
       DATABASE_URL: "mysql://admin:sup3r-s3cret@db.internal:3306/prod",
     });
 
     expect(error.message).not.toContain("sup3r-s3cret");
     expect(error.message).not.toContain("db.internal");
     expect(error.message).not.toContain("staging-secret-mode");
+    expect(error.message).not.toContain("short-secret-value");
+    expect(error.message).not.toContain("secret-path");
   });
 
   it("returns a frozen object", () => {
-    expect(Object.isFrozen(parseEnv({ DATABASE_URL: validUrl }))).toBe(true);
+    expect(Object.isFrozen(parseEnv(base))).toBe(true);
+  });
+});
+
+describe("BETTER_AUTH_SECRET", () => {
+  it.each([undefined, "", "x".repeat(31)])("rejects %j and names the variable", (value) => {
+    const error = captureError({ ...base, BETTER_AUTH_SECRET: value });
+
+    expect(error.variables).toEqual(["BETTER_AUTH_SECRET"]);
+  });
+
+  it("accepts 32 characters", () => {
+    expect(parseEnv({ ...base, BETTER_AUTH_SECRET: "x".repeat(32) }).BETTER_AUTH_SECRET).toBe(
+      "x".repeat(32),
+    );
+  });
+
+  it("is never shown in the error message", () => {
+    const error = captureError({ ...base, BETTER_AUTH_SECRET: "weak-and-private" });
+
+    expect(error.message).toContain("BETTER_AUTH_SECRET");
+    expect(error.message).not.toContain("weak-and-private");
+  });
+});
+
+describe("APP_URL", () => {
+  it.each([undefined, "", "ftp://app.example", "not a url"])("rejects %j", (value) => {
+    expect(captureError({ ...base, APP_URL: value }).variables).toEqual(["APP_URL"]);
+  });
+
+  it.each(["http://localhost:3000", "https://opanel.example"])("accepts %s", (value) => {
+    expect(parseEnv({ ...base, APP_URL: value }).APP_URL).toBe(value);
   });
 });
 
@@ -86,7 +129,7 @@ describe("createEnvAccessor", () => {
     let reads = 0;
     const getEnv = createEnvAccessor(() => {
       reads += 1;
-      return { DATABASE_URL: validUrl };
+      return base;
     });
 
     const first = getEnv();
@@ -100,7 +143,7 @@ describe("createEnvAccessor", () => {
     let reads = 0;
     createEnvAccessor(() => {
       reads += 1;
-      return { DATABASE_URL: validUrl };
+      return base;
     });
 
     expect(reads).toBe(0);
