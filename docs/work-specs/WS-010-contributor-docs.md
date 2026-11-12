@@ -1,6 +1,6 @@
 # WS-010 — Contributor docs: README and CONTRIBUTING
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: In progress (approved by the owner on 2026-11-12)
 - Work-item: [WI-010](../work-items/WI-010-contributor-docs.md)
 - Canonical docs: `AGENTS.md` sections 1, 4, 5 and 8
 

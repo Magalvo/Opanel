@@ -1,6 +1,6 @@
 # WI-010 — Contributor docs: README and CONTRIBUTING
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-12)
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: WI-009
 - Work-spec: [WS-010](../work-specs/WS-010-contributor-docs.md)
