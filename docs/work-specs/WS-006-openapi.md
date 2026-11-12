@@ -1,6 +1,6 @@
 # WS-006 — OpenAPI document generated from Zod
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-006](../work-items/WI-006-openapi.md)
 - Canonical docs: `AGENTS.md` sections 2, 3 and hard rule 9; [0001](../canonical/0001-ai-qa-agents-and-triage.md)
 
@@ -111,6 +111,36 @@ None.
 | 7   | manual, once | add a throwaway route without a contract: test 4 fails; change the health schema: test 5 fails; revert both                                      | guards bite            |
 | 8   | manual, once | `curl /api/v1/openapi.json` against `pnpm start` returns the document                                                                            | end to end             |
 | 9   | gate         | `typecheck`, `lint`, `format:check`, `test`, `build`                                                                                             | gate                   |
+
+## Resolved questions
+
+Decided with the owner on 2026-11-12: the committed `docs/api/openapi.json` is kept; a
+browsable documentation page is deferred until there are real endpoints.
+
+## Deviations from the approved spec
+
+1. **`docs/api/openapi.json` is in `.prettierignore`.** Prettier collapses short JSON
+   arrays that the generator writes expanded, so the two would otherwise fight. The test
+   compares parsed content, not formatting.
+2. **Public operations carry `security: []`** in the document, the OpenAPI way of saying
+   "no credentials required". It is derived from the contract's `public: true`, so it will
+   stay correct once a default security scheme is added with authentication.
+
+## Implementation record
+
+- Red: three new test files failed on missing modules.
+- Green: 52 tests pass (42 unit, 10 integration).
+- During green, one of my own tests was wrong: it compared the document with
+  `z.toJSONSchema(schema)`, which returns a `$ref` for schemas that have an id. The test
+  now reads the expected enum values and field names from the Zod schema's shape.
+- Guards verified by hand, then reverted:
+  - a throwaway `POST` route with no contract failed "documents every implemented route";
+  - adding a value to the health schema's `status` enum failed "matches the committed
+    docs/api/openapi.json" with the message naming `pnpm openapi:generate`.
+- `pnpm build` lists `/api/v1/openapi.json` as static. Against `pnpm start` it returns
+  `200`, `application/json`, and a body identical to the committed file, describing both
+  `/api/v1/health` and itself.
+- `typecheck`, `lint`, `format:check`, `test`, `build` pass.
 
 ## Risks and open questions
 

@@ -1,6 +1,6 @@
 # WI-006 — OpenAPI document generated from Zod
 
-- Status: Proposed
+- Status: Done
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: WI-005
 - Work-spec: [WS-006](../work-specs/WS-006-openapi.md)
@@ -14,16 +14,16 @@ the API shows up as a reviewable diff. This implements `AGENTS.md` hard rule 9.
 
 ## Acceptance criteria
 
-- [ ] `GET /api/v1/openapi.json` returns a valid OpenAPI 3.1 document describing
+- [x] `GET /api/v1/openapi.json` returns a valid OpenAPI 3.1 document describing
       `GET /api/v1/health`, including both responses and their schemas.
-- [ ] The document is generated from the Zod schemas in `src/lib/schemas`; no response or
+- [x] The document is generated from the Zod schemas in `src/lib/schemas`; no response or
       request shape is written by hand a second time.
-- [ ] A test fails if an API route exists without an entry in the document, or the
+- [x] A test fails if an API route exists without an entry in the document, or the
       document describes a route that does not exist.
-- [ ] `docs/api/openapi.json` is committed, `pnpm openapi:generate` rewrites it, and a
+- [x] `docs/api/openapi.json` is committed, `pnpm openapi:generate` rewrites it, and a
       test fails when the committed file differs from the generated document.
-- [ ] The document validates against the official OpenAPI 3.1 schema in a test.
-- [ ] The full existing quality gate passes.
+- [x] The document validates against the official OpenAPI 3.1 schema in a test.
+- [x] The full existing quality gate passes.
 
 ## Notes
 

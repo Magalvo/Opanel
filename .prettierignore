@@ -3,3 +3,4 @@ pnpm-lock.yaml
 out
 coverage
 next-env.d.ts
+docs/api/openapi.json
