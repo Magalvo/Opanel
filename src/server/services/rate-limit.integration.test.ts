@@ -4,7 +4,15 @@ import { describe, expect, it } from "vitest";
 import { getDb } from "@/server/db/client";
 import { rateLimits } from "@/server/db/schema";
 
-import { consumeRateLimit, purgeExpiredRateLimits, signInKeys } from "./rate-limit";
+import {
+  consumeRateLimit,
+  LONGEST_WINDOW_SECONDS,
+  purgeExpiredRateLimits,
+  SIGN_IN_EMAIL_RULE,
+  SIGN_IN_FAILURE_AUDIT_RULE,
+  SIGN_IN_IP_RULE,
+  signInKeys,
+} from "./rate-limit";
 
 const rule = { max: 3, windowSeconds: 900 };
 
@@ -42,6 +50,44 @@ describe("consumeRateLimit", () => {
     expect(results.filter((result) => result.allowed)).toHaveLength(10);
   });
 
+  it("marks the first refusal of a window, once, and again in a new window", async () => {
+    const flags: boolean[] = [];
+    for (let i = 0; i < 6; i++) {
+      flags.push((await consumeRateLimit(getDb(), "k", rule)).firstRefusal);
+    }
+
+    // max is 3: the 4th attempt is the first one refused.
+    expect(flags).toEqual([false, false, false, true, false, false]);
+
+    await getDb().execute(
+      sql`update rate_limits set window_started_at = now() - interval '1 hour' where key = 'k'`,
+    );
+    const next: boolean[] = [];
+    for (let i = 0; i < 4; i++) {
+      next.push((await consumeRateLimit(getDb(), "k", rule)).firstRefusal);
+    }
+    expect(next).toEqual([false, false, false, true]);
+  });
+
+  it("marks exactly one first refusal among concurrent calls", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 30 }, () =>
+        consumeRateLimit(getDb(), "race", { max: 10, windowSeconds: 900 }),
+      ),
+    );
+
+    expect(results.filter((result) => result.firstRefusal)).toHaveLength(1);
+  });
+
+  it("reports how much of the limit is left", async () => {
+    const remaining: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      remaining.push((await consumeRateLimit(getDb(), "k", rule)).remaining);
+    }
+
+    expect(remaining).toEqual([2, 1, 0, 0, 0]);
+  });
+
   it("keeps keys independent", async () => {
     for (let i = 0; i < 4; i++) await consumeRateLimit(getDb(), "a", rule);
 
@@ -74,5 +120,31 @@ describe("purgeExpiredRateLimits", () => {
 
     const rows = await getDb().select().from(rateLimits);
     expect(rows.map((row) => row.key)).toEqual(["recent"]);
+  });
+
+  it("deletes a counter as soon as its window has ended, and keeps one inside its window", async () => {
+    await consumeRateLimit(getDb(), "ended", rule);
+    await consumeRateLimit(getDb(), "running", rule);
+    const longest = String(LONGEST_WINDOW_SECONDS);
+    await getDb().execute(sql`
+      update rate_limits
+      set window_started_at = now() - make_interval(secs => ${longest}::int + 1)
+      where key = 'ended'`);
+    await getDb().execute(sql`
+      update rate_limits
+      set window_started_at = now() - make_interval(secs => ${longest}::int - 60)
+      where key = 'running'`);
+
+    await purgeExpiredRateLimits(getDb());
+
+    const rows = await getDb().select().from(rateLimits);
+    expect(rows.map((row) => row.key)).toEqual(["running"]);
+  });
+
+  it("uses a window at least as long as every sign-in rule", () => {
+    for (const limit of [SIGN_IN_EMAIL_RULE, SIGN_IN_IP_RULE, SIGN_IN_FAILURE_AUDIT_RULE]) {
+      expect(LONGEST_WINDOW_SECONDS).toBeGreaterThanOrEqual(limit.windowSeconds);
+    }
+    expect(SIGN_IN_FAILURE_AUDIT_RULE).toEqual({ max: 200, windowSeconds: 900 });
   });
 });

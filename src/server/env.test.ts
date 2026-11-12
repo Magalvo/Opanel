@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createEnvAccessor, EnvValidationError, parseEnv } from "./env";
+import { createEnvAccessor, EnvValidationError, parseEnv, productionWarnings } from "./env";
 
 const validUrl = "postgres://opanel:opanel@localhost:5432/opanel";
 const validSecret = "test-secret-test-secret-test-secret-0123";
@@ -143,6 +143,26 @@ describe("CLIENT_IP_HEADER", () => {
     expect(captureError({ ...base, CLIENT_IP_HEADER: value }).variables).toEqual([
       "CLIENT_IP_HEADER",
     ]);
+  });
+});
+
+describe("productionWarnings", () => {
+  it("warns when production has no CLIENT_IP_HEADER, naming the variable", () => {
+    const warnings = productionWarnings({ NODE_ENV: "production", CLIENT_IP_HEADER: undefined });
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("CLIENT_IP_HEADER");
+    expect(warnings[0]).toContain("per email only");
+  });
+
+  it("is silent when the header is configured", () => {
+    expect(
+      productionWarnings({ NODE_ENV: "production", CLIENT_IP_HEADER: "x-forwarded-for" }),
+    ).toEqual([]);
+  });
+
+  it.each(["development", "test"] as const)("is silent in %s", (NODE_ENV) => {
+    expect(productionWarnings({ NODE_ENV, CLIENT_IP_HEADER: undefined })).toEqual([]);
   });
 });
 
