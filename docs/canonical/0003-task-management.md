@@ -217,15 +217,17 @@ distinguishing feature lands at WT-06.
 - "Done" for dedupe purposes means a column in the `done` category.
 - The regression reference between tasks is a `regression of` link, not a dedicated
   column.
+- A new agent-filed bug is placed in the first board column only when the project does
+  not use sprints; with sprints it goes to the top of the backlog (section 13).
 
-## 13. Open questions for the owner
+## 13. Resolved questions
 
-1. **Where do agent-filed bugs land when a project uses sprints?** Doc 0001 puts new bugs
-   in the first board column. In a sprint project that injects work into the running
-   sprint. Proposed: without sprints, first column (unchanged); with sprints, top of the
-   backlog, so a person decides whether it enters the sprint.
-2. **Organization-wide roles.** Proposed above: one role per person for the whole install,
-   all projects visible to everyone. Acceptable for v1, or do you need a person to be a
-   Manager in one project and a Member in another?
-3. **Who can delete tasks.** Proposed: Members only their own reports, Managers any, always
-   as a restorable soft delete. Acceptable?
+Decided with the owner on 2026-11-12:
+
+1. **Agent-filed bugs in sprint projects** go to the top of the backlog, so a person
+   decides whether they enter the running sprint. In projects without sprints they go to
+   the first board column, as in doc 0001.
+2. **Roles are organization-wide:** one role per person for the whole install, and all
+   projects are visible to every signed-in human. Per-project roles are out of v1.
+3. **Deleting tasks:** Members may delete only tasks they reported, Managers and Admins
+   any. Deletion is always a restorable soft delete.

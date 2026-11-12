@@ -30,18 +30,18 @@ their first commit.
 
 Each item leaves the repository green and is one branch/PR.
 
-| Item                                              | Title                                                                              | Status | Depends on             |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------- | ------ | ---------------------- |
-| [WI-001](../work-items/WI-001-app-skeleton.md)    | App skeleton: Next.js, strict TypeScript, Vitest                                   | Done   | none                   |
-| [WI-002](../work-items/WI-002-lint-and-format.md) | ESLint + Prettier with `lint` and `format:check` scripts                           | Done   | WI-001                 |
-| WI-003                                            | Validated environment variables (Zod)                                              | Draft  | WI-001                 |
-| WI-004                                            | PostgreSQL in Docker Compose, Drizzle client, migrations, integration test harness | Draft  | WI-003                 |
-| WI-005                                            | `GET /api/v1/health` vertical slice (route handler → service → DB)                 | Draft  | WI-004                 |
-| WI-006                                            | OpenAPI document generated from Zod, served at `/api/v1/openapi.json`              | Draft  | WI-005                 |
-| WI-007                                            | Playwright setup with a smoke test, `test:e2e` script                              | Draft  | WI-005                 |
-| WI-008                                            | Tailwind CSS + shadcn/ui base and app shell layout                                 | Draft  | WI-002                 |
-| WI-009                                            | GitHub Actions CI running the full quality gate                                    | Draft  | WI-002, WI-004, WI-007 |
-| WI-010                                            | `README.md` and `CONTRIBUTING.md`: setup, commands, workflow                       | Draft  | WI-009                 |
+| Item                                              | Title                                                                              | Status   | Depends on             |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- | -------- | ---------------------- |
+| [WI-001](../work-items/WI-001-app-skeleton.md)    | App skeleton: Next.js, strict TypeScript, Vitest                                   | Done     | none                   |
+| [WI-002](../work-items/WI-002-lint-and-format.md) | ESLint + Prettier with `lint` and `format:check` scripts                           | Done     | WI-001                 |
+| [WI-003](../work-items/WI-003-validated-env.md)   | Validated environment variables (Zod)                                              | Proposed | WI-001                 |
+| WI-004                                            | PostgreSQL in Docker Compose, Drizzle client, migrations, integration test harness | Draft    | WI-003                 |
+| WI-005                                            | `GET /api/v1/health` vertical slice (route handler → service → DB)                 | Draft    | WI-004                 |
+| WI-006                                            | OpenAPI document generated from Zod, served at `/api/v1/openapi.json`              | Draft    | WI-005                 |
+| WI-007                                            | Playwright setup with a smoke test, `test:e2e` script                              | Draft    | WI-005                 |
+| WI-008                                            | Tailwind CSS + shadcn/ui base and app shell layout                                 | Draft    | WI-002                 |
+| WI-009                                            | GitHub Actions CI running the full quality gate                                    | Draft    | WI-002, WI-004, WI-007 |
+| WI-010                                            | `README.md` and `CONTRIBUTING.md`: setup, commands, workflow                       | Draft    | WI-009                 |
 
 Work-items beyond WI-001 are listed here as one-liners and get their own work-item and
 work-spec files just before they are started, so each spec reflects the code that actually
