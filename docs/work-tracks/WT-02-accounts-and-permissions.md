@@ -109,6 +109,31 @@ As in WT-01, each item gets its work-item and work-spec files just before it is 
   response (other than the one-time invitation link), log line or audit entry.
 - The full quality gate passes on `main`.
 
+## Notes for the implementer
+
+Facts established while preparing this track, recorded so they are not rediscovered.
+
+- **How an endpoint is written since WI-011.** Wrap the handler with `route()` from
+  `src/server/http/route.ts`; read input with `readJson`, `readQuery` and `readParams`;
+  report expected failures by throwing the constructors in `src/server/http/errors.ts`
+  (services may throw them too); return `json()` or `noContent()`. Add the endpoint's
+  contract, with its `request` schemas, to `src/lib/openapi/contracts.ts` and run
+  `pnpm openapi:generate`. A test fails if a route has no contract or the reverse.
+- **A new error code** (for example `version_conflict`) is added to `PROBLEM_CODES` in
+  `src/lib/schemas/problem.ts` by the work-spec that needs it.
+- **Better Auth, checked on 2026-11-12 against the published 1.7.22 type definitions**
+  (not yet installed; re-check against the installed version, hard rule 13). Its peer
+  ranges accept the installed Next.js, Drizzle ORM, drizzle-kit and Zod. The options this
+  track relies on exist: per-model `modelName` and `additionalFields` (table and column
+  mapping, extra columns such as `kind` and `role`), `emailAndPassword.disableSignUp`,
+  `emailAndPassword.password.hash` / `verify` (for Argon2id), `minPasswordLength` /
+  `maxPasswordLength`, `session.expiresIn` / `updateAge`, and
+  `advanced.database.generateId` (`"uuid"` makes PostgreSQL generate the id).
+- **Running the database-backed tests without Docker** (for example in a cloud sandbox):
+  any local PostgreSQL works if it has a role `opanel` with password `opanel` and the
+  three databases of `docker/postgres/init/01-create-test-db.sql`. CI remains the
+  reference, on the PostgreSQL version of `compose.yaml`.
+
 ## Risks and open questions
 
 1. **New dependencies.** `better-auth` (1.7.x is current; it supports the installed

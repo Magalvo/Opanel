@@ -5,6 +5,19 @@ listed here with its current status. Update it whenever a doc is added or change
 
 Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or `Superseded`).
 
+## Where the project stands
+
+Updated at the end of every work-item, so that a new session can start from here.
+
+- **Last finished:** WI-011 (API foundations), the first item of WT-02.
+- **Next:** WI-012, "Permission catalogue, human roles and the `Actor` type". It is pure
+  logic with no dependency. Its work-item and work-spec files do not exist yet: draft
+  them as `Proposed`, then stop for the owner's approval (`AGENTS.md` section 4).
+- **Order after that:** the work-item table in
+  [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
+  decisions the owner approved for the track and notes for whoever implements it.
+- **Nothing is awaiting an owner decision.**
+
 ## Canonical docs (`canonical/`)
 
 | Doc                                               | Title                                                       | Status   |
@@ -56,6 +69,10 @@ WI-012 to WI-021 are outlined in WT-02 and get their own files when they are sta
 
 Deferred decisions that need a work-item before they are acted on.
 
+- Update the data model sketch in doc 0001 section 7 when WS-013 is approved: the password
+  hash moves from `accounts` to a `credentials` table (WT-02, design decision 2).
+- Declare the security schemes (session cookie, bearer token) in the OpenAPI document
+  when the first authenticated endpoint is added (WI-015).
 - Add a browsable API documentation page once there are real endpoints (see WS-006).
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
