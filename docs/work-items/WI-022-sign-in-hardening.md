@@ -1,6 +1,6 @@
 # WI-022 — Sign-in hardening: bounded audit and limiter growth
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: WI-015
 - Work-spec: [WS-022](../work-specs/WS-022-sign-in-hardening.md)
@@ -18,18 +18,18 @@ is refusing someone, but the number of rows an anonymous caller can cause is cap
 
 ## Acceptance criteria
 
-- [ ] A sign-in refused by the limiter is audited once per limiter key and window, on the
+- [x] A sign-in refused by the limiter is audited once per limiter key and window, on the
       first refusal. Further refusals in that window write no audit row.
-- [ ] Failed sign-ins that are audited share one install-wide budget per 15 minutes. When
+- [x] Failed sign-ins that are audited share one install-wide budget per 15 minutes. When
       the budget is used up, further failures in that window write no audit row, and the
       last row written says that more were suppressed.
-- [ ] The budget never changes the response: a suppressed failure gets the same `401` or
+- [x] The budget never changes the response: a suppressed failure gets the same `401` or
       `429`, with the same body and headers, as an audited one.
-- [ ] Successful sign-ins, sign-outs and every other audited action are never suppressed.
-- [ ] Limiter counters are deleted once their window has ended, not a day later.
-- [ ] In production, starting the server without `CLIENT_IP_HEADER` logs one warning that
+- [x] Successful sign-ins, sign-outs and every other audited action are never suppressed.
+- [x] Limiter counters are deleted once their window has ended, not a day later.
+- [x] In production, starting the server without `CLIENT_IP_HEADER` logs one warning that
       sign-in is limited per email only. It does not stop the server.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

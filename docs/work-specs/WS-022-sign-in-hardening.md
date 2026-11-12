@@ -1,6 +1,6 @@
 # WS-022 — Sign-in hardening: bounded audit and limiter growth
 
-- Status: Approved (by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-022](../work-items/WI-022-sign-in-hardening.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4,
   [0004](../canonical/0004-api-conventions.md) section 4; WT-02 design decision 10
@@ -90,6 +90,36 @@ None. `POST /api/v1/auth/sign-in` and `POST /api/v1/setup` answer exactly as bef
 
 The audit rule is passed to `signIn` as an optional argument with the production default,
 the same way `checkHealth` takes its timeout, so test 4 does not need 200 requests.
+
+## Deviations from the approved spec
+
+1. **`consumeRateLimit` also returns `remaining`**, the attempts left in the window. The
+   audit budget needs to know when it writes its last row, and reading that from the
+   counter the same statement returns avoids a second query.
+2. **The audit budget's key and rule are exported constants** (`SIGN_IN_FAILURE_AUDIT_KEY`,
+   `SIGN_IN_FAILURE_AUDIT_RULE`), and the purge window is `LONGEST_WINDOW_SECONDS`, the
+   longest window of the three rules. A test asserts it covers every rule, so adding a
+   longer rule later cannot silently purge live counters.
+3. **The operator note is in `.env.example`**, next to the variable, not in
+   `CONTRIBUTING.md`.
+4. **One extra test:** with the budget used up, the limiter still refuses with `429` and
+   `Retry-After` and writes no row.
+5. **Test 5 compares the error a failed sign-in throws** (status, code, title, detail,
+   retry delay), which is everything the route turns into the response, instead of the
+   HTTP response itself.
+
+## Implementation record
+
+- Red: 13 new tests failed on behaviour (nine in the limiter and sign-in services, four on
+  the missing `productionWarnings`). The "same answer when suppressed" test passed from
+  the start, as it should: this item must not change responses.
+- Green: 381 tests pass (up from 367). Playwright: 22 pass.
+- The existing test "the 11th attempt is refused and audited" is unchanged and still
+  holds: the 11th attempt is the first refusal of its window.
+- Seen when the end-to-end run started the production server without the variable:
+  `Warning: CLIENT_IP_HEADER is not set: sign-in attempts are limited per email only ...`
+- `typecheck`, `lint`, `format:check`, `test`, `test:e2e` pass locally, against PostgreSQL
+  16 (no Docker in the sandbox used). CI runs them on the PostgreSQL of `compose.yaml`.
 
 ## Resolved questions
 
