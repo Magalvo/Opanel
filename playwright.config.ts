@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-import { E2E_BASE_URL, E2E_DATABASE_URL, E2E_PORT } from "./tests/e2e/environment";
+import { E2E_AUTH_SECRET, E2E_BASE_URL, E2E_DATABASE_URL, E2E_PORT } from "./tests/e2e/environment";
 
 const isCI = Boolean(process.env.CI);
 
@@ -26,7 +26,11 @@ export default defineConfig({
   webServer: {
     command: `tsx tests/e2e/prepare.ts && next build && next start -p ${String(E2E_PORT)}`,
     url: `${E2E_BASE_URL}/api/v1/health`,
-    env: { DATABASE_URL: E2E_DATABASE_URL },
+    env: {
+      DATABASE_URL: E2E_DATABASE_URL,
+      BETTER_AUTH_SECRET: E2E_AUTH_SECRET,
+      APP_URL: E2E_BASE_URL,
+    },
     // Never reuse a server that is already listening: it could be serving an older build,
     // and the tests would pass or fail against the wrong code.
     reuseExistingServer: false,

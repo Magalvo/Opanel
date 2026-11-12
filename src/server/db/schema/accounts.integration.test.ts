@@ -68,14 +68,12 @@ describe("accounts, credentials and sessions tables", () => {
 
   it("deletes credentials and sessions with their account", async () => {
     const account = await insertHuman();
-    await db()
-      .insert(credentials)
-      .values({
-        accountId: account.id,
-        providerId: "credential",
-        providerAccountId: account.id,
-        passwordHash: "hash",
-      });
+    await db().insert(credentials).values({
+      accountId: account.id,
+      providerId: "credential",
+      providerAccountId: account.id,
+      passwordHash: "hash",
+    });
     await db()
       .insert(sessions)
       .values({

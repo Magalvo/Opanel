@@ -9,3 +9,6 @@ export const E2E_DATABASE_URL =
   process.env.E2E_DATABASE_URL ?? "postgres://opanel:opanel@localhost:5432/opanel_e2e_test";
 
 export const E2E_DATABASE_SUFFIX = "_e2e_test";
+
+/** Placeholder session secret for the app under test. Not a secret: the database is a throwaway. */
+export const E2E_AUTH_SECRET = "e2e-secret-only-for-playwright-0123456789abcdef";

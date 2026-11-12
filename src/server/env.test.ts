@@ -54,7 +54,9 @@ describe("parseEnv", () => {
   });
 
   it("rejects a DATABASE_URL that is not a URL", () => {
-    expect(captureError({ ...base, DATABASE_URL: "not a url" }).variables).toEqual(["DATABASE_URL"]);
+    expect(captureError({ ...base, DATABASE_URL: "not a url" }).variables).toEqual([
+      "DATABASE_URL",
+    ]);
   });
 
   it("rejects a DATABASE_URL with a non-Postgres scheme", () => {

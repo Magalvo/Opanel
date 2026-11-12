@@ -50,7 +50,9 @@ describe("Better Auth on Opanel's tables", () => {
     await createHuman();
 
     await expect(
-      getAuth().api.signInEmail({ body: { email: "ada@example.com", password: "wrong password!" } }),
+      getAuth().api.signInEmail({
+        body: { email: "ada@example.com", password: "wrong password!" },
+      }),
     ).rejects.toThrow();
 
     expect(await getDb().select().from(sessions)).toHaveLength(0);
@@ -65,7 +67,7 @@ describe("Better Auth on Opanel's tables", () => {
       body: { email: "ada@example.com", password },
       returnHeaders: true,
     });
-    const cookie = (headers.getSetCookie() as string[]).map((c) => c.split(";")[0]).join("; ");
+    const cookie = (headers.getSetCookie()).map((c) => c.split(";")[0]).join("; ");
     expect(await getDb().select().from(sessions)).toHaveLength(1);
 
     await getAuth().api.signOut({ headers: new Headers({ cookie }) });
