@@ -28,24 +28,24 @@ Three pillars:
 
 ## 2. Tech stack
 
-| Concern         | Choice                                                        |
-| --------------- | ------------------------------------------------------------- |
-| Language        | TypeScript, `strict` mode, no `any`                           |
-| App             | Next.js (App Router) monolith: UI + API route handlers        |
-| API             | Versioned REST under `/api/v1`, OpenAPI generated from Zod    |
-| Database        | PostgreSQL                                                    |
-| Human auth      | Better Auth (email + password, sessions in PostgreSQL)        |
-| Agent auth      | Custom scoped API tokens (canonical doc 0001)                 |
-| Live sync       | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (canonical doc 0002) |
-| ORM, migrations | Drizzle ORM + drizzle-kit                                     |
-| Validation      | Zod (single source for runtime validation, types and OpenAPI) |
-| UI              | React, Tailwind CSS, shadcn/ui                                |
-| Unit/integration tests | Vitest                                                 |
-| End-to-end tests | Playwright                                                   |
-| Lint, format    | ESLint + Prettier                                             |
-| Package manager | pnpm                                                          |
-| Local infra     | Docker Compose (PostgreSQL)                                   |
-| CI              | GitHub Actions                                                |
+| Concern                | Choice                                                             |
+| ---------------------- | ------------------------------------------------------------------ |
+| Language               | TypeScript, `strict` mode, no `any`                                |
+| App                    | Next.js (App Router) monolith: UI + API route handlers             |
+| API                    | Versioned REST under `/api/v1`, OpenAPI generated from Zod         |
+| Database               | PostgreSQL                                                         |
+| Human auth             | Better Auth (email + password, sessions in PostgreSQL)             |
+| Agent auth             | Custom scoped API tokens (canonical doc 0001)                      |
+| Live sync              | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (canonical doc 0002) |
+| ORM, migrations        | Drizzle ORM + drizzle-kit                                          |
+| Validation             | Zod (single source for runtime validation, types and OpenAPI)      |
+| UI                     | React, Tailwind CSS, shadcn/ui                                     |
+| Unit/integration tests | Vitest                                                             |
+| End-to-end tests       | Playwright                                                         |
+| Lint, format           | ESLint + Prettier                                                  |
+| Package manager        | pnpm                                                               |
+| Local infra            | Docker Compose (PostgreSQL)                                        |
+| CI                     | GitHub Actions                                                     |
 
 Exact versions are pinned by the boilerplate work-spec, not here. Adding, removing or
 swapping a dependency in this table requires a canonical doc change first.
@@ -83,12 +83,12 @@ Layering rules:
 AI contributors have **no persistent memory**. The docs in this repo are the only context
 that carries between sessions. If it is not written down here, it was not decided.
 
-| Layer         | Location            | Answers                                   | Naming              |
-| ------------- | ------------------- | ----------------------------------------- | ------------------- |
-| Canonical doc | `docs/canonical/`   | Why and how the system is built (lasting) | `NNNN-slug.md`      |
-| Work-track    | `docs/work-tracks/` | An epic: goal, scope, list of work-items  | `WT-NN-slug.md`     |
-| Work-item     | `docs/work-items/`  | One atomic, independently shippable task  | `WI-NNN-slug.md`    |
-| Work-spec     | `docs/work-specs/`  | Exactly how one work-item is implemented  | `WS-NNN-slug.md`    |
+| Layer         | Location            | Answers                                   | Naming           |
+| ------------- | ------------------- | ----------------------------------------- | ---------------- |
+| Canonical doc | `docs/canonical/`   | Why and how the system is built (lasting) | `NNNN-slug.md`   |
+| Work-track    | `docs/work-tracks/` | An epic: goal, scope, list of work-items  | `WT-NN-slug.md`  |
+| Work-item     | `docs/work-items/`  | One atomic, independently shippable task  | `WI-NNN-slug.md` |
+| Work-spec     | `docs/work-specs/`  | Exactly how one work-item is implemented  | `WS-NNN-slug.md` |
 
 A work-spec shares its number with its work-item. Templates are the `_TEMPLATE.md` file in
 each directory. `docs/README.md` holds the index and the status of every doc.
@@ -128,7 +128,8 @@ pnpm test         # Vitest unit + integration
 pnpm test:e2e     # Playwright
 ```
 
-These scripts are defined by the boilerplate work-track. Until then they do not exist.
+These scripts are added by the boilerplate work-track (WT-01); its work-item table shows
+which of them exist so far.
 
 ## 6. Hard rules
 
@@ -151,6 +152,9 @@ These scripts are defined by the boilerplate work-track. Until then they do not 
 10. One work-item per branch/PR. Keep unrelated changes out.
 11. When a doc and the code disagree, stop and raise it. Do not silently pick one.
 12. When requirements are unclear, ask the owner. Do not assume.
+13. Before writing code against a framework or library, read the documentation for the
+    **installed version** (for Next.js: `node_modules/next/dist/docs/`). Installed versions
+    are newer than what an AI contributor may remember; do not rely on recalled APIs.
 
 ## 7. Definition of done
 

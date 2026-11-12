@@ -55,8 +55,14 @@ Events are small and carry identifiers, not full entities:
 
 ```jsonc
 // event: task.updated
-{ "id": "evt_...", "entity": "task", "entityId": "42", "version": 7,
-  "actorAccountId": "acc_...", "at": "2026-11-12T10:00:00Z" }
+{
+  "id": "evt_...",
+  "entity": "task",
+  "entityId": "42",
+  "version": 7,
+  "actorAccountId": "acc_...",
+  "at": "2026-11-12T10:00:00Z",
+}
 ```
 
 Event types in v1: `task.created`, `task.updated`, `task.moved`, `task.deleted`,

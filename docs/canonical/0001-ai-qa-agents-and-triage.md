@@ -9,16 +9,16 @@
 Opanel must let AI QA agents test a product's frontend and API and automatically file bugs
 to the responsible team. Decisions already taken with the owner:
 
-| Topic            | Decision                                                                 |
-| ---------------- | ------------------------------------------------------------------------ |
-| What agents test | Any product tracked in Opanel, including Opanel itself (dogfooding)      |
-| Where agents run | Outside Opanel, as external API clients. Opanel runs no agents, no LLMs  |
+| Topic            | Decision                                                                  |
+| ---------------- | ------------------------------------------------------------------------- |
+| What agents test | Any product tracked in Opanel, including Opanel itself (dogfooding)       |
+| Where agents run | Outside Opanel, as external API clients. Opanel runs no agents, no LLMs   |
 | Agent auth       | Scoped, revocable API tokens. No passwords or browser sessions for agents |
-| Human auth       | Email + password                                                         |
-| Routing          | The agent classifies the origin layer; the server maps layer to team     |
-| Duplicates       | Fingerprint dedupe against open tickets                                  |
-| API              | REST `/api/v1` with OpenAPI generated from Zod                           |
-| Tenancy          | One organization per install                                             |
+| Human auth       | Email + password                                                          |
+| Routing          | The agent classifies the origin layer; the server maps layer to team      |
+| Duplicates       | Fingerprint dedupe against open tickets                                   |
+| API              | REST `/api/v1` with OpenAPI generated from Zod                            |
+| Tenancy          | One organization per install                                              |
 
 ## 2. Responsibilities
 
@@ -61,13 +61,13 @@ accounts or tokens.
 
 A role is a named bundle of scopes; scopes are what endpoints check.
 
-| Scope              | Allows                                         |
-| ------------------ | ---------------------------------------------- |
-| `projects:read`    | List projects, teams and routing layers        |
-| `tasks:read`       | Read tasks, epics and comments                 |
-| `reports:write`    | Submit bug reports                             |
-| `comments:write`   | Comment on tasks                               |
-| `tasks:write`      | Create and edit tasks directly                 |
+| Scope            | Allows                                  |
+| ---------------- | --------------------------------------- |
+| `projects:read`  | List projects, teams and routing layers |
+| `tasks:read`     | Read tasks, epics and comments          |
+| `reports:write`  | Submit bug reports                      |
+| `comments:write` | Comment on tasks                        |
+| `tasks:write`    | Create and edit tasks directly          |
 
 Initial agent roles:
 
@@ -105,11 +105,11 @@ every service function takes an `Actor`. There is one permission system, not two
 
 ```jsonc
 {
-  "title": "Checkout button returns 500",        // required
-  "originLayer": "api",                           // frontend | api | backend | unknown
-  "confidence": 0.8,                              // 0..1, agent's confidence in originLayer
-  "severity": "high",                             // low | medium | high | critical
-  "fingerprint": "a3f1...",                       // required, opaque, max 128 chars
+  "title": "Checkout button returns 500", // required
+  "originLayer": "api", // frontend | api | backend | unknown
+  "confidence": 0.8, // 0..1, agent's confidence in originLayer
+  "severity": "high", // low | medium | high | critical
+  "fingerprint": "a3f1...", // required, opaque, max 128 chars
   "summary": "Markdown description of the bug",
   "evidence": {
     "stepsToReproduce": ["..."],
@@ -118,9 +118,9 @@ every service function takes an `Actor`. There is one permission system, not two
     "url": "https://app.example.com/checkout",
     "http": { "method": "POST", "path": "/api/orders", "status": 500, "responseSnippet": "..." },
     "consoleErrors": ["..."],
-    "diagnosis": "Why the agent believes this layer is at fault"
+    "diagnosis": "Why the agent believes this layer is at fault",
   },
-  "runId": "optional id grouping reports from one test run"
+  "runId": "optional id grouping reports from one test run",
 }
 ```
 
@@ -134,12 +134,12 @@ Evidence is text/JSON only in v1, size-capped. File attachments are out of v1.
 
 ### Origin layers
 
-| Layer      | Meaning (guidance published to agent authors)                                  |
-| ---------- | ------------------------------------------------------------------------------ |
-| `frontend` | Rendering, client-side logic or UI state is wrong while API responses are correct |
-| `api`      | The HTTP contract is violated: wrong status, schema, validation, auth handling |
+| Layer      | Meaning (guidance published to agent authors)                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| `frontend` | Rendering, client-side logic or UI state is wrong while API responses are correct                |
+| `api`      | The HTTP contract is violated: wrong status, schema, validation, auth handling                   |
 | `backend`  | The contract is honored but the outcome is wrong: data, business logic, jobs, 5xx from internals |
-| `unknown`  | The agent cannot tell                                                          |
+| `unknown`  | The agent cannot tell                                                                            |
 
 The layer set is fixed in v1. Teams are configurable; layers are not.
 
@@ -152,7 +152,7 @@ In one database transaction:
    in a done/closed status.
    - Found: link the report, increment the task's `occurrences`, update
      `last_reported_at`, add a system comment. No new ticket, no reassignment.
-   - Not found: continue. A matching *closed* task does not block creation; the new task
+   - Not found: continue. A matching _closed_ task does not block creation; the new task
      links to it as a possible regression.
 3. **Route**: look up `routing_rules(project_id, origin_layer) -> team_id`.
    - `unknown`, or no rule for the layer: use the project's fallback triage team.

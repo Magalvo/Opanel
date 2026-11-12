@@ -1,6 +1,6 @@
 # WS-002 — ESLint and Prettier
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-002](../work-items/WI-002-lint-and-format.md)
 - Canonical docs: `AGENTS.md` sections 2, 5, 6
 
@@ -32,26 +32,26 @@ when `typescript-eslint` supports it.
 
 Latest stable on 2026-11-12, pinned exactly.
 
-| Package | Version | Kind |
-| ------- | ------- | ---- |
-| `typescript` | 6.0.3 (was 7.0.2) | dev |
-| `eslint` | 10.14.0 | dev |
-| `@eslint/js` | 10.0.1 | dev |
-| `typescript-eslint` | 8.72.2 | dev |
-| `eslint-config-next` | 16.4.6 | dev |
-| `eslint-config-prettier` | 10.1.8 | dev |
-| `eslint-plugin-simple-import-sort` | 14.0.0 | dev |
-| `prettier` | 3.10.1 | dev |
+| Package                            | Version           | Kind |
+| ---------------------------------- | ----------------- | ---- |
+| `typescript`                       | 6.0.3 (was 7.0.2) | dev  |
+| `eslint`                           | 10.14.0           | dev  |
+| `@eslint/js`                       | 10.0.1            | dev  |
+| `typescript-eslint`                | 8.72.2            | dev  |
+| `eslint-config-next`               | 16.4.6            | dev  |
+| `eslint-config-prettier`           | 10.1.8            | dev  |
+| `eslint-plugin-simple-import-sort` | 14.0.0            | dev  |
+| `prettier`                         | 3.10.1            | dev  |
 
 ## Files
 
-| Path | Change |
-| ---- | ------ |
-| `package.json` | modify: TypeScript version, new dev dependencies, scripts |
-| `pnpm-lock.yaml` | modify (generated) |
-| `eslint.config.mjs` | create (see below) |
-| `.prettierrc.json` | create: `{ "printWidth": 100 }`, otherwise Prettier defaults |
-| `.prettierignore` | create: `pnpm-lock.yaml`, `.next`, `coverage`, `next-env.d.ts` |
+| Path                                       | Change                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| `package.json`                             | modify: TypeScript version, new dev dependencies, scripts         |
+| `pnpm-lock.yaml`                           | modify (generated)                                                |
+| `eslint.config.mjs`                        | create (see below)                                                |
+| `.prettierrc.json`                         | create: `{ "printWidth": 100 }`, otherwise Prettier defaults      |
+| `.prettierignore`                          | create: `pnpm-lock.yaml`, `.next`, `coverage`, `next-env.d.ts`    |
 | existing source, config and Markdown files | modify only where Prettier or the import-sort rule reformats them |
 
 Scripts added:
@@ -103,21 +103,38 @@ None.
 Lint and format rules are configuration, so the "failing test" for this item is the gate
 itself failing on a known violation.
 
-| # | Level | Test | Covers criterion |
-| - | ----- | ---- | ---------------- |
-| 1 | red | With the config in place and before any fixes, `pnpm lint` and `pnpm format:check` are run and their failures on the existing code recorded | gates detect real issues |
-| 2 | green | Fix what they report; both pass | lint and format pass |
-| 3 | manual, once each | Introduce an explicit `any`, a `@ts-ignore`, an unawaited promise, an unused variable, an undescribed `eslint-disable`; confirm each fails `pnpm lint` with the expected rule id; remove | hard rule 3 is enforced |
-| 4 | manual, once | Mis-format a file; confirm `pnpm format:check` fails; restore | format gate bites |
-| 5 | gate | `pnpm typecheck`, `pnpm test`, `pnpm build` pass on TypeScript 6.0.3 | nothing regressed |
+| #   | Level             | Test                                                                                                                                                                                     | Covers criterion         |
+| --- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 1   | red               | With the config in place and before any fixes, `pnpm lint` and `pnpm format:check` are run and their failures on the existing code recorded                                              | gates detect real issues |
+| 2   | green             | Fix what they report; both pass                                                                                                                                                          | lint and format pass     |
+| 3   | manual, once each | Introduce an explicit `any`, a `@ts-ignore`, an unawaited promise, an unused variable, an undescribed `eslint-disable`; confirm each fails `pnpm lint` with the expected rule id; remove | hard rule 3 is enforced  |
+| 4   | manual, once      | Mis-format a file; confirm `pnpm format:check` fails; restore                                                                                                                            | format gate bites        |
+| 5   | gate              | `pnpm typecheck`, `pnpm test`, `pnpm build` pass on TypeScript 6.0.3                                                                                                                     | nothing regressed        |
 
-## Risks and open questions
+## Resolved questions
 
-1. `eslint-config-next` 16.4.6 declares `eslint >=9`, and its bundled plugins
-   (`eslint-plugin-react`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y`) may lag
-   behind ESLint 10. If any of them fails on ESLint 10, fall back to the latest ESLint 9
-   and record it here. **Owner: is that fallback acceptable without a new approval round,
-   as with TypeScript?**
-2. `strictTypeChecked` is the strictest typescript-eslint preset. Individual rules that
-   prove noisy can be relaxed later by a spec change; it is proposed on from day one for
-   the same reason as the strict compiler flags.
+Decided with the owner on 2026-11-12:
+
+1. Falling back to ESLint 9 without a new approval round is allowed. Not needed: ESLint
+   10.14.0 works with `eslint-config-next` 16.4.6. pnpm prints unmet-peer warnings for
+   `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react`, which do not
+   list ESLint 10 yet; the Next.js docs call this out as expected.
+2. `strictTypeChecked` is enabled.
+
+## Deviations from the approved spec
+
+1. **One extra dev dependency:** `@eslint-community/eslint-plugin-eslint-comments` 4.8.1.
+   ESLint has no built-in way to require a description on `eslint-disable` comments, so
+   the plugin's `require-description` rule is used, as the spec anticipated.
+
+## Implementation record
+
+- Red: with the config in place, `pnpm format:check` failed on 10 files (Markdown tables
+  and `tsconfig.json`). `pnpm lint` passed on the existing code at once, so its red step
+  is the injected violations below.
+- Green: `pnpm format` applied; `lint`, `format:check`, `typecheck`, `test` and `build`
+  all pass on TypeScript 6.0.3. `next build` does not undo Prettier's `tsconfig.json`
+  formatting.
+- Manual: a file with five violations failed `pnpm lint` with exactly the expected rules:
+  `no-explicit-any`, `ban-ts-comment`, `no-floating-promises`, `no-unused-vars`,
+  `eslint-comments/require-description`. A mis-formatted file failed `pnpm format:check`.

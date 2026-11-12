@@ -13,8 +13,8 @@ What is true when this track is finished, in one or two sentences.
 
 ## Work-items
 
-| Item | Title | Status | Depends on |
-| ---- | ----- | ------ | ---------- |
-| WI-NNN | | Draft | |
+| Item   | Title | Status | Depends on |
+| ------ | ----- | ------ | ---------- |
+| WI-NNN |       | Draft  |            |
 
 ## Exit criteria

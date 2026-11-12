@@ -7,15 +7,15 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 ## Canonical docs (`canonical/`)
 
-| Doc | Title | Status |
-| --- | ----- | ------ |
+| Doc                                               | Title                                                       | Status   |
+| ------------------------------------------------- | ----------------------------------------------------------- | -------- |
 | [0001](canonical/0001-ai-qa-agents-and-triage.md) | AI QA agents: identity, authentication and automated triage | Approved |
-| [0002](canonical/0002-realtime-sync.md) | Real-time board sync | Approved |
+| [0002](canonical/0002-realtime-sync.md)           | Real-time board sync                                        | Approved |
 
 ## Work-tracks (`work-tracks/`)
 
-| Track | Title | Status |
-| ----- | ----- | ------ |
+| Track                                             | Title               | Status      |
+| ------------------------------------------------- | ------------------- | ----------- |
 | [WT-01](work-tracks/WT-01-project-boilerplate.md) | Project boilerplate | In progress |
 
 Planned next, not yet drafted:
@@ -28,10 +28,10 @@ Planned next, not yet drafted:
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
-| Item | Title | Item status | Spec | Spec status |
-| ---- | ----- | ----------- | ---- | ----------- |
-| [WI-001](work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Done | [WS-001](work-specs/WS-001-app-skeleton.md) | Done |
-| [WI-002](work-items/WI-002-lint-and-format.md) | ESLint and Prettier | Proposed | [WS-002](work-specs/WS-002-lint-and-format.md) | Proposed |
+| Item                                           | Title                                            | Item status | Spec                                           | Spec status |
+| ---------------------------------------------- | ------------------------------------------------ | ----------- | ---------------------------------------------- | ----------- |
+| [WI-001](work-items/WI-001-app-skeleton.md)    | App skeleton: Next.js, strict TypeScript, Vitest | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)    | Done        |
+| [WI-002](work-items/WI-002-lint-and-format.md) | ESLint and Prettier                              | Done        | [WS-002](work-specs/WS-002-lint-and-format.md) | Done        |
 
 WI-003 to WI-010 are outlined in WT-01 and get their own files when they are started.
 
@@ -41,3 +41,4 @@ Deferred decisions that need a work-item before they are acted on.
 
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
+- Return from TypeScript 6.0 to 7 once `typescript-eslint` supports it (see WS-002).

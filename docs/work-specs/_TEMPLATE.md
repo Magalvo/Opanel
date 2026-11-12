@@ -10,9 +10,9 @@ How the work-item will be implemented and why this way.
 
 ## Files
 
-| Path | Change |
-| ---- | ------ |
-| | create / modify |
+| Path | Change          |
+| ---- | --------------- |
+|      | create / modify |
 
 ## Data model changes
 
@@ -24,8 +24,8 @@ Endpoints, Zod schemas, status codes, required scopes. "None" if none.
 
 ## Test plan (written first, in this order)
 
-| # | Level | Test | Covers criterion |
-| - | ----- | ---- | ---------------- |
-| 1 | unit / integration / e2e | | |
+| #   | Level                    | Test | Covers criterion |
+| --- | ------------------------ | ---- | ---------------- |
+| 1   | unit / integration / e2e |      |                  |
 
 ## Risks and open questions

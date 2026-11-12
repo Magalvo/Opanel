@@ -25,37 +25,37 @@ Order of work (TDD):
 Latest stable on the npm registry on 2026-11-12. Pinned exactly (no `^`) in
 `package.json`; upgrades are deliberate changes.
 
-| Package | Version | Kind |
-| ------- | ------- | ---- |
-| `next` | 16.4.6 | dependency |
-| `react`, `react-dom` | 19.3.1 | dependency |
-| `typescript` | 7.0.2 | dev |
-| `@types/react`, `@types/react-dom` | 19.3.0 | dev |
-| `@types/node` | latest 22.x | dev |
-| `vitest` | 5.1.0 | dev |
-| `@vitejs/plugin-react` | 6.3.0 | dev |
-| `@testing-library/react` | 16.3.3 | dev |
-| `@testing-library/jest-dom` | 7.0.1 | dev |
-| `jsdom` | 31.0.0 | dev |
+| Package                            | Version     | Kind       |
+| ---------------------------------- | ----------- | ---------- |
+| `next`                             | 16.4.6      | dependency |
+| `react`, `react-dom`               | 19.3.1      | dependency |
+| `typescript`                       | 7.0.2       | dev        |
+| `@types/react`, `@types/react-dom` | 19.3.0      | dev        |
+| `@types/node`                      | latest 22.x | dev        |
+| `vitest`                           | 5.1.0       | dev        |
+| `@vitejs/plugin-react`             | 6.3.0       | dev        |
+| `@testing-library/react`           | 16.3.3      | dev        |
+| `@testing-library/jest-dom`        | 7.0.1       | dev        |
+| `jsdom`                            | 31.0.0      | dev        |
 
 Runtime: Node.js 22 (`engines.node: ">=22"`, `.nvmrc`: `22`). pnpm 10, pinned through the
 `packageManager` field.
 
 ## Files
 
-| Path | Change |
-| ---- | ------ |
-| `package.json` | create: name `opanel`, `private`, `"type": "module"`, scripts, pinned deps, `engines`, `packageManager` |
-| `pnpm-lock.yaml` | create (generated) |
-| `.nvmrc` | create: `22` |
-| `.gitignore` | create: `node_modules`, `.next`, `out`, `coverage`, `.env*` (except `.env.example`), `*.tsbuildinfo`, `next-env.d.ts`, Playwright output dirs |
-| `tsconfig.json` | create (see below) |
-| `next.config.ts` | create: `reactStrictMode: true`, `typedRoutes: true`, nothing else |
-| `vitest.config.ts` | create: React plugin, `jsdom` environment, `@/*` alias, setup file, include `src/**/*.test.{ts,tsx}` |
-| `vitest.setup.ts` | create: registers `@testing-library/jest-dom` matchers and RTL cleanup |
-| `src/app/layout.tsx` | create: root layout, `<html lang="en">`, metadata title "Opanel" |
-| `src/app/page.tsx` | create: `<main>` with `<h1>Opanel</h1>` and a one-line tagline |
-| `src/app/page.test.tsx` | create: the first test |
+| Path                    | Change                                                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`          | create: name `opanel`, `private`, `"type": "module"`, scripts, pinned deps, `engines`, `packageManager`                                       |
+| `pnpm-lock.yaml`        | create (generated)                                                                                                                            |
+| `.nvmrc`                | create: `22`                                                                                                                                  |
+| `.gitignore`            | create: `node_modules`, `.next`, `out`, `coverage`, `.env*` (except `.env.example`), `*.tsbuildinfo`, `next-env.d.ts`, Playwright output dirs |
+| `tsconfig.json`         | create (see below)                                                                                                                            |
+| `next.config.ts`        | create: `reactStrictMode: true`, `typedRoutes: true`, nothing else                                                                            |
+| `vitest.config.ts`      | create: React plugin, `jsdom` environment, `@/*` alias, setup file, include `src/**/*.test.{ts,tsx}`                                          |
+| `vitest.setup.ts`       | create: registers `@testing-library/jest-dom` matchers and RTL cleanup                                                                        |
+| `src/app/layout.tsx`    | create: root layout, `<html lang="en">`, metadata title "Opanel"                                                                              |
+| `src/app/page.tsx`      | create: `<main>` with `<h1>Opanel</h1>` and a one-line tagline                                                                                |
+| `src/app/page.test.tsx` | create: the first test                                                                                                                        |
 
 Scripts in `package.json`:
 
@@ -94,13 +94,13 @@ None.
 
 ## Test plan (written first, in this order)
 
-| # | Level | Test | Covers criterion |
-| - | ----- | ---- | ---------------- |
-| 1 | unit (Vitest + RTL) | `page.test.tsx`: rendering the home page shows a level-1 heading with the text "Opanel" | `pnpm test` passes; home page shows heading |
-| 2 | gate | `pnpm typecheck` passes | strict type-check |
-| 3 | gate | `pnpm build` completes | build |
-| 4 | manual, once | add a type error, confirm `pnpm typecheck` fails, remove it | guardrail actually bites |
-| 5 | manual, once | `pnpm dev`, request `/`, confirm `200` and the heading in the HTML | dev server works |
+| #   | Level               | Test                                                                                    | Covers criterion                            |
+| --- | ------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 1   | unit (Vitest + RTL) | `page.test.tsx`: rendering the home page shows a level-1 heading with the text "Opanel" | `pnpm test` passes; home page shows heading |
+| 2   | gate                | `pnpm typecheck` passes                                                                 | strict type-check                           |
+| 3   | gate                | `pnpm build` completes                                                                  | build                                       |
+| 4   | manual, once        | add a type error, confirm `pnpm typecheck` fails, remove it                             | guardrail actually bites                    |
+| 5   | manual, once        | `pnpm dev`, request `/`, confirm `200` and the heading in the HTML                      | dev server works                            |
 
 Automated browser verification of the running app arrives with Playwright in WI-007.
 
@@ -111,7 +111,7 @@ Decided with the owner on 2026-11-12:
 1. **TypeScript 7:** falling back to 6.x or 5.x without a new approval round is allowed if
    tooling is incompatible. Not needed so far: Next.js 16.4.6, Vitest 5.1.0 and
    `@vitejs/plugin-react` 6.3.0 all work with TypeScript 7.0.2. `typescript-eslint`
-   compatibility is still to be confirmed in WI-002.
+   turned out not to support TypeScript 7, so WI-002 moved the project to 6.0.3 (see WS-002).
 2. **Node.js:** 22 now; upgrade to 24 LTS tracked in `docs/README.md` (Follow-ups).
 3. **pnpm:** 10 now; upgrade to 12 tracked in `docs/README.md` (Follow-ups).
 4. `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess` are enabled.
