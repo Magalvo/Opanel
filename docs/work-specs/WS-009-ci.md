@@ -1,6 +1,6 @@
 # WS-009 — Continuous integration
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: In progress (approved by the owner on 2026-11-12)
 - Work-item: [WI-009](../work-items/WI-009-ci.md)
 - Canonical docs: `AGENTS.md` sections 2 and 5
 

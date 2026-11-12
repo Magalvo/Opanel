@@ -1,6 +1,6 @@
 # WI-009 — Continuous integration
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-12)
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: WI-002, WI-004, WI-007
 - Work-spec: [WS-009](../work-specs/WS-009-ci.md)
