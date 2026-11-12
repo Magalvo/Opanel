@@ -31,6 +31,30 @@ describe("accounts, credentials and sessions tables", () => {
     expect(names).toEqual(expect.arrayContaining(["accounts", "credentials", "sessions"]));
   });
 
+  it("has the tables and nullable columns Better Auth's adapter requires", async () => {
+    const tables = await db().execute<{ tablename: string }>(
+      sql`select tablename from pg_tables where schemaname = 'public'`,
+    );
+    expect(tables.map((row) => row.tablename)).toContain("verification");
+
+    const columns = await db().execute<{ column_name: string; is_nullable: string }>(
+      sql`select column_name, is_nullable from information_schema.columns
+          where table_schema = 'public' and table_name = 'credentials'`,
+    );
+    const oauth = [
+      "access_token",
+      "refresh_token",
+      "id_token",
+      "access_token_expires_at",
+      "refresh_token_expires_at",
+      "scope",
+    ];
+    for (const name of oauth) {
+      const column = columns.find((row) => row.column_name === name);
+      expect(column?.is_nullable, name).toBe("YES");
+    }
+  });
+
   it("fills in id, timestamps and defaults", async () => {
     const account = await insertHuman();
 
