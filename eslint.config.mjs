@@ -56,6 +56,22 @@ export default defineConfig([
     },
   },
 
+  // AGENTS.md hard rule 4: configuration is read only through the validated env module.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/server/env.ts", "src/instrumentation.ts"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "process",
+          property: "env",
+          message: "Read configuration through getEnv() from @/server/env instead.",
+        },
+      ],
+    },
+  },
+
   // Plain JavaScript config files are not part of the TypeScript project.
   {
     files: ["**/*.{js,mjs,cjs}"],

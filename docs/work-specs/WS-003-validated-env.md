@@ -1,6 +1,6 @@
 # WS-003 — Validated environment variables
 
-- Status: Approved (2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-003](../work-items/WI-003-validated-env.md)
 - Canonical docs: `AGENTS.md` sections 3 and 6 (hard rules 4 and 7)
 
@@ -90,11 +90,28 @@ None.
 | 10  | manual, once | `pnpm dev` without `DATABASE_URL` exits with the error; with `.env` it serves `/`                 | fail fast at startup |
 | 11  | gate         | `pnpm build` with no variables set; `typecheck`, `lint`, `format:check`, `test` pass              | build and gate       |
 
-## Risks and open questions
+## Deviations from the approved spec
 
-1. `register()` behaviour in `next dev` (whether a thrown error stops the process or is
-   only logged) is to be confirmed against the installed version during implementation.
-   If it only logs, the fallback is to exit the process explicitly from `register()` and
-   record that here.
-2. After this item `pnpm dev` requires a `.env` file. Until WI-004 adds the database, the
-   example value points at a database that does not exist yet; nothing connects to it.
+1. **`src/instrumentation.ts` is also exempt from the `process.env` lint rule.** It must
+   read `process.env.NEXT_RUNTIME` literally, because Next.js inlines that constant at
+   build time; the installed docs prescribe exactly this check.
+2. **`register()` exits the process on invalid configuration** (the fallback foreseen in
+   the risks). `next dev` stopped on a thrown error by itself, but `next start` only
+   logged it and kept running. `register()` now prints the message and calls
+   `process.exit(1)`, so both behave the same.
+3. **`createEnvAccessor(readSource)` is exported next to `getEnv`.** It is the factory
+   `getEnv` is built from, and lets test 8 prove "parsed once" without touching the real
+   `process.env`.
+
+`vitest.config.ts` did not need changing.
+
+## Implementation record
+
+- Red: `src/server/env.test.ts` failed on the missing `./env` module.
+- Green: 12 unit tests pass (13 in the suite with the home page test).
+- Manual: `process.env.SECRET` in another `src/` file failed `pnpm lint`
+  (`no-restricted-properties`). Without `DATABASE_URL`, `pnpm dev` and `pnpm start` both
+  print the three-line error and exit with code 1; with `.env` copied from
+  `.env.example` both serve `/` with `200`.
+- `pnpm build` passes with no variables set; `typecheck`, `lint`, `format:check` and
+  `test` pass.
