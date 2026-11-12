@@ -1,6 +1,6 @@
 # WI-011 — API foundations: errors, validation helpers, request id
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: canonical doc [0004](../canonical/0004-api-conventions.md)
 - Work-spec: [WS-011](../work-specs/WS-011-api-foundations.md)
@@ -18,27 +18,27 @@ behaviour.
 
 ## Acceptance criteria
 
-- [ ] There is one Zod schema for the problem-details error body of doc 0004 section 4,
+- [x] There is one Zod schema for the problem-details error body of doc 0004 section 4,
       and every error produced by the shared code parses with it.
-- [ ] A route handler wrapped with the shared wrapper returns, for a thrown API error,
+- [x] A route handler wrapped with the shared wrapper returns, for a thrown API error,
       the status, `code` and `detail` of that error as `application/problem+json`.
-- [ ] An unexpected exception becomes a `500` with code `internal_error`; the response
+- [x] An unexpected exception becomes a `500` with code `internal_error`; the response
       contains none of the exception's message or stack, and the exception is logged
       server-side together with the request id.
-- [ ] A JSON body that is malformed, or that fails its Zod schema, becomes a `400` with
+- [x] A JSON body that is malformed, or that fails its Zod schema, becomes a `400` with
       code `invalid_request` and one `errors` entry per failing field, with dotted paths.
       Rejected values are never echoed back.
-- [ ] A body-carrying request whose content type is not JSON becomes a `415`.
-- [ ] Query strings are validated the same way as bodies.
-- [ ] Every response from a wrapped handler, success or error, has an `X-Request-Id`
+- [x] A body-carrying request whose content type is not JSON becomes a `415`.
+- [x] Query strings are validated the same way as bodies.
+- [x] Every response from a wrapped handler, success or error, has an `X-Request-Id`
       header and `Cache-Control: no-store`; error bodies repeat the id as `requestId`.
-- [ ] A request to an unknown path under `/api/` returns the `404` problem body, not HTML.
-- [ ] Endpoint contracts can describe request bodies, query and path parameters, and
+- [x] A request to an unknown path under `/api/` returns the `404` problem body, not HTML.
+- [x] Endpoint contracts can describe request bodies, query and path parameters, and
       error responses; the generated OpenAPI document shows error responses as
       `application/problem+json` and adds `401` and `403` to every non-public operation.
-- [ ] `docs/api/openapi.json` is regenerated; the health and OpenAPI endpoints are
+- [x] `docs/api/openapi.json` is regenerated; the health and OpenAPI endpoints are
       unchanged in behaviour.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

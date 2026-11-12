@@ -1,6 +1,6 @@
 # WS-011 — API foundations: errors, validation helpers, request id
 
-- Status: Approved (by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-011](../work-items/WI-011-api-foundations.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4 and 7;
   `AGENTS.md` sections 3 and 6
@@ -143,6 +143,38 @@ of an endpoint.
 
 All of these are unit tests because nothing here uses the database; the first integration
 tests of these helpers arrive with the first real endpoint in WI-015.
+
+## Deviations from the approved spec
+
+1. **`ResponseContract` is a union**, not one interface with an extra flag: a response is
+   either `{ description, schema }` or `{ description, problem: true }`. A problem response
+   therefore cannot also name a schema, which the flag alone would have allowed.
+2. **One extra constructor**, `internalError()`, used by the wrapper for unexpected
+   exceptions so that the `500` body is built the same way as every other error.
+3. **The catch-all also answers `PUT` and `HEAD`**, in addition to the methods named in
+   test 13, so that no method on an unknown path falls through to the HTML page.
+4. **Unknown field names are reported, their values are not.** While making test 10 pass
+   I corrected the test itself: its first version used the marker string as a field
+   _name_, which contradicts test 9 (an unknown field is reported by name). The marker is
+   now only ever a value.
+5. **`src/lib/schemas/problem.ts` also exports `fieldErrorSchema` and
+   `PROBLEM_CONTENT_TYPE`**, shared by the wrapper, the OpenAPI generator and the tests.
+
+## Implementation record
+
+- Red: four new test files failed on missing modules; four new OpenAPI cases and the
+  catch-all exemption case failed on behaviour.
+- Green: 118 tests pass (108 unit, 10 integration), up from 57 unit tests. Playwright:
+  12 pass, including the new unknown-path test against the production build.
+- `docs/api/openapi.json` was regenerated and is byte-identical: both existing endpoints
+  are public and nothing references the `Problem` component yet.
+- Next.js 16 route handler signature and catch-all matching were taken from
+  `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route.md` and
+  `dynamic-routes.md`. The catch-all coexists with the existing routes: health and the
+  OpenAPI document are served by their own handlers, as the unchanged E2E tests show.
+- `typecheck`, `lint`, `format:check`, `test`, `test:e2e` (which builds) pass locally.
+  Locally the database was PostgreSQL 16, because the sandbox used has no Docker; CI
+  runs the same gate against the PostgreSQL 18 of `compose.yaml`.
 
 ## Risks and open questions
 
