@@ -1,6 +1,6 @@
 # 0004 — API conventions
 
-- Status: **Proposed** (2026-11-12), awaiting owner approval
+- Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
 - Relates to: [0001](0001-ai-qa-agents-and-triage.md) (authentication, bug report contract),
@@ -197,12 +197,10 @@ commits. The breaking-change rule applies from that release on.
 - CORS for third-party browser apps.
 - A general idempotency-key header.
 
-## 10. Open questions
+## 10. Resolved questions
 
-1. **Identifier format.** This doc chooses plain UUIDs. The examples in doc 0002 show
-   prefixed ids (`"evt_..."`, `"acc_..."`) and a numeric task id (`"42"`). I read those as
-   illustrations, not decisions. **Owner: confirm plain UUIDs**, and I will align the
-   examples in doc 0002 when this doc is approved.
-2. **Strict requests.** Rejecting unknown fields is stricter than most APIs. It catches
-   agent bugs early, at the cost that a client written for a newer Opanel fails against an
-   older install when it sends a field that install does not know. **Owner: keep strict?**
+Decided with the owner on 2026-11-12:
+
+1. **Identifier format:** plain UUIDs. The examples in doc 0002, which showed prefixed and
+   numeric ids, were illustrations and have been aligned with this doc.
+2. **Strict requests:** unknown fields and query parameters are rejected.

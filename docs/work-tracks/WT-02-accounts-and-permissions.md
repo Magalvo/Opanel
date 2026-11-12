@@ -1,9 +1,9 @@
 # WT-02 — Accounts, human sign-in, roles and the permission layer
 
-- Status: Proposed (awaiting owner approval)
+- Status: In progress (approved by the owner on 2026-11-12)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3, 4),
   [0003](../canonical/0003-task-management.md) (section 3),
-  [0004](../canonical/0004-api-conventions.md) (proposed)
+  [0004](../canonical/0004-api-conventions.md)
 
 ## Goal
 
@@ -39,11 +39,10 @@ in, change their role and deactivate them, and each of those actions is in the a
 - Enforcement of the board permissions in doc 0003 section 3. They are defined in the
   catalogue here and enforced by the work-track that builds each feature.
 
-## Design decisions proposed by this track
+## Design decisions
 
 These are choices the canonical docs leave open. Each is detailed in the work-spec of the
-item that implements it; they are listed here so the owner can redirect the track before
-any spec is written.
+item that implements it. The owner approved all of them on 2026-11-12.
 
 1. **Better Auth is used server-side only.** Opanel defines its own endpoints under
    `/api/v1/auth/...` with Zod schemas, which call Better Auth's server API. Better Auth's
@@ -80,19 +79,19 @@ any spec is written.
 
 Each item leaves the repository green and is one branch/PR.
 
-| Item                                              | Title                                                                        | Status   | Depends on     |
-| ------------------------------------------------- | ---------------------------------------------------------------------------- | -------- | -------------- |
-| [WI-011](../work-items/WI-011-api-foundations.md) | API foundations: problem-details errors, validation helpers, request id      | Proposed | doc 0004       |
-| WI-012                                            | Permission catalogue, human roles and the `Actor` type (pure logic)          | Draft    | none           |
-| WI-013                                            | Accounts, credentials and sessions schema; Better Auth installed; auth env   | Draft    | WI-012         |
-| WI-014                                            | Audit log table and writer                                                   | Draft    | WI-013         |
-| WI-015                                            | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Draft    | WI-011, WI-014 |
-| WI-016                                            | First-run setup: create the first Admin (API and page)                       | Draft    | WI-015         |
-| WI-017                                            | Sign-in page, protected app shell, account menu with sign-out                | Draft    | WI-015         |
-| WI-018                                            | Account management API: list, invite, change role, deactivate, reactivate    | Draft    | WI-015         |
-| WI-019                                            | Accepting an invitation or reset link: set a password (API and page)         | Draft    | WI-018         |
-| WI-020                                            | Admin "People" page                                                          | Draft    | WI-017, WI-018 |
-| WI-021                                            | Own profile: change name and password                                        | Draft    | WI-017         |
+| Item                                              | Title                                                                        | Status      | Depends on     |
+| ------------------------------------------------- | ---------------------------------------------------------------------------- | ----------- | -------------- |
+| [WI-011](../work-items/WI-011-api-foundations.md) | API foundations: problem-details errors, validation helpers, request id      | In progress | doc 0004       |
+| WI-012                                            | Permission catalogue, human roles and the `Actor` type (pure logic)          | Draft       | none           |
+| WI-013                                            | Accounts, credentials and sessions schema; Better Auth installed; auth env   | Draft       | WI-012         |
+| WI-014                                            | Audit log table and writer                                                   | Draft       | WI-013         |
+| WI-015                                            | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Draft       | WI-011, WI-014 |
+| WI-016                                            | First-run setup: create the first Admin (API and page)                       | Draft       | WI-015         |
+| WI-017                                            | Sign-in page, protected app shell, account menu with sign-out                | Draft       | WI-015         |
+| WI-018                                            | Account management API: list, invite, change role, deactivate, reactivate    | Draft       | WI-015         |
+| WI-019                                            | Accepting an invitation or reset link: set a password (API and page)         | Draft       | WI-018         |
+| WI-020                                            | Admin "People" page                                                          | Draft       | WI-017, WI-018 |
+| WI-021                                            | Own profile: change name and password                                        | Draft       | WI-017         |
 
 As in WT-01, each item gets its work-item and work-spec files just before it is started.
 
@@ -122,5 +121,5 @@ As in WT-01, each item gets its work-item and work-spec files just before it is 
    unique index, plus a database check that human accounts always have one. Better Auth
    only ever creates and reads human rows. To be confirmed against the installed version
    in WS-013.
-3. **Owner decisions needed** on design decisions 1, 2, 4, 5 and 6 above. The others are
-   defaults that are cheap to change later.
+3. **Resolved:** the owner approved all ten design decisions above as proposed on
+   2026-11-12.

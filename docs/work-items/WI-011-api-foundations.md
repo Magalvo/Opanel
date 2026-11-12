@@ -1,8 +1,8 @@
 # WI-011 — API foundations: errors, validation helpers, request id
 
-- Status: Proposed (awaiting owner approval)
+- Status: In progress (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
-- Depends on: canonical doc [0004](../canonical/0004-api-conventions.md) being approved
+- Depends on: canonical doc [0004](../canonical/0004-api-conventions.md)
 - Work-spec: [WS-011](../work-specs/WS-011-api-foundations.md)
 
 ## Outcome

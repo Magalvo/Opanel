@@ -1,6 +1,6 @@
 # WS-011 — API foundations: errors, validation helpers, request id
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12)
 - Work-item: [WI-011](../work-items/WI-011-api-foundations.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4 and 7;
   `AGENTS.md` sections 3 and 6
@@ -88,7 +88,7 @@ owner's explicit approval.
 | `src/lib/openapi/routes.test.ts`         | modify: the catch-all is exempt from "must be documented" |
 | `tests/e2e/api.spec.ts`                  | modify: unknown path returns the `404` problem body       |
 | `docs/api/openapi.json`                  | regenerate                                                |
-| `AGENTS.md`                              | modify: add `src/server/http/` to section 3 (if approved) |
+| `AGENTS.md`                              | modify: add `src/server/http/` to section 3               |
 | `docs/canonical/0004-api-conventions.md` | no change expected                                        |
 
 No new dependencies.
@@ -146,13 +146,11 @@ tests of these helpers arrive with the first real endpoint in WI-015.
 
 ## Risks and open questions
 
-1. **`AGENTS.md` layout change** (`src/server/http/`), described above. **Owner: approve?**
-   The alternative that needs no change is `src/lib/http/`, at the cost of server-only
-   code sitting in a folder the UI also imports from.
+1. **Resolved:** the owner approved adding `src/server/http/` to `AGENTS.md` section 3
+   on 2026-11-12.
 2. **Route handler signature.** How Next.js 16 passes path parameters to a handler, and
    how a catch-all interacts with its own not-found handling, will be taken from the
    documentation of the installed version (`node_modules/next/dist/docs/`, hard rule 13)
    before the wrapper's types are fixed. If the catch-all cannot coexist cleanly with the
    existing routes, I will stop and report rather than work around it.
-3. **This spec depends on doc 0004.** If the owner changes the error format or the status
-   codes there, this spec is revised before it can be approved.
+3. **Resolved:** doc 0004 was approved unchanged on 2026-11-12.

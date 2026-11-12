@@ -12,14 +12,14 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 | [0001](canonical/0001-ai-qa-agents-and-triage.md) | AI QA agents: identity, authentication and automated triage | Approved |
 | [0002](canonical/0002-realtime-sync.md)           | Real-time board sync                                        | Approved |
 | [0003](canonical/0003-task-management.md)         | Task management: roles, tickets, boards and planning        | Approved |
-| [0004](canonical/0004-api-conventions.md)         | API conventions                                             | Proposed |
+| [0004](canonical/0004-api-conventions.md)         | API conventions                                             | Approved |
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                  | Title                                                   | Status   |
-| ------------------------------------------------------ | ------------------------------------------------------- | -------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Proposed |
+| Track                                                  | Title                                                   | Status      |
+| ------------------------------------------------------ | ------------------------------------------------------- | ----------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done        |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | In progress |
 
 Planned next, not yet drafted:
 
@@ -48,7 +48,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-008](work-items/WI-008-ui-foundation.md)    | UI foundation: Tailwind, shadcn/ui and the app shell    | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)    | Done        |
 | [WI-009](work-items/WI-009-ci.md)               | Continuous integration                                  | Done        | [WS-009](work-specs/WS-009-ci.md)               | Done        |
 | [WI-010](work-items/WI-010-contributor-docs.md) | Contributor docs: README and CONTRIBUTING               | Done        | [WS-010](work-specs/WS-010-contributor-docs.md) | Done        |
-| [WI-011](work-items/WI-011-api-foundations.md)  | API foundations: errors, validation helpers, request id | Proposed    | [WS-011](work-specs/WS-011-api-foundations.md)  | Proposed    |
+| [WI-011](work-items/WI-011-api-foundations.md)  | API foundations: errors, validation helpers, request id | In progress | [WS-011](work-specs/WS-011-api-foundations.md)  | Approved    |
 
 WI-012 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
