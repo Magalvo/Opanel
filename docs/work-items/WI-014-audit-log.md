@@ -1,6 +1,6 @@
 # WI-014 — Audit log table and writer
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-013](WI-013-accounts-and-better-auth.md)
 - Work-spec: [WS-014](../work-specs/WS-014-audit-log.md)

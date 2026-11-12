@@ -1,6 +1,6 @@
 # WS-014 — Audit log table and writer
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-014](../work-items/WI-014-audit-log.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 4 and 7;
   [0003](../canonical/0003-task-management.md) section 9;

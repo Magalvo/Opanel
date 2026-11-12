@@ -84,7 +84,7 @@ Each item leaves the repository green and is one branch/PR.
 | [WI-011](../work-items/WI-011-api-foundations.md)          | API foundations: problem-details errors, validation helpers, request id      | Done     | doc 0004       |
 | [WI-012](../work-items/WI-012-permissions-and-actor.md)    | Permission catalogue, human roles and the `Actor` type (pure logic)          | Done     | none           |
 | [WI-013](../work-items/WI-013-accounts-and-better-auth.md) | Accounts, credentials and sessions schema; Better Auth installed; auth env   | Done     | WI-012         |
-| [WI-014](../work-items/WI-014-audit-log.md)                | Audit log table and writer                                                   | Proposed | WI-013         |
+| [WI-014](../work-items/WI-014-audit-log.md)                | Audit log table and writer                                                   | Approved | WI-013         |
 | WI-015                                                     | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Draft    | WI-011, WI-014 |
 | WI-016                                                     | First-run setup: create the first Admin (API and page)                       | Draft    | WI-015         |
 | WI-017                                                     | Sign-in page, protected app shell, account menu with sign-out                | Draft    | WI-015         |
