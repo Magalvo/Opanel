@@ -33,7 +33,7 @@ Each item leaves the repository green and is one branch/PR.
 | Item | Title | Status | Depends on |
 | ---- | ----- | ------ | ---------- |
 | [WI-001](../work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Done | none |
-| WI-002 | ESLint + Prettier with `lint` and `format:check` scripts | Draft | WI-001 |
+| [WI-002](../work-items/WI-002-lint-and-format.md) | ESLint + Prettier with `lint` and `format:check` scripts | Proposed | WI-001 |
 | WI-003 | Validated environment variables (Zod) | Draft | WI-001 |
 | WI-004 | PostgreSQL in Docker Compose, Drizzle client, migrations, integration test harness | Draft | WI-003 |
 | WI-005 | `GET /api/v1/health` vertical slice (route handler → service → DB) | Draft | WI-004 |

@@ -31,8 +31,9 @@ Planned next, not yet drafted:
 | Item | Title | Item status | Spec | Spec status |
 | ---- | ----- | ----------- | ---- | ----------- |
 | [WI-001](work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Done | [WS-001](work-specs/WS-001-app-skeleton.md) | Done |
+| [WI-002](work-items/WI-002-lint-and-format.md) | ESLint and Prettier | Proposed | [WS-002](work-specs/WS-002-lint-and-format.md) | Proposed |
 
-WI-002 to WI-010 are outlined in WT-01 and get their own files when they are started.
+WI-003 to WI-010 are outlined in WT-01 and get their own files when they are started.
 
 ## Follow-ups
 
