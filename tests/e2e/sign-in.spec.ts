@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { E2E_BASE_URL } from "./environment";
 import { test as signedIn } from "./fixtures";
 import { ageSessions, seedAccount, sessionExpiry } from "./seed";
 
@@ -70,8 +71,9 @@ signedIn.describe("the account menu", () => {
       await page.getByRole("menuitem", { name: "Sign out" }).click();
       await expect(page).toHaveURL(/\/sign-in/);
 
+      // The sign-out replaced the app's history entry, so going back leaves the app behind.
       await page.goBack();
-      await expect(page).toHaveURL(/\/sign-in/);
+      await expect(page).not.toHaveURL(`${E2E_BASE_URL}/`);
       await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
     },
   );

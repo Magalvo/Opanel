@@ -11,20 +11,20 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
-  account: async ({ browserName: _browserName }, use) => {
+  account: async ({ browserName: _browserName }, provide) => {
     const email = `e2e-${crypto.randomUUID()}@example.com`;
     await seedAccount({ email, password: PASSWORD, role: "member" });
-    await use({ email, password: PASSWORD });
+    await provide({ email, password: PASSWORD });
   },
 
   // The page's own request context shares its cookie jar, so the browser is signed in.
-  page: async ({ page, account }, use) => {
+  page: async ({ page, account }, provide) => {
     const response = await page.request.post("/api/v1/auth/sign-in", {
       headers: { Origin: E2E_BASE_URL },
       data: account,
     });
     expect(response.status()).toBe(200);
-    await use(page);
+    await provide(page);
   },
 });
 

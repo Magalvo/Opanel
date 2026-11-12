@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/schemas/auth";
+import { COOKIE_PREFIX } from "@/lib/session-cookie";
 import { getDb } from "@/server/db/client";
 import { accounts, credentials, sessions, verification } from "@/server/db/schema";
 import { type Env, getEnv } from "@/server/env";
@@ -26,7 +27,7 @@ export function createAuth(env: AuthEnv) {
     }),
     advanced: {
       database: { generateId: "uuid" },
-      cookiePrefix: "opanel",
+      cookiePrefix: COOKIE_PREFIX,
       // `Secure` whenever the app is served over https (canonical doc 0001 section 4).
       useSecureCookies: new URL(env.APP_URL).protocol === "https:",
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", path: "/" },

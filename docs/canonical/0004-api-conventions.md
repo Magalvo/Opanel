@@ -176,6 +176,15 @@ may be returned as a full `items` array with `nextCursor: null`; the work-spec s
   and other server-side clients are unaffected.
 - Every non-public operation documents `401` and `403` in the OpenAPI document
   automatically; work-specs do not repeat them.
+- **Pages** have three layers (WS-017). The proxy (`src/proxy.ts`) redirects a page request
+  with no session cookie to the sign-in page; it reads the cookie's presence only and is not
+  a security boundary. The `(app)` layout verifies the session with the database
+  (`requireAccount()`). Data is protected where it is read: it reaches the browser through
+  `/api/v1`, which authenticates every request. A server component that reads data itself
+  must call `requireAccount()` and a permission check, because a layout is not re-rendered
+  on every navigation.
+- An authenticated API route returns the `Set-Cookie` headers that `authenticate` produced
+  (it extends a session that is being used), so that using the app keeps the session alive.
 
 ## 8. Versioning
 

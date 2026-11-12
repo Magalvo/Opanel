@@ -1,6 +1,6 @@
 # WS-017 — Sign-in page, protected app shell, account menu with sign-out
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 4, 8;
@@ -154,3 +154,37 @@ Technical, settled by the tests:
    backdates the session row in the end-to-end database before loading the page; if that
    proves unreliable it is replaced by an integration test of the same `me` route, which
    WS-015 already covers, and I say so in the implementation record.
+
+## Deviations from the approved spec
+
+1. **After signing in, the page does a full load** (`window.location.assign`) instead of
+   `router.push` and `router.refresh`. With `typedRoutes`, `router.push` rejects a dynamic
+   path unless it is cast to `Route`, and that cast is "unnecessary" to the linter wherever
+   the route types are not generated (as in CI) and necessary where they are, so no code
+   passed in both states. A full load is also the right thing here: the server must render
+   with the cookie that was just set. `safeNextPath` still guarantees the path.
+2. **The proxy also skips `/api/`, `/sign-in` and `/setup` in its own code**, not only in the
+   matcher, which now excludes just static assets. Both the function and the matcher are
+   tested.
+3. **`src/lib/session-cookie.ts`** (not in the file list) holds the cookie prefix and the
+   two cookie names, so the proxy and Better Auth's configuration cannot drift apart.
+4. **The back-button test** first expected `/sign-in` and was wrong: `router.replace` takes
+   the app's entry out of the history, so going back leaves the app behind, which is the
+   intended behaviour. The test now asserts that the app is not shown.
+5. **Test 12 (keep-alive) is deterministic after all:** the end-to-end test ages the
+   account's sessions by 5 days in the database and checks that loading the app moves the
+   expiry forward, so no fallback was needed.
+6. **`next typegen`** was run locally once, because the generated route types were stale.
+   `pnpm typecheck` and `pnpm lint` were checked both with and without generated types.
+7. The existing `home` and `shell` end-to-end specs now import `test` from
+   `tests/e2e/fixtures.ts`, which signs a seeded account in.
+
+## Implementation record
+
+- Red: component, proxy, path, session, page and layout tests failed on missing modules and
+  behaviour (committed before any code). The sign-in form test was changed once, before its
+  code, to expect the full load of deviation 1, and was seen failing.
+- Green: 319 Vitest tests (up from 272) and 21 Playwright tests (up from 15) pass, twice in
+  a row. `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

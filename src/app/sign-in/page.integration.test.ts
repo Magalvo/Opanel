@@ -9,9 +9,7 @@ vi.mock("next/headers", () => ({ headers: vi.fn() }));
 const { default: SignInPage } = await import("./page");
 
 function withCookie(cookie: string | undefined): void {
-  vi.mocked(headers).mockResolvedValue(
-    new Headers(cookie === undefined ? {} : { cookie }) as Awaited<ReturnType<typeof headers>>,
-  );
+  vi.mocked(headers).mockResolvedValue(new Headers(cookie === undefined ? {} : { cookie }));
 }
 
 function props(next?: string | string[]) {

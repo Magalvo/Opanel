@@ -44,7 +44,7 @@ describe("proxy", () => {
 });
 
 describe("proxy matcher", () => {
-  const matcher = new RegExp(`^${String(config.matcher)}$`);
+  const matcher = new RegExp(`^${config.matcher}$`);
 
   it("skips static assets and the favicon", () => {
     for (const path of ["/_next/static/chunk.js", "/_next/image", "/favicon.ico"]) {

@@ -11,9 +11,7 @@ vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: vi.fn() }));
 const { default: AppLayout } = await import("./layout");
 
 function request(cookie: string | undefined): void {
-  vi.mocked(headers).mockResolvedValue(
-    new Headers(cookie === undefined ? {} : { cookie }) as Awaited<ReturnType<typeof headers>>,
-  );
+  vi.mocked(headers).mockResolvedValue(new Headers(cookie === undefined ? {} : { cookie }));
   vi.mocked(cookies).mockResolvedValue({
     get: () => undefined,
   } as unknown as Awaited<ReturnType<typeof cookies>>);
@@ -34,9 +32,14 @@ describe("the (app) layout", () => {
   it("redirects to /sign-in when there is no valid session", async () => {
     request(undefined);
 
-    await expect(AppLayout({ children: null })).rejects.toMatchObject({
-      digest: expect.stringContaining("NEXT_REDIRECT;replace;/sign-in;"),
-    });
+    let digest = "";
+    try {
+      await AppLayout({ children: null });
+    } catch (error) {
+      digest = (error as { digest?: string }).digest ?? "";
+    }
+
+    expect(digest).toContain("NEXT_REDIRECT;replace;/sign-in;");
   });
 
   it("renders the shell for a valid session", async () => {

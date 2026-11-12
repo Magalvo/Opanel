@@ -12,9 +12,7 @@ vi.mock("next/headers", () => ({ headers: vi.fn() }));
 const { getSession, requireAccount } = await import("./session");
 
 function withCookie(cookie: string | undefined): void {
-  vi.mocked(headers).mockResolvedValue(
-    new Headers(cookie === undefined ? {} : { cookie }) as Awaited<ReturnType<typeof headers>>,
-  );
+  vi.mocked(headers).mockResolvedValue(new Headers(cookie === undefined ? {} : { cookie }));
 }
 
 async function redirectsToSignIn(promise: Promise<unknown>): Promise<boolean> {

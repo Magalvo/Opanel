@@ -2,10 +2,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const push = vi.fn();
-const refresh = vi.fn();
-
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
+// After signing in the whole page is loaded again, so the server renders with the new cookie.
+const assign = vi.fn();
 
 const { SignInForm } = await import("./sign-in-form");
 
@@ -35,21 +33,20 @@ async function submit(next = "/") {
 
 describe("SignInForm", () => {
   beforeEach(() => {
-    push.mockReset();
-    refresh.mockReset();
+    assign.mockReset();
+    Object.defineProperty(window, "location", { value: { assign }, writable: true });
     fetchMock.mockReset();
     vi.stubGlobal("fetch", fetchMock);
   });
 
-  it("posts the email and password, then goes to the return path and refreshes", async () => {
+  it("posts the email and password, then loads the return path", async () => {
     fetchMock.mockResolvedValue(Response.json({ id: "x" }, { status: 200 }));
 
     await submit("/projects/1");
 
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith("/projects/1");
+      expect(assign).toHaveBeenCalledWith("/projects/1");
     });
-    expect(refresh).toHaveBeenCalled();
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("/api/v1/auth/sign-in");
     expect(init?.method).toBe("POST");
@@ -65,7 +62,7 @@ describe("SignInForm", () => {
     await submit();
 
     expect(await screen.findByText("Invalid email or password.")).toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it("says how long to wait on a 429", async () => {
