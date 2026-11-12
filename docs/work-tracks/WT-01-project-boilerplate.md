@@ -1,6 +1,6 @@
 # WT-01 — Project boilerplate
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-12)
 - Canonical docs: `AGENTS.md` (sections 2, 3, 5), [0001](../canonical/0001-ai-qa-agents-and-triage.md), [0002](../canonical/0002-realtime-sync.md)
 
 ## Goal
@@ -32,7 +32,7 @@ Each item leaves the repository green and is one branch/PR.
 
 | Item | Title | Status | Depends on |
 | ---- | ----- | ------ | ---------- |
-| [WI-001](../work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Proposed | none |
+| [WI-001](../work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Done | none |
 | WI-002 | ESLint + Prettier with `lint` and `format:check` scripts | Draft | WI-001 |
 | WI-003 | Validated environment variables (Zod) | Draft | WI-001 |
 | WI-004 | PostgreSQL in Docker Compose, Drizzle client, migrations, integration test harness | Draft | WI-003 |

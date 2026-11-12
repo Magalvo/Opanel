@@ -1,6 +1,6 @@
 # WI-001 — App skeleton: Next.js, strict TypeScript, Vitest
 
-- Status: Proposed
+- Status: Done
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: none
 - Work-spec: [WS-001](../work-specs/WS-001-app-skeleton.md)
@@ -16,16 +16,16 @@ with a failing test.
 
 ## Acceptance criteria
 
-- [ ] `pnpm install` succeeds from a clean clone with a committed lockfile.
-- [ ] `pnpm dev` serves a home page at `/` showing the heading "Opanel".
-- [ ] `pnpm build` completes without errors.
-- [ ] `pnpm typecheck` passes with `strict` and the extra strictness flags in WS-001.
-- [ ] `pnpm test` runs Vitest and passes, including a test asserting the home page
+- [x] `pnpm install` succeeds from a clean clone with a committed lockfile.
+- [x] `pnpm dev` serves a home page at `/` showing the heading "Opanel".
+- [x] `pnpm build` completes without errors.
+- [x] `pnpm typecheck` passes with `strict` and the extra strictness flags in WS-001.
+- [x] `pnpm test` runs Vitest and passes, including a test asserting the home page
       renders the "Opanel" heading.
-- [ ] A deliberately introduced type error makes `pnpm typecheck` fail (verified once by
+- [x] A deliberately introduced type error makes `pnpm typecheck` fail (verified once by
       hand, not committed).
-- [ ] Node and pnpm versions are pinned (`engines`, `packageManager`, `.nvmrc`).
-- [ ] `.gitignore` excludes `node_modules`, `.next`, env files and test output.
+- [x] Node and pnpm versions are pinned (`engines`, `packageManager`, `.nvmrc`).
+- [x] `.gitignore` excludes `node_modules`, `.next`, env files and test output.
 
 ## Notes
 

@@ -1,6 +1,6 @@
 # WS-001 — App skeleton: Next.js, strict TypeScript, Vitest
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-001](../work-items/WI-001-app-skeleton.md)
 - Canonical docs: `AGENTS.md` sections 2, 3, 5
 
@@ -104,17 +104,34 @@ None.
 
 Automated browser verification of the running app arrives with Playwright in WI-007.
 
-## Risks and open questions
+## Resolved questions
 
-1. **TypeScript 7.** 7.0 is a new major (the native compiler). Next.js 16.4,
-   `@vitejs/plugin-react` and, in WI-002, `typescript-eslint` must all support it. If any
-   of them does not, fall back to the latest TypeScript 6.x or 5.x and record the change
-   in this spec. **Owner: is that fallback acceptable without a new approval round?**
-2. **Node.js 22 vs 24.** 22 is proposed because it is what the current development
-   environment provides and Next.js requires `>=20.9`. Node 24 is the newer LTS line.
-   **Owner: keep 22, or target 24?**
-3. **pnpm 10 vs 12.** 10 is installed in the development environment; 12 is the latest.
-   **Owner: keep 10, or pin 12?**
-4. `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess` are stricter than most
-   projects use and occasionally fight third-party types. They are far cheaper to enable
-   on day one than later, so they are proposed on; they can be relaxed by a spec change.
+Decided with the owner on 2026-11-12:
+
+1. **TypeScript 7:** falling back to 6.x or 5.x without a new approval round is allowed if
+   tooling is incompatible. Not needed so far: Next.js 16.4.6, Vitest 5.1.0 and
+   `@vitejs/plugin-react` 6.3.0 all work with TypeScript 7.0.2. `typescript-eslint`
+   compatibility is still to be confirmed in WI-002.
+2. **Node.js:** 22 now; upgrade to 24 LTS tracked in `docs/README.md` (Follow-ups).
+3. **pnpm:** 10 now; upgrade to 12 tracked in `docs/README.md` (Follow-ups).
+4. `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess` are enabled.
+
+## Deviations from the approved spec
+
+1. **`next.config.ts` has one extra option, `agentRules: false`.** Next.js 16.4 `next dev`
+   appends its own managed block to `AGENTS.md` and re-adds it when removed. `AGENTS.md`
+   is the owner-approved constitution and must not be edited by a tool, so the feature is
+   switched off. The block's advice (this Next.js version differs from what an AI
+   contributor may remember; read the docs shipped in `node_modules/next/dist/docs/`
+   before writing Next.js code) is sound and is proposed to the owner as a hard rule.
+2. **`tsconfig.json` formatting and `include`.** `next build` rewrites the file on first
+   run (expanded arrays, adds `.next/dev/types/**/*.ts` to `include`). The rewritten file
+   is committed so the working tree stays clean.
+
+## Implementation record
+
+- Red: `src/app/page.test.tsx` failed with "Failed to resolve import ./page".
+- Green: `layout.tsx` and `page.tsx` added; 1 test passing.
+- `pnpm typecheck` and `pnpm build` pass, including from a clean checkout state.
+- Manual: an injected type error failed `pnpm typecheck` (TS2322); `pnpm dev` served `/`
+  with `200` and `<h1>Opanel</h1>`.

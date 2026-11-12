@@ -16,7 +16,7 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 | Track | Title | Status |
 | ----- | ----- | ------ |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md) | Project boilerplate | Proposed |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md) | Project boilerplate | In progress |
 
 Planned next, not yet drafted:
 
@@ -30,6 +30,13 @@ Planned next, not yet drafted:
 
 | Item | Title | Item status | Spec | Spec status |
 | ---- | ----- | ----------- | ---- | ----------- |
-| [WI-001](work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Proposed | [WS-001](work-specs/WS-001-app-skeleton.md) | Proposed |
+| [WI-001](work-items/WI-001-app-skeleton.md) | App skeleton: Next.js, strict TypeScript, Vitest | Done | [WS-001](work-specs/WS-001-app-skeleton.md) | Done |
 
 WI-002 to WI-010 are outlined in WT-01 and get their own files when they are started.
+
+## Follow-ups
+
+Deferred decisions that need a work-item before they are acted on.
+
+- Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
+- Upgrade pnpm from 10 to 12 (`packageManager`, CI).
