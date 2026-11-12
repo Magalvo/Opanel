@@ -1,6 +1,6 @@
 # WI-015 — Sign-in, sign-out, `GET /api/v1/me`, request authentication, sign-in limiter
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-011](WI-011-api-foundations.md), [WI-014](WI-014-audit-log.md)
 - Work-spec: [WS-015](../work-specs/WS-015-sign-in-and-authentication.md)

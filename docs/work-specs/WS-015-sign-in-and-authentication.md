@@ -1,6 +1,6 @@
 # WS-015 — Sign-in, sign-out, `GET /api/v1/me`, request authentication, sign-in limiter
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-015](../work-items/WI-015-sign-in-and-authentication.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4;
   [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;

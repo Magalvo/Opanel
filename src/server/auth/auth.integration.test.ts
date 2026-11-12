@@ -2,9 +2,10 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { getDb } from "@/server/db/client";
+import { getEnv } from "@/server/env";
 import { accounts, credentials, sessions } from "@/server/db/schema";
 
-import { getAuth } from "./auth";
+import { createAuth, getAuth } from "./auth";
 import { hashPassword } from "./password";
 
 const password = "correct horse battery staple";
@@ -86,5 +87,19 @@ describe("Better Auth on Opanel's tables", () => {
     ).rejects.toThrow();
 
     expect(await getDb().select().from(accounts)).toHaveLength(0);
+  });
+
+  it("marks the session cookie Secure when the app's URL is https, and not over http", async () => {
+    await createHuman();
+    const body = { email: "ada@example.com", password };
+    const secure = createAuth({ ...getEnv(), APP_URL: "https://opanel.example" });
+    const plain = createAuth({ ...getEnv(), APP_URL: "http://localhost:3000" });
+
+    const https = await secure.api.signInEmail({ body, returnHeaders: true });
+    const http = await plain.api.signInEmail({ body, returnHeaders: true });
+
+    expect(https.headers.getSetCookie().join(";")).toMatch(/;\s*Secure/i);
+    expect(https.headers.getSetCookie().join(";")).toMatch(/HttpOnly/i);
+    expect(http.headers.getSetCookie().join(";")).not.toMatch(/;\s*Secure/i);
   });
 });
