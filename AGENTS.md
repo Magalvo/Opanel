@@ -142,8 +142,9 @@ which of them exist so far.
    boundary.
 5. Every schema change is a Drizzle migration committed with the code. Never edit an
    applied migration.
-6. Every API endpoint enforces authentication and an explicit permission check. Agents
-   get no implicit permissions.
+6. Every API endpoint enforces authentication and an explicit permission check, except
+   endpoints that a work-spec explicitly declares public. Public endpoints must not expose
+   data or internal detail. Agents get no implicit permissions.
 7. Secrets never enter the repo, logs, or API responses. API tokens are stored hashed and
    shown exactly once.
 8. Every state-changing action records the acting account (human or agent) in the audit log.

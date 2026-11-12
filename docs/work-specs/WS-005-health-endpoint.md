@@ -1,6 +1,6 @@
 # WS-005 — Health endpoint: the first vertical slice
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-005](../work-items/WI-005-health-endpoint.md)
 - Canonical docs: `AGENTS.md` sections 3 and 6
 
@@ -77,6 +77,37 @@ Headers: `Content-Type: application/json`, `Cache-Control: no-store`.
 | 9   | gate         | `typecheck`, `lint`, `format:check`, `test`, `build`                                                                                      | gate                    |
 
 An automated browser-level check of this endpoint arrives with Playwright in WI-007.
+
+## Resolved questions
+
+Decided with the owner on 2026-11-12:
+
+1. `AGENTS.md` hard rule 6 now allows endpoints that a work-spec explicitly declares
+   public. `GET /api/v1/health` is declared public by this spec.
+2. A canonical doc "API conventions" (error format, pagination, versioning) will be
+   written at the start of WT-02.
+
+## Deviations from the approved spec
+
+1. **The timeout test is a unit test, not an integration test** (plan row 4). It uses a
+   stub whose query never answers, which is deterministic; making a real PostgreSQL query
+   outlast a timeout would need `pg_sleep` and slow the suite. The unreachable-database
+   case (row 3) remains a real integration test.
+2. **One extra test file**, `src/server/services/health.test.ts`, holds that test and two
+   more unit cases for the service.
+3. `checkHealth` accepts an optional `{ timeoutMs, logError }` argument so tests can use a
+   short timeout and capture the log line instead of printing it.
+
+## Implementation record
+
+- Red: five new test files failed on missing modules.
+- Green: 42 tests pass (32 unit, 10 integration).
+- `pnpm build` lists `/api/v1/health` as dynamic (`ƒ`).
+- Manual, against `pnpm start`: database up gives `200`
+  `{"status":"ok","database":"up"}` with `Cache-Control: no-store`; database stopped gives
+  `503` `{"status":"degraded","database":"down"}` in under 10 ms; after restarting the
+  database the endpoint returns `200` again without restarting the app.
+- `typecheck`, `lint`, `format:check`, `test`, `build` pass.
 
 ## Risks and open questions
 

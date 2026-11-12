@@ -1,6 +1,6 @@
 # WI-005 — Health endpoint: the first vertical slice
 
-- Status: Proposed
+- Status: Done
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: WI-004
 - Work-spec: [WS-005](../work-specs/WS-005-health-endpoint.md)
@@ -15,18 +15,18 @@ checks will call.
 
 ## Acceptance criteria
 
-- [ ] `GET /api/v1/health` returns `200` and `{ "status": "ok", "database": "up" }` when
+- [x] `GET /api/v1/health` returns `200` and `{ "status": "ok", "database": "up" }` when
       the database answers.
-- [ ] It returns `503` and `{ "status": "degraded", "database": "down" }` when the
+- [x] It returns `503` and `{ "status": "degraded", "database": "down" }` when the
       database does not answer within the timeout, and never hangs.
-- [ ] The response body is defined by a Zod schema in `src/lib/schemas`, and the handler's
+- [x] The response body is defined by a Zod schema in `src/lib/schemas`, and the handler's
       output is validated against it in tests.
-- [ ] The response is never cached and is computed per request (not at build time).
-- [ ] The response exposes nothing beyond those two fields: no versions, hostnames or
+- [x] The response is never cached and is computed per request (not at build time).
+- [x] The response exposes nothing beyond those two fields: no versions, hostnames or
       error text.
-- [ ] The route handler contains no database access; the service contains no HTTP
+- [x] The route handler contains no database access; the service contains no HTTP
       concerns.
-- [ ] The full existing quality gate passes.
+- [x] The full existing quality gate passes.
 
 ## Notes
 
