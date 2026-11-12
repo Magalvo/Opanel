@@ -49,8 +49,8 @@ Three pillars:
 | CI                     | GitHub Actions                                                     |
 
 Exact versions are pinned in `package.json` by the work-spec that adds each dependency, not
-here. Adding, removing or
-swapping a dependency in this table requires a canonical doc change first.
+here. Adding, removing or swapping a dependency in this table requires a canonical doc
+change first.
 
 ## 3. Directory conventions
 

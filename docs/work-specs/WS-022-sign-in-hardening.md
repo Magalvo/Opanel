@@ -1,6 +1,6 @@
 # WS-022 — Sign-in hardening: bounded audit and limiter growth
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12)
 - Work-item: [WI-022](../work-items/WI-022-sign-in-hardening.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4,
   [0004](../canonical/0004-api-conventions.md) section 4; WT-02 design decision 10
@@ -91,17 +91,13 @@ None. `POST /api/v1/auth/sign-in` and `POST /api/v1/setup` answer exactly as bef
 The audit rule is passed to `signIn` as an optional argument with the production default,
 the same way `checkHealth` takes its timeout, so test 4 does not need 200 requests.
 
-## Risks and open questions
+## Resolved questions
 
-1. **Should there also be a cap on all sign-in attempts?** It would bound the CPU spent on
-   password hashing when someone floods the endpoint with many emails and no client
-   address is known. Its cost: anyone can then lock every user out of sign-in for the
-   length of the window. I recommend **no**: the supported answer is to run behind a
-   reverse proxy and set `CLIENT_IP_HEADER`, which this item now warns about.
-   **Owner: agree?**
-2. **Budget size.** 200 failure rows per 15 minutes is a judgement: far above what a real
-   team produces by mistyping, small enough that a week of sustained abuse stays near
-   130,000 rows. **Owner: acceptable?**
-3. **A suppressed failure leaves no trace of its own.** The row marked `moreSuppressed`
-   says that it happened, not how often. Counting them would need a counter that is not in
-   the audit log; I propose not to add one in v1.
+The owner approved this spec as proposed on 2026-11-12:
+
+1. **No cap on all sign-in attempts.** It would let anyone lock every user out. The
+   supported protection is a reverse proxy and `CLIENT_IP_HEADER`, which this item warns
+   about at startup.
+2. **Budget:** 200 audited sign-in failures per 15 minutes.
+3. **Suppressed failures are not counted.** The row marked `moreSuppressed` records that
+   suppression happened, not how often.

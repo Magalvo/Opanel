@@ -1,6 +1,6 @@
 # WI-022 — Sign-in hardening: bounded audit and limiter growth
 
-- Status: Proposed (awaiting owner approval)
+- Status: In progress (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: WI-015
 - Work-spec: [WS-022](../work-specs/WS-022-sign-in-hardening.md)
