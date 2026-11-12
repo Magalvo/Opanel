@@ -24,14 +24,16 @@ function rejects(method: string, headers: Record<string, string>, app = appUrl):
 describe("assertSameOrigin", () => {
   it("lets a state-changing request from the app's own origin through", () => {
     for (const method of ["POST", "PATCH", "DELETE", "PUT"]) {
-      expect(() => assertSameOrigin(request(method, { Origin: appUrl }), appUrl)).not.toThrow();
+      expect(() => {
+        assertSameOrigin(request(method, { Origin: appUrl }), appUrl);
+      }).not.toThrow();
     }
   });
 
   it("compares origins only, so a path or trailing slash in APP_URL does not matter", () => {
-    expect(() =>
-      assertSameOrigin(request("POST", { Origin: appUrl }), "https://opanel.example/"),
-    ).not.toThrow();
+    expect(() => {
+      assertSameOrigin(request("POST", { Origin: appUrl }), "https://opanel.example/");
+    }).not.toThrow();
   });
 
   it("rejects another origin, a look-alike, another scheme or port, null and a missing header", () => {
@@ -44,18 +46,20 @@ describe("assertSameOrigin", () => {
   });
 
   it("does not apply to GET and HEAD", () => {
-    expect(() =>
-      assertSameOrigin(request("GET", { Origin: "https://evil.example" }), appUrl),
-    ).not.toThrow();
-    expect(() => assertSameOrigin(request("HEAD"), appUrl)).not.toThrow();
+    expect(() => {
+      assertSameOrigin(request("GET", { Origin: "https://evil.example" }), appUrl);
+    }).not.toThrow();
+    expect(() => {
+      assertSameOrigin(request("HEAD"), appUrl);
+    }).not.toThrow();
   });
 
   it("does not apply to requests that carry an Authorization header", () => {
-    expect(() =>
+    expect(() => {
       assertSameOrigin(
         request("POST", { Authorization: "Bearer x", Origin: "https://evil.example" }),
         appUrl,
-      ),
-    ).not.toThrow();
+      );
+    }).not.toThrow();
   });
 });

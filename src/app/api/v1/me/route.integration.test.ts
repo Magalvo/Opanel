@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { meResponseSchema } from "@/lib/schemas/auth";
-import { APP_ORIGIN, createTestAccount, signInCookie } from "@/server/auth/testing";
 import { HUMAN_ROLE_PERMISSIONS } from "@/server/auth/roles";
+import { APP_ORIGIN, createTestAccount, signInCookie } from "@/server/auth/testing";
 
 import { GET } from "./route";
 

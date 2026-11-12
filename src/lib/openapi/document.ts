@@ -21,6 +21,9 @@ const CREDENTIAL_RESPONSES: Readonly<Record<number, ResponseContract>> = {
 };
 
 function toResponse(response: ResponseContract): Responses[StatusCode] {
+  if ("noContent" in response) {
+    return { description: response.description };
+  }
   return {
     description: response.description,
     content:

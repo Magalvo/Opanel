@@ -50,7 +50,7 @@ describe("consumeRateLimit", () => {
 });
 
 describe("signInKeys", () => {
-  it("never holds the raw email, ignores its case, and adds the address only when known", async () => {
+  it("never holds the raw email, ignores its case, and adds the address only when known", () => {
     const keys = signInKeys("Ada@Example.com", "203.0.113.7");
     const same = signInKeys("ada@example.com", null);
 

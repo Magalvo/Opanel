@@ -36,9 +36,11 @@ test.describe("sign-in and sign-out", () => {
   test("a wrong password is a 401 problem body, and a foreign Origin is a 403", async ({
     request,
   }) => {
+    // Unique per run: the end-to-end database is not emptied, and the limiter counts per email.
+    const unknownEmail = `nobody-${crypto.randomUUID()}@example.com`;
     const wrong = await request.post("/api/v1/auth/sign-in", {
       headers: { Origin: E2E_BASE_URL },
-      data: { email: "nobody@example.com", password: "whatever" },
+      data: { email: unknownEmail, password: "whatever" },
     });
     expect(wrong.status()).toBe(401);
     expect(problemSchema.parse(await wrong.json()).code).toBe("unauthenticated");

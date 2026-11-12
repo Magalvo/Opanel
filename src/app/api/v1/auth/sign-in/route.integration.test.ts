@@ -117,7 +117,9 @@ describe("POST /api/v1/auth/sign-in", () => {
       undefined,
     );
     const badBody = await bad.text();
-    spies.forEach((spy) => spy.mockRestore());
+    spies.forEach((spy) => {
+      spy.mockRestore();
+    });
 
     const [session] = await getDb().select().from(sessions);
     const audit = JSON.stringify(await getDb().select().from(auditLog));

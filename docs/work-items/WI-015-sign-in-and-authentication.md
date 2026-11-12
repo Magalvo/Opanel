@@ -1,6 +1,6 @@
 # WI-015 — Sign-in, sign-out, `GET /api/v1/me`, request authentication, sign-in limiter
 
-- Status: Approved (by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-011](WI-011-api-foundations.md), [WI-014](WI-014-audit-log.md)
 - Work-spec: [WS-015](../work-specs/WS-015-sign-in-and-authentication.md)
@@ -20,34 +20,34 @@ so tests create accounts directly.
 
 ## Acceptance criteria
 
-- [ ] `POST /api/v1/auth/sign-in` with a correct email and password returns `200` with the
+- [x] `POST /api/v1/auth/sign-in` with a correct email and password returns `200` with the
       account's id, name, email, kind and role, and sets a session cookie that is
       `HttpOnly`, `SameSite=Lax`, and `Secure` when the app's URL is `https`.
-- [ ] A wrong password, an unknown email and a deactivated account all get the same `401`
+- [x] A wrong password, an unknown email and a deactivated account all get the same `401`
       response, so the response does not reveal whether the email exists.
-- [ ] After the allowed number of attempts, further attempts get `429` with `Retry-After`,
+- [x] After the allowed number of attempts, further attempts get `429` with `Retry-After`,
       per email and per client address; the counters live in PostgreSQL, are updated
       atomically under concurrent requests, and a successful sign-in is not blocked by
       other people's attempts.
-- [ ] `GET /api/v1/me` with a valid session returns the signed-in account and its
+- [x] `GET /api/v1/me` with a valid session returns the signed-in account and its
       permissions; without one, or with an expired session, a deactivated account or an
       `Authorization` header, it returns `401`.
-- [ ] `POST /api/v1/auth/sign-out` ends the session (the row is deleted, the cookie is
+- [x] `POST /api/v1/auth/sign-out` ends the session (the row is deleted, the cookie is
       cleared, `204`); the old cookie no longer authenticates.
-- [ ] A state-changing request that carries no `Authorization` header and whose `Origin`
+- [x] A state-changing request that carries no `Authorization` header and whose `Origin`
       is not the app's own origin is rejected with `403`, before any work is done.
-- [ ] One function authenticates any request into an `Actor`; it is the only place that
+- [x] One function authenticates any request into an `Actor`; it is the only place that
       reads the cookie.
-- [ ] Sign-in, failed sign-in (no actor, with a reason and without the email) and sign-out
+- [x] Sign-in, failed sign-in (no actor, with a reason and without the email) and sign-out
       are recorded in the audit log, in the same transaction as the change they describe
       wherever Opanel owns the change.
-- [ ] No password, hash, session token or cookie value appears in any response body, log
+- [x] No password, hash, session token or cookie value appears in any response body, log
       line or audit entry.
-- [ ] The three operations are in the generated OpenAPI document with their request and
+- [x] The three operations are in the generated OpenAPI document with their request and
       response schemas, and `docs/api/openapi.json` is regenerated.
-- [ ] End-to-end: sign in, `me`, sign out, `me` again, against the running production
+- [x] End-to-end: sign in, `me`, sign out, `me` again, against the running production
       build.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

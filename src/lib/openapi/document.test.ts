@@ -22,9 +22,9 @@ function documentAsJson(): Record<string, unknown> {
 
 const responseSchema = z.object({
   description: z.string().min(1),
-  content: z.object({
-    "application/json": z.object({ schema: z.object({ $ref: z.string() }) }),
-  }),
+  // Absent on a no-content response such as the 204 of sign-out.
+  // JSON for successes, problem+json for errors.
+  content: z.record(z.string(), z.object({ schema: z.object({ $ref: z.string() }) })).optional(),
 });
 
 const documentSchema = z.object({
@@ -68,7 +68,7 @@ describe("buildOpenApiDocument", () => {
     expect(operation).toBeDefined();
     expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(["200", "503"]);
     for (const response of Object.values(operation?.responses ?? {})) {
-      expect(response.content["application/json"].schema.$ref).toBe(
+      expect(response.content?.["application/json"]?.schema.$ref).toBe(
         "#/components/schemas/HealthResponse",
       );
     }
@@ -132,6 +132,14 @@ describe("buildOpenApiDocument", () => {
       responses: { 200: { description: "The thing.", schema: thingSchema } },
     } satisfies EndpointContract;
 
+    const endSession = {
+      method: "post",
+      path: "/api/v1/things/end",
+      summary: "End a thing",
+      public: false,
+      responses: { 204: { description: "Ended.", noContent: true } },
+    } satisfies EndpointContract;
+
     const anyOperationSchema = z.object({
       parameters: z
         .array(z.object({ name: z.string(), in: z.string(), required: z.boolean().optional() }))
@@ -146,7 +154,9 @@ describe("buildOpenApiDocument", () => {
         z.string(),
         z.object({
           description: z.string().min(1),
-          content: z.record(z.string(), z.object({ schema: z.object({ $ref: z.string() }) })),
+          content: z
+            .record(z.string(), z.object({ schema: z.object({ $ref: z.string() }) }))
+            .optional(),
         }),
       ),
     });
@@ -154,7 +164,9 @@ describe("buildOpenApiDocument", () => {
     function testDocument(): Record<string, unknown> {
       return z
         .record(z.string(), z.unknown())
-        .parse(JSON.parse(JSON.stringify(buildOpenApiDocument([createThing, publicThing]))));
+        .parse(
+          JSON.parse(JSON.stringify(buildOpenApiDocument([createThing, publicThing, endSession]))),
+        );
     }
 
     function operation(path: string, method: string): z.infer<typeof anyOperationSchema> {
@@ -172,7 +184,7 @@ describe("buildOpenApiDocument", () => {
       const { responses } = operation(createThing.path, "post");
 
       expect(Object.keys(responses["400"]?.content ?? {})).toEqual(["application/problem+json"]);
-      expect(responses["400"]?.content["application/problem+json"]?.schema.$ref).toBe(
+      expect(responses["400"]?.content?.["application/problem+json"]?.schema.$ref).toBe(
         "#/components/schemas/Problem",
       );
       expect(Object.keys(responses["201"]?.content ?? {})).toEqual(["application/json"]);
@@ -185,6 +197,14 @@ describe("buildOpenApiDocument", () => {
       expect(Object.keys(responses["401"]?.content ?? {})).toEqual(["application/problem+json"]);
       // A description written in the contract wins over the generic one.
       expect(responses["403"]?.description).toBe("The actor may not create things here.");
+    });
+
+    it("describes a no-content response without a body", () => {
+      const { responses } = operation(endSession.path, "post");
+
+      expect(responses["204"]?.description).toBe("Ended.");
+      expect(responses["204"]?.content).toBeUndefined();
+      expect(Object.keys(responses).sort()).toEqual(["204", "401", "403"]);
     });
 
     it("adds neither to public operations", () => {

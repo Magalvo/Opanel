@@ -4,15 +4,17 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/schemas/auth";
 import { getDb } from "@/server/db/client";
 import { accounts, credentials, sessions, verification } from "@/server/db/schema";
-import { getEnv } from "@/server/env";
+import { type Env, getEnv } from "@/server/env";
 
 import { hashPassword, verifyPassword } from "./password";
 
 const DAY_SECONDS = 24 * 60 * 60;
 
-function createAuth() {
-  const env = getEnv();
+/** The configuration this code needs from the environment. */
+type AuthEnv = Pick<Env, "BETTER_AUTH_SECRET" | "APP_URL">;
 
+/** Builds a Better Auth instance. Application code uses `getAuth()`; tests pass their own env. */
+export function createAuth(env: AuthEnv) {
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.APP_URL,
@@ -22,7 +24,13 @@ function createAuth() {
       provider: "pg",
       schema: { accounts, credentials, sessions, verification },
     }),
-    advanced: { database: { generateId: "uuid" } },
+    advanced: {
+      database: { generateId: "uuid" },
+      cookiePrefix: "opanel",
+      // `Secure` whenever the app is served over https (canonical doc 0001 section 4).
+      useSecureCookies: new URL(env.APP_URL).protocol === "https:",
+      defaultCookieAttributes: { httpOnly: true, sameSite: "lax", path: "/" },
+    },
     // Better Auth's `user`, `session` and `account` models are Opanel's `accounts`,
     // `sessions` and `credentials` (WT-02 decision 2). `fields` maps Better Auth's field
     // names to the property names of the Drizzle tables.
@@ -54,7 +62,7 @@ function createAuth() {
   });
 }
 
-type Auth = ReturnType<typeof createAuth>;
+export type Auth = ReturnType<typeof createAuth>;
 
 const store = globalThis as typeof globalThis & { __opanelAuth?: Auth };
 
@@ -63,6 +71,6 @@ const store = globalThis as typeof globalThis & { __opanelAuth?: Auth };
  * 1). Created on first call, so importing this module reads no environment.
  */
 export function getAuth(): Auth {
-  store.__opanelAuth ??= createAuth();
+  store.__opanelAuth ??= createAuth(getEnv());
   return store.__opanelAuth;
 }

@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { ApiError } from "@/server/http/errors";
 import { createTestAccount, setDisabled, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, sessions } from "@/server/db/schema";
+import { ApiError } from "@/server/http/errors";
 
 import { signIn } from "./sign-in";
 

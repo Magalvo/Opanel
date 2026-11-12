@@ -2,8 +2,8 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { getDb } from "@/server/db/client";
-import { getEnv } from "@/server/env";
 import { accounts, credentials, sessions } from "@/server/db/schema";
+import { getEnv } from "@/server/env";
 
 import { createAuth, getAuth } from "./auth";
 import { hashPassword } from "./password";

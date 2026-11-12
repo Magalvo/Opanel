@@ -1,6 +1,6 @@
 # WS-015 — Sign-in, sign-out, `GET /api/v1/me`, request authentication, sign-in limiter
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-015](../work-items/WI-015-sign-in-and-authentication.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4;
   [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
@@ -183,3 +183,37 @@ Technical, settled by the tests rather than assumed:
    end-to-end database with `hashPassword`, because there is no setup flow until WI-016.
    If Playwright cannot import the server modules cleanly, the seed becomes a small
    script run by `prepare.ts`.
+
+## Deviations from the approved spec
+
+1. **A third response kind in contracts.** `204` has no body, which the OpenAPI contract
+   types could not express. `ResponseContract` gains `{ description, noContent: true }`,
+   with a test written first. The old OpenAPI test schema was relaxed to allow responses
+   without `content` and `application/problem+json` content, which no earlier contract had.
+2. **`src/server/http/client-ip.ts`** (not in the file list): reads `CLIENT_IP_HEADER`,
+   takes the **last** entry of a list (the one the trusted proxy appended, the first being
+   client-controlled), and accepts only IP addresses.
+3. **Services default to `getDb()`** (`signIn(input, db = getDb())`), so route files import
+   no database client, as `AGENTS.md` section 3 asks.
+4. **`json()` and `noContent()` take an optional `cookies` headers argument** and copy only
+   its `Set-Cookie` entries, which is how the routes forward Better Auth's cookies.
+5. **Question 5 (timing) resolved by reading the installed source:** Better Auth's
+   `signInEmail` already hashes the password for an unknown user. Ours does the same for
+   unknown and deactivated accounts before it gets there.
+6. **Question 7 (Playwright seed):** `tests/e2e/seed.ts` uses its own connection to the
+   end-to-end database, because the test process has no application environment. The
+   end-to-end tests use a unique email per run, since that database is not emptied and the
+   limiter counts per email.
+7. **Test 11 (Secure cookie)** builds two Better Auth instances with `createAuth(env)`
+   (now exported) for an `https` and an `http` app URL, in `auth.integration.test.ts`.
+8. **Test helpers** for creating accounts, signing in and building requests are in
+   `src/server/auth/testing.ts`.
+
+## Implementation record
+
+- Red: unit, integration and end-to-end tests failed on missing modules and behaviour
+  (committed before any code); a separate Red test preceded the `noContent` contract.
+- Green: 250 Vitest tests (up from 200) and 14 Playwright tests (up from 12) pass.
+  `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

@@ -15,7 +15,14 @@ export interface ProblemResponseContract {
   problem: true;
 }
 
-export type ResponseContract = JsonResponseContract | ProblemResponseContract;
+/** A successful response with no body, e.g. `204`. */
+export interface NoContentResponseContract {
+  description: string;
+  noContent: true;
+}
+
+export type ResponseContract =
+  JsonResponseContract | ProblemResponseContract | NoContentResponseContract;
 
 /** What the operation accepts. Each part is the strict Zod schema the handler validates with. */
 export interface RequestContract {
