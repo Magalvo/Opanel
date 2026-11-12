@@ -8,12 +8,27 @@ import { contracts } from "./contracts";
 const API_ROOT = path.join(process.cwd(), "src/app/api");
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 
+/**
+ * Route files that are deliberately not in the OpenAPI document. The only one is the
+ * catch-all that answers unknown paths with a 404 problem body (WS-011): it is the
+ * absence of an endpoint, not an endpoint.
+ */
+const UNDOCUMENTED_ROUTE_FILES = ["[...path]/route.ts"];
+
+/** Every route file under src/app/api, as a POSIX path relative to it. */
+function routeFiles(): string[] {
+  return globSync("**/route.ts", { cwd: API_ROOT }).map((file) => file.split(path.sep).join("/"));
+}
+
 /** "METHOD /path" for every HTTP method exported by a route file under src/app/api. */
 function implementedOperations(): string[] {
   const operations: string[] = [];
-  for (const file of globSync("**/route.ts", { cwd: API_ROOT })) {
+  for (const file of routeFiles()) {
+    if (UNDOCUMENTED_ROUTE_FILES.includes(file)) {
+      continue;
+    }
     const source = readFileSync(path.join(API_ROOT, file), "utf8");
-    const segments = path.dirname(file).split(path.sep);
+    const segments = path.posix.dirname(file).split("/");
     // Next.js dynamic segments are written [id]; OpenAPI writes them {id}.
     const urlPath = `/api/${segments.join("/")}`.replace(/\[([^\]]+)\]/g, "{$1}");
     for (const method of HTTP_METHODS) {
@@ -43,6 +58,14 @@ describe("API routes and OpenAPI contracts", () => {
       "Route handlers and src/lib/openapi/contracts.ts disagree. " +
         "Every exported HTTP method needs a contract, and every contract needs a handler.",
     ).toEqual(implementedOperations());
+  });
+
+  it("exempts only the catch-all for unknown paths, and that file exists", () => {
+    expect(UNDOCUMENTED_ROUTE_FILES).toEqual(["[...path]/route.ts"]);
+    expect(routeFiles()).toContain("[...path]/route.ts");
+    expect(implementedOperations().some((operation) => operation.includes("{...path}"))).toBe(
+      false,
+    );
   });
 
   it("has no duplicate contracts", () => {
