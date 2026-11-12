@@ -1,6 +1,6 @@
 # WI-010 — Contributor docs: README and CONTRIBUTING
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-track: [WT-01](../work-tracks/WT-01-project-boilerplate.md)
 - Depends on: WI-009
 - Work-spec: [WS-010](../work-specs/WS-010-contributor-docs.md)
@@ -13,21 +13,21 @@ the repository root. This is the last item of WT-01.
 
 ## Acceptance criteria
 
-- [ ] `README.md` says what Opanel is, that it is early (no features yet), and its licence.
-- [ ] `README.md` lists the prerequisites (Node.js, pnpm, Docker) with the versions the
+- [x] `README.md` says what Opanel is, that it is early (no features yet), and its licence.
+- [x] `README.md` lists the prerequisites (Node.js, pnpm, Docker) with the versions the
       repository pins, and the steps from a fresh clone to a running app.
-- [ ] Following those steps literally on a fresh clone reaches a running app whose
+- [x] Following those steps literally on a fresh clone reaches a running app whose
       `/api/v1/health` returns `200`.
-- [ ] `README.md` lists every `package.json` script with one line on what it does, and
+- [x] `README.md` lists every `package.json` script with one line on what it does, and
       names the five quality gate commands.
-- [ ] `README.md` shows the CI status badge for `main`.
-- [ ] `CONTRIBUTING.md` explains the spec-driven workflow, TDD order, quality gate, commit
+- [x] `README.md` shows the CI status badge for `main`.
+- [x] `CONTRIBUTING.md` explains the spec-driven workflow, TDD order, quality gate, commit
       convention and one-item-per-pull-request rule, by summarising and linking to
       `AGENTS.md` rather than restating it.
-- [ ] `CONTRIBUTING.md` covers the things that trip up a first run: the three local
+- [x] `CONTRIBUTING.md` covers the things that trip up a first run: the three local
       databases, the port override, resetting the database volume, and installing the
       Playwright browser.
-- [ ] Both files pass `format:check`, and every relative link in them resolves.
+- [x] Both files pass `format:check`, and every relative link in them resolves.
 
 ## Notes
 

@@ -1,6 +1,6 @@
 # WS-010 — Contributor docs: README and CONTRIBUTING
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-010](../work-items/WI-010-contributor-docs.md)
 - Canonical docs: `AGENTS.md` sections 1, 4, 5 and 8
 
@@ -119,3 +119,27 @@ None.
    setting only the owner can decide.
 5. **`pnpm db:migrate` with no migrations.** There are no tables yet; the walkthrough
    confirms the command succeeds as a no-op rather than failing.
+
+## Outcome
+
+Open question 1: the owner chose (a). Pull request 1 was merged into `main` first and this
+item was done on its own branch, `claude/wi-010-contributor-docs`. Open question 2: no
+committed doc test, as proposed.
+
+| #   | Result                                                                                                                                                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Passed: failed first with both files missing, then all relative links resolved.                                                                                                                     |
+| 2   | Passed, with one deviation: the throwaway clone used `OPANEL_DB_PORT=55432` and the matching `.env` port, to stay clear of the working copy's database. `/api/v1/health` returned `200`.            |
+| 3   | Passed: all 16 scripts appear in the README commands table.                                                                                                                                         |
+| 4   | Passed: all five gate commands, locally.                                                                                                                                                            |
+| 5   | The badge URL returns an image, and [the run on `main`](https://github.com/Magalvo/Opanel/actions/runs/43260747457) after the merge is green. The pull request run is recorded on the pull request. |
+| 6   | Pending: the owner's review of the pull request.                                                                                                                                                    |
+
+The port-override instructions in `CONTRIBUTING.md` were also exercised: the integration
+tests passed against the database on port 55432 with `DATABASE_URL` set in the shell. The
+`E2E_DATABASE_URL` override was not exercised.
+
+`pnpm db:migrate` on a fresh database printed "Migrations are up to date."
+
+WT-01 exit criteria now hold, so the work-track is marked `Done`. The GitHub default
+branch (open question 4) is still the old working branch.

@@ -1,6 +1,6 @@
 # WT-01 — Project boilerplate
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Canonical docs: `AGENTS.md` (sections 2, 3, 5), [0001](../canonical/0001-ai-qa-agents-and-triage.md), [0002](../canonical/0002-realtime-sync.md)
 
 ## Goal
@@ -30,18 +30,18 @@ their first commit.
 
 Each item leaves the repository green and is one branch/PR.
 
-| Item                                               | Title                                                                              | Status      | Depends on             |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------- | ---------------------- |
-| [WI-001](../work-items/WI-001-app-skeleton.md)     | App skeleton: Next.js, strict TypeScript, Vitest                                   | Done        | none                   |
-| [WI-002](../work-items/WI-002-lint-and-format.md)  | ESLint + Prettier with `lint` and `format:check` scripts                           | Done        | WI-001                 |
-| [WI-003](../work-items/WI-003-validated-env.md)    | Validated environment variables (Zod)                                              | Done        | WI-001                 |
-| [WI-004](../work-items/WI-004-database.md)         | PostgreSQL in Docker Compose, Drizzle client, migrations, integration test harness | Done        | WI-003                 |
-| [WI-005](../work-items/WI-005-health-endpoint.md)  | `GET /api/v1/health` vertical slice (route handler → service → DB)                 | Done        | WI-004                 |
-| [WI-006](../work-items/WI-006-openapi.md)          | OpenAPI document generated from Zod, served at `/api/v1/openapi.json`              | Done        | WI-005                 |
-| [WI-007](../work-items/WI-007-e2e.md)              | Playwright setup with a smoke test, `test:e2e` script                              | Done        | WI-005                 |
-| [WI-008](../work-items/WI-008-ui-foundation.md)    | Tailwind CSS + shadcn/ui base and app shell layout                                 | Done        | WI-002                 |
-| [WI-009](../work-items/WI-009-ci.md)               | GitHub Actions CI running the full quality gate                                    | Done        | WI-002, WI-004, WI-007 |
-| [WI-010](../work-items/WI-010-contributor-docs.md) | `README.md` and `CONTRIBUTING.md`: setup, commands, workflow                       | In progress | WI-009                 |
+| Item                                               | Title                                                                              | Status | Depends on             |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- | ------ | ---------------------- |
+| [WI-001](../work-items/WI-001-app-skeleton.md)     | App skeleton: Next.js, strict TypeScript, Vitest                                   | Done   | none                   |
+| [WI-002](../work-items/WI-002-lint-and-format.md)  | ESLint + Prettier with `lint` and `format:check` scripts                           | Done   | WI-001                 |
+| [WI-003](../work-items/WI-003-validated-env.md)    | Validated environment variables (Zod)                                              | Done   | WI-001                 |
+| [WI-004](../work-items/WI-004-database.md)         | PostgreSQL in Docker Compose, Drizzle client, migrations, integration test harness | Done   | WI-003                 |
+| [WI-005](../work-items/WI-005-health-endpoint.md)  | `GET /api/v1/health` vertical slice (route handler → service → DB)                 | Done   | WI-004                 |
+| [WI-006](../work-items/WI-006-openapi.md)          | OpenAPI document generated from Zod, served at `/api/v1/openapi.json`              | Done   | WI-005                 |
+| [WI-007](../work-items/WI-007-e2e.md)              | Playwright setup with a smoke test, `test:e2e` script                              | Done   | WI-005                 |
+| [WI-008](../work-items/WI-008-ui-foundation.md)    | Tailwind CSS + shadcn/ui base and app shell layout                                 | Done   | WI-002                 |
+| [WI-009](../work-items/WI-009-ci.md)               | GitHub Actions CI running the full quality gate                                    | Done   | WI-002, WI-004, WI-007 |
+| [WI-010](../work-items/WI-010-contributor-docs.md) | `README.md` and `CONTRIBUTING.md`: setup, commands, workflow                       | Done   | WI-009                 |
 
 Work-items beyond WI-001 are listed here as one-liners and get their own work-item and
 work-spec files just before they are started, so each spec reflects the code that actually
