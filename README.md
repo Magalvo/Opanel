@@ -31,7 +31,7 @@ endpoint and an OpenAPI document. The roadmap and the status of every piece of w
 
 ```bash
 pnpm install
-cp .env.example .env
+cp .env.example .env   # then replace BETTER_AUTH_SECRET: openssl rand -base64 32
 docker compose up -d
 pnpm db:migrate
 pnpm dev

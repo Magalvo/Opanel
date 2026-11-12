@@ -35,6 +35,7 @@ Three pillars:
 | API                    | Versioned REST under `/api/v1`, OpenAPI generated from Zod         |
 | Database               | PostgreSQL                                                         |
 | Human auth             | Better Auth (email + password, sessions in PostgreSQL)             |
+| Password hashing       | Argon2id via @node-rs/argon2                                       |
 | Agent auth             | Custom scoped API tokens (canonical doc 0001)                      |
 | Live sync              | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (canonical doc 0002) |
 | ORM, migrations        | Drizzle ORM + drizzle-kit                                          |
