@@ -12,10 +12,17 @@ const fetchMock = vi.fn<typeof fetch>();
 const password = "a long enough password";
 
 function problem(status: number, body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify({ type: "about:blank", status, ...body }), {
-    status,
-    headers: { "Content-Type": "application/problem+json" },
-  });
+  return new Response(
+    JSON.stringify({
+      type: "about:blank",
+      title: "Problem",
+      status,
+      detail: "A problem.",
+      requestId: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+      ...body,
+    }),
+    { status, headers: { "Content-Type": "application/problem+json" } },
+  );
 }
 
 async function fillAndSubmit(confirmation = password) {
@@ -54,7 +61,7 @@ describe("SetupForm", () => {
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("/api/v1/setup");
     expect(init?.method).toBe("POST");
-    expect(JSON.parse(String(init?.body))).toEqual({
+    expect(JSON.parse(typeof init?.body === "string" ? init.body : "{}")).toEqual({
       name: "Ada Admin",
       email: "ada@example.com",
       password,

@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { accountSummarySchema, meResponseSchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
+import { HUMAN_ROLE_PERMISSIONS } from "@/server/auth/roles";
 import {
   APP_ORIGIN,
   cookieHeaderFrom,
   createTestAccount,
   postRequest,
 } from "@/server/auth/testing";
-import { HUMAN_ROLE_PERMISSIONS } from "@/server/auth/roles";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, sessions } from "@/server/db/schema";
 
@@ -54,10 +54,10 @@ describe("POST /api/v1/setup", () => {
   });
 
   it("answers 400 per field without echoing the password, 403 for a foreign Origin, 415 for non-JSON", async () => {
-    const short = await POST(postRequest(path, { ...body, password: "short-secret" }), undefined);
+    const short = await POST(postRequest(path, { ...body, password: "tiny-secret" }), undefined);
     expect(short.status).toBe(400);
     const text = await short.text();
-    expect(text).not.toContain("short-secret");
+    expect(text).not.toContain("tiny-secret");
     expect(problemSchema.parse(JSON.parse(text)).errors?.map((e) => e.path)).toEqual(["password"]);
 
     const request = postRequest(path, body, { Origin: "https://evil.example" });
@@ -85,7 +85,9 @@ describe("POST /api/v1/setup", () => {
 
     const response = await POST(postRequest(path, { ...body, password: marker }), undefined);
     const text = await response.text();
-    spies.forEach((spy) => spy.mockRestore());
+    spies.forEach((spy) => {
+      spy.mockRestore();
+    });
 
     const [session] = await getDb().select().from(sessions);
     const audit = JSON.stringify(await getDb().select().from(auditLog));

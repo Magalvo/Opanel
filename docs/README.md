@@ -9,14 +9,14 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-015 (sign-in, authentication, limiter), merged in PR #7.
-- **Next:** WI-016, first-run setup. Work-item and work-spec are drafted and `Proposed`;
-  **waiting for the owner's approval** of [WS-016](work-specs/WS-016-first-run-setup.md),
-  which lists four open questions. No code until it is `Approved`.
+- **Last finished:** WI-016 (first-run setup), the sixth item of WT-02.
+- **Next:** WI-017, the sign-in page, the protected app shell and the account menu with
+  sign-out. Draft its work-item and work-spec as `Proposed`, then stop for the owner's
+  approval. It also owns sending a visitor of an empty install to `/setup`.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
-- **Awaiting the owner:** approval of WS-016.
+- **Nothing is awaiting an owner decision.**
 
 ## Canonical docs (`canonical/`)
 
@@ -66,7 +66,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-013](work-items/WI-013-accounts-and-better-auth.md)   | Accounts, sessions schema and Better Auth               | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)   | Done        |
 | [WI-014](work-items/WI-014-audit-log.md)                  | Audit log table and writer                              | Done        | [WS-014](work-specs/WS-014-audit-log.md)                  | Done        |
 | [WI-015](work-items/WI-015-sign-in-and-authentication.md) | Sign-in, sign-out, me, authentication, limiter          | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md) | Done        |
-| [WI-016](work-items/WI-016-first-run-setup.md)            | First-run setup: create the first Admin                 | Approved | [WS-016](work-specs/WS-016-first-run-setup.md)            | Approved |
+| [WI-016](work-items/WI-016-first-run-setup.md)            | First-run setup: create the first Admin                 | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)            | Done        |
 
 WI-017 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
@@ -74,6 +74,9 @@ WI-017 to WI-021 are outlined in WT-02 and get their own files when they are sta
 
 Deferred decisions that need a work-item before they are acted on.
 
+- Optional `SETUP_TOKEN` for the first-run setup: if set, the form and endpoint require it,
+  so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
+  question 1).
 - Update the data model sketch in doc 0001 section 7 when WS-013 is approved: the password
   hash moves from `accounts` to a `credentials` table (WT-02, design decision 2).
 - Declare the security schemes (session cookie, bearer token) in the OpenAPI document

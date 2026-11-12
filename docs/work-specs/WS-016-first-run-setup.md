@@ -1,6 +1,6 @@
 # WS-016 — First-run setup: create the first Admin (API and page)
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-016](../work-items/WI-016-first-run-setup.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 3, 4, 7;
@@ -144,3 +144,33 @@ Technical, settled by the tests:
 6. **Playwright project dependencies** (`first-run` before `chromium`) change the shape of
    `playwright.config.ts`. If they interact badly with the single `webServer`, I stop and
    report instead of working around it.
+
+## Deviations from the approved spec
+
+1. **The page test is `page.integration.test.ts`**, not `.tsx`: the integration project only
+   picks up `*.integration.test.ts`, and the test renders nothing, it only calls the page
+   function.
+2. **Two of my own tests were wrong and were corrected after the Red run**, without
+   weakening what they check: the simulated `400` was not a valid problem body (it lacked
+   `title`, `detail` and `requestId`, so the form rightly could not read it), and the
+   "too short" password `short-secret` has exactly 12 characters, which is valid.
+3. **`SubmitEvent`** is used for the form handler, because React's `FormEvent` is marked
+   deprecated and the lint rule forbids it.
+4. **`prepare.ts` also empties `rate_limits`**, not only `accounts`, so every end-to-end run
+   starts with clean sign-in counters.
+5. **Question 5 (not-found):** called directly, `notFound()` rejects with
+   `digest: "NEXT_HTTP_ERROR_FALLBACK;404"`, as the installed Next.js documentation says;
+   the browser test shows the 404 page.
+6. **Question 6 (Playwright projects):** `first-run` before `chromium` works with the single
+   `webServer`; the full suite is stable across consecutive runs.
+7. **Not included, as decided with the owner:** the optional `SETUP_TOKEN`. It is recorded
+   as a follow-up in `docs/README.md`.
+
+## Implementation record
+
+- Red: schema, form, service, route and page tests failed on missing modules and
+  behaviour (committed before any code).
+- Green: 272 Vitest tests (up from 250) and 15 Playwright tests (up from 14) pass.
+  `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

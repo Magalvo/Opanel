@@ -20,7 +20,21 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    // First-run setup needs an install with no accounts, so it runs alone and first. The
+    // other specs seed their own accounts and wait for it (WS-016).
+    {
+      name: "first-run",
+      testMatch: "**/setup.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "chromium",
+      testIgnore: "**/setup.spec.ts",
+      dependencies: ["first-run"],
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
 
   // The app under test is the production build, running against its own database.
   webServer: {
