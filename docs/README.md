@@ -9,11 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-017 (sign-in page, protected shell, account menu), the seventh item
-  of WT-02.
-- **Next:** WI-018, the account management API: list, invite, change role, deactivate,
-  reactivate. Draft its work-item and work-spec as `Proposed`, then stop for the owner's
-  approval.
+- **Last finished:** WI-018 (account management API), the eighth item of WT-02.
+- **Next:** WI-019, accepting an invitation or reset link: set a password (API and page).
+  Links already exist (`<APP_URL>/accept#<token>`, hash only in `account_tokens`); this
+  item redeems them. Draft its work-item and work-spec as `Proposed`, then stop for the
+  owner's approval.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
@@ -69,8 +69,9 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter          | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
 | [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                 | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
 | [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu             | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
+| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                  | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
 
-WI-018 to WI-021 are outlined in WT-02 and get their own files when they are started.
+WI-019 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
 ## Follow-ups
 

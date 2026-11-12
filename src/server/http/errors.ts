@@ -65,6 +65,13 @@ export function conflict(detail: string): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "conflict", detail });
 }
 
+/** `409` with the specific code of WS-018: the change would leave no active Admin. */
+export function lastAdmin(
+  detail = "This would leave the installation without an active administrator.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "last_admin", detail });
+}
+
 export function unsupportedMediaType(
   detail = "The request body must be sent as application/json.",
 ): ApiError {

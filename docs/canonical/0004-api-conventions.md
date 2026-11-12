@@ -113,7 +113,8 @@ Rules:
 
 - Clients branch on `code` and `status`, never on `title` or `detail`.
 - A work-spec may introduce a more specific code for a status (for example
-  `version_conflict` for `409`) and extra fields that belong to it (doc 0002 returns the
+  `version_conflict` for `409`, or `last_admin` for the `409` of a change that would leave no
+  active Admin, WS-018) and extra fields that belong to it (doc 0002 returns the
   current entity with a version conflict, as `current`). Codes are never renamed or reused.
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged
@@ -138,10 +139,14 @@ GET /api/v1/tasks?limit=50&cursor=eyJ...
 }
 ```
 
-- `limit`: default 50, maximum 100. Out of range is a `400`.
+- `limit`: default 50, maximum 100. Out of range is a `400`. Built in WS-018
+  (`paginationQuerySchema`, `pageSchema`, `encodeCursor`, `decodeCursor`).
 - `cursor` is an opaque string taken from a previous `nextCursor`. Cursors are keyset
   based, so a list stays correct while rows are inserted, which matters on boards that
   agents write to continuously. There are no page numbers and no total count.
+- A cursor carries the last row's creation time **with microsecond precision, as text**, and
+  its id; a `Date` would truncate to milliseconds and repeat a row. A tampered cursor is a
+  `400` with the field error `cursor`.
 - Each endpoint has one documented default order. Where sorting is offered it is
   `sort=field` (ascending) or `sort=-field` (descending), limited to documented fields.
 - Filters are plain query parameters named after the field (`assigneeTeamId=...`). The
