@@ -3,6 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
+- Amended by: [0003](0003-task-management.md), section 12 (proposed, not yet in force)
 
 ## 1. Context
 

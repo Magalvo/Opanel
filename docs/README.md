@@ -11,6 +11,7 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 | ------------------------------------------------- | ----------------------------------------------------------- | -------- |
 | [0001](canonical/0001-ai-qa-agents-and-triage.md) | AI QA agents: identity, authentication and automated triage | Approved |
 | [0002](canonical/0002-realtime-sync.md)           | Real-time board sync                                        | Approved |
+| [0003](canonical/0003-task-management.md)         | Task management: roles, tickets, boards and planning        | Proposed |
 
 ## Work-tracks (`work-tracks/`)
 
@@ -20,11 +21,18 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Planned next, not yet drafted:
 
-- WT-02 Accounts and human auth
-- WT-03 Projects, teams, columns, epics, tasks (kanban core)
+- WT-02 Accounts, human sign-in, roles and the permission layer
+- WT-03 Board core: projects, teams, columns, epics, tasks, comments, assignment
 - WT-04 Real-time board sync
 - WT-05 Agent accounts and API tokens
 - WT-06 Bug reports and automated triage
+- WT-07 Backlog, priority, due dates, labels
+- WT-08 Search, filters, list view, activity timeline
+- WT-09 Sub-tasks and task links
+- WT-10 Sprints and story points
+
+WT-07 to WT-10 and the detail of WT-02 and WT-03 come from canonical doc 0003, which is
+still `Proposed`.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
