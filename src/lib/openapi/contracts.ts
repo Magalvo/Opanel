@@ -1,4 +1,4 @@
-import { meContract, signInContract, signOutContract } from "@/lib/schemas/auth";
+import { meContract, setupContract, signInContract, signOutContract } from "@/lib/schemas/auth";
 import { healthContract } from "@/lib/schemas/health";
 import { openApiContract } from "@/lib/schemas/openapi";
 
@@ -11,4 +11,5 @@ export const contracts: readonly EndpointContract[] = [
   signInContract,
   signOutContract,
   meContract,
+  setupContract,
 ];

@@ -37,7 +37,8 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Then open <http://localhost:3000>. The health endpoint is at
+Then open <http://localhost:3000/setup> to create the first administrator (it is the only
+way in on a fresh install, and it disappears once an account exists). The health endpoint is at
 <http://localhost:3000/api/v1/health> and the OpenAPI document at
 <http://localhost:3000/api/v1/openapi.json>.
 

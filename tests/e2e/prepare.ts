@@ -1,5 +1,7 @@
 // Runs before the app under test is built and started (see playwright.config.ts).
 // Checks that DATABASE_URL points at a reachable end-to-end database, then migrates it.
+import { sql } from "drizzle-orm";
+
 import { closeDb, getDb } from "@/server/db/client";
 import { runMigrations } from "@/server/db/migrate";
 import { getEnv } from "@/server/env";
@@ -28,6 +30,11 @@ async function prepare(): Promise<void> {
   }
 
   await runMigrations(getDb());
+
+  // The first-run setup test needs an install with no accounts, and this database is not
+  // emptied between runs. Safe: the name was checked above. Cascades to credentials,
+  // sessions and the audit log; rate limits are emptied too so each run starts clean.
+  await getDb().execute(sql`truncate table accounts, rate_limits restart identity cascade`);
 }
 
 try {

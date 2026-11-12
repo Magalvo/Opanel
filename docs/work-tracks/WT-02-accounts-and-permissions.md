@@ -86,7 +86,7 @@ Each item leaves the repository green and is one branch/PR.
 | [WI-013](../work-items/WI-013-accounts-and-better-auth.md)   | Accounts, credentials and sessions schema; Better Auth installed; auth env   | Done   | WI-012         |
 | [WI-014](../work-items/WI-014-audit-log.md)                  | Audit log table and writer                                                   | Done   | WI-013         |
 | [WI-015](../work-items/WI-015-sign-in-and-authentication.md) | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Done   | WI-011, WI-014 |
-| WI-016                                                       | First-run setup: create the first Admin (API and page)                       | Draft  | WI-015         |
+| [WI-016](../work-items/WI-016-first-run-setup.md)            | First-run setup: create the first Admin (API and page)                       | Done   | WI-015         |
 | WI-017                                                       | Sign-in page, protected app shell, account menu with sign-out                | Draft  | WI-015         |
 | WI-018                                                       | Account management API: list, invite, change role, deactivate, reactivate    | Draft  | WI-015         |
 | WI-019                                                       | Accepting an invitation or reset link: set a password (API and page)         | Draft  | WI-018         |

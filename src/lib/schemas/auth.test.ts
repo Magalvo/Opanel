@@ -8,6 +8,7 @@ import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   passwordSchema,
+  setupRequestSchema,
   signInRequestSchema,
 } from "./auth";
 
@@ -96,5 +97,39 @@ describe("auth contracts", () => {
     expect(byOperation.get("post /api/v1/auth/sign-in")?.public).toBe(true);
     expect(byOperation.get("post /api/v1/auth/sign-out")?.public).toBe(false);
     expect(byOperation.get("get /api/v1/me")?.public).toBe(false);
+  });
+});
+
+describe("setupRequestSchema", () => {
+  const valid = { name: "Ada Admin", email: "ada@example.com", password: "a".repeat(12) };
+
+  it("accepts a name, an email and a password of 12 to 128 characters", () => {
+    expect(setupRequestSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("trims the name and rejects a blank or over-long one", () => {
+    expect(setupRequestSchema.parse({ ...valid, name: "  Ada  " }).name).toBe("Ada");
+    expect(setupRequestSchema.safeParse({ ...valid, name: "   " }).success).toBe(false);
+    expect(setupRequestSchema.safeParse({ ...valid, name: "x".repeat(101) }).success).toBe(false);
+  });
+
+  it("rejects a bad email, a short password, a missing field and unknown fields", () => {
+    for (const body of [
+      { ...valid, email: "nope" },
+      { ...valid, password: "a".repeat(11) },
+      { name: valid.name, email: valid.email },
+      { ...valid, role: "admin" },
+    ]) {
+      expect(setupRequestSchema.safeParse(body).success).toBe(false);
+    }
+  });
+
+  it("is documented as a public operation", () => {
+    const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
+
+    expect(setup?.public).toBe(true);
+    expect(Object.keys(setup?.responses ?? {})).toEqual(
+      expect.arrayContaining(["201", "400", "403", "404", "415"]),
+    );
   });
 });

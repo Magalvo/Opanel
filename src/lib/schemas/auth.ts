@@ -22,6 +22,15 @@ export const signInRequestSchema = z
   })
   .meta({ id: "SignInRequest" });
 
+/** Body of `POST /api/v1/setup`: the first Admin. The password follows the same rule as any. */
+export const setupRequestSchema = z
+  .strictObject({
+    name: z.string().trim().min(1).max(100),
+    email: z.email(),
+    password: passwordSchema,
+  })
+  .meta({ id: "SetupRequest" });
+
 /** An account as the API shows it. Never includes credentials. */
 export const accountSummarySchema = z
   .strictObject({
@@ -81,4 +90,26 @@ export const meContract = {
   description: "Returns the caller's account and permissions. Needs a session, no permission.",
   public: false,
   responses: { 200: { description: "The caller.", schema: meResponseSchema } },
+} satisfies EndpointContract;
+
+export const setupContract = {
+  method: "post",
+  path: "/api/v1/setup",
+  summary: "Create the first Admin",
+  description:
+    "First-run setup. Creates the first Admin and signs them in. Public, because before the " +
+    "first account exists there is nobody to authenticate. Once any account exists it answers " +
+    "404, like an unknown path. Must come from the app's own origin.",
+  public: true,
+  request: { body: setupRequestSchema },
+  responses: {
+    201: {
+      description: "The Admin was created. The session cookie is set.",
+      schema: accountSummarySchema,
+    },
+    400: { description: "The body is not valid.", problem: true },
+    403: { description: "The request does not come from the app's own origin.", problem: true },
+    404: { description: "The installation is already set up.", problem: true },
+    415: { description: "The body is not JSON.", problem: true },
+  },
 } satisfies EndpointContract;
