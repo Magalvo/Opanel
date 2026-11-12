@@ -168,9 +168,8 @@ describe("route", () => {
 
   it("passes the request and the route context to the handler", async () => {
     const context = { params: Promise.resolve({ id: "abc" }) };
-    const handler = route(
-      async (request: Request, received: typeof context) =>
-        json({ method: request.method, id: (await received.params).id }),
+    const handler = route(async (request: Request, received: typeof context) =>
+      json({ method: request.method, id: (await received.params).id }),
     );
 
     const response = await handler(get(), context);
@@ -234,29 +233,26 @@ describe("readJson", () => {
     );
 
     const problem = await problemOf(response);
-    expect(problem.errors?.map((error) => error.path).sort()).toEqual([
-      "evidence.http.x",
-      "titel",
-    ]);
+    expect(problem.errors?.map((error) => error.path).sort()).toEqual(["evidence.http.x", "titel"]);
   });
 
   it("reports a body of the wrong shape at the root", async () => {
-    const response = await throughRoute(post("[1,2]"), (request) =>
-      readJson(request, thingSchema),
-    );
+    const response = await throughRoute(post("[1,2]"), (request) => readJson(request, thingSchema));
 
     const problem = await problemOf(response);
     expect(problem.errors).toHaveLength(1);
     expect(problem.errors?.[0]?.path).toBe("");
   });
 
+  // Field names are reported (see above); the values sent for them never are.
   it("never echoes a rejected value", async () => {
     const marker = "MARKER-hunter2-MARKER";
     const response = await throughRoute(
       post(
         JSON.stringify({
           title: 12345678,
-          [marker]: marker,
+          extra: marker,
+          kind: marker,
           evidence: { http: { status: marker } },
         }),
       ),
