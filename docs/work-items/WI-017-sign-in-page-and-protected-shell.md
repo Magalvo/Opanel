@@ -1,6 +1,6 @@
 # WI-017 — Sign-in page, protected app shell, account menu with sign-out
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-015](WI-015-sign-in-and-authentication.md), [WI-016](WI-016-first-run-setup.md)
 - Work-spec: [WS-017](../work-specs/WS-017-sign-in-page-and-protected-shell.md)

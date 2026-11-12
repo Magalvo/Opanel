@@ -1,6 +1,6 @@
 # WS-017 — Sign-in page, protected app shell, account menu with sign-out
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 4, 8;

@@ -10,7 +10,10 @@ const password = "an e2e password, long enough";
 test("the first visitor creates the Admin, ends up signed in, and /setup disappears", async ({
   page,
 }) => {
-  await page.goto("/setup");
+  // A visitor to an empty install is led from the home page to the setup page.
+  await page.goto("/");
+  await expect(page).toHaveURL("/setup");
+
   await page.getByLabel("Name").fill("First Admin");
   await page.getByLabel("Email").fill("first-admin@example.com");
   await page.getByLabel("Password", { exact: true }).fill(password);
@@ -18,6 +21,7 @@ test("the first visitor creates the Admin, ends up signed in, and /setup disappe
   await page.getByRole("button", { name: "Create administrator" }).click();
 
   await expect(page).toHaveURL("/");
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
   const me = await page.request.get("/api/v1/me");
   expect(me.status()).toBe(200);
   expect(meResponseSchema.parse(await me.json())).toMatchObject({

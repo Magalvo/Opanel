@@ -1,4 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
 
 const html = (page: Page) => page.locator("html");
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');

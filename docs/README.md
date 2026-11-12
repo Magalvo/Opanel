@@ -68,7 +68,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                              | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
 | [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter          | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
 | [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                 | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
-| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu             | Proposed    | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Proposed    |
+| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu             | Approved | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Approved |
 
 WI-018 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
