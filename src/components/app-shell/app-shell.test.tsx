@@ -1,17 +1,36 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppShell } from "./app-shell";
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
+}));
+
+const { AppShell } = await import("./app-shell");
+
+const account = {
+  id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+  kind: "human" as const,
+  name: "Ada Admin",
+  email: "ada@example.com",
+  role: "admin",
+};
 
 function renderShell() {
   return render(
-    <AppShell defaultSidebarOpen>
+    <AppShell defaultSidebarOpen account={account}>
       <p>page content</p>
     </AppShell>,
   );
 }
 
 describe("AppShell", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(Response.json({}))),
+    );
+  });
+
   it("renders the page inside the main region", () => {
     renderShell();
 
@@ -24,6 +43,13 @@ describe("AppShell", () => {
     const topBar = screen.getByRole("banner");
     expect(within(topBar).getByRole("button", { name: "Toggle sidebar" })).toBeInTheDocument();
     expect(within(topBar).getByRole("button", { name: "Theme" })).toBeInTheDocument();
+  });
+
+  it("has the account menu of the signed-in account in the top bar", () => {
+    renderShell();
+
+    const topBar = screen.getByRole("banner");
+    expect(within(topBar).getByRole("button", { name: "Account menu" })).toHaveTextContent("A");
   });
 
   it("has a main navigation area that contains no links yet", () => {

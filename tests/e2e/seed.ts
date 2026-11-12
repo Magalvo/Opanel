@@ -31,3 +31,29 @@ export async function seedAccount(input: {
     await client.end();
   }
 }
+
+/** Pretends an account's sessions were created `days` days ago (their expiry moves closer). */
+export async function ageSessions(email: string, days: number): Promise<void> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    await client`
+      update sessions set expires_at = expires_at - make_interval(days => ${days})
+      where account_id = (select id from accounts where email = ${email})`;
+  } finally {
+    await client.end();
+  }
+}
+
+/** When the account's latest session expires. */
+export async function sessionExpiry(email: string): Promise<Date> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    const [row] = await client<{ expires_at: Date }[]>`
+      select max(expires_at) as expires_at from sessions
+      where account_id = (select id from accounts where email = ${email})`;
+    if (!row) throw new Error("no session");
+    return row.expires_at;
+  } finally {
+    await client.end();
+  }
+}
