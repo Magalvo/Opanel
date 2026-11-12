@@ -133,7 +133,7 @@ committed doc test, as proposed.
 | 3   | Passed: all 16 scripts appear in the README commands table.                                                                                                                                         |
 | 4   | Passed: all five gate commands, locally.                                                                                                                                                            |
 | 5   | The badge URL returns an image, and [the run on `main`](https://github.com/Magalvo/Opanel/actions/runs/43260747457) after the merge is green. The pull request run is recorded on the pull request. |
-| 6   | Pending: the owner's review of the pull request.                                                                                                                                                    |
+| 6   | The owner approved merging pull request 2 on 2026-11-12.                                                                                                                                            |
 
 The port-override instructions in `CONTRIBUTING.md` were also exercised: the integration
 tests passed against the database on port 55432 with `DATABASE_URL` set in the shell. The
