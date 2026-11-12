@@ -19,7 +19,7 @@ Docker Compose, no extra infrastructure unless it is clearly needed.
 event bus, and the existing REST API for all writes.**
 
 ```
- Browser A --- PATCH /api/v1/tasks/42 ---> route handler -> service
+ Browser A --- PATCH /api/v1/tasks/{id} -> route handler -> service
                                                               | 1. write + bump version
                                                               | 2. NOTIFY in same transaction
                                                               v
@@ -56,11 +56,11 @@ Events are small and carry identifiers, not full entities:
 ```jsonc
 // event: task.updated
 {
-  "id": "evt_...",
+  "id": "0193a1c2-...", // ids are UUIDs (doc 0004)
   "entity": "task",
-  "entityId": "42",
+  "entityId": "0193a1b7-...",
   "version": 7,
-  "actorAccountId": "acc_...",
+  "actorAccountId": "01939f04-...",
   "at": "2026-11-12T10:00:00Z",
 }
 ```

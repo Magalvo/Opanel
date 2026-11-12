@@ -67,6 +67,7 @@ src/
     db/                 Drizzle schema, migrations, DB client
     services/           Domain logic (the only layer that touches the DB)
     auth/               Sessions, API tokens, permission checks
+    http/               Shared route-handler helpers: errors, input parsing, responses
   lib/
     schemas/            Zod schemas shared by API, UI and OpenAPI
 tests/

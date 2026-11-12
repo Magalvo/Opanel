@@ -8,6 +8,7 @@ import { z } from "zod";
 import { healthResponseSchema } from "@/lib/schemas/health";
 
 import packageJson from "../../../package.json";
+import type { EndpointContract } from "./contract";
 import { buildOpenApiDocument } from "./document";
 
 const COMMITTED_FILE = path.join(process.cwd(), "docs/api/openapi.json");
@@ -99,6 +100,121 @@ describe("buildOpenApiDocument", () => {
 
     expect(result.errors ?? []).toEqual([]);
     expect(result.valid).toBe(true);
+  });
+
+  describe("with contracts that have requests and errors", () => {
+    const thingSchema = z
+      .strictObject({ id: z.uuid(), title: z.string() })
+      .meta({ id: "TestThing" });
+
+    const createThing = {
+      method: "post",
+      path: "/api/v1/projects/{projectId}/things",
+      summary: "Create a thing",
+      public: false,
+      request: {
+        params: z.strictObject({ projectId: z.uuid() }),
+        query: z.strictObject({ dryRun: z.enum(["true", "false"]).optional() }),
+        body: z.strictObject({ title: z.string().min(1) }).meta({ id: "TestThingInput" }),
+      },
+      responses: {
+        201: { description: "Created.", schema: thingSchema },
+        400: { description: "The body is not valid.", problem: true },
+        403: { description: "The actor may not create things here.", problem: true },
+      },
+    } satisfies EndpointContract;
+
+    const publicThing = {
+      method: "get",
+      path: "/api/v1/public-thing",
+      summary: "A public thing",
+      public: true,
+      responses: { 200: { description: "The thing.", schema: thingSchema } },
+    } satisfies EndpointContract;
+
+    const anyOperationSchema = z.object({
+      parameters: z
+        .array(z.object({ name: z.string(), in: z.string(), required: z.boolean().optional() }))
+        .optional(),
+      requestBody: z
+        .object({
+          required: z.boolean().optional(),
+          content: z.record(z.string(), z.object({ schema: z.object({ $ref: z.string() }) })),
+        })
+        .optional(),
+      responses: z.record(
+        z.string(),
+        z.object({
+          description: z.string().min(1),
+          content: z.record(z.string(), z.object({ schema: z.object({ $ref: z.string() }) })),
+        }),
+      ),
+    });
+
+    function testDocument(): Record<string, unknown> {
+      return z
+        .record(z.string(), z.unknown())
+        .parse(JSON.parse(JSON.stringify(buildOpenApiDocument([createThing, publicThing]))));
+    }
+
+    function operation(path: string, method: string): z.infer<typeof anyOperationSchema> {
+      const paths = z
+        .object({ paths: z.record(z.string(), z.record(z.string(), anyOperationSchema)) })
+        .parse(testDocument()).paths;
+      const found = paths[path]?.[method];
+      if (found === undefined) {
+        throw new Error(`no operation ${method} ${path}`);
+      }
+      return found;
+    }
+
+    it("describes error responses as problem details", () => {
+      const { responses } = operation(createThing.path, "post");
+
+      expect(Object.keys(responses["400"]?.content ?? {})).toEqual(["application/problem+json"]);
+      expect(responses["400"]?.content["application/problem+json"]?.schema.$ref).toBe(
+        "#/components/schemas/Problem",
+      );
+      expect(Object.keys(responses["201"]?.content ?? {})).toEqual(["application/json"]);
+    });
+
+    it("adds 401 and 403 to operations that need credentials", () => {
+      const { responses } = operation(createThing.path, "post");
+
+      expect(Object.keys(responses).sort()).toEqual(["201", "400", "401", "403"]);
+      expect(Object.keys(responses["401"]?.content ?? {})).toEqual(["application/problem+json"]);
+      // A description written in the contract wins over the generic one.
+      expect(responses["403"]?.description).toBe("The actor may not create things here.");
+    });
+
+    it("adds neither to public operations", () => {
+      const { responses } = operation(publicThing.path, "get");
+
+      expect(Object.keys(responses)).toEqual(["200"]);
+    });
+
+    it("describes path and query parameters and the request body", () => {
+      const { parameters, requestBody } = operation(createThing.path, "post");
+
+      expect(parameters).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "projectId", in: "path", required: true }),
+          expect.objectContaining({ name: "dryRun", in: "query" }),
+        ]),
+      );
+      expect(parameters).toHaveLength(2);
+      expect(requestBody?.required).toBe(true);
+      expect(requestBody?.content["application/json"]?.schema.$ref).toBe(
+        "#/components/schemas/TestThingInput",
+      );
+    });
+
+    it("is still a valid OpenAPI 3.1 document", async () => {
+      const result = await new Validator().validate(testDocument());
+
+      expect(result.errors ?? []).toEqual([]);
+      expect(result.valid).toBe(true);
+    });
   });
 
   it("matches the committed docs/api/openapi.json", () => {
