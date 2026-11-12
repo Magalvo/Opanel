@@ -1,6 +1,6 @@
 # WS-012 — Permission catalogue, human roles and the `Actor` type
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-012](../work-items/WI-012-permissions-and-actor.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4,
   [0003](../canonical/0003-task-management.md) section 3,

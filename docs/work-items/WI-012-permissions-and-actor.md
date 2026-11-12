@@ -1,6 +1,6 @@
 # WI-012 — Permission catalogue, human roles and the `Actor` type
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: none
 - Work-spec: [WS-012](../work-specs/WS-012-permissions-and-actor.md)

@@ -82,7 +82,7 @@ Each item leaves the repository green and is one branch/PR.
 | Item                                                    | Title                                                                        | Status   | Depends on     |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- | -------- | -------------- |
 | [WI-011](../work-items/WI-011-api-foundations.md)       | API foundations: problem-details errors, validation helpers, request id      | Done     | doc 0004       |
-| [WI-012](../work-items/WI-012-permissions-and-actor.md) | Permission catalogue, human roles and the `Actor` type (pure logic)          | Proposed | none           |
+| [WI-012](../work-items/WI-012-permissions-and-actor.md) | Permission catalogue, human roles and the `Actor` type (pure logic)          | Approved | none           |
 | WI-013                                                  | Accounts, credentials and sessions schema; Better Auth installed; auth env   | Draft    | WI-012         |
 | WI-014                                                  | Audit log table and writer                                                   | Draft    | WI-013         |
 | WI-015                                                  | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Draft    | WI-011, WI-014 |
