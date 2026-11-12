@@ -1,6 +1,6 @@
 # 0003 — Task management: roles, tickets, boards and planning
 
-- Status: **Proposed** (awaiting owner review)
+- Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Amends: [0001](0001-ai-qa-agents-and-triage.md) (human roles, task links, see section 12)
 
@@ -210,6 +210,8 @@ distinguishing feature lands at WT-06.
 - Attachments and notifications (already excluded in doc 0001).
 
 ## 12. Amendments to doc 0001
+
+Applied to doc 0001 on 2026-11-12.
 
 - Human roles are `admin`, `manager`, `member`, `viewer` (was `admin`, `member`).
 - Routing rules and teams are managed by Managers and Admins (agent accounts and tokens

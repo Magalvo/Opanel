@@ -1,6 +1,6 @@
 # WS-003 — Validated environment variables
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (2026-11-12)
 - Work-item: [WI-003](../work-items/WI-003-validated-env.md)
 - Canonical docs: `AGENTS.md` sections 3 and 6 (hard rules 4 and 7)
 

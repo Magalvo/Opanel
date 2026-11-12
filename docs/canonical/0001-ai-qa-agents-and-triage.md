@@ -3,7 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
-- Amended by: [0003](0003-task-management.md), section 12 (proposed, not yet in force)
+- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12)
 
 ## 1. Context
 
@@ -51,7 +51,8 @@ operator's concern; Opanel only records when each agent was last seen.
 Humans and agents share one `accounts` table, distinguished by `kind` (`human` | `agent`).
 This keeps assignment, comments and the audit log uniform: an actor is always an account.
 
-- **Human account**: email, password hash, role (`admin` | `member`).
+- **Human account**: email, password hash, role (`admin` | `manager` | `member` |
+  `viewer`; permissions are defined in doc 0003).
 - **Agent account**: unique name, description, role, set of scopes, owning human
   (the admin who created it), `disabled_at`, `last_seen_at`. No email, no password.
 
@@ -150,15 +151,15 @@ In one database transaction:
 
 1. **Persist** the raw report in `bug_reports` (always, even when deduplicated).
 2. **Dedupe**: look for a task in the same project with the same fingerprint that is not
-   in a done/closed status.
+   in a column of the `done` category (doc 0003, section 5).
    - Found: link the report, increment the task's `occurrences`, update
      `last_reported_at`, add a system comment. No new ticket, no reassignment.
    - Not found: continue. A matching _closed_ task does not block creation; the new task
-     links to it as a possible regression.
+     gets a `regression of` link to it (doc 0003, section 7).
 3. **Route**: look up `routing_rules(project_id, origin_layer) -> team_id`.
    - `unknown`, or no rule for the layer: use the project's fallback triage team.
-4. **Create** a task of type `bug` in the project's first column, with `assignee_team_id`
-   set, `reporter_account_id` set to the agent, and the report rendered into the body.
+4. **Create** a task of type `bug`, placed in the project's first column, or at the top of
+   the backlog if the project uses sprints (doc 0003), with `assignee_team_id` set, `reporter_account_id` set to the agent, and the report rendered into the body.
 5. **Audit**: record the action against the agent's account.
 
 A unique partial index on `(project_id, fingerprint)` for open tasks makes dedupe safe
@@ -170,7 +171,7 @@ timestamps, ids and other volatile values.
 
 Tickets are assigned to a **team**, not a person. Team members self-assign or a human
 triages within the team. Humans can always re-route a ticket; that does not change the
-routing rules.
+routing rules. Routing rules and teams are managed by Managers and Admins.
 
 ## 7. Data model sketch
 
@@ -183,11 +184,12 @@ api_tokens(id, account_id, public_id, secret_hash, expires_at?, revoked_at?, las
 sessions(id, account_id, expires_at)
 teams(id, name)                             team_members(team_id, account_id)
 projects(id, key, name, fallback_team_id)
-columns(id, project_id, name, position, is_done)
+columns(id, project_id, name, position, category)
 epics(id, project_id, title, ...)
 tasks(id, project_id, epic_id?, column_id, type, title, body, severity?,
       assignee_team_id?, assignee_account_id?, reporter_account_id,
-      fingerprint?, occurrences, last_reported_at?, regression_of_task_id?)
+      fingerprint?, occurrences, last_reported_at?)
+task_links(from_task_id, to_task_id, type)
 comments(id, task_id, author_account_id?, kind, body)
 routing_rules(project_id, origin_layer, team_id)
 bug_reports(id, project_id, agent_account_id, task_id, payload, created_at)

@@ -11,7 +11,7 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 | ------------------------------------------------- | ----------------------------------------------------------- | -------- |
 | [0001](canonical/0001-ai-qa-agents-and-triage.md) | AI QA agents: identity, authentication and automated triage | Approved |
 | [0002](canonical/0002-realtime-sync.md)           | Real-time board sync                                        | Approved |
-| [0003](canonical/0003-task-management.md)         | Task management: roles, tickets, boards and planning        | Proposed |
+| [0003](canonical/0003-task-management.md)         | Task management: roles, tickets, boards and planning        | Approved |
 
 ## Work-tracks (`work-tracks/`)
 
@@ -31,8 +31,7 @@ Planned next, not yet drafted:
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 and the detail of WT-02 and WT-03 come from canonical doc 0003, which is
-still `Proposed`.
+WT-07 to WT-10 and the detail of WT-02 and WT-03 come from canonical doc 0003.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
