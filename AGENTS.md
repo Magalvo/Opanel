@@ -128,8 +128,7 @@ pnpm test         # Vitest unit + integration
 pnpm test:e2e     # Playwright
 ```
 
-These scripts are added by the boilerplate work-track (WT-01); its work-item table shows
-which of them exist so far.
+All five exist. `test` and `test:e2e` need the database: `docker compose up -d`.
 
 ## 6. Hard rules
 

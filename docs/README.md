@@ -43,7 +43,7 @@ WT-07 to WT-10 and the detail of WT-02 and WT-03 come from canonical doc 0003.
 | [WI-004](work-items/WI-004-database.md)        | PostgreSQL, Drizzle and the integration test harness | Done        | [WS-004](work-specs/WS-004-database.md)        | Done        |
 | [WI-005](work-items/WI-005-health-endpoint.md) | Health endpoint: the first vertical slice            | Done        | [WS-005](work-specs/WS-005-health-endpoint.md) | Done        |
 | [WI-006](work-items/WI-006-openapi.md)         | OpenAPI document generated from Zod                  | Done        | [WS-006](work-specs/WS-006-openapi.md)         | Done        |
-| [WI-007](work-items/WI-007-e2e.md)             | Playwright end-to-end tests                          | Proposed    | [WS-007](work-specs/WS-007-e2e.md)             | Proposed    |
+| [WI-007](work-items/WI-007-e2e.md)             | Playwright end-to-end tests                          | Done        | [WS-007](work-specs/WS-007-e2e.md)             | Done        |
 
 WI-008 to WI-010 are outlined in WT-01 and get their own files when they are started.
 
@@ -56,4 +56,6 @@ Deferred decisions that need a work-item before they are acted on.
   start of WT-02.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
+- Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
+- Add Firefox and WebKit to the end-to-end tests once there is real UI to protect.
 - Return from TypeScript 6.0 to 7 once `typescript-eslint` supports it (see WS-002).
