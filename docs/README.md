@@ -9,13 +9,15 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-013 (accounts schema, Better Auth, auth env), the third item of WT-02.
-- **Next:** WI-014, the audit log table and writer. Draft its work-item and work-spec as
-  `Proposed`, then stop for the owner's approval.
+- **Last finished:** WI-013 (accounts schema, Better Auth, auth env), merged in PR #5.
+- **Next:** WI-014, the audit log table and writer. Work-item and work-spec are drafted
+  and `Proposed`; **waiting for the owner's approval** of
+  [WS-014](work-specs/WS-014-audit-log.md), which lists four open questions. No code until
+  it is `Approved`.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
-- **Nothing is awaiting an owner decision.**
+- **Awaiting the owner:** approval of WS-014.
 
 ## Canonical docs (`canonical/`)
 
@@ -63,8 +65,9 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-011](work-items/WI-011-api-foundations.md)          | API foundations: errors, validation helpers, request id | Done        | [WS-011](work-specs/WS-011-api-foundations.md)          | Done        |
 | [WI-012](work-items/WI-012-permissions-and-actor.md)    | Permission catalogue, human roles and the `Actor` type  | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)    | Done        |
 | [WI-013](work-items/WI-013-accounts-and-better-auth.md) | Accounts, sessions schema and Better Auth               | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md) | Done        |
+| [WI-014](work-items/WI-014-audit-log.md)                | Audit log table and writer                              | Proposed    | [WS-014](work-specs/WS-014-audit-log.md)                | Proposed    |
 
-WI-014 to WI-021 are outlined in WT-02 and get their own files when they are started.
+WI-015 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
 ## Follow-ups
 
