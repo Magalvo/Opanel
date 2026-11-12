@@ -5,15 +5,15 @@ import {
   createTestAccount,
   failAuditFor,
   signInCookie,
-  testActor,
   TEST_PASSWORD,
+  testActor,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, accountTokens, auditLog, sessions } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { hashToken } from "./account-tokens";
 import { inviteAccount, issueResetLink, listAccounts, updateAccount } from "./account-management";
+import { hashToken } from "./account-tokens";
 import { signIn } from "./sign-in";
 
 async function admin(email = "admin@example.com") {
@@ -129,7 +129,7 @@ describe("listAccounts", () => {
     expect(third.nextCursor).toBeNull();
     // the three rows that share a timestamp come out in id order
     const tiedIds = emails
-      .filter((email) => /^u[123]@/.test(email ?? ""))
+      .filter((email) => /^u[123]@/.test(email))
       .map(
         (email) =>
           [...first.items, ...second.items, ...third.items].find((item) => item.email === email)

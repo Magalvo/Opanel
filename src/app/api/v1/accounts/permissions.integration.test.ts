@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { apiRequest, createTestAccount, signInCookie } from "@/server/auth/testing";
 
-import { PATCH } from "./[accountId]/route";
 import { POST as resetLink } from "./[accountId]/reset-link/route";
+import { PATCH } from "./[accountId]/route";
 import { GET, POST } from "./route";
 
 function context(accountId: string) {

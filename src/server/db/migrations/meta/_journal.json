@@ -36,6 +36,13 @@
       "when": 1794514193254,
       "tag": "0004_rate_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794520375083,
+      "tag": "0005_account_tokens",
+      "breakpoints": true
     }
   ]
 }

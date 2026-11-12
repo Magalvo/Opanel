@@ -1,6 +1,6 @@
 # WI-018 — Account management API: list, invite, change role, deactivate, reactivate
 
-- Status: Approved (by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-015](WI-015-sign-in-and-authentication.md)
 - Work-spec: [WS-018](../work-specs/WS-018-account-management-api.md)
@@ -21,36 +21,36 @@ opened yet (WI-019 builds the page that accepts it).
 
 ## Acceptance criteria
 
-- [ ] Only an actor holding `accounts:manage` (an Admin) can call any of the endpoints;
+- [x] Only an actor holding `accounts:manage` (an Admin) can call any of the endpoints;
       Viewer, Member and Manager get `403`, an unauthenticated caller `401`, and
       state-changing calls from another origin `403`.
-- [ ] `GET /api/v1/accounts` lists human accounts, 50 per page by default and 100 at most,
+- [x] `GET /api/v1/accounts` lists human accounts, 50 per page by default and 100 at most,
       with an opaque keyset cursor; each item shows id, name, email, role, status
       (`invited`, `active` or `deactivated`), creation time and last-seen time. Unknown
       query parameters, an out-of-range `limit` and a tampered cursor are `400`.
-- [ ] `POST /api/v1/accounts` invites a person by name, email and role: it creates the
+- [x] `POST /api/v1/accounts` invites a person by name, email and role: it creates the
       account, with no password, and returns it together with a single-use link valid for
       7 days, shown exactly once. A second invitation for the same email is `409`.
-- [ ] The link is stored only as a hash; it never appears in any list, log line or audit
+- [x] The link is stored only as a hash; it never appears in any list, log line or audit
       entry.
-- [ ] `PATCH /api/v1/accounts/{accountId}` changes the role and/or deactivates or
+- [x] `PATCH /api/v1/accounts/{accountId}` changes the role and/or deactivates or
       reactivates the account. Changing a role or deactivating ends that account's sessions
       immediately, in the same transaction as the change.
-- [ ] The only active Admin cannot be demoted or deactivated, by anyone including
+- [x] The only active Admin cannot be demoted or deactivated, by anyone including
       themselves (`409`, code `last_admin`), even when two such requests race.
-- [ ] `POST /api/v1/accounts/{accountId}/reset-link` returns a fresh single-use link for an
+- [x] `POST /api/v1/accounts/{accountId}/reset-link` returns a fresh single-use link for an
       invited or active account (`409` for a deactivated one) and invalidates that
       account's earlier unused links.
-- [ ] Agent accounts are not listed and cannot be reached through these endpoints.
-- [ ] Each state change is audited with the acting Admin: `account.invited`,
+- [x] Agent accounts are not listed and cannot be reached through these endpoints.
+- [x] Each state change is audited with the acting Admin: `account.invited`,
       `account.role_changed` (from and to), `account.deactivated`, `account.reactivated`,
       `account.reset_link_created`; a change that changes nothing writes nothing.
-- [ ] The five operations are in the generated OpenAPI document and
+- [x] The five operations are in the generated OpenAPI document and
       `docs/api/openapi.json` is regenerated.
-- [ ] End to end, through the running app: an Admin invites a person, changes their role,
+- [x] End to end, through the running app: an Admin invites a person, changes their role,
       is refused when trying to demote the last Admin, and deactivating a signed-in person
       makes their next request `401`.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

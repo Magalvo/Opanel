@@ -1,6 +1,6 @@
 # WS-018 — Account management API: list, invite, change role, deactivate, reactivate
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-018](../work-items/WI-018-account-management-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3;
   [0004](../canonical/0004-api-conventions.md) sections 3 to 7;
@@ -156,3 +156,33 @@ Technical, settled by the tests:
 5. **Serialising Admin changes.** One advisory lock for all role and deactivation changes
    is coarse, but these are rare Admin actions, and it is the simplest thing that is
    provably right (test 13).
+
+## Deviations from the approved spec
+
+1. **The permission is checked in the route and again in the service.** Doc 0004 section 7
+   asks the endpoint to check before calling a service; the service check is a second line
+   that cannot be forgotten by a future caller. Tests cover both.
+2. **Timestamps are formatted in SQL.** Drizzle's `postgres-js` driver hands raw `execute`
+   results back as strings, and a JavaScript `Date` would cut a cursor to milliseconds and
+   repeat the last row. The list therefore selects the ISO text itself, with six fractional
+   digits for the cursor, and compares with `::timestamptz`. The tie test (three rows with the
+   same creation time) covers it.
+3. **A duplicate email uses `ON CONFLICT DO NOTHING`**, not a caught unique violation, so the
+   transaction is never left in an aborted state.
+4. **`lastAdmin()`** is a named error constructor in `src/server/http/errors.ts` (not in the
+   file list), next to the others; `last_admin` is also in `PROBLEM_CODES`.
+5. **Test helpers** `apiRequest`, `testActor` and `failAuditFor` were added to
+   `src/server/auth/testing.ts`.
+6. **The end-to-end test deactivates the other Admins** it finds (the first-run Admin exists
+   by then) so that its own Admin is the last active one, which is the only way to reach
+   `last_admin` in a database shared by the suite.
+
+## Implementation record
+
+- Red: schema, pagination, contract, token, service and route tests failed on missing
+  modules, the missing table and the missing code (committed before any code).
+- Green: 367 Vitest tests (up from 319) and 22 Playwright tests (up from 21) pass.
+  `pnpm db:generate` and `pnpm openapi:generate` leave no diff; typecheck and lint pass with
+  and without generated route types.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

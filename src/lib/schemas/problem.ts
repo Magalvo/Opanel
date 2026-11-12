@@ -2,7 +2,8 @@ import { z } from "zod";
 
 /**
  * Base error codes of the API (canonical doc 0004, section 4). Clients branch on these.
- * A work-spec may add a more specific code; codes are never renamed or reused.
+ * A work-spec may add a more specific code (`last_admin`, WS-018); codes are never renamed or
+ * reused.
  */
 export const PROBLEM_CODES = [
   "invalid_request",
@@ -10,6 +11,7 @@ export const PROBLEM_CODES = [
   "forbidden",
   "not_found",
   "conflict",
+  "last_admin",
   "unsupported_media_type",
   "rate_limited",
   "internal_error",

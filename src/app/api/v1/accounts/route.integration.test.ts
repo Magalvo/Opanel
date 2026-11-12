@@ -134,7 +134,9 @@ describe("POST /api/v1/accounts", () => {
       undefined,
     );
     const text = await response.text();
-    spies.forEach((spy) => spy.mockRestore());
+    spies.forEach((spy) => {
+      spy.mockRestore();
+    });
 
     const token = new URL(inviteResponseSchema.parse(JSON.parse(text)).link.url).hash.slice(1);
     const [session] = await getDb().select().from(sessions);
