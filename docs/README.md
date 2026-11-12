@@ -66,7 +66,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-013](work-items/WI-013-accounts-and-better-auth.md)   | Accounts, sessions schema and Better Auth               | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)   | Done        |
 | [WI-014](work-items/WI-014-audit-log.md)                  | Audit log table and writer                              | Done        | [WS-014](work-specs/WS-014-audit-log.md)                  | Done        |
 | [WI-015](work-items/WI-015-sign-in-and-authentication.md) | Sign-in, sign-out, me, authentication, limiter          | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md) | Done        |
-| [WI-016](work-items/WI-016-first-run-setup.md)            | First-run setup: create the first Admin                 | Proposed    | [WS-016](work-specs/WS-016-first-run-setup.md)            | Proposed    |
+| [WI-016](work-items/WI-016-first-run-setup.md)            | First-run setup: create the first Admin                 | Approved | [WS-016](work-specs/WS-016-first-run-setup.md)            | Approved |
 
 WI-017 to WI-021 are outlined in WT-02 and get their own files when they are started.
 

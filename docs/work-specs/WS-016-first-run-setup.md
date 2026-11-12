@@ -1,6 +1,6 @@
 # WS-016 — First-run setup: create the first Admin (API and page)
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-016](../work-items/WI-016-first-run-setup.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 3, 4, 7;
