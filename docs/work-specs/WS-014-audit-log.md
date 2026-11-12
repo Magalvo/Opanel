@@ -1,6 +1,6 @@
 # WS-014 — Audit log table and writer
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-014](../work-items/WI-014-audit-log.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 4 and 7;
   [0003](../canonical/0003-task-management.md) section 9;
@@ -115,3 +115,22 @@ Technical:
    different types. `Executor` is the narrowest type both satisfy (`insert` is all the
    writer needs); this is settled when the first integration test compiles against the
    installed Drizzle 0.45 documentation (hard rule 13).
+
+## Deviations from the approved spec
+
+1. **The append-only trigger is migration `0003`, written with `drizzle-kit generate
+--custom`** as planned; `pnpm db:generate` afterwards reports nothing to generate, so
+   the hand-written file does not disturb the schema snapshot.
+2. **Test 8 (no actor)** is split: the runtime part (a row with a null actor) and the
+   type part (`actor` is required and typed `Actor | null`, checked with `expectTypeOf`).
+3. **`AuditExecutor` is `Pick<Database, "insert">`.** Both the database and a Drizzle
+   transaction satisfy it; the integration tests compile and run against both.
+
+## Implementation record
+
+- Red: the unit test failed on the missing module; the integration test failed on the
+  missing module (committed before any code).
+- Green: 200 tests pass (about 20 new), up from 180. Playwright: 12 pass. `pnpm
+db:generate` reports nothing to generate.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

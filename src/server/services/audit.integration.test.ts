@@ -83,7 +83,9 @@ describe("recordAudit", () => {
     expect(row?.actorAccountId).toBeNull();
     expectTypeOf<AuditEvent["actor"]>().not.toBeUndefined();
     expectTypeOf<AuditEvent>().toHaveProperty("actor");
-    expectTypeOf<Pick<AuditEvent, "actor">>().not.toEqualTypeOf<Partial<Pick<AuditEvent, "actor">>>();
+    expectTypeOf<Pick<AuditEvent, "actor">>().not.toEqualTypeOf<
+      Partial<Pick<AuditEvent, "actor">>
+    >();
   });
 });
 

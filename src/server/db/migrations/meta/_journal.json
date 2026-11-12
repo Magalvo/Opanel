@@ -15,6 +15,20 @@
       "when": 1794511661548,
       "tag": "0001_better_auth_required_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794512877748,
+      "tag": "0002_audit_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794512878421,
+      "tag": "0003_audit_log_append_only",
+      "breakpoints": true
     }
   ]
 }

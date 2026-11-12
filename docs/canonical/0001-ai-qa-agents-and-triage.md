@@ -198,7 +198,7 @@ task_links(from_task_id, to_task_id, type)
 comments(id, task_id, author_account_id?, kind, body)
 routing_rules(project_id, origin_layer, team_id)
 bug_reports(id, project_id, agent_account_id, task_id, payload, created_at)
-audit_log(id, actor_account_id, action, entity, entity_id, data, created_at)
+audit_log(id, actor_account_id?, action, entity, entity_id?, data?, created_at)   append-only
 ```
 
 A **project** is the unit under test. Dogfooding means creating a project named "Opanel"

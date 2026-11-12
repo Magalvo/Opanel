@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assertAuditDataSafe,
   AUDIT_ACTIONS,
   AUDIT_DATA_MAX_BYTES,
-  assertAuditDataSafe,
   auditActionSchema,
 } from "./audit";
 
@@ -27,17 +27,23 @@ describe("auditActionSchema", () => {
 
 describe("assertAuditDataSafe", () => {
   it("accepts plain data", () => {
-    expect(() =>
-      assertAuditDataSafe({ from: "member", to: "admin", count: 2, tags: ["a", { b: null }] }),
-    ).not.toThrow();
+    expect(() => {
+      assertAuditDataSafe({ from: "member", to: "admin", count: 2, tags: ["a", { b: null }] });
+    }).not.toThrow();
   });
 
   it.each(["password", "Secret", "apiToken", "passwordHash", "Authorization", "cookie"])(
     "rejects the key %s at any depth",
     (key) => {
-      expect(() => assertAuditDataSafe({ [key]: "x" })).toThrow();
-      expect(() => assertAuditDataSafe({ outer: { [key]: "x" } })).toThrow();
-      expect(() => assertAuditDataSafe({ list: [{ [key]: "x" }] })).toThrow();
+      expect(() => {
+        assertAuditDataSafe({ [key]: "x" });
+      }).toThrow();
+      expect(() => {
+        assertAuditDataSafe({ outer: { [key]: "x" } });
+      }).toThrow();
+      expect(() => {
+        assertAuditDataSafe({ list: [{ [key]: "x" }] });
+      }).toThrow();
     },
   );
 
@@ -55,12 +61,20 @@ describe("assertAuditDataSafe", () => {
   it("accepts data up to 8 KiB and rejects one byte more", () => {
     const overhead = JSON.stringify({ v: "" }).length;
     const exact = { v: "a".repeat(AUDIT_DATA_MAX_BYTES - overhead) };
-    expect(() => assertAuditDataSafe(exact)).not.toThrow();
-    expect(() => assertAuditDataSafe({ v: exact.v + "a" })).toThrow();
+    expect(() => {
+      assertAuditDataSafe(exact);
+    }).not.toThrow();
+    expect(() => {
+      assertAuditDataSafe({ v: exact.v + "a" });
+    }).toThrow();
   });
 
   it("rejects values that are not JSON", () => {
-    expect(() => assertAuditDataSafe({ f: () => 1 })).toThrow();
-    expect(() => assertAuditDataSafe({ n: 10n })).toThrow();
+    expect(() => {
+      assertAuditDataSafe({ f: () => 1 });
+    }).toThrow();
+    expect(() => {
+      assertAuditDataSafe({ n: 10n });
+    }).toThrow();
   });
 });
