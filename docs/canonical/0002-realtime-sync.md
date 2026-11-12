@@ -109,8 +109,10 @@ The stream sends a heartbeat comment every 25 seconds so proxies keep it open.
 - E2E (Playwright, two browser contexts): a card moved in one context appears moved in the
   other without reload; a ticket created through the API appears on an open board.
 
-## 8. Open questions for the owner
+## 8. Resolved questions
 
-1. Is "second writer gets a conflict and sees the newer version" acceptable for v1, or do
-   you want field-level merging (two people editing different fields both succeed)?
-2. Is presence (avatars of who is on the board) wanted in v1? Proposed: no.
+Decided with the owner on 2026-11-12:
+
+1. **Concurrent edits:** the second writer gets a `409` and is shown the newer version.
+   No field-level merging in v1.
+2. **Presence:** not in v1.
