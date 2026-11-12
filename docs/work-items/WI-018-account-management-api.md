@@ -1,6 +1,6 @@
 # WI-018 — Account management API: list, invite, change role, deactivate, reactivate
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-12)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-015](WI-015-sign-in-and-authentication.md)
 - Work-spec: [WS-018](../work-specs/WS-018-account-management-api.md)

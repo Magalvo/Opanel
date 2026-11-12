@@ -88,7 +88,7 @@ Each item leaves the repository green and is one branch/PR.
 | [WI-015](../work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Done     | WI-011, WI-014 |
 | [WI-016](../work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin (API and page)                       | Done     | WI-015         |
 | [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected app shell, account menu with sign-out                | Done     | WI-015         |
-| [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate    | Proposed | WI-015         |
+| [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate    | Approved | WI-015         |
 | WI-019                                                             | Accepting an invitation or reset link: set a password (API and page)         | Draft    | WI-018         |
 | WI-020                                                             | Admin "People" page                                                          | Draft    | WI-017, WI-018 |
 | WI-021                                                             | Own profile: change name and password                                        | Draft    | WI-017         |

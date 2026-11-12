@@ -1,6 +1,6 @@
 # WS-018 — Account management API: list, invite, change role, deactivate, reactivate
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
 - Work-item: [WI-018](../work-items/WI-018-account-management-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3;
   [0004](../canonical/0004-api-conventions.md) sections 3 to 7;

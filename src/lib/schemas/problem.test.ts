@@ -28,12 +28,13 @@ describe("problemSchema", () => {
     expect(problemSchema.parse(problem)).toEqual(problem);
   });
 
-  it("knows the base codes of canonical doc 0004", () => {
+  it("knows the base codes of canonical doc 0004 and the specific ones of work-specs", () => {
     expect([...PROBLEM_CODES].sort()).toEqual([
       "conflict",
       "forbidden",
       "internal_error",
       "invalid_request",
+      "last_admin",
       "not_found",
       "rate_limited",
       "unauthenticated",
