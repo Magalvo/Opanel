@@ -1,6 +1,6 @@
 # WS-009 — Continuous integration
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12)
 - Work-item: [WI-009](../work-items/WI-009-ci.md)
 - Canonical docs: `AGENTS.md` sections 2 and 5
 
@@ -89,3 +89,23 @@ None.
    Dependabot later). Proposed anyway, as the safer default for a public project.
 4. Docker Hub rate limits can occasionally fail the image pull on shared CI runners. If
    it becomes a problem, the image can be mirrored or cached.
+
+## Outcome
+
+Implemented in [pull request 1](https://github.com/Magalvo/Opanel/pull/1), a draft from
+the working branch into `main` (owner's choice for open question 1; `main` was created on
+GitHub from the commit that proposed this spec).
+
+| #   | Result                                                                                                                                                             |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Passed: `actionlint` 1.7.12 reports no problems.                                                                                                                   |
+| 2   | Passed: [run 43253052980](https://github.com/Magalvo/Opanel/actions/runs/43253052980) failed at `Format check`; the test and end-to-end steps were skipped.        |
+| 3   | Passed: [run 43253730057](https://github.com/Magalvo/Opanel/actions/runs/43253730057) passed every step.                                                           |
+| 4   | Passed: the log shows Node.js 22.23.4, pnpm 10.28.0 and PostgreSQL 18.6.                                                                                           |
+| 5   | Not run (optional). The upload step is configured and ran on the red run, but no end-to-end failure was forced, so a real report artifact has not been downloaded. |
+
+Also not observed in practice: a newer push cancelling a run in progress, and the `push`
+trigger on `main` (it first fires when the pull request is merged). Both are configured.
+
+Action versions pinned: `actions/checkout` v7.0.1, `pnpm/action-setup` v6.1.1,
+`actions/setup-node` v7.1.0, `actions/upload-artifact` v7.0.2. Risk 2 did not occur.
