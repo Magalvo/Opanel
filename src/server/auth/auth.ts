@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/schemas/auth";
 import { getDb } from "@/server/db/client";
-import { accounts, credentials, sessions } from "@/server/db/schema";
+import { accounts, credentials, sessions, verification } from "@/server/db/schema";
 import { getEnv } from "@/server/env";
 
 import { hashPassword, verifyPassword } from "./password";
@@ -20,7 +20,7 @@ function createAuth() {
     telemetry: { enabled: false },
     database: drizzleAdapter(getDb(), {
       provider: "pg",
-      schema: { accounts, credentials, sessions },
+      schema: { accounts, credentials, sessions, verification },
     }),
     advanced: { database: { generateId: "uuid" } },
     // Better Auth's `user`, `session` and `account` models are Opanel's `accounts`,

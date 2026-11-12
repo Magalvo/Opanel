@@ -2,3 +2,4 @@
 export { accounts } from "./accounts";
 export { credentials } from "./credentials";
 export { sessions } from "./sessions";
+export { verification } from "./verification";

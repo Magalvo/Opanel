@@ -1,6 +1,6 @@
 # WS-013 — Accounts, credentials and sessions schema; Better Auth installed; auth env
 
-- Status: Approved (by the owner on 2026-11-12, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-12; one amendment approved the same day, see Deviations)
 - Work-item: [WI-013](../work-items/WI-013-accounts-and-better-auth.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 3, 4, 7;
   [0004](../canonical/0004-api-conventions.md) section 7;
@@ -151,3 +151,31 @@ Technical, to be settled by the tests rather than assumed:
 6. **Native module and Next.js.** `@node-rs/argon2` is a native addon. The Next.js 16
    documentation of the installed version decides whether `serverExternalPackages` is
    needed; the production build in the E2E run is the proof.
+
+## Deviations from the approved spec
+
+1. **Extra tables and columns, approved by the owner on 2026-11-12.** Better Auth 1.7.22's
+   Drizzle adapter compares the schema with its own model and refuses to start without a
+   `verification` table and six nullable OAuth columns on `credentials` (`access_token`,
+   `refresh_token`, `id_token`, `access_token_expires_at`, `refresh_token_expires_at`,
+   `scope`). The spec had excluded both. They are added by migration
+   `0001_better_auth_required_columns` (the applied `0000` was not edited) and are unused
+   in v1. A test (written first) requires them.
+2. **`algorithm: 2` instead of `Algorithm.Argon2id`.** `@node-rs/argon2` exports the
+   algorithm as an ambient `const enum`, which TypeScript refuses under `isolatedModules`.
+   The numeric value is Argon2id; test 5 checks the hash header.
+3. **Test 15 (telemetry off)** is in `auth.integration.test.ts`, not a unit test, because
+   it reads the configured instance, which needs the environment.
+4. **Accounts in the tests are created by direct inserts** with `hashPassword` (the
+   second option of question 5); no production way to create accounts exists yet.
+5. **`next.config.ts` is unchanged:** Next.js 16 already externalises `@node-rs/argon2`
+   (`serverExternalPackages` documentation of the installed version).
+
+## Implementation record
+
+- Red: unit tests failed on missing modules and env; integration tests failed on missing
+  tables. Then, after the owner's decision, a Red test for the extra tables and columns.
+- Green: 180 tests pass (154 unit, 26 integration), up from 133. Playwright: 12 pass
+  against the production build. `pnpm db:generate` reports nothing to generate.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

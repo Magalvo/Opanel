@@ -8,6 +8,13 @@
       "when": 1794511476055,
       "tag": "0000_accounts_and_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794511661548,
+      "tag": "0001_better_auth_required_columns",
+      "breakpoints": true
     }
   ]
 }
