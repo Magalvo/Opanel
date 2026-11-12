@@ -83,6 +83,25 @@ export function parseEnv(source: EnvSource): Env {
   throw new EnvValidationError(problems);
 }
 
+/**
+ * Things an operator should know about a production configuration that is valid but weaker
+ * than it could be. Printed once at startup; never a reason to stop the server.
+ */
+export function productionWarnings(env: Pick<Env, "NODE_ENV" | "CLIENT_IP_HEADER">): string[] {
+  if (env.NODE_ENV !== "production") {
+    return [];
+  }
+  const warnings: string[] = [];
+  if (env.CLIENT_IP_HEADER === undefined) {
+    warnings.push(
+      "CLIENT_IP_HEADER is not set: sign-in attempts are limited per email only, not per " +
+        "client address. Run Opanel behind a reverse proxy and set CLIENT_IP_HEADER to the " +
+        "header in which that proxy puts the client address. See .env.example.",
+    );
+  }
+  return warnings;
+}
+
 export function createEnvAccessor(readSource: () => EnvSource): () => Env {
   let cached: Env | undefined;
   return () => {

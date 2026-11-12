@@ -15,11 +15,30 @@ export interface RateLimitResult {
   allowed: boolean;
   /** Seconds until the window frees up; 0 when allowed. */
   retryAfterSeconds: number;
+  /** True only for the attempt that crosses the limit: once per key and window. */
+  firstRefusal: boolean;
+  /** Attempts still allowed in this window after this one; 0 at and beyond the limit. */
+  remaining: number;
 }
 
 /** Sign-in: 10 attempts per email and 50 per address, per 15 minutes (WS-015). */
 export const SIGN_IN_EMAIL_RULE: RateLimitRule = { max: 10, windowSeconds: 15 * 60 };
 export const SIGN_IN_IP_RULE: RateLimitRule = { max: 50, windowSeconds: 15 * 60 };
+
+/**
+ * Not a limit on signing in: the budget of `auth.sign_in_failed` audit rows for the whole
+ * install, 200 per 15 minutes (WS-022). The audit log is append-only, so without it anyone
+ * could grow that table by one row per request.
+ */
+export const SIGN_IN_FAILURE_AUDIT_RULE: RateLimitRule = { max: 200, windowSeconds: 15 * 60 };
+export const SIGN_IN_FAILURE_AUDIT_KEY = "signin:failure-audit";
+
+/** The longest window of any rule: a counter older than this means nothing any more. */
+export const LONGEST_WINDOW_SECONDS = Math.max(
+  SIGN_IN_EMAIL_RULE.windowSeconds,
+  SIGN_IN_IP_RULE.windowSeconds,
+  SIGN_IN_FAILURE_AUDIT_RULE.windowSeconds,
+);
 
 /**
  * Records one attempt against `key` and says whether it is within the limit. A single
@@ -48,14 +67,19 @@ export async function consumeRateLimit(
     throw new Error("The rate limiter did not return a row.");
   }
   const allowed = row.count <= max;
-  return { allowed, retryAfterSeconds: allowed ? 0 : Math.max(1, row.retry_after) };
+  return {
+    allowed,
+    retryAfterSeconds: allowed ? 0 : Math.max(1, row.retry_after),
+    firstRefusal: row.count === max + 1,
+    remaining: Math.max(0, max - row.count),
+  };
 }
 
-/** Deletes counters whose window ended more than a day ago. */
+/** Deletes counters whose window has ended. */
 export async function purgeExpiredRateLimits(executor: RateLimitExecutor): Promise<void> {
-  await executor.execute(
-    sql`delete from rate_limits where window_started_at < now() - interval '1 day'`,
-  );
+  await executor.execute(sql`
+    delete from rate_limits
+    where window_started_at < now() - make_interval(secs => ${LONGEST_WINDOW_SECONDS})`);
 }
 
 /**
