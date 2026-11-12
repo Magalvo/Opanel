@@ -212,7 +212,8 @@ Technical, settled by the tests rather than assumed:
 ## Implementation record
 
 - Red: unit, integration and end-to-end tests failed on missing modules and behaviour
-  (committed before any code); a separate Red test preceded the `noContent` contract.
+  (committed before any code). The `noContent` contract test was seen failing before its
+  code was written, but was committed together with it.
 - Green: 250 Vitest tests (up from 200) and 14 Playwright tests (up from 12) pass.
   `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
 - Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
