@@ -1,6 +1,6 @@
 # WS-026 — Teams, membership and the people directory
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-13, questions 1 to 3 as proposed)
 - Work-item: [WI-026](../work-items/WI-026-teams-and-people.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3;
   [0004](../canonical/0004-api-conventions.md) sections 5, 6, 7;

@@ -1,6 +1,6 @@
 # WI-026 — Teams, membership and the people directory
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 9 and 17)
 - Depends on: WI-025
 - Work-spec: [WS-026](../work-specs/WS-026-teams-and-people.md)
