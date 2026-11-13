@@ -1,6 +1,6 @@
 # WS-025 — `route()` declares authentication and permission
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-13, with question 1 as proposed)
 - Work-item: [WI-025](../work-items/WI-025-route-declares-access.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 7; `AGENTS.md`
   hard rules 6 and 9; [WT-03](../work-tracks/WT-03-board-core.md) decision 1;

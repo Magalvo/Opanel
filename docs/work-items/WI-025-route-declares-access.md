@@ -1,6 +1,6 @@
 # WI-025 — `route()` declares authentication and permission
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (design decision 1)
 - Depends on: none
 - Work-spec: [WS-025](../work-specs/WS-025-route-declares-access.md)
