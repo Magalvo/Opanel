@@ -100,10 +100,31 @@ describe("buildOpenApiDocument", () => {
     for (const contract of contracts) {
       const security = paths[contract.path]?.[contract.method]?.security;
       expect(security, `${contract.method} ${contract.path}`).toEqual(
-        contract.public ? [] : [{ sessionCookie: [] }],
+        contract.access.kind === "public" ? [] : [{ sessionCookie: [] }],
       );
     }
-    expect(contracts.some((contract) => !contract.public)).toBe(true);
+    expect(contracts.some((contract) => contract.access.kind !== "public")).toBe(true);
+  });
+
+  it("names the permission of every permission-checked operation, and only there", () => {
+    const { paths } = z
+      .object({
+        paths: z.record(z.string(), z.record(z.string(), z.record(z.string(), z.unknown()))),
+      })
+      .parse(documentAsJson());
+
+    for (const contract of contracts) {
+      const operation = paths[contract.path]?.[contract.method];
+      const where = `${contract.method} ${contract.path}`;
+      if (contract.access.kind === "permission") {
+        expect(operation?.["x-opanel-permission"], where).toBe(contract.access.permission);
+        expect(operation?.["description"], where).toContain(
+          `Requires the \`${contract.access.permission}\` permission.`,
+        );
+      } else {
+        expect(operation?.["x-opanel-permission"], where).toBeUndefined();
+      }
+    }
   });
 
   it("derives the health schema from the Zod schema", () => {
@@ -139,7 +160,7 @@ describe("buildOpenApiDocument", () => {
       method: "post",
       path: "/api/v1/projects/{projectId}/things",
       summary: "Create a thing",
-      public: false,
+      access: { kind: "permission", permission: "tasks:write" },
       request: {
         params: z.strictObject({ projectId: z.uuid() }),
         query: z.strictObject({ dryRun: z.enum(["true", "false"]).optional() }),
@@ -156,7 +177,7 @@ describe("buildOpenApiDocument", () => {
       method: "get",
       path: "/api/v1/public-thing",
       summary: "A public thing",
-      public: true,
+      access: { kind: "public" },
       responses: { 200: { description: "The thing.", schema: thingSchema } },
     } satisfies EndpointContract;
 
@@ -164,7 +185,7 @@ describe("buildOpenApiDocument", () => {
       method: "post",
       path: "/api/v1/things/end",
       summary: "End a thing",
-      public: false,
+      access: { kind: "authenticated" },
       responses: { 204: { description: "Ended.", noContent: true } },
     } satisfies EndpointContract;
 
@@ -239,6 +260,23 @@ describe("buildOpenApiDocument", () => {
     it("requires the session cookie on the protected one and nothing on the public one", () => {
       expect(operation(createThing.path, "post").security).toEqual([{ sessionCookie: [] }]);
       expect(operation(publicThing.path, "get").security).toEqual([]);
+    });
+
+    it("names the permission on a permission-checked operation only", () => {
+      const document = testDocument();
+      const paths = z
+        .object({
+          paths: z.record(z.string(), z.record(z.string(), z.record(z.string(), z.unknown()))),
+        })
+        .parse(document).paths;
+
+      expect(paths[createThing.path]?.["post"]?.["x-opanel-permission"]).toBe("tasks:write");
+      expect(paths[createThing.path]?.["post"]?.["description"]).toBe(
+        "Requires the `tasks:write` permission.",
+      );
+      expect(paths[endSession.path]?.["post"]?.["x-opanel-permission"]).toBeUndefined();
+      expect(paths[endSession.path]?.["post"]?.["description"]).toBeUndefined();
+      expect(paths[publicThing.path]?.["get"]?.["x-opanel-permission"]).toBeUndefined();
     });
 
     it("adds neither to public operations", () => {

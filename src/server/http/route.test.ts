@@ -4,10 +4,22 @@ import { z } from "zod";
 import { problemSchema } from "@/lib/schemas/problem";
 
 import { ApiError, notFound, rateLimited } from "./errors";
-import { json, noContent, readJson, readParams, readQuery, route } from "./route";
+import type { EndpointContract } from "@/lib/openapi/contract";
+
+import { json, noContent, readJson, readParams, readQuery, route, unknownPathRoute } from "./route";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const URL_BASE = "http://localhost/api/v1/things";
+const APP_URL = "http://localhost";
+
+/** A public operation: the wrapper checks only the origin, never credentials. */
+const publicThing = {
+  method: "get",
+  path: "/api/v1/things",
+  summary: "Things",
+  access: { kind: "public" },
+  responses: { 200: { description: "Things.", noContent: true } },
+} satisfies EndpointContract;
 
 function get(headers?: Record<string, string>): Request {
   return new Request(URL_BASE, headers ? { headers } : {});
@@ -17,7 +29,10 @@ function post(body: string, contentType: string | null = "application/json"): Re
   return new Request(URL_BASE, {
     method: "POST",
     body,
-    headers: contentType === null ? {} : { "Content-Type": contentType },
+    headers: {
+      Origin: APP_URL,
+      ...(contentType === null ? {} : { "Content-Type": contentType }),
+    },
   });
 }
 
@@ -30,8 +45,9 @@ async function throughRoute(
   request: Request,
   action: (request: Request) => Promise<unknown>,
 ): Promise<Response> {
-  const handler = route(async (incoming: Request) => json(await action(incoming)), {
+  const handler = route(publicThing, async (incoming: Request) => json(await action(incoming)), {
     logError: () => undefined,
+    appUrl: APP_URL,
   });
   return handler(request, undefined);
 }
@@ -43,7 +59,7 @@ const thingSchema = z.strictObject({
 
 describe("route", () => {
   it("turns a thrown ApiError into its problem response", async () => {
-    const handler = route(() => {
+    const handler = route(publicThing, () => {
       throw notFound("No such thing.");
     });
 
@@ -61,7 +77,7 @@ describe("route", () => {
   });
 
   it("sends Retry-After with a rate limit", async () => {
-    const handler = route(() => {
+    const handler = route(publicThing, () => {
       throw rateLimited(30);
     });
 
@@ -73,6 +89,7 @@ describe("route", () => {
 
   it("turns an unexpected exception into internal_error without leaking it", async () => {
     const handler = route(
+      publicThing,
       () => {
         throw new Error("secret detail at /srv/app/db.ts");
       },
@@ -92,6 +109,7 @@ describe("route", () => {
   it("logs an unexpected exception with the request id of the response", async () => {
     const logError = vi.fn<(message: string) => void>();
     const handler = route(
+      publicThing,
       () => {
         throw new TypeError("boom");
       },
@@ -109,6 +127,7 @@ describe("route", () => {
   it("does not log expected API errors", async () => {
     const logError = vi.fn<(message: string) => void>();
     const handler = route(
+      publicThing,
       () => {
         throw notFound();
       },
@@ -121,7 +140,7 @@ describe("route", () => {
   });
 
   it("adds no-store and a request id to a successful response, keeping the rest", async () => {
-    const handler = route(() => json({ ok: true }, 201));
+    const handler = route(publicThing, () => json({ ok: true }, 201));
 
     const response = await handler(get(), undefined);
 
@@ -133,7 +152,7 @@ describe("route", () => {
   });
 
   it("handles a response with no body", async () => {
-    const handler = route(() => noContent());
+    const handler = route(publicThing, () => noContent());
 
     const response = await handler(get(), undefined);
 
@@ -144,7 +163,7 @@ describe("route", () => {
   });
 
   it("repeats the request id header in the error body", async () => {
-    const handler = route(() => {
+    const handler = route(publicThing, () => {
       throw notFound();
     });
 
@@ -155,7 +174,7 @@ describe("route", () => {
   });
 
   it("generates a new id per request and ignores an incoming X-Request-Id", async () => {
-    const handler = route(() => noContent());
+    const handler = route(publicThing, () => noContent());
     const supplied = "11111111-1111-4111-8111-111111111111";
 
     const first = await handler(get({ "X-Request-Id": supplied }), undefined);
@@ -168,7 +187,7 @@ describe("route", () => {
 
   it("passes the request and the route context to the handler", async () => {
     const context = { params: Promise.resolve({ id: "abc" }) };
-    const handler = route(async (request: Request, received: typeof context) =>
+    const handler = route(publicThing, async (request: Request, received: typeof context) =>
       json({ method: request.method, id: (await received.params).id }),
     );
 
@@ -176,6 +195,81 @@ describe("route", () => {
 
     expect(await response.json()).toEqual({ method: "GET", id: "abc" });
   });
+});
+
+describe("route with a public contract", () => {
+  const options = { appUrl: APP_URL, logError: () => undefined };
+
+  function postFrom(origin: string | null): Request {
+    return new Request(URL_BASE, {
+      method: "POST",
+      headers: origin === null ? {} : { Origin: origin },
+    });
+  }
+
+  it("rejects a state-changing request from another origin, or with none, before the handler", async () => {
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      for (const origin of ["https://evil.example", null]) {
+        const handler = vi.fn(() => noContent());
+        const request = new Request(URL_BASE, {
+          method,
+          headers: origin === null ? {} : { Origin: origin },
+        });
+
+        const response = await route(publicThing, handler, options)(request, undefined);
+
+        expect(response.status, `${method} from ${String(origin)}`).toBe(403);
+        expect((await problemOf(response)).code).toBe("forbidden");
+        expect(handler).not.toHaveBeenCalled();
+      }
+    }
+  });
+
+  it("lets a same-origin state-changing request reach the handler", async () => {
+    const handler = vi.fn(() => noContent());
+
+    const response = await route(publicThing, handler, options)(postFrom(APP_URL), undefined);
+
+    expect(response.status).toBe(204);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("needs no Origin on GET, and hands the handler no authentication", async () => {
+    const handler = vi.fn((_request: Request, _context: unknown, auth: undefined) =>
+      json({ auth: auth === undefined }),
+    );
+
+    const response = await route(publicThing, handler, options)(get(), undefined);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ auth: true });
+  });
+
+  it("exposes the contract it was built from", () => {
+    const handler = route(publicThing, () => noContent(), options);
+
+    expect(handler.contract).toBe(publicThing);
+  });
+});
+
+describe("unknownPathRoute", () => {
+  it("converts errors and adds the shared headers, and carries no contract", async () => {
+    const handler = unknownPathRoute(() => {
+      throw notFound("Nothing here.");
+    });
+
+    const response = await handler(postFrom404(), undefined);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("X-Request-Id")).toMatch(UUID);
+    expect("contract" in handler).toBe(false);
+  });
+
+  function postFrom404(): Request {
+    // No Origin: the catch-all changes nothing, so it is not checked.
+    return new Request(URL_BASE, { method: "POST" });
+  }
 });
 
 describe("readJson", () => {
