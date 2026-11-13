@@ -33,6 +33,13 @@ export const SIGN_IN_IP_RULE: RateLimitRule = { max: 50, windowSeconds: 15 * 60 
 export const ACCEPT_LINK_IP_RULE: RateLimitRule = { max: 30, windowSeconds: 15 * 60 };
 
 /**
+ * Changing one's own password: 10 attempts per account per 15 minutes (WS-021). Per account,
+ * not per address: the risk is someone with a stolen session cookie guessing the password,
+ * and they choose their address.
+ */
+export const CHANGE_PASSWORD_RULE: RateLimitRule = { max: 10, windowSeconds: 15 * 60 };
+
+/**
  * Not a limit on signing in: the budget of `auth.sign_in_failed` audit rows for the whole
  * install, 200 per 15 minutes (WS-022). The audit log is append-only, so without it anyone
  * could grow that table by one row per request.
@@ -46,6 +53,7 @@ export const LONGEST_WINDOW_SECONDS = Math.max(
   SIGN_IN_IP_RULE.windowSeconds,
   SIGN_IN_FAILURE_AUDIT_RULE.windowSeconds,
   ACCEPT_LINK_IP_RULE.windowSeconds,
+  CHANGE_PASSWORD_RULE.windowSeconds,
 );
 
 /**

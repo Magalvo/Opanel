@@ -4,10 +4,21 @@ import { contracts } from "@/lib/openapi/contracts";
 
 import {
   accountLinkSchema,
+  accountNameSchema,
   inviteRequestSchema,
   managedAccountSchema,
   updateAccountRequestSchema,
 } from "./accounts";
+
+describe("accountNameSchema", () => {
+  it("trims, and accepts 1 to 100 characters", () => {
+    expect(accountNameSchema.parse("  Grace Hopper ")).toBe("Grace Hopper");
+    expect(accountNameSchema.safeParse("x".repeat(100)).success).toBe(true);
+    expect(accountNameSchema.safeParse(" ").success).toBe(false);
+    expect(accountNameSchema.safeParse("x".repeat(101)).success).toBe(false);
+    expect(accountNameSchema.safeParse(42).success).toBe(false);
+  });
+});
 
 describe("inviteRequestSchema", () => {
   const valid = { name: "Grace", email: "grace@example.com", role: "member" };

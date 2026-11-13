@@ -51,6 +51,15 @@ describe("AccountMenu", () => {
     expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
+  it("links to the person's own profile page", async () => {
+    const user = userEvent.setup();
+    render(<AccountMenu account={account} />);
+
+    await user.click(screen.getByRole("button", { name: "Account menu" }));
+
+    expect(screen.getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
+  });
+
   it("signs out through the API, then replaces the route with /sign-in and refreshes", async () => {
     const user = userEvent.setup();
     render(<AccountMenu account={account} />);
