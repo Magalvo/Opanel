@@ -1,6 +1,6 @@
 # WI-029 — Columns API
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 4, 5, 7, 10, 16)
 - Depends on: WI-028
 - Work-spec: [WS-029](../work-specs/WS-029-columns-api.md)
