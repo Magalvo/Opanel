@@ -124,7 +124,9 @@ describe("POST /api/v1/account-links/accept", () => {
 
     const response = await POST(postRequest(path, { token, password: marker }), undefined);
     const text = await response.text();
-    spies.forEach((spy) => { spy.mockRestore(); });
+    spies.forEach((spy) => {
+      spy.mockRestore();
+    });
 
     const [session] = await getDb().select().from(sessions);
     const audit = JSON.stringify(await getDb().select().from(auditLog));

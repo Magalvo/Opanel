@@ -72,6 +72,16 @@ export function lastAdmin(
   return new ApiError({ status: 409, title: "Conflict", code: "last_admin", detail });
 }
 
+/**
+ * `404` with the specific code of WS-019: the one-time link is unknown, used, expired,
+ * replaced, or belongs to a deactivated account. Deliberately one answer for all of them.
+ */
+export function invalidLink(
+  detail = "This link is no longer valid. Ask an administrator for a new one.",
+): ApiError {
+  return new ApiError({ status: 404, title: "Not Found", code: "invalid_link", detail });
+}
+
 export function unsupportedMediaType(
   detail = "The request body must be sent as application/json.",
 ): ApiError {

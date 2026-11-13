@@ -2,17 +2,21 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AcceptForm } from "./accept-form";
+const push = vi.fn();
+const refresh = vi.fn();
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
+
+const { AcceptForm } = await import("./accept-form");
 
 const TOKEN = "T".repeat(43);
-const assign = vi.fn();
 const replaceState = vi.fn();
 const fetchMock = vi.fn<typeof fetch>();
 const password = "a long enough password";
 
 function setAddress(hash: string) {
   Object.defineProperty(window, "location", {
-    value: { hash, pathname: "/accept", search: "", assign },
+    value: { hash, pathname: "/accept", search: "" },
     writable: true,
   });
 }
@@ -46,7 +50,8 @@ async function fillAndSubmit(confirmation = password) {
 
 describe("AcceptForm", () => {
   beforeEach(() => {
-    assign.mockReset();
+    push.mockReset();
+    refresh.mockReset();
     replaceState.mockReset();
     fetchMock.mockReset();
     vi.stubGlobal("fetch", fetchMock);
@@ -83,14 +88,15 @@ describe("AcceptForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("posts the token and the password only, then loads the app", async () => {
+  it("posts the token and the password only, then goes to the app and refreshes", async () => {
     fetchMock.mockResolvedValue(Response.json({ id: "x" }, { status: 200 }));
 
     await fillAndSubmit();
 
     await waitFor(() => {
-      expect(assign).toHaveBeenCalledWith("/");
+      expect(push).toHaveBeenCalledWith("/");
     });
+    expect(refresh).toHaveBeenCalled();
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("/api/v1/account-links/accept");
     expect(init?.method).toBe("POST");
@@ -106,7 +112,7 @@ describe("AcceptForm", () => {
     expect(
       await screen.findByText("This link is no longer valid. Ask an administrator for a new one."),
     ).toBeInTheDocument();
-    expect(assign).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("shows the server's field errors on a 400", async () => {

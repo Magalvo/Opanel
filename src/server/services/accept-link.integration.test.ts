@@ -82,7 +82,7 @@ describe("accepting an invitation", () => {
       .select()
       .from(credentials)
       .where(eq(credentials.accountId, account.id));
-    expect(credential?.passwordHash).toMatch(/^\\$argon2id\\$/);
+    expect(credential?.passwordHash).toMatch(/^\$argon2id\$/);
     expect(credential?.passwordHash).not.toContain(NEW_PASSWORD);
     const [link] = await getDb().select().from(accountTokens);
     expect(link?.usedAt).toBeInstanceOf(Date);
@@ -312,7 +312,9 @@ describe("secrets", () => {
     );
 
     await accept(token, { password: "Marker-Password-77aa-31c0" });
-    spies.forEach((spy) => { spy.mockRestore(); });
+    spies.forEach((spy) => {
+      spy.mockRestore();
+    });
 
     expect(logged.join("\n")).not.toContain("Marker-Password-77aa-31c0");
     expect(logged.join("\n")).not.toContain(token);

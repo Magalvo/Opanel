@@ -1,4 +1,4 @@
-import { expect, request as playwrightRequest, test } from "@playwright/test";
+import { type Browser, expect, request as playwrightRequest, test } from "@playwright/test";
 
 import { inviteResponseSchema, resetLinkResponseSchema } from "@/lib/schemas/accounts";
 
@@ -10,11 +10,7 @@ const firstPassword = "the first password I choose";
 const secondPassword = "the second password I choose";
 const origin = { Origin: E2E_BASE_URL };
 
-async function setPasswordFromLink(
-  browser: import("@playwright/test").Browser,
-  url: string,
-  password: string,
-) {
+async function setPasswordFromLink(browser: Browser, url: string, password: string) {
   const context = await browser.newContext({ baseURL: E2E_BASE_URL });
   const page = await context.newPage();
   await page.goto(url);

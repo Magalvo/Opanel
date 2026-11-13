@@ -31,6 +31,14 @@ export const setupRequestSchema = z
   })
   .meta({ id: "SetupRequest" });
 
+/** Body of `POST /api/v1/account-links/accept`: a one-time token and the password to set. */
+export const acceptLinkRequestSchema = z
+  .strictObject({
+    token: z.string().regex(/^[A-Za-z0-9_-]{43,128}$/, { error: "Not a valid link token." }),
+    password: passwordSchema,
+  })
+  .meta({ id: "AcceptLinkRequest" });
+
 /** An account as the API shows it. Never includes credentials. */
 export const accountSummarySchema = z
   .strictObject({
@@ -111,5 +119,29 @@ export const setupContract = {
     403: { description: "The request does not come from the app's own origin.", problem: true },
     404: { description: "The installation is already set up.", problem: true },
     415: { description: "The body is not JSON.", problem: true },
+  },
+} satisfies EndpointContract;
+
+export const acceptLinkContract = {
+  method: "post",
+  path: "/api/v1/account-links/accept",
+  summary: "Accept an invitation or reset link",
+  description:
+    "Sets the password of the account a one-time link was issued for, and signs the person in. " +
+    "Public: the token is the credential. Every refusal (unknown, used, expired, replaced, or " +
+    "the account is deactivated) is the same 404 `invalid_link`. All earlier sessions of the " +
+    "account end. Must come from the app's own origin.",
+  public: true,
+  request: { body: acceptLinkRequestSchema },
+  responses: {
+    200: {
+      description: "The password was set. The session cookie is set.",
+      schema: accountSummarySchema,
+    },
+    400: { description: "The body is not valid.", problem: true },
+    403: { description: "The request does not come from the app's own origin.", problem: true },
+    404: { description: "The link is not valid (code `invalid_link`).", problem: true },
+    415: { description: "The body is not JSON.", problem: true },
+    429: { description: "Too many attempts from this address. See Retry-After.", problem: true },
   },
 } satisfies EndpointContract;

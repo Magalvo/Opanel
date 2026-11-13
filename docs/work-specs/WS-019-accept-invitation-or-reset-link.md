@@ -1,6 +1,6 @@
 # WS-019 — Accepting an invitation or reset link: set a password (API and page)
 
-- Status: Approved (by the owner on 2026-11-13, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-019](../work-items/WI-019-accept-invitation-or-reset-link.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 5, 6, 7, 8;
@@ -155,3 +155,35 @@ Technical, settled by the tests:
    sessions, including one the person may have in another browser, before the new one is
    created (decision 7). That is intended and is stated on the page: "You will be signed out
    everywhere else."
+
+## Deviations from the approved spec
+
+1. **After success the form uses `router.push("/")` and `router.refresh()`**, as the setup
+   form does, not `window.location.assign("/")`. The Next.js lint rule
+   `no-location-assign-relative-destination` rejects a full load to a fixed internal path,
+   and a literal `"/"` is a valid typed route, so the reason that made WS-017 use a full load
+   (a dynamic path) does not apply here. The test was changed first and seen failing.
+2. **The token is read through `useSyncExternalStore`, not an effect that sets state.** The
+   rule `react-hooks/set-state-in-effect` rejected the effect, and the alternatives lose the
+   token once the fragment is cleared or break in React's strict mode. A small store per form
+   reads the fragment once, remembers it and renders nothing on the server; the effect only
+   clears the address bar. No `eslint-disable` was needed.
+3. **Test 17 (the page) is a unit test**, `page.test.tsx`, since the page uses no database.
+4. **`invalidLink()`** is a named error constructor in `src/server/http/errors.ts`, next to the
+   others.
+5. **Question 4 (row lock):** `.for("update", { of: accountTokens })` exists in the installed
+   Drizzle 0.45 types and the race test proves it: of five simultaneous requests exactly one
+   wins. **Question 5 (reading the fragment)** is covered by the component tests and by the
+   browser test.
+6. **Two of my own tests were fixed after the Red run**, without weakening them: a regular
+   expression escaped twice, and two tests rewritten to remove leftover scaffolding.
+
+## Implementation record
+
+- Red: schema, form, page, proxy, limiter, service and route tests failed on missing modules
+  and behaviour (committed before any code).
+- Green: 430 Vitest tests (up from 367 plus the ones from WI-022 and WI-023) and 23
+  Playwright tests pass, twice in a row. `pnpm db:generate` and `pnpm openapi:generate` leave
+  no diff; typecheck and lint pass with and without generated route types.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

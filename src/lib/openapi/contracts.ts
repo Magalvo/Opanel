@@ -4,7 +4,13 @@ import {
   resetLinkContract,
   updateAccountContract,
 } from "@/lib/schemas/accounts";
-import { meContract, setupContract, signInContract, signOutContract } from "@/lib/schemas/auth";
+import {
+  acceptLinkContract,
+  meContract,
+  setupContract,
+  signInContract,
+  signOutContract,
+} from "@/lib/schemas/auth";
 import { healthContract } from "@/lib/schemas/health";
 import { openApiContract } from "@/lib/schemas/openapi";
 
@@ -18,6 +24,7 @@ export const contracts: readonly EndpointContract[] = [
   signOutContract,
   meContract,
   setupContract,
+  acceptLinkContract,
   listAccountsContract,
   inviteAccountContract,
   updateAccountContract,
