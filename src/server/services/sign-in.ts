@@ -12,7 +12,10 @@ import { recordAudit } from "./audit";
 import {
   consumeRateLimit,
   purgeExpiredRateLimits,
+  type RateLimitRule,
   SIGN_IN_EMAIL_RULE,
+  SIGN_IN_FAILURE_AUDIT_KEY,
+  SIGN_IN_FAILURE_AUDIT_RULE,
   SIGN_IN_IP_RULE,
   signInKeys,
 } from "./rate-limit";
@@ -24,6 +27,11 @@ export interface SignInInput {
   clientIp: string | null;
   /** The request's headers, so Better Auth can record the user agent. */
   headers: Headers;
+}
+
+export interface SignInOptions {
+  /** The install-wide budget of failure audit rows. Tests lower it. */
+  failureAuditRule?: RateLimitRule;
 }
 
 export interface SignInResult {
@@ -47,18 +55,30 @@ export function summarize(account: AccountRow): AccountSummary {
   };
 }
 
+/**
+ * Audits a failed sign-in while the install-wide budget lasts (WS-022). The audit log is
+ * append-only and this is reachable without signing in, so the number of rows it can write
+ * is capped: the row that uses up the budget says that more were suppressed, and after it
+ * nothing is written until the window ends. The budget is consumed on every failure, known
+ * email or not, so it cannot tell the two apart, and it never changes the response.
+ */
 async function auditFailure(
   db: Database,
+  rule: RateLimitRule,
   reason: "bad_credentials" | "disabled" | "rate_limited",
   accountId: string | undefined,
 ): Promise<void> {
+  const budget = await consumeRateLimit(db, SIGN_IN_FAILURE_AUDIT_KEY, rule);
+  if (!budget.allowed) {
+    return;
+  }
   // No actor (nobody is authenticated) and never the email: people type passwords there.
   await recordAudit(db, {
     actor: null,
     action: "auth.sign_in_failed",
     entity: "account",
     ...(accountId === undefined ? {} : { entityId: accountId }),
-    data: { reason },
+    data: { reason, ...(budget.remaining === 0 ? { moreSuppressed: true } : {}) },
   });
 }
 
@@ -67,7 +87,11 @@ async function auditFailure(
  * same `401`. Limits are checked before the password is, so a blocked caller learns
  * nothing about it.
  */
-export async function signIn(input: SignInInput, db: Database = getDb()): Promise<SignInResult> {
+export async function signIn(
+  input: SignInInput,
+  db: Database = getDb(),
+  { failureAuditRule = SIGN_IN_FAILURE_AUDIT_RULE }: SignInOptions = {},
+): Promise<SignInResult> {
   if (Math.random() < 0.02) {
     await purgeExpiredRateLimits(db);
   }
@@ -79,7 +103,10 @@ export async function signIn(input: SignInInput, db: Database = getDb()): Promis
   }
   const blocked = attempts.filter((attempt) => !attempt.allowed);
   if (blocked.length > 0) {
-    await auditFailure(db, "rate_limited", undefined);
+    // Once per key and window: repeating a refused attempt writes nothing more.
+    if (blocked.some((attempt) => attempt.firstRefusal)) {
+      await auditFailure(db, failureAuditRule, "rate_limited", undefined);
+    }
     throw rateLimited(Math.max(...blocked.map((attempt) => attempt.retryAfterSeconds)));
   }
 
@@ -87,7 +114,7 @@ export async function signIn(input: SignInInput, db: Database = getDb()): Promis
   if (account?.disabledAt !== null) {
     dummyHash ??= hashPassword("not the password of anyone");
     await verifyPassword({ hash: await dummyHash, password: input.password });
-    await auditFailure(db, account ? "disabled" : "bad_credentials", account?.id);
+    await auditFailure(db, failureAuditRule, account ? "disabled" : "bad_credentials", account?.id);
     throw unauthenticated(INVALID_CREDENTIALS);
   }
 
@@ -103,7 +130,7 @@ export async function signIn(input: SignInInput, db: Database = getDb()): Promis
     if (!isAPIError(error)) {
       throw error;
     }
-    await auditFailure(db, "bad_credentials", account.id);
+    await auditFailure(db, failureAuditRule, "bad_credentials", account.id);
     throw unauthenticated(INVALID_CREDENTIALS);
   }
 

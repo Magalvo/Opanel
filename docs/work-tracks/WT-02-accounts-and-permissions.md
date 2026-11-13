@@ -79,19 +79,21 @@ item that implements it. The owner approved all of them on 2026-11-12.
 
 Each item leaves the repository green and is one branch/PR.
 
-| Item                                                               | Title                                                                        | Status | Depends on     |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------ | -------------- |
-| [WI-011](../work-items/WI-011-api-foundations.md)                  | API foundations: problem-details errors, validation helpers, request id      | Done   | doc 0004       |
-| [WI-012](../work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type (pure logic)          | Done   | none           |
-| [WI-013](../work-items/WI-013-accounts-and-better-auth.md)         | Accounts, credentials and sessions schema; Better Auth installed; auth env   | Done   | WI-012         |
-| [WI-014](../work-items/WI-014-audit-log.md)                        | Audit log table and writer                                                   | Done   | WI-013         |
-| [WI-015](../work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter | Done   | WI-011, WI-014 |
-| [WI-016](../work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin (API and page)                       | Done   | WI-015         |
-| [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected app shell, account menu with sign-out                | Done   | WI-015         |
-| [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate    | Done   | WI-015         |
-| WI-019                                                             | Accepting an invitation or reset link: set a password (API and page)         | Draft  | WI-018         |
-| WI-020                                                             | Admin "People" page                                                          | Draft  | WI-017, WI-018 |
-| WI-021                                                             | Own profile: change name and password                                        | Draft  | WI-017         |
+| Item                                                               | Title                                                                               | Status | Depends on     |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------ | -------------- |
+| [WI-011](../work-items/WI-011-api-foundations.md)                  | API foundations: problem-details errors, validation helpers, request id             | Done   | doc 0004       |
+| [WI-012](../work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type (pure logic)                 | Done   | none           |
+| [WI-013](../work-items/WI-013-accounts-and-better-auth.md)         | Accounts, credentials and sessions schema; Better Auth installed; auth env          | Done   | WI-012         |
+| [WI-014](../work-items/WI-014-audit-log.md)                        | Audit log table and writer                                                          | Done   | WI-013         |
+| [WI-015](../work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter        | Done   | WI-011, WI-014 |
+| [WI-016](../work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin (API and page)                              | Done   | WI-015         |
+| [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected app shell, account menu with sign-out                       | Done   | WI-015         |
+| [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate           | Done   | WI-015         |
+| WI-019                                                             | Accepting an invitation or reset link: set a password (API and page)                | Draft  | WI-018         |
+| WI-020                                                             | Admin "People" page                                                                 | Draft  | WI-017, WI-018 |
+| WI-021                                                             | Own profile: change name and password                                               | Draft  | WI-017         |
+| [WI-022](../work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth (from the review of 2026-11-12) | Done   | WI-015         |
+| [WI-023](../work-items/WI-023-api-guard-rails.md)                  | API guard rails: authentication declared in OpenAPI, checks enforced by a test      | Done   | WI-015         |
 
 As in WT-01, each item gets its work-item and work-spec files just before it is started.
 
@@ -113,6 +115,9 @@ As in WT-01, each item gets its work-item and work-spec files just before it is 
 
 Facts established while preparing this track, recorded so they are not rediscovered.
 
+- **A test now enforces the three calls every handler makes (WI-023):**
+  `assertSameOrigin` on state-changing methods, `authenticate` and `requirePermission` on
+  non-public contracts. Its failure message names the file and the missing call.
 - **How an endpoint is written since WI-011.** Wrap the handler with `route()` from
   `src/server/http/route.ts`; read input with `readJson`, `readQuery` and `readParams`;
   report expected failures by throwing the constructors in `src/server/http/errors.ts`
@@ -121,8 +126,8 @@ Facts established while preparing this track, recorded so they are not rediscove
   `pnpm openapi:generate`. A test fails if a route has no contract or the reverse.
 - **A new error code** (for example `version_conflict`) is added to `PROBLEM_CODES` in
   `src/lib/schemas/problem.ts` by the work-spec that needs it.
-- **Better Auth, checked on 2026-11-12 against the published 1.7.22 type definitions**
-  (not yet installed; re-check against the installed version, hard rule 13). Its peer
+- **Better Auth 1.7.22 is installed since WI-013.** The points below were first checked
+  against its published type definitions and confirmed there. Its peer
   ranges accept the installed Next.js, Drizzle ORM, drizzle-kit and Zod. The options this
   track relies on exist: per-model `modelName` and `additionalFields` (table and column
   mapping, extra columns such as `kind` and `role`), `emailAndPassword.disableSignUp`,
@@ -136,15 +141,13 @@ Facts established while preparing this track, recorded so they are not rediscove
 
 ## Risks and open questions
 
-1. **New dependencies.** `better-auth` (1.7.x is current; it supports the installed
-   Next.js 16, Drizzle 0.45 and Zod 4) and an Argon2id implementation, because Better
-   Auth's built-in password hash is scrypt and doc 0001 requires Argon2id. Exact packages
-   and versions are pinned in WS-013 after reading the documentation of the version
-   installed.
-2. **Agents share the `accounts` table but have no email** (doc 0001), while Better Auth
-   expects every row of its user model to have one. Proposed: `email` is nullable with a
-   unique index, plus a database check that human accounts always have one. Better Auth
-   only ever creates and reads human rows. To be confirmed against the installed version
-   in WS-013.
+1. **Resolved in WI-013:** `better-auth` 1.7.22 and `@node-rs/argon2` 2.2.2 are installed
+   and pinned; Argon2id replaces Better Auth's default scrypt hash.
+2. **Resolved in WI-013:** `accounts.email` is nullable and unique, and a database check
+   requires it for human accounts, so agent rows (WT-05) need none.
 3. **Resolved:** the owner approved all ten design decisions above as proposed on
    2026-11-12.
+4. **Open, from the review of 2026-11-12:** WI-022 and WI-023 (both done) were added to
+   this track. Three planning gaps that touch this track (recovering the only Admin,
+   correcting or freeing an email, `SETUP_TOKEN`) are listed in `docs/README.md` under
+   Follow-ups and await an owner decision.

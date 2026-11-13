@@ -1,12 +1,18 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createTestAccount, setDisabled, TEST_PASSWORD } from "@/server/auth/testing";
+import {
+  cookieHeaderFrom,
+  createTestAccount,
+  setDisabled,
+  TEST_PASSWORD,
+  testActor,
+} from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, sessions } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { signIn } from "./sign-in";
+import { signIn, signOut } from "./sign-in";
 
 const base = { headers: new Headers(), clientIp: null };
 
@@ -109,6 +115,111 @@ describe("signIn", () => {
 
     const other = await signIn({ ...base, email: "other@example.com", password: TEST_PASSWORD });
     expect(other.account.email).toBe("other@example.com");
+  });
+
+  it("audits a refusal by the limiter once per window, however often it is repeated", async () => {
+    await createTestAccount();
+    for (let i = 0; i < 10; i++) {
+      await failure(signIn({ ...base, email: "ada@example.com", password: "wrong password!" }));
+    }
+
+    const refusals: ApiError[] = [];
+    for (let i = 0; i < 10; i++) {
+      refusals.push(
+        await failure(signIn({ ...base, email: "ada@example.com", password: TEST_PASSWORD })),
+      );
+    }
+
+    expect(refusals.map((error) => error.status)).toEqual(Array(10).fill(429));
+    const audit = await getDb().select().from(auditLog);
+    const reasons = audit.map((row) => (row.data as { reason: string }).reason);
+    expect(reasons.filter((reason) => reason === "rate_limited")).toHaveLength(1);
+    expect(audit).toHaveLength(11);
+  });
+
+  describe("with the failure audit budget used up", () => {
+    const failureAuditRule = { max: 5, windowSeconds: 900 };
+
+    async function failTwelveTimes(): Promise<ApiError[]> {
+      const errors: ApiError[] = [];
+      for (let i = 0; i < 12; i++) {
+        errors.push(
+          await failure(
+            signIn(
+              { ...base, email: `nobody${String(i)}@example.com`, password: "wrong password!" },
+              getDb(),
+              { failureAuditRule },
+            ),
+          ),
+        );
+      }
+      return errors;
+    }
+
+    it("writes no more failure rows than the budget, and marks the last one", async () => {
+      await failTwelveTimes();
+
+      const audit = await getDb().select().from(auditLog).orderBy(auditLog.id);
+      expect(audit.map((row) => row.action)).toEqual(Array(5).fill("auth.sign_in_failed"));
+      expect(audit.map((row) => row.data)).toEqual([
+        { reason: "bad_credentials" },
+        { reason: "bad_credentials" },
+        { reason: "bad_credentials" },
+        { reason: "bad_credentials" },
+        { reason: "bad_credentials", moreSuppressed: true },
+      ]);
+    });
+
+    it("answers a suppressed failure exactly like an audited one", async () => {
+      const errors = await failTwelveTimes();
+      const first = errors[0];
+
+      for (const error of [errors[5], errors[11]]) {
+        expect(error?.status).toBe(first?.status);
+        expect(error?.code).toBe(first?.code);
+        expect(error?.title).toBe(first?.title);
+        expect(error?.detail).toBe(first?.detail);
+        expect(error?.retryAfterSeconds).toBe(first?.retryAfterSeconds);
+      }
+      expect(first?.status).toBe(401);
+    });
+
+    it("still refuses by the limiter, without a row, when the budget is used up", async () => {
+      await failTwelveTimes();
+      await createTestAccount();
+      const attempt = () =>
+        failure(
+          signIn({ ...base, email: "ada@example.com", password: "wrong password!" }, getDb(), {
+            failureAuditRule,
+          }),
+        );
+      for (let i = 0; i < 10; i++) await attempt();
+
+      const limited = await attempt();
+
+      expect(limited.status).toBe(429);
+      expect(limited.retryAfterSeconds).toBeGreaterThan(0);
+      expect(await getDb().select().from(auditLog)).toHaveLength(5);
+    });
+
+    it("never suppresses a successful sign-in or a sign-out", async () => {
+      await failTwelveTimes();
+      const account = await createTestAccount();
+
+      const signedIn = await signIn(
+        { ...base, email: "ada@example.com", password: TEST_PASSWORD },
+        getDb(),
+        { failureAuditRule },
+      );
+      await signOut({
+        actor: testActor(account),
+        headers: new Headers({ Cookie: cookieHeaderFrom(signedIn.headers) }),
+      });
+
+      const audit = await getDb().select().from(auditLog).orderBy(auditLog.id);
+      expect(audit.slice(5).map((row) => row.action)).toEqual(["auth.sign_in", "auth.sign_out"]);
+      expect(audit.slice(5).map((row) => row.actorAccountId)).toEqual([account.id, account.id]);
+    });
   });
 
   it("refuses the 51st attempt from one address, whatever the email", async () => {

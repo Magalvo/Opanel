@@ -1,6 +1,7 @@
 import { createDocument } from "zod-openapi";
 
 import { PROBLEM_CONTENT_TYPE, problemSchema } from "@/lib/schemas/problem";
+import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
 
 import packageJson from "../../../package.json";
 import type { EndpointContract, ResponseContract } from "./contract";
@@ -19,6 +20,14 @@ const CREDENTIAL_RESPONSES: Readonly<Record<number, ResponseContract>> = {
   401: { description: "No valid credentials were sent.", problem: true },
   403: { description: "The actor lacks the permission or scope.", problem: true },
 };
+
+/**
+ * How a person's browser authenticates (canonical doc 0004, section 7). The bearer token of
+ * agents is declared together with tokens, in WT-05: the document must not describe what
+ * the server rejects.
+ */
+const SESSION_COOKIE_SCHEME = "sessionCookie";
+const [SESSION_COOKIE, SECURE_SESSION_COOKIE] = SESSION_COOKIE_NAMES;
 
 function toResponse(response: ResponseContract): Responses[StatusCode] {
   if ("noContent" in response) {
@@ -48,7 +57,7 @@ function toOperation(contract: EndpointContract): Operation {
     summary: contract.summary,
     ...(contract.description === undefined ? {} : { description: contract.description }),
     // An empty list means "no credentials required" for this operation.
-    ...(contract.public ? { security: [] } : {}),
+    security: contract.public ? [] : [{ [SESSION_COOKIE_SCHEME]: [] }],
     ...(params === undefined && query === undefined
       ? {}
       : {
@@ -86,5 +95,17 @@ export function buildOpenApiDocument(
     },
     servers: [{ url: "/" }],
     paths,
+    components: {
+      securitySchemes: {
+        [SESSION_COOKIE_SCHEME]: {
+          type: "apiKey",
+          in: "cookie",
+          name: SESSION_COOKIE,
+          description:
+            "The session cookie set by `POST /api/v1/auth/sign-in`. When Opanel is served " +
+            `over https the cookie is named \`${SECURE_SESSION_COOKIE}\`.`,
+        },
+      },
+    },
   });
 }

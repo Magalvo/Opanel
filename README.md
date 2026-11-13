@@ -14,9 +14,10 @@ day one for human engineering teams and autonomous AI agents working side by sid
 
 ## Status
 
-Opanel is at the boilerplate stage. The app runs, and every quality check is in place, but
-there are no accounts, boards or agents yet: today it serves an empty app shell, a health
-endpoint and an OpenAPI document. The roadmap and the status of every piece of work are in
+Opanel is in early development. Accounts are in place: a first-run setup that creates the
+first Admin, sign-in with email and password, four roles, and an API with which Admins
+invite people, change roles and deactivate accounts. There are no projects, boards or
+agents yet. The roadmap and the status of every piece of work are in
 [docs/README.md](docs/README.md).
 
 ## Prerequisites
