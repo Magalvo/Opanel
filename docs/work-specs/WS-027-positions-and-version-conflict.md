@@ -1,6 +1,6 @@
 # WS-027 — Fractional positions and the `version_conflict` response
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-13, questions 1 and 2 as proposed)
 - Work-item: [WI-027](../work-items/WI-027-positions-and-version-conflict.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0004](../canonical/0004-api-conventions.md) sections 4, 6;

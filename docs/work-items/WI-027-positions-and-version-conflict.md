@@ -1,6 +1,6 @@
 # WI-027 — Fractional positions and the `version_conflict` response
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 5 and 7, amendment A2)
 - Depends on: none
 - Work-spec: [WS-027](../work-specs/WS-027-positions-and-version-conflict.md)
