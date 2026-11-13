@@ -1,6 +1,6 @@
 # WI-023 — API guard rails: declared authentication and enforced checks
 
-- Status: Proposed (awaiting owner approval)
+- Status: In progress (approved by the owner on 2026-11-13)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: WI-015
 - Work-spec: [WS-023](../work-specs/WS-023-api-guard-rails.md)

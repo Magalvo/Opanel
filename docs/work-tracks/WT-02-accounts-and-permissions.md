@@ -79,21 +79,21 @@ item that implements it. The owner approved all of them on 2026-11-12.
 
 Each item leaves the repository green and is one branch/PR.
 
-| Item                                                               | Title                                                                               | Status   | Depends on     |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | -------- | -------------- |
-| [WI-011](../work-items/WI-011-api-foundations.md)                  | API foundations: problem-details errors, validation helpers, request id             | Done     | doc 0004       |
-| [WI-012](../work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type (pure logic)                 | Done     | none           |
-| [WI-013](../work-items/WI-013-accounts-and-better-auth.md)         | Accounts, credentials and sessions schema; Better Auth installed; auth env          | Done     | WI-012         |
-| [WI-014](../work-items/WI-014-audit-log.md)                        | Audit log table and writer                                                          | Done     | WI-013         |
-| [WI-015](../work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter        | Done     | WI-011, WI-014 |
-| [WI-016](../work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin (API and page)                              | Done     | WI-015         |
-| [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected app shell, account menu with sign-out                       | Done     | WI-015         |
-| [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate           | Done     | WI-015         |
-| WI-019                                                             | Accepting an invitation or reset link: set a password (API and page)                | Draft    | WI-018         |
-| WI-020                                                             | Admin "People" page                                                                 | Draft    | WI-017, WI-018 |
-| WI-021                                                             | Own profile: change name and password                                               | Draft    | WI-017         |
-| [WI-022](../work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth (from the review of 2026-11-12) | Done     | WI-015         |
-| [WI-023](../work-items/WI-023-api-guard-rails.md)                  | API guard rails: authentication declared in OpenAPI, checks enforced by a test      | Proposed | WI-015         |
+| Item                                                               | Title                                                                               | Status      | Depends on     |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ----------- | -------------- |
+| [WI-011](../work-items/WI-011-api-foundations.md)                  | API foundations: problem-details errors, validation helpers, request id             | Done        | doc 0004       |
+| [WI-012](../work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type (pure logic)                 | Done        | none           |
+| [WI-013](../work-items/WI-013-accounts-and-better-auth.md)         | Accounts, credentials and sessions schema; Better Auth installed; auth env          | Done        | WI-012         |
+| [WI-014](../work-items/WI-014-audit-log.md)                        | Audit log table and writer                                                          | Done        | WI-013         |
+| [WI-015](../work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, `GET /api/v1/me`; request authentication; sign-in limiter        | Done        | WI-011, WI-014 |
+| [WI-016](../work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin (API and page)                              | Done        | WI-015         |
+| [WI-017](../work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected app shell, account menu with sign-out                       | Done        | WI-015         |
+| [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate           | Done        | WI-015         |
+| WI-019                                                             | Accepting an invitation or reset link: set a password (API and page)                | Draft       | WI-018         |
+| WI-020                                                             | Admin "People" page                                                                 | Draft       | WI-017, WI-018 |
+| WI-021                                                             | Own profile: change name and password                                               | Draft       | WI-017         |
+| [WI-022](../work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth (from the review of 2026-11-12) | Done        | WI-015         |
+| [WI-023](../work-items/WI-023-api-guard-rails.md)                  | API guard rails: authentication declared in OpenAPI, checks enforced by a test      | In progress | WI-015         |
 
 As in WT-01, each item gets its work-item and work-spec files just before it is started.
 
@@ -144,7 +144,7 @@ Facts established while preparing this track, recorded so they are not rediscove
    requires it for human accounts, so agent rows (WT-05) need none.
 3. **Resolved:** the owner approved all ten design decisions above as proposed on
    2026-11-12.
-4. **Open, from the review of 2026-11-12:** WI-022 (done) and WI-023 (awaiting approval) were added to
+4. **Open, from the review of 2026-11-12:** WI-022 (done) and WI-023 (in progress) were added to
    this track. Three planning gaps that touch this track (recovering the only Admin,
    correcting or freeing an email, `SETUP_TOKEN`) are listed in `docs/README.md` under
    Follow-ups and await an owner decision.

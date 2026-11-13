@@ -1,6 +1,6 @@
 # WS-023 — API guard rails: declared authentication and enforced checks
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-13)
 - Work-item: [WI-023](../work-items/WI-023-api-guard-rails.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 7; `AGENTS.md`
   hard rules 6 and 9
@@ -100,13 +100,12 @@ Tests 5 to 7 run the checker on sample text so that it is itself tested: a check
 always passes would otherwise look green. The checker is a small pure function in a new
 `src/lib/openapi/route-checks.ts`, used only by the test.
 
-## Risks and open questions
+## Resolved questions
 
-1. **Test now, wrapper later?** Described under "Alternative considered". **Owner: agree
-   with the test now, and deciding on the wrapper at the start of WT-03?**
-2. **A text check can be satisfied without being right**, for example by a call that is
-   present but placed after the service call. It catches forgetting, which is the realistic
-   failure; the per-endpoint integration tests (`403` for a foreign `Origin`, `403` for
-   each lower role) remain the proof of behaviour.
-3. **`route-checks.ts` is test support living in `src/lib/openapi/`**, next to the test
-   that uses it, so that it can have its own tests. It is not imported by the app.
+The owner approved this spec and agreed with its questions on 2026-11-13:
+
+1. **The test now.** Whether the checks move into the `route()` wrapper is decided at the
+   start of WT-03 (recorded as a follow-up in `docs/README.md`).
+2. **A text check catches forgetting, not misplacement.** Accepted: the per-endpoint
+   integration tests remain the proof of behaviour.
+3. **`route-checks.ts` lives in `src/lib/openapi/`** as test support with its own tests.
