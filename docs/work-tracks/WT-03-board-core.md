@@ -1,6 +1,6 @@
 # WT-03 — Board core: projects, teams, columns, epics, tasks, comments, assignment
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-13)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (sections 2 to 5, 9),
   [0002](../canonical/0002-realtime-sync.md) (section 4, consistency rules),
   [0004](../canonical/0004-api-conventions.md),
@@ -50,7 +50,7 @@ the concurrency rules of doc 0002, so WT-04 only adds the live push.
 ## Design decisions
 
 Choices the canonical docs leave open. Each is detailed in the work-spec of the item that
-implements it. **Awaiting owner approval.**
+implements it. The owner approved all of them as proposed on 2026-11-13.
 
 1. **Checks move into the `route()` wrapper** (WS-023, question 1). A handler is declared as
    `route({ auth: "permission", permission: "tasks:write" }, handler)`, or
@@ -167,19 +167,17 @@ As before, each item gets its work-item and work-spec files just before it is st
 
 ## Risks and open questions
 
-1. **Hard rule 8 versus doc 0003 section 9.** `AGENTS.md` says every state-changing action
-   records the actor "in the audit log"; doc 0003 says task history is separate from the
-   audit log, which holds security and administrative actions. Decision 16 proposes that
-   `task_events` is the record for task and comment changes. If the owner agrees, the
-   wording of hard rule 8 should say "in the audit log or the task history"; otherwise
-   every task write also writes an audit row.
-2. **Comments**: create and read only in v1, or may an author edit and delete their own
-   comment? Doc 0003 is silent. Proposed: create and read only in this track.
-3. **Task detail as a page or a dialog?** Proposed: its own URL
-   (`/projects/KEY/tasks/KEY-12`), opened as a dialog over the board when reached from it,
-   so a task can be shared as a link.
-4. **Default team membership** of a project: none. Projects are visible to every signed-in
-   human (doc 0003 resolved question 2), so teams only matter for assignment and, in
-   WT-06, routing.
-5. **Large boards**: the board loads every page of tasks. Acceptable until WT-07 moves
-   unscheduled work to the backlog; measured in WI-037 with 1 000 tasks.
+Questions 1 to 4 were resolved by the owner on 2026-11-13, by approving the proposals.
+
+1. **Resolved: hard rule 8 versus doc 0003 section 9.** `task_events` is the record of the
+   acting account for task and comment changes; configuration changes go to the audit log
+   (decision 16). Hard rule 8 in `AGENTS.md` now reads "in the audit log or, for task and
+   comment changes, the task history".
+2. **Resolved: comments** are created and read only in this track. Editing and deleting
+   them is not planned.
+3. **Resolved: the task detail** has its own URL (`/projects/KEY/tasks/KEY-12`) and opens as
+   a dialog over the board when reached from it.
+4. **Resolved: projects have no default teams.** Teams matter for assignment now and for
+   routing in WT-06.
+5. **Open risk, large boards:** the board loads every page of tasks. Acceptable until WT-07
+   moves unscheduled work to the backlog; measured in WI-037 with 1 000 tasks.

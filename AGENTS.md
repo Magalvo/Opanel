@@ -152,7 +152,8 @@ All five exist. `test` and `test:e2e` need the database: `docker compose up -d`.
    data or internal detail. Agents get no implicit permissions.
 7. Secrets never enter the repo, logs, or API responses. API tokens are stored hashed and
    shown exactly once.
-8. Every state-changing action records the acting account (human or agent) in the audit log.
+8. Every state-changing action records the acting account (human or agent) in the audit log
+   or, for task and comment changes, the task history (canonical doc 0003 section 9).
 9. Any change to a `/api/v1` contract updates the Zod schema, so the OpenAPI spec stays
    generated, never hand-written. Breaking changes require a new API version.
 10. One work-item per branch/PR. Keep unrelated changes out.
