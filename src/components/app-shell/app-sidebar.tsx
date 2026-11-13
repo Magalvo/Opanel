@@ -1,8 +1,16 @@
+import { UsersIcon } from "lucide-react";
 import Link from "next/link";
 
-import { Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
-export function AppSidebar() {
+export function AppSidebar({ canManageAccounts }: Readonly<{ canManageAccounts: boolean }>) {
   return (
     <Sidebar>
       <SidebarHeader>
@@ -20,8 +28,21 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        {/* Navigation items arrive with the first real screens (WT-02, WT-03). */}
-        <nav aria-label="Main" className="flex-1" />
+        {/* More items arrive with the first screens of WT-03. */}
+        <nav aria-label="Main" className="flex-1">
+          {canManageAccounts && (
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/people">
+                    <UsersIcon aria-hidden="true" />
+                    People
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          )}
+        </nav>
       </SidebarContent>
     </Sidebar>
   );

@@ -1,6 +1,6 @@
 # WI-020 — Admin "People" page
 
-- Status: Approved (by the owner on 2026-11-13)
+- Status: Done (approved by the owner on 2026-11-13)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-017](WI-017-sign-in-page-and-protected-shell.md), [WI-018](WI-018-account-management-api.md)
 - Work-spec: [WS-020](../work-specs/WS-020-people-page.md)
@@ -18,33 +18,33 @@ UI consumes the same `/api/v1` endpoints agents use).
 
 ## Acceptance criteria
 
-- [ ] A "People" item in the sidebar and the `/people` page exist for an actor who holds
+- [x] A "People" item in the sidebar and the `/people` page exist for an actor who holds
       `accounts:manage`. For anyone else the item is absent and `/people` is a `404` page.
-- [ ] The page lists the install's human accounts, oldest first, 50 at a time with a "Load
+- [x] The page lists the install's human accounts, oldest first, 50 at a time with a "Load
       more" control, each with name, email, role, a status (invited, active or deactivated)
       and when the person was last seen.
-- [ ] While loading it shows a placeholder; if loading fails it says so and offers to retry.
-- [ ] An Admin can invite a person (name, email, role). The invitation's link is then shown in
+- [x] While loading it shows a placeholder; if loading fails it says so and offers to retry.
+- [x] An Admin can invite a person (name, email, role). The invitation's link is then shown in
       a dialog with a "Copy link" control, together with its expiry and a notice that it is
       shown only once. Closing the dialog discards the link from the page.
-- [ ] The invite dialog says that the email cannot be changed afterwards.
-- [ ] An Admin can change a person's role from the list. The result of the API is shown: the
+- [x] The invite dialog says that the email cannot be changed afterwards.
+- [x] An Admin can change a person's role from the list. The result of the API is shown: the
       row updates on success; a refusal because the person is the only active Admin is
       explained in plain words.
-- [ ] An Admin can deactivate and reactivate an account. Deactivating, and any change to the
+- [x] An Admin can deactivate and reactivate an account. Deactivating, and any change to the
       Admin's own account, asks for confirmation and says what it does (ends the person's
       sessions).
-- [ ] An Admin can generate a new link for an invited account (a new invitation) or an active
+- [x] An Admin can generate a new link for an invited account (a new invitation) or an active
       one (a password reset); not for a deactivated one. It is shown like an invitation's.
-- [ ] If an Admin changes their own role away from Admin, or deactivates themselves, they are
+- [x] If an Admin changes their own role away from Admin, or deactivates themselves, they are
       taken to the sign-in page, because their session has ended.
-- [ ] Every action reports its outcome in text that assistive technology announces; dialogs
+- [x] Every action reports its outcome in text that assistive technology announces; dialogs
       trap and return focus; the table and its controls are usable by keyboard.
-- [ ] The page works at phone width without horizontal page scroll, in light and dark themes.
-- [ ] End to end, in a browser: an Admin opens People, invites a person and reads the link,
+- [x] The page works at phone width without horizontal page scroll, in light and dark themes.
+- [x] End to end, in a browser: an Admin opens People, invites a person and reads the link,
       changes their role, deactivates and reactivates them; a Member does not see the item and
       gets a `404` at `/people`.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

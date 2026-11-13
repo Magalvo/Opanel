@@ -1,0 +1,259 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ManagedAccount } from "@/lib/schemas/accounts";
+
+import { ApiFailure, createLink, listAccounts, updateAccount } from "./api";
+import { type Invited, InviteDialog } from "./invite-dialog";
+import { LinkDialog, type ShownLink } from "./link-dialog";
+import { PeopleTable } from "./people-table";
+import { ROLE_LABELS } from "./roles";
+
+type Phase = "loading" | "error" | "ready";
+
+type Confirmation =
+  | { kind: "deactivate"; person: ManagedAccount }
+  | { kind: "role"; person: ManagedAccount; role: ManagedAccount["role"] };
+
+const LAST_ADMIN =
+  "This is the only active administrator, so they cannot be demoted or deactivated.";
+
+/** The Admin "People" page (WS-020): a client of the account management API. */
+export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: string }>) {
+  const router = useRouter();
+  const [people, setPeople] = useState<ManagedAccount[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [message, setMessage] = useState("");
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const [shownLink, setShownLink] = useState<ShownLink | null>(null);
+
+  function showFirstPage(page: Awaited<ReturnType<typeof listAccounts>>) {
+    setPeople(page.items);
+    setNextCursor(page.nextCursor);
+    setPhase("ready");
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    listAccounts().then(
+      (page) => {
+        if (!cancelled) showFirstPage(page);
+      },
+      () => {
+        if (!cancelled) setPhase("error");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function retry() {
+    setPhase("loading");
+    listAccounts().then(showFirstPage, () => {
+      setPhase("error");
+    });
+  }
+
+  async function loadMore() {
+    if (nextCursor === null) return;
+    setLoadingMore(true);
+    try {
+      const page = await listAccounts(nextCursor);
+      setPeople((current) => [...current, ...page.items]);
+      setNextCursor(page.nextCursor);
+    } catch {
+      setMessage("Could not load more people. Try again.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  function replace(updated: ManagedAccount) {
+    setPeople((current) => current.map((person) => (person.id === updated.id ? updated : person)));
+  }
+
+  /** The Admin's own session has ended if they changed their own role or deactivated themselves. */
+  function leaveIfSelf(person: ManagedAccount) {
+    if (person.id === currentAccountId) {
+      router.replace("/sign-in");
+      router.refresh();
+    }
+  }
+
+  function failure(error: unknown, fallback: string) {
+    setMessage(error instanceof ApiFailure && error.code === "last_admin" ? LAST_ADMIN : fallback);
+  }
+
+  async function changeRole(person: ManagedAccount, role: ManagedAccount["role"]) {
+    try {
+      const updated = await updateAccount(person.id, { role });
+      replace(updated);
+      setMessage(`${person.name}'s role is now ${ROLE_LABELS[role]}. They were signed out.`);
+      leaveIfSelf(person);
+    } catch (error) {
+      failure(error, "Could not change the role. Try again.");
+    }
+  }
+
+  async function setActive(person: ManagedAccount, active: boolean) {
+    try {
+      replace(await updateAccount(person.id, { active }));
+      setMessage(
+        active
+          ? `${person.name} was reactivated.`
+          : `${person.name} was deactivated and signed out.`,
+      );
+      if (!active) leaveIfSelf(person);
+    } catch (error) {
+      failure(
+        error,
+        active ? "Could not reactivate. Try again." : "Could not deactivate. Try again.",
+      );
+    }
+  }
+
+  async function newLink(person: ManagedAccount) {
+    try {
+      const { link } = await createLink(person.id);
+      setShownLink({ title: person.status === "invited" ? "Invitation link" : "Reset link", link });
+      setMessage(`A new link was created for ${person.name}.`);
+    } catch {
+      setMessage("Could not create the link. Try again.");
+    }
+  }
+
+  function invited({ account, link }: Invited) {
+    if (nextCursor === null) {
+      setPeople((current) => [...current, account]);
+      setMessage(`Invited ${account.name}.`);
+    } else {
+      setMessage(`Invited ${account.name}. They appear at the end of the list.`);
+    }
+    setShownLink({ title: "Invitation link", link });
+  }
+
+  function confirmed() {
+    const current = confirmation;
+    setConfirmation(null);
+    if (current?.kind === "deactivate") void setActive(current.person, false);
+    if (current?.kind === "role") void changeRole(current.person, current.role);
+  }
+
+  const self = (person: ManagedAccount) => person.id === currentAccountId;
+  const asking = confirmation;
+
+  return (
+    <div className="grid max-w-5xl gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">People</h1>
+        <InviteDialog onInvited={invited} />
+      </div>
+
+      <div role="status" className="min-h-5 text-sm text-muted-foreground">
+        {message}
+      </div>
+
+      {phase === "loading" && (
+        <div className="grid gap-2">
+          <p className="text-sm text-muted-foreground">Loading people…</p>
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+      )}
+
+      {phase === "error" && (
+        <div className="flex items-center gap-2">
+          <p role="alert" className="text-sm text-destructive">
+            Could not load people.
+          </p>
+          <Button variant="outline" size="sm" onClick={retry}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {phase === "ready" && (
+        <>
+          <PeopleTable
+            people={people}
+            onRoleChange={(person, role) => {
+              if (self(person)) setConfirmation({ kind: "role", person, role });
+              else void changeRole(person, role);
+            }}
+            onDeactivate={(person) => {
+              setConfirmation({ kind: "deactivate", person });
+            }}
+            onReactivate={(person) => void setActive(person, true)}
+            onCreateLink={(person) => void newLink(person)}
+          />
+          {nextCursor !== null && (
+            <div>
+              <Button variant="outline" disabled={loadingMore} onClick={() => void loadMore()}>
+                Load more
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      <AlertDialog
+        open={asking !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmation(null);
+        }}
+      >
+        {asking !== null && (
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {asking.kind === "role"
+                  ? "Change your own role?"
+                  : self(asking.person)
+                    ? "Deactivate your own account?"
+                    : `Deactivate ${asking.person.name}?`}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {self(asking.person)
+                  ? "This ends your session immediately. You will be signed out."
+                  : "This ends their sessions immediately and removes their unused links. You can reactivate them later."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant={asking.kind === "deactivate" ? "destructive" : "default"}
+                onClick={confirmed}
+              >
+                {asking.kind === "role" ? "Change role" : "Deactivate"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        )}
+      </AlertDialog>
+
+      <LinkDialog
+        shown={shownLink}
+        onClose={() => {
+          setShownLink(null);
+        }}
+      />
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
 # WS-020 — Admin "People" page
 
-- Status: Approved (by the owner on 2026-11-13, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-020](../work-items/WI-020-people-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3;
   [0004](../canonical/0004-api-conventions.md) sections 5 and 7;
@@ -146,3 +146,36 @@ Technical, settled by the tests:
 7. **Radix `Select` in tests.** jsdom lacks some pointer APIs Radix uses; the unit tests may
    need small, documented polyfills in `vitest.setup.ts`. If that proves fragile, the role
    control becomes a native `<select>` styled like the rest, and I say so in the record.
+
+## Deviations from the approved spec
+
+1. **A fifth UI component, `alert-dialog`,** was added next to `table`, `dialog`, `select` and
+   `badge`. The confirmations need `role="alertdialog"`, which Radix's `AlertDialog` provides
+   and `Dialog` does not. Still no new dependency.
+2. **The five components were written by hand** in the style of `button.tsx`,
+   `dropdown-menu.tsx` and `sheet.tsx`, not with the shadcn CLI.
+3. **Question 7 (Radix `Select` in jsdom):** it works with a small polyfill block in
+   `vitest.setup.ts` (pointer capture, `scrollIntoView`, `ResizeObserver`, all no-ops). The
+   native `<select>` fallback was not needed.
+4. **One test was moved, not weakened:** the outcome message of an invitation is asserted
+   after the link dialog is closed, because Radix hides the page behind a modal from assistive
+   technology, so the message is read when the dialog closes.
+5. **No active-page highlight on the People link:** the sidebar stays a server component. It
+   arrives with the first screens that need it (WT-03).
+6. **Keyboard coverage is partial in the tests:** every control has an accessible name, the
+   status region is announced, and Escape closes dialogs and returns focus to the button that
+   opened them. Tab order itself comes from native elements and Radix and has no test of its
+   own.
+7. **The end-to-end test loops on "Load more"** until the invited person shows, because the
+   end-to-end database keeps every account of the run and the newest can be on page two.
+8. `next typegen` was run once locally, as in WI-017; typecheck and lint pass with and without
+   generated route types.
+
+## Implementation record
+
+- Red: sidebar, page, layout and People component tests failed on missing modules and
+  behaviour (committed before any code).
+- Green: 457 Vitest tests (up from 430) and 26 Playwright tests (up from 23) pass, twice in a
+  row. `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

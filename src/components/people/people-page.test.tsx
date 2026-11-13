@@ -63,6 +63,11 @@ function problem(
 }
 
 const fetchMock = vi.fn<typeof fetch>();
+
+function urlOf(input: Parameters<typeof fetch>[0]): string {
+  if (typeof input === "string") return input;
+  return input instanceof URL ? input.href : input.url;
+}
 const responses = new Map<string, () => Response>();
 
 function on(key: string, response: () => Response) {
@@ -76,7 +81,7 @@ function page(items: ManagedAccount[], nextCursor: string | null = null) {
 function calls(method: string): [string, RequestInit | undefined][] {
   return fetchMock.mock.calls
     .filter(([, init]) => (init?.method ?? "GET") === method)
-    .map(([url, init]) => [String(url), init]);
+    .map(([url, init]) => [urlOf(url), init]);
 }
 
 function bodyOf(init: RequestInit | undefined): unknown {
@@ -101,7 +106,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   responses.clear();
   fetchMock.mockImplementation((input, init) => {
-    const key = `${init?.method ?? "GET"} ${String(input)}`;
+    const key = `${init?.method ?? "GET"} ${urlOf(input)}`;
     const respond = responses.get(key);
     if (!respond) throw new Error(`unexpected request: ${key}`);
     return Promise.resolve(respond());
@@ -205,6 +210,12 @@ describe("PeoplePage: inviting", () => {
       name: "Grace",
       email: "grace@example.com",
       role: "member",
+    });
+    // While the modal is open the page behind it is hidden from assistive technology, so the
+    // outcome is read once the dialog is closed.
+    await user.click(within(linkDialog).getByRole("button", { name: "Done" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
     expect(screen.getByRole("status")).toHaveTextContent("Invited Grace.");
     expect(screen.getByText("grace@example.com")).toBeInTheDocument();

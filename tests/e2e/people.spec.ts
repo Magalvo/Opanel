@@ -1,4 +1,4 @@
-import { expect, test as base } from "@playwright/test";
+import { expect, type Page, test as base } from "@playwright/test";
 
 import { E2E_BASE_URL } from "./environment";
 import { expect as expectSigned, test as member } from "./fixtures";
@@ -20,7 +20,7 @@ const admin = base.extend({
 });
 
 /** The end-to-end database keeps every account of the run, so the newest may be on page two. */
-async function showEveryone(page: import("@playwright/test").Page) {
+async function showEveryone(page: Page) {
   const more = page.getByRole("button", { name: "Load more" });
   while (await more.isVisible()) {
     await more.click();
