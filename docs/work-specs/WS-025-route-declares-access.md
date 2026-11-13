@@ -1,6 +1,6 @@
 # WS-025 — `route()` declares authentication and permission
 
-- Status: Approved (approved by the owner on 2026-11-13, with question 1 as proposed)
+- Status: Done (approved by the owner on 2026-11-13, with question 1 as proposed)
 - Work-item: [WI-025](../work-items/WI-025-route-declares-access.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 7; `AGENTS.md`
   hard rules 6 and 9; [WT-03](../work-tracks/WT-03-board-core.md) decision 1;
@@ -212,3 +212,38 @@ fail first. Test 10 is checked to fail by wiring one handler to a wrong contract
 3. **Large diff with no behaviour change.** Twelve route files change at once. The
    existing integration tests of every endpoint are the safety net and must pass without
    edits other than those listed in test 12.
+
+## Deviations from the approved spec
+
+- Test 12 said the existing route tests would change only by new header assertions. Three
+  more kinds of edit were needed, none of which weakens a test: the health and OpenAPI
+  document tests call their handler as `GET(request, undefined)`, because a wrapped handler
+  takes a request; the contract tests in `src/lib/schemas/accounts.test.ts` and
+  `auth.test.ts` assert the exact `access` instead of `public`; and the `post()` helper of
+  `route.test.ts` sends the app's `Origin`, because every wrapped `POST` now has its origin
+  checked.
+- The generated description of the account-management operations reads "Requires the
+  `accounts:manage` permission." and no longer adds "(Admin)": the permission, not the
+  role, is the contract, and roles are listed in doc 0003.
+- Authentication's `Set-Cookie` headers are added to responses the handler returns, not to
+  problem responses for errors the handler throws. This keeps the behaviour of WT-02, where
+  no error response carried them.
+
+## Implementation record
+
+- Red: 40 unit tests failed against the old signatures (route, OpenAPI document, contract
+  and guard-rail tests), committed before any code; the guard-rail test already imported
+  every route module without error.
+- Green: 515 Vitest tests (up from 513; the deleted text-search tests of
+  `route-checks.test.ts` are replaced by the declaration checks of `routes.test.ts` and the
+  new `route-access.integration.test.ts`) and 28 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- The guard rail was checked to fail by wiring `PATCH /api/v1/me` to the contract of
+  `GET /api/v1/me`: "v1/me/route.ts: PATCH is built from the contract of GET /api/v1/me."
+- No handler under `src/app/api` calls `authenticate`, `requirePermission` or
+  `assertSameOrigin` any more.
+- The route handlers' types come from the contract: `route` takes a `const` type parameter,
+  so a public handler's third argument is `undefined` and a non-public one's is
+  `Authenticated`, with no assertion in any handler.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

@@ -1,6 +1,6 @@
 # WI-025 — `route()` declares authentication and permission
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (design decision 1)
 - Depends on: none
 - Work-spec: [WS-025](../work-specs/WS-025-route-declares-access.md)
@@ -16,27 +16,27 @@ replaced by a check on the declarations. The existing endpoints behave exactly a
 
 ## Acceptance criteria
 
-- [ ] An endpoint contract states its access as `public`, `authenticated` or
+- [x] An endpoint contract states its access as `public`, `authenticated` or
       `permission` with one permission from the catalogue; the old `public: boolean` field
       is gone.
-- [ ] `route(contract, handler)` rejects a cross-origin state-changing cookie request with
+- [x] `route(contract, handler)` rejects a cross-origin state-changing cookie request with
       `403`, an unauthenticated request to a non-public operation with `401`, and a caller
       without the declared permission with `403`, in that order, before the handler runs.
-- [ ] The handler of a non-public operation receives the authenticated caller; the handler
+- [x] The handler of a non-public operation receives the authenticated caller; the handler
       of a public one receives none.
-- [ ] The `Set-Cookie` headers produced by authentication reach the response unless the
+- [x] The `Set-Cookie` headers produced by authentication reach the response unless the
       handler set cookies of its own.
-- [ ] All twelve documented operations that use `route()` today, plus health and the
+- [x] All twelve documented operations that use `route()` today, plus health and the
       OpenAPI document, are declared through `route(contract, ...)`; no handler calls
       `authenticate`, `requirePermission` or `assertSameOrigin` itself.
-- [ ] A test fails when an exported handler is not built from the contract of its own
+- [x] A test fails when an exported handler is not built from the contract of its own
       method and path, and when the set of authentication-only operations differs from the
       four approved in WS-015 and WS-021.
-- [ ] The OpenAPI document names the required permission of each permission-checked
+- [x] The OpenAPI document names the required permission of each permission-checked
       operation.
-- [ ] Every existing route integration test passes unchanged, except where the spec
+- [x] Every existing route integration test passes unchanged, except where the spec
       lists a deliberate change.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 
