@@ -1,6 +1,6 @@
 # WS-030 — Tasks core
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-13, questions 1 to 5 as proposed)
 - Work-item: [WI-030](../work-items/WI-030-tasks-core.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 4, 9;
   [0002](../canonical/0002-realtime-sync.md) section 4;

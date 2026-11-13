@@ -1,6 +1,6 @@
 # WI-030 — Tasks core
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 3, 7, 8, 9, 10, 11, 13, 16)
 - Depends on: WI-026, WI-029
 - Work-spec: [WS-030](../work-specs/WS-030-tasks-core.md)
