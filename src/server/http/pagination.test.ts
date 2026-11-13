@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "./errors";
-import { decodeCursor, encodeCursor } from "./pagination";
+import { decodeCursor, decodeNameCursor, encodeCursor, encodeNameCursor } from "./pagination";
 
 const cursor = {
   createdAt: "2026-11-12T10:00:00.123456Z",
@@ -42,5 +42,44 @@ describe("cursors", () => {
       expect(error.code).toBe("invalid_request");
       expect(error.errors).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
     }
+  });
+});
+
+describe("name cursors (WS-026)", () => {
+  const nameCursor = { name: "Ada Lovelace", id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f" };
+
+  function nameFailure(value: string): ApiError {
+    try {
+      decodeNameCursor(value);
+    } catch (error) {
+      if (error instanceof ApiError) return error;
+      throw error;
+    }
+    throw new Error("expected a failure");
+  }
+
+  it("round-trip, including names with any characters", () => {
+    expect(decodeNameCursor(encodeNameCursor(nameCursor))).toEqual(nameCursor);
+    const odd = { name: 'Zoë "Q" % _ 名前', id: nameCursor.id };
+    expect(decodeNameCursor(encodeNameCursor(odd))).toEqual(odd);
+  });
+
+  it("are opaque URL-safe text", () => {
+    expect(encodeNameCursor(nameCursor)).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("refuse a creation-time cursor, garbage or a wrong shape with a 400 naming cursor", () => {
+    const tooLong = Buffer.from(JSON.stringify({ n: "x".repeat(101), i: nameCursor.id })).toString(
+      "base64url",
+    );
+    for (const value of [encodeCursor(cursor), "not a cursor!", "e30", tooLong]) {
+      const error = nameFailure(value);
+      expect(error.status).toBe(400);
+      expect(error.errors).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
+    }
+  });
+
+  it("are not accepted where a creation-time cursor is expected", () => {
+    expect(failure(encodeNameCursor(nameCursor)).status).toBe(400);
   });
 });
