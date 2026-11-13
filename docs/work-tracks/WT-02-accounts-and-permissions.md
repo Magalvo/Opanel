@@ -94,7 +94,7 @@ Each item leaves the repository green and is one branch/PR.
 | [WI-021](../work-items/WI-021-own-profile.md)                      | Own profile: change name and password                                                | Done     | WI-017                 |
 | [WI-022](../work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth (from the review of 2026-11-12)  | Done     | WI-015                 |
 | [WI-023](../work-items/WI-023-api-guard-rails.md)                  | API guard rails: authentication declared in OpenAPI, checks enforced by a test       | Done     | WI-015                 |
-| [WI-024](../work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted (frees its email); last-Admin count fix | Proposed | WI-018, WI-019, WI-020 |
+| [WI-024](../work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted (frees its email); last-Admin count fix | Approved | WI-018, WI-019, WI-020 |
 
 As in WT-01, each item gets its work-item and work-spec files just before it is started.
 

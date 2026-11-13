@@ -1,6 +1,6 @@
 # WI-024 — Revoke an invitation that was never accepted
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-13)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-018](WI-018-account-management-api.md), [WI-019](WI-019-accept-invitation-or-reset-link.md), [WI-020](WI-020-people-page.md)
 - Work-spec: [WS-024](../work-specs/WS-024-revoke-invitation.md)

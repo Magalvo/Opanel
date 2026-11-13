@@ -11,8 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-021 (own profile: change name and password). Every item in the
   WT-02 table is done.
-- **Next:** WI-024, revoke an invitation that was never accepted. Its work-item and
-  work-spec are `Proposed` and wait for the owner's approval (four open questions in WS-024).
+- **In progress:** WI-024, revoke an invitation that was never accepted (work-spec approved
+  on 2026-11-13).
   After it, WT-02's exit criteria are checked and the track is closed.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
@@ -76,7 +76,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                     | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
-| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Proposed    | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Proposed    |
+| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Approved    | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Approved    |
 
 ## Follow-ups
 
