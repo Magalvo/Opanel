@@ -1,6 +1,6 @@
 # WS-028 — Projects with default columns
 
-- Status: Approved (approved by the owner on 2026-11-13, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-13, questions 1 to 4 as proposed)
 - Work-item: [WI-028](../work-items/WI-028-projects-and-default-columns.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 5;
   [0004](../canonical/0004-api-conventions.md) sections 3, 5, 6;
@@ -186,3 +186,27 @@ Section 4. All additive. The OpenAPI document gains six operations, the schemas 
 4. **Positions are unique per project** (section 1). If the owner prefers, the index can be
    dropped and ties broken by id, accepting that two concurrent inserts may sit in an
    arbitrary order.
+
+## Deviations from the approved spec
+
+None in behaviour. The list order, `lower(name) collate "C"` then id, follows the order WS-026
+established for names, as section 4 says.
+
+## Implementation record
+
+- Red: the new tests failed on missing modules and on the two new problem codes and four
+  audit actions (committed before any code).
+- Green: 602 Vitest tests (up from 578) and 28 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` leaves no diff after migration
+  `0007_projects_and_columns`; `pnpm openapi:generate` adds the six operations and the
+  `Project`, `ProjectPage` and `ProjectVersionConflict` schemas.
+- `columns.position` is a custom column type (`src/server/db/schema/collated-text.ts`)
+  whose SQL type is `text collate "C"`; drizzle-kit writes it into the migration and
+  generates no diff afterwards.
+- Amendment A2 checked on a database created with the ICU collation `en-US`, where
+  `select 'aZ' < 'aa'` is false: the position test still returns `aZ` before `aa`, and the
+  project service tests pass there too.
+- Two concurrent creations of one key give one `201` and one `project_key_taken`, and
+  exactly three columns for the winner.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
