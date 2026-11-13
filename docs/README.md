@@ -9,11 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-021 (own profile: change name and password). Every item in the
-  WT-02 table is done.
-- **In progress:** WI-024, revoke an invitation that was never accepted (work-spec approved
-  on 2026-11-13).
-  After it, WT-02's exit criteria are checked and the track is closed.
+- **Last finished:** WI-024 (revoke an invitation that was never accepted; the last-Admin
+  rule now counts only Admins with a password). Every item in the WT-02 table is done.
+- **Next:** check WT-02's exit criteria against `main`, mark the track `Done`, then draft
+  WT-03 (board core). The planning gaps below still await an owner decision.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
@@ -76,7 +75,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                     | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
-| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Approved    | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Approved    |
+| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
 
 ## Follow-ups
 
@@ -87,11 +86,9 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 - **No way back in if the only Admin loses their password.** A reset link can only be
   created by another Admin (WT-02 decision 6). Candidate: a command-line script, run on
   the server, that issues a reset link for an Admin.
-- **An email can be neither corrected nor freed.** There is no email change and no account
-  deletion, only deactivation, so an invitation sent to a mistyped address keeps that
-  address taken. Decided in WS-020: the People page only warns, in the invite dialog, that the
-  email cannot be changed. The real fix, revoking an invitation that was never accepted so
-  its email is free again (new API and a new audit action), is planned as **WI-024**, next.
+- **An email can be neither corrected nor freed** once its invitation was accepted. An
+  invitation that was never accepted can now be revoked, which frees its email (WI-024).
+  Changing the email of an account that has signed in remains undecided.
 - **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
   the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
@@ -102,6 +99,9 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 
 Other follow-ups:
 
+- Take the per-account lock of WS-024 (`lockAccount`) in `issueResetLink` too, so issuing a
+  new link while the same person accepts the previous one cannot deadlock (see WS-024,
+  implementation record).
 - Weigh moving authentication, permission and origin checks into the `route()` wrapper at
   the start of WT-03 (see WS-023, question 1).
 - Make `pnpm typecheck` independent of a stale `.next` directory (for example by

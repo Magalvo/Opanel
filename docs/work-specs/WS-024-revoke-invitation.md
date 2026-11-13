@@ -1,6 +1,6 @@
 # WS-024 — Revoke an invitation that was never accepted
 
-- Status: Approved (approved by the owner on 2026-11-13, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-024](../work-items/WI-024-revoke-invitation.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 3, 5, 9;
@@ -178,3 +178,36 @@ Technical, settled by the tests:
    a deadlock still shows up, I stop and report.
 6. **No `revoked` status in the list.** The row simply disappears; the People page reloads
    on `409`, so a stale page cannot show a revoked invitation as still pending for long.
+
+## Deviations from the approved spec
+
+1. **Test placement.** The service tests were added to the existing
+   `account-management.integration.test.ts`, as the Files table says; the last-Admin test
+   sits with the other last-Admin tests, and the "unknown ids and agents" and "permissions"
+   tests now cover `revokeInvitation` too.
+2. **`src/components/people/api.ts`:** the code that turns a failed response into an
+   `ApiFailure` was extracted (`failureOf`) so `revokeInvitation`, which has no body to
+   parse on success, shares it with `call`.
+3. **The confirmation dialog's texts** moved into one function, `confirmationText`, now that
+   it has three kinds; the wording of the two existing kinds is unchanged (their tests are
+   untouched).
+4. **The People page shows "Revoke invitation" only for the status `invited`.** The API
+   also revokes an invited account that was deactivated, but the list shows that account as
+   `deactivated` without saying whether it ever had a password, so the page does not offer
+   it there; such an account can still be revoked through the API.
+
+## Implementation record
+
+- Red: 17 tests failed on missing modules and behaviour (committed before any code). The
+  last-Admin test failed because the Admin could demote themselves while an invited Admin
+  existed, confirming the gap of section 4.
+- Green: 513 Vitest tests (up from 497) and 28 Playwright tests pass. The race test (10
+  rounds of revoke and accept at once) and the WS-019 race test passed in three consecutive
+  runs with no deadlock. `pnpm db:generate` and `pnpm openapi:generate` leave no diff;
+  typecheck, lint and format pass.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
+- Found while implementing, not changed (out of scope): issuing a new link
+  (`issueResetLink`) also deletes the account's unused links, so issuing one while the same
+  person accepts the previous one could in principle deadlock. Taking `lockAccount` there
+  too would close it. Recorded as a follow-up in `docs/README.md`.
