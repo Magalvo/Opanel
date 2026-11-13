@@ -5,4 +5,5 @@ export { auditLog } from "./audit-log";
 export { credentials } from "./credentials";
 export { rateLimits } from "./rate-limits";
 export { sessions } from "./sessions";
+export { teamMembers, teams } from "./teams";
 export { verification } from "./verification";

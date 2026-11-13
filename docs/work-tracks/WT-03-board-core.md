@@ -59,8 +59,8 @@ implements it. The owner approved all of them as proposed on 2026-11-13.
    methods, and passes the `Actor` to the handler. The guard-rail test then checks the
    declaration against the contract instead of searching handler text. Reason: this track
    adds about 30 endpoints; a handler that cannot exist without declaring its checks is
-   stronger than a text search. The existing endpoints (twelve handlers, plus health and the OpenAPI document) are converted first (WI-025),
-   with no behaviour change. Object-level rules (a Member deleting only their own task)
+   stronger than a text search. The existing endpoints (twelve handlers, plus health and
+   the OpenAPI document) are converted first (WI-025), with no behaviour change. Object-level rules (a Member deleting only their own task)
    stay in the services.
 2. **Project keys** are 2 to 10 characters, uppercase letters and digits, starting with a
    letter, unique, and **cannot be changed** after creation, because task keys never change
@@ -77,6 +77,14 @@ implements it. The owner approved all of them as proposed on 2026-11-13.
    Clients send neighbours (`afterId` / `beforeId`), never position values; the server
    computes the key. Alternative considered: a `double precision` column, rejected because
    precision runs out after about 50 moves between the same two cards.
+   **Byte-order collation (amendment A2):** PostgreSQL sorts `text` by the database's
+   collation, which on most installs is a language collation (under `en_US.UTF-8`, `"a"`
+   sorts before `"B"`; the keys need the reverse). Every position column is therefore
+   declared `COLLATE "C"`, and no query orders it with another collation. WI-027 states in
+   `src/lib/position.ts` that keys compare by code unit and tests them with `<`, never
+   `localeCompare`; WI-028, which creates the first position column, tests on the real
+   database that keys differing only by case come back from `ORDER BY position` in the
+   library's order.
 6. **Moving is its own endpoint**, `POST /api/v1/tasks/{idOrKey}/move` with
    `{ columnId, afterTaskId?, beforeTaskId?, version }`, so WT-04 can emit `task.moved`
    separately from `task.updated`. It checks `version` like any update.
@@ -86,7 +94,8 @@ implements it. The owner approved all of them as proposed on 2026-11-13.
    and the last write wins.
 8. **Assignment**: a task may have a team, a person, both or neither, and the person need
    not belong to the team (doc 0003: "any team or person"). Only active human accounts can
-   be newly assigned; a task keeps showing a person who was later deactivated.
+   be newly assigned; a task keeps showing a person who was later deactivated. People are
+   picked from the people directory (decision 17).
 9. **Teams** have a unique name. A team that any task is assigned to cannot be deleted
    (`409 team_in_use`); it can be renamed. Members are human accounts.
 10. **Columns**: a project starts with "To do" (`todo`), "In progress" (`in_progress`) and
@@ -115,88 +124,54 @@ implements it. The owner approved all of them as proposed on 2026-11-13.
 16. **Audit log versus history** (see question 1): configuration changes (teams, membership,
     projects, columns, epics) are written to the audit log; task and comment changes are
     written to `task_events`, which record the actor as hard rule 8 requires.
-
-## Proposed amendments (awaiting owner approval)
-
-From the audit of `main` on 2026-11-13. The track above is approved as it stands; nothing
-in this section is decided until the owner approves it. Once approved, each amendment is
-folded into the decision or work-item it names and this section is removed.
-
-**A1. A people directory that every signed-in person can read.** Assigning a task to a
-person (decision 8) and choosing team members (decision 9) both need a list of accounts to
-pick from. The only list today is `GET /api/v1/accounts`, which needs `accounts:manage`:
-Admins only. A Member cannot assign a task to anyone, and a Manager cannot add anyone to a
-team.
-
-- Proposed: `GET /api/v1/people`, permission `projects:read` (every human role has it).
-  It returns human accounts as `{ id, name, active }`, ordered by name, paginated, with an
-  optional `q` that matches the start of a name. It never returns emails, roles or
-  invitation state: those stay behind `accounts:manage`. Invited accounts that have not
-  chosen a password are left out; deactivated ones are included with `active: false`, so
-  a task assigned to someone who left can still show their name.
-- Built in WI-026 (teams), which needs it first.
-- Doc 0001 section 3 describes the `projects:read` scope as "List projects, teams and
-  routing layers"; it would read "projects, teams, people and routing layers". Agents with
-  that scope would therefore see names of people, which they need in order to read who a
-  task is assigned to.
-- Alternative: a new permission `people:read` given to every human role and to no agent
-  scope. More precise, one more entry in the catalogue of doc 0003.
-
-**A2. Position columns use byte-order collation.** Decision 5 relies on position keys that
-"sort as plain text". PostgreSQL sorts `text` by the database's collation, which for most
-installs is a language collation, not byte order: under `en_US.UTF-8`, `"a"` sorts before
-`"B"`, while the base-62 keys need `"B"` before `"a"`. Without a fix, cards and columns
-change order on some installs and not on others.
-
-- Proposed addition to decision 5: every position column is declared `COLLATE "C"`, and
-  every query that orders by it relies on the column's collation (no `ORDER BY` with
-  another collation).
-- WI-028, which creates the first position column, gets an integration test on the real
-  database: keys that differ only by case, generated by `src/lib/position.ts`, come back
-  from `ORDER BY position` in the order the library says.
-- WI-027 states in `src/lib/position.ts` that the keys must be compared by code unit, and
-  tests the JavaScript side with a plain `<` comparison, never `localeCompare`.
-
-**A3. Epic fields are those of doc 0003.** The track lists what can be done to an epic but
-not its fields. Doc 0003 section 4 gives an epic a title, a description, a status (`open`
-or `closed`) and optional start and target dates.
-
-- Proposed: WI-033 implements all five, the two dates as calendar dates (`YYYY-MM-DD`, doc
-  0004), with the target date not before the start date when both are set. Progress in
-  this track is done tasks over total; story points join it in WT-10.
-
-**A4. Two hardening items join the track.** WI-040 (account links) and WI-041 (security
-headers and Content Security Policy), both `Proposed`, in the table below. WI-041 has to be
-done before WI-038, the first item that shows text written by users.
-
-A note that needs no decision: doc 0001 section 6 has the triage pipeline add **system
-comments** to a task. WS-034 should give the comments table a `kind` and a nullable author
-from the start, so WT-06 adds a value, not a redesign.
+17. **A people directory every signed-in person can read (amendment A1).** Assigning a task
+    to a person and choosing team members need a list of accounts, and
+    `GET /api/v1/accounts` is Admin-only. `GET /api/v1/people`, permission `projects:read`
+    (every human role has it), returns human accounts as `{ id, name, active }`, ordered by
+    name, paginated, with an optional `q` that matches the start of a name. It never
+    returns emails, roles or invitation state, which stay behind `accounts:manage`. Invited
+    accounts that never chose a password are left out; deactivated ones are included with
+    `active: false`, so a task assigned to someone who left still shows their name. Agents
+    with `projects:read` therefore see names, which they need to read who a task is
+    assigned to (doc 0001 section 3 updated). Built in WI-026, which needs it first.
+    Alternative not taken: a separate `people:read` permission.
+18. **Epic fields (amendment A3)** are those of doc 0003 section 4: title, description,
+    status (`open` or `closed`), and optional start and target dates as calendar dates
+    (`YYYY-MM-DD`), the target not before the start when both are set. Progress in this
+    track is done tasks over total; story points join it in WT-10.
+19. **Comments have a `kind` and a nullable author from the start**, because doc 0001
+    section 6 has the triage pipeline add system comments. WT-06 then adds a value, not a
+    redesign. Only `user` comments are created in this track.
 
 ## Work-items
 
 Each item leaves the repository green and is one branch/PR. API items include their
 integration tests and OpenAPI contracts; UI items include their end-to-end tests.
 
-| Item                                                     | Title                                                                             | Status   | Depends on             |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------- | -------- | ---------------------- |
-| [WI-025](../work-items/WI-025-route-declares-access.md)  | `route()` declares authentication and permission; existing endpoints converted    | Done     | none                   |
-| WI-026                                                   | Teams and membership: schema, service, API                                        | Draft    | WI-025                 |
-| WI-027                                                   | Fractional positions (pure logic) and the `version_conflict` response             | Draft    | none                   |
-| WI-028                                                   | Projects with default columns: schema, service, API (create, edit, archive, list) | Draft    | WI-025, WI-027         |
-| WI-029                                                   | Columns API: create, rename, recategorise, reorder, delete                        | Draft    | WI-028                 |
-| WI-030                                                   | Tasks core: schema, keys, history events; create, get, list, edit, assign         | Draft    | WI-026, WI-029         |
-| WI-031                                                   | Move a task between and within columns                                            | Draft    | WI-030                 |
-| WI-032                                                   | Delete and restore a task                                                         | Draft    | WI-030                 |
-| WI-033                                                   | Epics: schema, service, API; a task's epic; progress                              | Draft    | WI-030                 |
-| WI-034                                                   | Comments: schema, service, API                                                    | Draft    | WI-030                 |
-| WI-035                                                   | Teams page                                                                        | Draft    | WI-026                 |
-| WI-036                                                   | Projects list, navigation and project settings (details, columns, deleted tasks)  | Draft    | WI-029, WI-032         |
-| WI-037                                                   | Board page: columns, cards, create a task, drag and drop                          | Draft    | WI-031, WI-036         |
-| WI-038                                                   | Task detail: fields, Markdown description, assignment, epic, comments, delete     | Draft    | WI-033, WI-034, WI-037 |
-| WI-039                                                   | Epics page: list, create, edit, close, progress                                   | Draft    | WI-033, WI-036         |
-| [WI-040](../work-items/WI-040-account-link-hardening.md) | Account link hardening (from the audit of 2026-11-13)                             | Proposed | none                   |
-| [WI-041](../work-items/WI-041-security-headers.md)       | Security headers and Content Security Policy (from the audit of 2026-11-13)       | Proposed | none; before WI-038    |
+Two hardening items from the audit of 2026-11-13 joined the track (amendment A4): WI-040
+(account links) and WI-041 (security headers and Content Security Policy). WI-041 is done
+before WI-038, the first item that shows text written by users. Their work-specs are
+written; each still needs the owner's approval like any other.
+
+| Item                                                     | Title                                                                                    | Status   | Depends on             |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------- | ---------------------- |
+| [WI-025](../work-items/WI-025-route-declares-access.md)  | `route()` declares authentication and permission; existing endpoints converted           | Done     | none                   |
+| [WI-026](../work-items/WI-026-teams-and-people.md)       | Teams and membership, people directory: schema, service, API                             | Done     | WI-025                 |
+| WI-027                                                   | Fractional positions (pure logic) and the `version_conflict` response                    | Draft    | none                   |
+| WI-028                                                   | Projects with default columns: schema, service, API (create, edit, archive, list)        | Draft    | WI-025, WI-027         |
+| WI-029                                                   | Columns API: create, rename, recategorise, reorder, delete                               | Draft    | WI-028                 |
+| WI-030                                                   | Tasks core: schema, keys, history events; create, get, list, edit, assign; `team_in_use` | Draft    | WI-026, WI-029         |
+| WI-031                                                   | Move a task between and within columns                                                   | Draft    | WI-030                 |
+| WI-032                                                   | Delete and restore a task                                                                | Draft    | WI-030                 |
+| WI-033                                                   | Epics: schema, service, API; a task's epic; progress                                     | Draft    | WI-030                 |
+| WI-034                                                   | Comments: schema, service, API                                                           | Draft    | WI-030                 |
+| WI-035                                                   | Teams page                                                                               | Draft    | WI-026                 |
+| WI-036                                                   | Projects list, navigation and project settings (details, columns, deleted tasks)         | Draft    | WI-029, WI-032         |
+| WI-037                                                   | Board page: columns, cards, create a task, drag and drop                                 | Draft    | WI-031, WI-036         |
+| WI-038                                                   | Task detail: fields, Markdown description, assignment, epic, comments, delete            | Draft    | WI-033, WI-034, WI-037 |
+| WI-039                                                   | Epics page: list, create, edit, close, progress                                          | Draft    | WI-033, WI-036         |
+| [WI-040](../work-items/WI-040-account-link-hardening.md) | Account link hardening (from the audit of 2026-11-13)                                    | Proposed | none                   |
+| [WI-041](../work-items/WI-041-security-headers.md)       | Security headers and Content Security Policy (from the audit of 2026-11-13)              | Proposed | none; before WI-038    |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 
@@ -240,6 +215,6 @@ Questions 1 to 4 were resolved by the owner on 2026-11-13, by approving the prop
    routing in WT-06.
 5. **Open risk, large boards:** the board loads every page of tasks. Acceptable until WT-07
    moves unscheduled work to the backlog; measured in WI-037 with 1 000 tasks.
-6. **Open, from the audit of 2026-11-13:** amendments A1 to A4 above await the owner's
-   approval. A1 and A2 change WI-026, WI-027 and WI-028, so they should be decided before
-   those items are drafted.
+6. **Resolved: the audit of 2026-11-13.** The owner approved amendments A1 to A4 on
+   2026-11-13, A1 with `projects:read` as proposed. They are folded into decisions 5, 8, 17,
+   18 and 19 and the work-items table.

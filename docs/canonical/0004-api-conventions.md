@@ -145,9 +145,12 @@ GET /api/v1/tasks?limit=50&cursor=eyJ...
 - `cursor` is an opaque string taken from a previous `nextCursor`. Cursors are keyset
   based, so a list stays correct while rows are inserted, which matters on boards that
   agents write to continuously. There are no page numbers and no total count.
-- A cursor carries the last row's creation time **with microsecond precision, as text**, and
-  its id; a `Date` would truncate to milliseconds and repeat a row. A tampered cursor is a
-  `400` with the field error `cursor`.
+- A cursor carries the last row's sort key and its id. By default the sort key is the
+  creation time **with microsecond precision, as text**; a `Date` would truncate to
+  milliseconds and repeat a row. Lists ordered by name (people, teams; WS-026) carry the
+  name and order by `lower(name)` under the `"C"` collation, so the order is the same on
+  every install whatever its database collation. A tampered cursor, or one from a list
+  with another sort key, is a `400` with the field error `cursor`.
 - Each endpoint has one documented default order. Where sorting is offered it is
   `sort=field` (ascending) or `sort=-field` (descending), limited to documented fields.
 - Filters are plain query parameters named after the field (`assigneeTeamId=...`). The

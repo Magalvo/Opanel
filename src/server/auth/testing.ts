@@ -12,6 +12,7 @@ export const TEST_PASSWORD = "correct horse battery staple";
 /** Creates a human account with a password credential, directly in the test database. */
 export async function createTestAccount(
   overrides: {
+    name?: string;
     email?: string;
     role?: "admin" | "manager" | "member" | "viewer";
     password?: string;
@@ -23,7 +24,7 @@ export async function createTestAccount(
     .insert(accounts)
     .values({
       kind: "human",
-      name: "Ada",
+      name: overrides.name ?? "Ada",
       email: overrides.email ?? "ada@example.com",
       role: overrides.role ?? "member",
       disabledAt: overrides.disabled ? new Date() : null,

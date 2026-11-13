@@ -18,6 +18,11 @@ export const AUDIT_ACTIONS = [
   "account.reactivated",
   "account.name_changed",
   "account.invitation_revoked",
+  "team.created",
+  "team.renamed",
+  "team.deleted",
+  "team.member_added",
+  "team.member_removed",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);

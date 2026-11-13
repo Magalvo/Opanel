@@ -3,7 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
-- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12)
+- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13)
 
 ## 1. Context
 
@@ -66,13 +66,13 @@ agent) are what endpoints check. The single catalogue of all permissions, and th
 roles built from them, is `src/lib/schemas/permissions.ts` and `src/server/auth/roles.ts`
 (WI-012). The table below lists the ones agents use.
 
-| Scope            | Allows                                  |
-| ---------------- | --------------------------------------- |
-| `projects:read`  | List projects, teams and routing layers |
-| `tasks:read`     | Read tasks, epics and comments          |
-| `reports:write`  | Submit bug reports                      |
-| `comments:write` | Comment on tasks                        |
-| `tasks:write`    | Create and edit tasks directly          |
+| Scope            | Allows                                          |
+| ---------------- | ----------------------------------------------- |
+| `projects:read`  | List projects, teams, people and routing layers |
+| `tasks:read`     | Read tasks, epics and comments                  |
+| `reports:write`  | Submit bug reports                              |
+| `comments:write` | Comment on tasks                                |
+| `tasks:write`    | Create and edit tasks directly                  |
 
 Initial agent roles:
 

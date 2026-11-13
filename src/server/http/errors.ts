@@ -72,6 +72,16 @@ export function lastAdmin(
   return new ApiError({ status: 409, title: "Conflict", code: "last_admin", detail });
 }
 
+/** `409` with the specific code of WS-026: another team has this name, ignoring case. */
+export function teamNameTaken(detail = "Another team already has this name."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "team_name_taken", detail });
+}
+
+/** `409` with the specific code of WS-026: the account is deactivated. */
+export function accountInactive(detail = "This person is deactivated."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "account_inactive", detail });
+}
+
 /**
  * `404` with the specific code of WS-019: the one-time link is unknown, used, expired,
  * replaced, or belongs to a deactivated account. Deliberately one answer for all of them.

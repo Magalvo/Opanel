@@ -36,3 +36,37 @@ export function decodeCursor(value: string): Cursor {
   }
   return { createdAt: result.data.t, id: result.data.i };
 }
+
+/**
+ * Where a page ordered by name ended (WS-026): the last row's name and the id that breaks
+ * ties. Used by lists ordered by name, such as people and teams.
+ */
+export interface NameCursor {
+  name: string;
+  id: string;
+}
+
+const nameCursorSchema = z.strictObject({
+  n: z.string().max(100),
+  i: z.uuid(),
+});
+
+export function encodeNameCursor(cursor: NameCursor): string {
+  return Buffer.from(JSON.stringify({ n: cursor.name, i: cursor.id })).toString("base64url");
+}
+
+/** Throws `400` naming the field `cursor` if the value is not a name cursor of this API. */
+export function decodeNameCursor(value: string): NameCursor {
+  const invalid = invalidRequest([{ path: "cursor", message: "Invalid cursor." }]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch {
+    throw invalid;
+  }
+  const result = nameCursorSchema.safeParse(parsed);
+  if (!result.success) {
+    throw invalid;
+  }
+  return { name: result.data.n, id: result.data.i };
+}
