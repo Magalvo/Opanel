@@ -1,6 +1,6 @@
 # WS-030 — Tasks core
 
-- Status: Approved (approved by the owner on 2026-11-13, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-13, questions 1 to 5 as proposed)
 - Work-item: [WI-030](../work-items/WI-030-tasks-core.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 4, 9;
   [0002](../canonical/0002-realtime-sync.md) section 4;
@@ -240,3 +240,32 @@ Sections 4 and 5. All additive. The OpenAPI document gains four operations, the 
    project's first column when its column goes), and does keep its team assignment.
 5. **No endpoint reads the history yet.** Events are written now; reading them is the
    activity timeline of WT-08.
+
+## Deviations from the approved spec
+
+- **Edits lock the task row and compare `version` in code** instead of `update ... where
+version = $expected`. The `field_changed` events need the exact state the change starts
+  from; with the row locked (`for update of t`, after the project's shared lock) the state
+  read is the state changed, and the outcome for the client is the same
+  (`version_conflict` with the current task).
+- **Files not in the list:** `src/server/services/projects.ts` gained `claimTaskNumber`
+  (section 3, step 1) and `findProjectRef` (the list needs only `tasks:read`, not
+  `projects:read`, so it does not go through `getProject`); `src/server/db/errors.ts`
+  holds `hasPostgresCode` and the two error codes, and `teams.ts` uses it instead of its
+  own copy.
+
+## Implementation record
+
+- Red: the new unit tests failed on missing modules, the board cursor, the two codes and
+  the `TaskVersionConflict` schema; the integration tests on missing modules (committed
+  before any code).
+- Green: 649 Vitest tests (up from 622) and 28 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` leaves no diff after `0008_tasks` and the hand-written
+  `0009_task_events_append_only`; `pnpm openapi:generate` adds the four operations.
+- Twenty concurrent creations give `OPA-1` to `OPA-20` with distinct positions; the task
+  service tests passed three runs in a row, and also on a database with the ICU collation
+  `en-US`.
+- `team_in_use` and `column_not_empty` come from the `restrict` foreign keys (PostgreSQL
+  error `23503`), mapped by `deleteTeam` and `deleteColumn`.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
