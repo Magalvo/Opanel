@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -18,7 +19,7 @@ function roleLabel(role: string): string {
   return `${role.charAt(0).toUpperCase()}${role.slice(1)}`;
 }
 
-/** Who is signed in, and how to sign out. Lives in the app shell's top bar. */
+/** Who is signed in, their profile, and how to sign out. Lives in the app shell's top bar. */
 export function AccountMenu({ account }: Readonly<{ account: AccountSummary }>) {
   const router = useRouter();
 
@@ -54,6 +55,9 @@ export function AccountMenu({ account }: Readonly<{ account: AccountSummary }>) 
           <span className="text-xs text-muted-foreground">{roleLabel(account.role)}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/profile">Profile</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
             void signOut();

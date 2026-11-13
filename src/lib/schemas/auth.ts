@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
 
+import { accountNameSchema } from "./accounts";
 import { permissionSchema } from "./permissions";
 
 export const PASSWORD_MIN_LENGTH = 12;
@@ -25,7 +26,7 @@ export const signInRequestSchema = z
 /** Body of `POST /api/v1/setup`: the first Admin. The password follows the same rule as any. */
 export const setupRequestSchema = z
   .strictObject({
-    name: z.string().trim().min(1).max(100),
+    name: accountNameSchema,
     email: z.email(),
     password: passwordSchema,
   })
@@ -91,6 +92,27 @@ export const signOutContract = {
   responses: { 204: { description: "Signed out.", noContent: true } },
 } satisfies EndpointContract;
 
+/** Body of `PATCH /api/v1/me`: the caller's new name. */
+export const updateMeRequestSchema = z
+  .strictObject({ name: accountNameSchema })
+  .meta({ id: "UpdateMeRequest" });
+
+/**
+ * Body of `POST /api/v1/me/password`. The current password is checked, not validated
+ * against today's rule, as at sign-in; the new one follows the rule of WT-02 decision 7.
+ */
+export const changePasswordRequestSchema = z
+  .strictObject({
+    currentPassword: z
+      .string({ error: "Must be text" })
+      .min(1, { error: "Required" })
+      .max(PASSWORD_MAX_LENGTH, {
+        error: `Must be at most ${String(PASSWORD_MAX_LENGTH)} characters`,
+      }),
+    newPassword: passwordSchema,
+  })
+  .meta({ id: "ChangePasswordRequest" });
+
 export const meContract = {
   method: "get",
   path: "/api/v1/me",
@@ -143,5 +165,45 @@ export const acceptLinkContract = {
     404: { description: "The link is not valid (code `invalid_link`).", problem: true },
     415: { description: "The body is not JSON.", problem: true },
     429: { description: "Too many attempts from this address. See Retry-After.", problem: true },
+  },
+} satisfies EndpointContract;
+
+export const updateMeContract = {
+  method: "patch",
+  path: "/api/v1/me",
+  summary: "Change one's own name",
+  description:
+    "Changes the caller's name and returns the caller as `GET /api/v1/me` does. Needs a " +
+    "session, no permission. Must come from the app's own origin.",
+  public: false,
+  request: { body: updateMeRequestSchema },
+  responses: {
+    200: { description: "The name was changed.", schema: meResponseSchema },
+    400: { description: "The body is not valid.", problem: true },
+    403: { description: "The request does not come from the app's own origin.", problem: true },
+    415: { description: "The body is not JSON.", problem: true },
+  },
+} satisfies EndpointContract;
+
+export const changePasswordContract = {
+  method: "post",
+  path: "/api/v1/me/password",
+  summary: "Change one's own password",
+  description:
+    "Replaces the caller's password after checking the current one, and ends every other " +
+    "session of the account; the session that made the request stays signed in. A wrong " +
+    "current password is a 400 with a field error on `currentPassword`. Limited per account. " +
+    "Needs a session, no permission. Must come from the app's own origin.",
+  public: false,
+  request: { body: changePasswordRequestSchema },
+  responses: {
+    204: { description: "The password was changed.", noContent: true },
+    400: {
+      description: "The body is not valid, or the current password is wrong.",
+      problem: true,
+    },
+    403: { description: "The request does not come from the app's own origin.", problem: true },
+    415: { description: "The body is not JSON.", problem: true },
+    429: { description: "Too many attempts for this account. See Retry-After.", problem: true },
   },
 } satisfies EndpointContract;

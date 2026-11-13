@@ -39,7 +39,9 @@ function renderPage() {
 }
 
 function bodyOf(call: Parameters<typeof fetch> | undefined): unknown {
-  return JSON.parse(String(call?.[1]?.body));
+  const body = call?.[1]?.body;
+  if (typeof body !== "string") throw new Error("expected a JSON string body");
+  return JSON.parse(body);
 }
 
 async function changePassword(user: ReturnType<typeof userEvent.setup>, confirmation = NEXT) {

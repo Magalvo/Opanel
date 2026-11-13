@@ -8,6 +8,8 @@ import { getAuth } from "./auth";
 export interface Authenticated {
   actor: Actor;
   account: AccountRow;
+  /** The id of the session row the cookie belongs to (WS-021 keeps it on a password change). */
+  sessionId: string;
   /** `Set-Cookie` headers Better Auth produced, for example when it extends the session. */
   headers: Headers;
 }
@@ -41,6 +43,7 @@ export async function authenticate(request: Request): Promise<Authenticated> {
   return {
     actor: humanActor({ accountId: account.id, role: account.role as Actor["role"] }),
     account,
+    sessionId: response.session.id,
     headers,
   };
 }

@@ -228,7 +228,7 @@ describe("changePasswordRequestSchema", () => {
   });
 
   it("never echoes a rejected password in its messages", () => {
-    const secret = "short-secret";
+    const secret = "tiny-secret"; // 11 characters: too short for a new password
     const result = changePasswordRequestSchema.safeParse({
       currentPassword: secret,
       newPassword: secret,

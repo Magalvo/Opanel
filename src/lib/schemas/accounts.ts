@@ -11,6 +11,9 @@ export const accountStatusSchema = z.enum(["invited", "active", "deactivated"]).
     "`invited` has no password yet, `active` can sign in, `deactivated` cannot and has no sessions.",
 });
 
+/** A person's name, as an Admin invites it and as the person changes it: trimmed, 1 to 100. */
+export const accountNameSchema = z.string().trim().min(1).max(100);
+
 /** An account as an Admin sees it in the people list. Never includes credentials. */
 export const managedAccountSchema = z
   .strictObject({
@@ -32,7 +35,7 @@ export type AccountPage = z.infer<typeof accountPageSchema>;
 
 export const inviteRequestSchema = z
   .strictObject({
-    name: z.string().trim().min(1).max(100),
+    name: accountNameSchema,
     email: z.email(),
     role: humanRoleSchema,
   })
