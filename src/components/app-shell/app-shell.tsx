@@ -14,14 +14,21 @@ interface AppShellProps {
   defaultSidebarOpen: boolean;
   /** The signed-in account, shown in the account menu. */
   account: AccountSummary;
+  /** Whether to show the People page in the navigation (`accounts:manage`). */
+  canManageAccounts: boolean;
 }
 
 /** The frame around every signed-in page: sidebar, top bar and the main region. */
-export function AppShell({ children, defaultSidebarOpen, account }: Readonly<AppShellProps>) {
+export function AppShell({
+  children,
+  defaultSidebarOpen,
+  account,
+  canManageAccounts,
+}: Readonly<AppShellProps>) {
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={defaultSidebarOpen}>
-        <AppSidebar />
+        <AppSidebar canManageAccounts={canManageAccounts} />
         <div className="flex min-h-svh min-w-0 flex-1 flex-col bg-background">
           <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-3">
             <SidebarTrigger />

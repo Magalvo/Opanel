@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { cookies, headers } from "next/headers";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestAccount, signInCookie } from "@/server/auth/testing";
@@ -47,5 +48,21 @@ describe("the (app) layout", () => {
     request(await signInCookie());
 
     expect(await AppLayout({ children: null })).toBeTruthy();
+  });
+
+  it.each([
+    ["admin", true],
+    ["manager", false],
+    ["member", false],
+    ["viewer", false],
+  ] as const)("tells the shell whether a %s can manage accounts: %s", async (role, expected) => {
+    await createTestAccount({ role });
+    request(await signInCookie());
+
+    const shell = (await AppLayout({ children: null })) as ReactElement<{
+      canManageAccounts?: boolean;
+    }>;
+
+    expect(shell.props.canManageAccounts).toBe(expected);
   });
 });
