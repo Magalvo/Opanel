@@ -109,4 +109,15 @@ describe("account contracts", () => {
       Object.keys(byOperation.get("post /api/v1/accounts/{accountId}/reset-link")?.responses ?? {}),
     ).toContain("409");
   });
+
+  it("document revoking an invitation as authenticated, answering 204, 404 and 409", () => {
+    const revoke = contracts.find(
+      (c) => c.method === "delete" && c.path === "/api/v1/accounts/{accountId}/invitation",
+    );
+
+    expect(revoke?.public).toBe(false);
+    expect(Object.keys(revoke?.responses ?? {})).toEqual(
+      expect.arrayContaining(["204", "400", "404", "409"]),
+    );
+  });
 });

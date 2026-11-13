@@ -183,11 +183,13 @@ describe("PeoplePage: inviting", () => {
     return screen.findByRole("dialog", { name: "Invite a person" });
   }
 
-  it("warns that the email cannot be changed, validates, posts and shows the link once", async () => {
+  it("says a wrong email can be fixed by revoking, validates, posts and shows the link once", async () => {
     const user = await renderLoaded([ada]);
     const dialog = await openInvite(user);
     expect(
-      within(dialog).getByText("Check the email: it cannot be changed later."),
+      within(dialog).getByText(
+        "Check the email. If it is wrong, revoke the invitation and invite again.",
+      ),
     ).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Create invitation" }));
@@ -432,5 +434,92 @@ describe("PeoplePage: changing people", () => {
     await waitFor(() => {
       expect(router.replace).toHaveBeenCalledWith("/sign-in");
     });
+  });
+});
+
+describe("PeoplePage: revoking an invitation", () => {
+  async function openActions(user: ReturnType<typeof userEvent.setup>, name: string) {
+    await user.click(screen.getByRole("button", { name: `Actions for ${name}` }));
+  }
+
+  async function askToRevoke(user: ReturnType<typeof userEvent.setup>) {
+    await openActions(user, "Grace");
+    await user.click(await screen.findByRole("menuitem", { name: "Revoke invitation" }));
+    return screen.findByRole("alertdialog", { name: "Revoke the invitation of Grace?" });
+  }
+
+  it("is offered only for an invited person", async () => {
+    const off = account({
+      id: "44444444-4444-4444-8444-444444444444",
+      name: "Off",
+      status: "deactivated",
+    });
+    const user = await renderLoaded([ada, grace, linus, off]);
+
+    for (const name of ["Linus", "Off"]) {
+      await openActions(user, name);
+      expect(await screen.findByRole("menu")).toBeInTheDocument();
+      expect(screen.queryByRole("menuitem", { name: "Revoke invitation" })).not.toBeInTheDocument();
+      await user.keyboard("{Escape}");
+    }
+    await openActions(user, "Grace");
+    expect(await screen.findByRole("menuitem", { name: "Revoke invitation" })).toBeInTheDocument();
+  });
+
+  it("asks first, says the email will be free, and does nothing on cancel", async () => {
+    const user = await renderLoaded();
+
+    const confirm = await askToRevoke(user);
+    expect(
+      within(confirm).getByText(
+        "Their link stops working and the account is removed. grace@example.com can be invited again.",
+      ),
+    ).toBeInTheDocument();
+    await user.click(within(confirm).getByRole("button", { name: "Cancel" }));
+
+    expect(calls("DELETE")).toHaveLength(0);
+  });
+
+  it("revokes on confirmation, removes the row and says so", async () => {
+    const user = await renderLoaded();
+    on(`DELETE /api/v1/accounts/${grace.id}/invitation`, () => new Response(null, { status: 204 }));
+
+    const confirm = await askToRevoke(user);
+    await user.click(within(confirm).getByRole("button", { name: "Revoke" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("row", { name: /Grace/ })).not.toBeInTheDocument();
+    });
+    expect(calls("DELETE").map(([url]) => url)).toEqual([
+      `/api/v1/accounts/${grace.id}/invitation`,
+    ]);
+    expect(screen.getByRole("status")).toHaveTextContent("The invitation of Grace was revoked.");
+  });
+
+  it("reloads the list and explains when the person accepted in the meantime", async () => {
+    const user = await renderLoaded();
+    on(`DELETE /api/v1/accounts/${grace.id}/invitation`, () => problem(409, { code: "conflict" }));
+    on("GET /api/v1/accounts?limit=50", page([ada, { ...grace, status: "active" }, linus]));
+
+    const confirm = await askToRevoke(user);
+    await user.click(within(confirm).getByRole("button", { name: "Revoke" }));
+
+    expect(
+      await screen.findByText("Grace has already accepted the invitation."),
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(row("Grace")).getByText("Active")).toBeInTheDocument();
+    });
+  });
+
+  it("says it could not revoke on any other failure, and keeps the row", async () => {
+    const user = await renderLoaded();
+    on(`DELETE /api/v1/accounts/${grace.id}/invitation`, () => problem(500));
+
+    const confirm = await askToRevoke(user);
+    await user.click(within(confirm).getByRole("button", { name: "Revoke" }));
+
+    expect(await screen.findByText("Could not revoke. Try again.")).toBeInTheDocument();
+    expect(row("Grace")).toBeInTheDocument();
   });
 });

@@ -64,6 +64,54 @@ admin(
   },
 );
 
+admin(
+  "an Admin revokes an invitation sent to a mistyped email; the link stops working and the email can be invited again",
+  async ({ page, browser }) => {
+    await page.goto("/people");
+    const email = `grace-${crypto.randomUUID()}@exmaple.com`;
+
+    async function invite(): Promise<string> {
+      await page.getByRole("button", { name: "Invite person" }).click();
+      const dialog = page.getByRole("dialog", { name: "Invite a person" });
+      await dialog.getByLabel("Name").fill("Grace Typo");
+      await dialog.getByLabel("Email").fill(email);
+      await dialog.getByRole("button", { name: "Create invitation" }).click();
+      const linkDialog = page.getByRole("dialog", { name: "Invitation link" });
+      const url = await linkDialog.getByLabel("Link").inputValue();
+      await linkDialog.getByRole("button", { name: "Done" }).click();
+      return url;
+    }
+
+    const link = await invite();
+    await showEveryone(page);
+    const row = page.getByRole("row", { name: new RegExp(email) });
+    await row.getByRole("button", { name: /^Actions for/ }).click();
+    await page.getByRole("menuitem", { name: "Revoke invitation" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Revoke" }).click();
+    await expect(page.getByRole("status")).toContainText("was revoked");
+    await expect(row).toHaveCount(0);
+
+    // The old link is refused in a fresh browser.
+    const context = await browser.newContext({ baseURL: E2E_BASE_URL });
+    try {
+      const other = await context.newPage();
+      await other.goto(link);
+      await other.getByLabel("Password", { exact: true }).fill("a password for nobody");
+      await other.getByLabel("Confirm password").fill("a password for nobody");
+      await other.getByRole("button", { name: "Set password" }).click();
+      await expect(
+        other.getByText("This link is no longer valid.", { exact: false }),
+      ).toBeVisible();
+    } finally {
+      await context.close();
+    }
+
+    // The same email can be invited again.
+    await invite();
+    await expect(page.getByRole("status")).toContainText("Invited Grace Typo.");
+  },
+);
+
 admin("the page fits a phone and renders in the dark theme", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.emulateMedia({ colorScheme: "dark" });

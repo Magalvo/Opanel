@@ -14,8 +14,9 @@ describe("auditActionSchema", () => {
     }
   });
 
-  it("includes the twelve actions of WT-02", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(12);
+  it("includes the thirteen actions of WT-02, the last one from WS-024", () => {
+    expect(AUDIT_ACTIONS).toHaveLength(13);
+    expect(AUDIT_ACTIONS).toContain("account.invitation_revoked");
   });
 
   it("rejects unknown, empty and wrongly cased actions", () => {
