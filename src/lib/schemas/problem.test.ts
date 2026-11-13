@@ -33,6 +33,7 @@ describe("problemSchema", () => {
       "conflict",
       "forbidden",
       "internal_error",
+      "invalid_link",
       "invalid_request",
       "last_admin",
       "not_found",

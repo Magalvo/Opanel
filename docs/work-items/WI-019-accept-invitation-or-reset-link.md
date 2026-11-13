@@ -1,6 +1,6 @@
 # WI-019 — Accepting an invitation or reset link: set a password (API and page)
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-13)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-018](WI-018-account-management-api.md)
 - Work-spec: [WS-019](../work-specs/WS-019-accept-invitation-or-reset-link.md)

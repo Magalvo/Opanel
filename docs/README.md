@@ -73,7 +73,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                   | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
 | [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu               | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
 | [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
-| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                        | Proposed    | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Proposed    |
+| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                        | Approved | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Approved |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 

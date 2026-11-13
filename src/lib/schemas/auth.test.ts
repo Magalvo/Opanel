@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { contracts } from "@/lib/openapi/contracts";
 
 import {
+  acceptLinkRequestSchema,
   accountSummarySchema,
   meResponseSchema,
   PASSWORD_MAX_LENGTH,
@@ -130,6 +131,48 @@ describe("setupRequestSchema", () => {
     expect(setup?.public).toBe(true);
     expect(Object.keys(setup?.responses ?? {})).toEqual(
       expect.arrayContaining(["201", "400", "403", "404", "415"]),
+    );
+  });
+});
+
+describe("acceptLinkRequestSchema", () => {
+  const token = "A".repeat(43);
+  const valid = { token, password: "a".repeat(12) };
+
+  it("accepts a base64url token of 43 to 128 characters and a password of 12 to 128", () => {
+    expect(acceptLinkRequestSchema.safeParse(valid).success).toBe(true);
+    expect(acceptLinkRequestSchema.safeParse({ ...valid, token: "a_-9".repeat(32) }).success).toBe(
+      true,
+    );
+    expect(acceptLinkRequestSchema.safeParse({ ...valid, password: "a".repeat(128) }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects a malformed token, a short or long password, missing and unknown fields", () => {
+    for (const body of [
+      { ...valid, token: "A".repeat(42) },
+      { ...valid, token: "A".repeat(129) },
+      { ...valid, token: `${"A".repeat(42)}!` },
+      { ...valid, token: `${"A".repeat(42)}=` },
+      { ...valid, password: "a".repeat(11) },
+      { ...valid, password: "a".repeat(129) },
+      { token },
+      { password: valid.password },
+      { ...valid, email: "ada@example.com" },
+    ]) {
+      expect(acceptLinkRequestSchema.safeParse(body).success).toBe(false);
+    }
+  });
+
+  it("is documented as a public operation that can answer 404 and 429", () => {
+    const accept = contracts.find(
+      (c) => c.method === "post" && c.path === "/api/v1/account-links/accept",
+    );
+
+    expect(accept?.public).toBe(true);
+    expect(Object.keys(accept?.responses ?? {})).toEqual(
+      expect.arrayContaining(["200", "400", "403", "404", "415", "429"]),
     );
   });
 });

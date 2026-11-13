@@ -1,6 +1,6 @@
 # WS-019 — Accepting an invitation or reset link: set a password (API and page)
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-019](../work-items/WI-019-accept-invitation-or-reset-link.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 5, 6, 7, 8;
