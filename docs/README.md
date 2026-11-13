@@ -14,8 +14,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Next:** draft WI-028 (projects with default columns) and WS-028 as `Proposed`, and stop
-  for the owner's approval.
+- **Next:** the owner reviews WI-028 and WS-028 (projects with default columns), drafted on
+  2026-11-13 as `Proposed`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -79,10 +79,11 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission          | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
 | [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                | Done        | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Done        |
 | [WI-027](work-items/WI-027-positions-and-version-conflict.md)   | Fractional positions and the `version_conflict` response  | Done        | [WS-027](work-specs/WS-027-positions-and-version-conflict.md)   | Done        |
+| [WI-028](work-items/WI-028-projects-and-default-columns.md)     | Projects with default columns                             | Proposed    | [WS-028](work-specs/WS-028-projects-and-default-columns.md)     | Proposed    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
-WI-028 to WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-029 to WI-039 are outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
