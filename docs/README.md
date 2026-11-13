@@ -9,14 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-025 (`route()` enforces the access declared in each contract),
-  the first item of WT-03, on 2026-11-13.
+- **Last finished:** WI-026 (teams, membership and the people directory), on 2026-11-13.
 - **Awaiting the owner's approval:**
-  - WI-026 / WS-026, teams, membership and the people directory (drafted 2026-11-13).
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Next:** once WS-026 is approved, implement it with TDD. Amendments A1 to A4 to WT-03
-  were approved on 2026-11-13 and are folded into the track.
+- **Next:** draft WI-027 (fractional positions and the `version_conflict` response) and
+  WS-027 as `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -78,7 +76,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 | [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
 | [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission          | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
-| [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                | Proposed    | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Proposed    |
+| [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                | Done        | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
