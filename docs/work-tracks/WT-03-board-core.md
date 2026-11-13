@@ -1,0 +1,183 @@
+# WT-03 — Board core: projects, teams, columns, epics, tasks, comments, assignment
+
+- Status: Approved (approved by the owner on 2026-11-13)
+- Canonical docs: [0003](../canonical/0003-task-management.md) (sections 2 to 5, 9),
+  [0002](../canonical/0002-realtime-sync.md) (section 4, consistency rules),
+  [0004](../canonical/0004-api-conventions.md),
+  [0001](../canonical/0001-ai-qa-agents-and-triage.md) (section 7, data model sketch)
+
+## Goal
+
+People can work a project on a kanban board: a Manager creates projects, teams, columns and
+epics; a Member creates tasks, edits them, moves them between columns, assigns them to a
+team or a person, and comments on them; a Viewer sees everything and changes nothing. Every
+task change is recorded as a history event in the same transaction, and every write follows
+the concurrency rules of doc 0002, so WT-04 only adds the live push.
+
+## In scope
+
+- Teams and team membership (API and an admin page).
+- Projects: create, edit, archive, unarchive; immutable project key; three default columns.
+- Columns per project: create, rename, change category, reorder, delete when empty, with at
+  least one `done` column always kept.
+- Epics: create, edit, close and reopen; a task's epic; progress as done tasks over total.
+- Tasks: create, read by id or key, list in board order, edit, move, assign, soft delete
+  and restore. Fields of this track: key, type, title, description, column, position,
+  assignee team, assignee person, reporter, epic, `version`.
+- Comments on tasks: create and list.
+- Task history events (doc 0003 section 9), written from the first version of the task
+  service. No timeline UI yet.
+- Optimistic concurrency (`version`, `409 version_conflict`) and fractional positions
+  (doc 0002 section 4).
+- UI: navigation to projects, projects list, project settings (details, columns, deleted
+  tasks), board with drag and drop, task detail with Markdown description and comments,
+  epics page, teams page.
+
+## Out of scope
+
+- Live sync, `NOTIFY` and the events endpoint (WT-04). This track leaves one place in each
+  service where WT-04 adds the notification.
+- Agent accounts and tokens (WT-05). Services take an `Actor` as today; agents simply do not
+  exist yet.
+- The project's fallback triage team and routing rules (WT-06).
+- Backlog, priority, due dates, labels (WT-07). In this track every task is in a column.
+- Search, filters (including filtering the board by epic), list view, activity timeline
+  (WT-08).
+- Sub-tasks and links (WT-09); sprints and story points (WT-10).
+- Severity, fingerprint, occurrences (WT-06).
+- Editing or deleting comments (see question 2).
+
+## Design decisions
+
+Choices the canonical docs leave open. Each is detailed in the work-spec of the item that
+implements it. The owner approved all of them as proposed on 2026-11-13.
+
+1. **Checks move into the `route()` wrapper** (WS-023, question 1). A handler is declared as
+   `route({ auth: "permission", permission: "tasks:write" }, handler)`, or
+   `{ auth: "account" }` for the authentication-only list, or `{ auth: "public" }`. The
+   wrapper authenticates, checks the permission, checks the origin on state-changing
+   methods, and passes the `Actor` to the handler. The guard-rail test then checks the
+   declaration against the contract instead of searching handler text. Reason: this track
+   adds about 30 endpoints; a handler that cannot exist without declaring its checks is
+   stronger than a text search. The nine existing endpoints are converted first (WI-025),
+   with no behaviour change. Object-level rules (a Member deleting only their own task)
+   stay in the services.
+2. **Project keys** are 2 to 10 characters, uppercase letters and digits, starting with a
+   letter, unique, and **cannot be changed** after creation, because task keys never change
+   (doc 0003 section 2). The name and description can change.
+3. **Task numbers** come from a counter on the project row (`next_task_number`), taken with
+   `UPDATE ... RETURNING` inside the creating transaction. The row lock serialises
+   concurrent creations in one project; numbers are never reused, including after a delete.
+4. **Archived projects** are read-only: every write to the project or anything in it returns
+   `409` with code `project_archived`. They are hidden from the projects list unless
+   `archived=true` is asked for. Projects are never deleted in v1.
+5. **Positions** are fractional-index strings (base-62 keys that sort as plain text, with a
+   key always available between two others), implemented in
+   `src/lib/position.ts` with no dependency. Used for columns and for tasks within a column.
+   Clients send neighbours (`afterId` / `beforeId`), never position values; the server
+   computes the key. Alternative considered: a `double precision` column, rejected because
+   precision runs out after about 50 moves between the same two cards.
+6. **Moving is its own endpoint**, `POST /api/v1/tasks/{idOrKey}/move` with
+   `{ columnId, afterTaskId?, beforeTaskId?, version }`, so WT-04 can emit `task.moved`
+   separately from `task.updated`. It checks `version` like any update.
+7. **`version`** exists on tasks, columns, epics and projects. Every `PATCH` and move must
+   send it; a mismatch returns `409 version_conflict` with the current entity as `current`
+   (doc 0004 section 4). Teams have no `version`: their edits are rename and membership,
+   and the last write wins.
+8. **Assignment**: a task may have a team, a person, both or neither, and the person need
+   not belong to the team (doc 0003: "any team or person"). Only active human accounts can
+   be newly assigned; a task keeps showing a person who was later deactivated.
+9. **Teams** have a unique name. A team that any task is assigned to cannot be deleted
+   (`409 team_in_use`); it can be renamed. Members are human accounts.
+10. **Columns**: a project starts with "To do" (`todo`), "In progress" (`in_progress`) and
+    "Done" (`done`). Deleting a non-empty column, or deleting or recategorising the last
+    `done` column, returns `409`. A project's columns are returned whole
+    (`nextCursor: null`, doc 0004 section 5).
+11. **Board listing**: `GET /api/v1/projects/{id}/tasks` returns tasks ordered by column
+    position, then task position, with a keyset cursor on those two values and the id.
+    The board loads every page. Soft-deleted tasks are excluded, except with
+    `deleted=true`, which needs `tasks:delete_any`.
+12. **Soft delete**: `deleted_at` and `deleted_by`. Members (`tasks:delete_own`) may delete
+    tasks they reported; Managers and Admins (`tasks:delete_any`) any task, and they restore
+    with `POST /api/v1/tasks/{idOrKey}/restore`. A deleted task returns `404` to everyone
+    except through that list and the restore endpoint.
+13. **History events** go in a `task_events` table: task id, actor account, time, event type,
+    field, old value, new value (JSON). Created, field changed, moved, deleted, restored,
+    commented. Append-only: no API writes or deletes them. Comments are stored separately;
+    a `commented` event only points at the comment.
+14. **Markdown** (task descriptions, epic descriptions, comments) is stored as text and
+    rendered in the browser with `react-markdown`, with raw HTML disabled and links
+    restricted to `http`, `https` and `mailto`. Its exact version is pinned by the
+    work-spec that adds it.
+15. **Drag and drop** uses `@dnd-kit` (core and sortable), which supports keyboard moves.
+    Every move is also possible without dragging, from the task detail (column select).
+    Versions pinned by the work-spec.
+16. **Audit log versus history** (see question 1): configuration changes (teams, membership,
+    projects, columns, epics) are written to the audit log; task and comment changes are
+    written to `task_events`, which record the actor as hard rule 8 requires.
+
+## Work-items
+
+Each item leaves the repository green and is one branch/PR. API items include their
+integration tests and OpenAPI contracts; UI items include their end-to-end tests.
+
+| Item   | Title                                                                             | Status | Depends on             |
+| ------ | --------------------------------------------------------------------------------- | ------ | ---------------------- |
+| WI-025 | `route()` declares authentication and permission; existing endpoints converted    | Draft  | none                   |
+| WI-026 | Teams and membership: schema, service, API                                        | Draft  | WI-025                 |
+| WI-027 | Fractional positions (pure logic) and the `version_conflict` response             | Draft  | none                   |
+| WI-028 | Projects with default columns: schema, service, API (create, edit, archive, list) | Draft  | WI-025, WI-027         |
+| WI-029 | Columns API: create, rename, recategorise, reorder, delete                        | Draft  | WI-028                 |
+| WI-030 | Tasks core: schema, keys, history events; create, get, list, edit, assign         | Draft  | WI-026, WI-029         |
+| WI-031 | Move a task between and within columns                                            | Draft  | WI-030                 |
+| WI-032 | Delete and restore a task                                                         | Draft  | WI-030                 |
+| WI-033 | Epics: schema, service, API; a task's epic; progress                              | Draft  | WI-030                 |
+| WI-034 | Comments: schema, service, API                                                    | Draft  | WI-030                 |
+| WI-035 | Teams page                                                                        | Draft  | WI-026                 |
+| WI-036 | Projects list, navigation and project settings (details, columns, deleted tasks)  | Draft  | WI-029, WI-032         |
+| WI-037 | Board page: columns, cards, create a task, drag and drop                          | Draft  | WI-031, WI-036         |
+| WI-038 | Task detail: fields, Markdown description, assignment, epic, comments, delete     | Draft  | WI-033, WI-034, WI-037 |
+| WI-039 | Epics page: list, create, edit, close, progress                                   | Draft  | WI-033, WI-036         |
+
+As before, each item gets its work-item and work-spec files just before it is started.
+
+## Exit criteria
+
+- [ ] A Manager creates a project, finds it with "To do", "In progress" and "Done", renames,
+      reorders and adds columns, and cannot delete a non-empty column or the last `done`
+      column.
+- [ ] A Member creates tasks on the board; they get keys `KEY-1`, `KEY-2`, ... with no gap or
+      duplicate under concurrent creation; they can be fetched by id or by key.
+- [ ] A Member moves a card by drag and drop and by keyboard; the order survives a reload.
+- [ ] A Member assigns a task to a team, a person or both, sets its epic, edits its Markdown
+      description (rendered with no raw HTML), comments, and deletes a task they reported
+      but not another person's; a Manager restores it.
+- [ ] A Viewer sees projects, boards, tasks, epics and comments and gets `403` from every
+      write endpoint of this track; this is tested for every endpoint.
+- [ ] An update or move with a stale `version` returns `409 version_conflict` with the
+      current entity.
+- [ ] Every task change produces exactly one history event per changed field in the same
+      transaction, and none after a rollback; every configuration change is in the audit
+      log with its actor.
+- [ ] Writes to an archived project return `409 project_archived`.
+- [ ] Every endpoint declares its authentication and permission through `route()`, checked
+      by the guard-rail test.
+- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
+      `pnpm openapi:generate` leaving no diff.
+
+## Risks and open questions
+
+Questions 1 to 4 were resolved by the owner on 2026-11-13, by approving the proposals.
+
+1. **Resolved: hard rule 8 versus doc 0003 section 9.** `task_events` is the record of the
+   acting account for task and comment changes; configuration changes go to the audit log
+   (decision 16). Hard rule 8 in `AGENTS.md` now reads "in the audit log or, for task and
+   comment changes, the task history".
+2. **Resolved: comments** are created and read only in this track. Editing and deleting
+   them is not planned.
+3. **Resolved: the task detail** has its own URL (`/projects/KEY/tasks/KEY-12`) and opens as
+   a dialog over the board when reached from it.
+4. **Resolved: projects have no default teams.** Teams matter for assignment now and for
+   routing in WT-06.
+5. **Open risk, large boards:** the board loads every page of tasks. Acceptable until WT-07
+   moves unscheduled work to the backlog; measured in WI-037 with 1 000 tasks.

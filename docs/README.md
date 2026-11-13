@@ -11,10 +11,9 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WT-02 (accounts, human sign-in, roles and the permission layer),
   closed on 2026-11-13 with every exit criterion checked against `main` (see the track).
-- **Next:** draft WT-03 (board core: projects, teams, columns, epics, tasks, comments,
-  assignment) from canonical doc 0003, as `Proposed`, and stop for the owner's approval.
-  Its first decision is listed under Other follow-ups: whether authentication, permission
-  and origin checks move into the `route()` wrapper (WS-023, question 1).
+- **Next:** WT-03 (board core) was approved on 2026-11-13. Draft WI-025 and WS-025
+  (checks declared in the `route()` wrapper) as `Proposed` and stop for the owner's
+  approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -29,14 +28,14 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                  | Title                                                   | Status |
-| ------------------------------------------------------ | ------------------------------------------------------- | ------ |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done   |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done   |
+| Track                                                  | Title                                                   | Status   |
+| ------------------------------------------------------ | ------------------------------------------------------- | -------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
+| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Approved |
 
 Planned next, not yet drafted:
 
-- WT-03 Board core: projects, teams, columns, epics, tasks, comments, assignment
 - WT-04 Real-time board sync
 - WT-05 Agent accounts and API tokens
 - WT-06 Bug reports and automated triage
@@ -45,7 +44,7 @@ Planned next, not yet drafted:
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
+WT-07 to WT-10 come from canonical doc 0003.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
@@ -102,7 +101,7 @@ Other follow-ups:
   new link while the same person accepts the previous one cannot deadlock (see WS-024,
   implementation record).
 - Weigh moving authentication, permission and origin checks into the `route()` wrapper at
-  the start of WT-03 (see WS-023, question 1).
+  the start of WT-03 (see WS-023, question 1). Approved as WT-03 decision 1 (WI-025).
 - Make `pnpm typecheck` independent of a stale `.next` directory (for example by
   generating route types first). Until then see the note in `CONTRIBUTING.md`.
 - Declare the bearer-token security scheme in the OpenAPI document with WT-05.
