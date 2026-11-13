@@ -1,6 +1,6 @@
 # WT-02 — Accounts, human sign-in, roles and the permission layer
 
-- Status: In progress (approved by the owner on 2026-11-12)
+- Status: Done (approved by the owner on 2026-11-12; closed on 2026-11-13)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3, 4),
   [0003](../canonical/0003-task-management.md) (section 3),
   [0004](../canonical/0004-api-conventions.md)
@@ -102,17 +102,41 @@ As in WT-01, each item gets its work-item and work-spec files just before it is 
 
 ## Exit criteria
 
-- On a fresh install, the first visitor creates the Admin account and lands in the app.
-- An unauthenticated visitor to any app page is sent to the sign-in page; an
-  unauthenticated API call gets the `401` problem body of doc 0004.
-- An Admin can invite a person, who can then sign in with the role they were given.
-- A Viewer, Member and Manager calling an Admin-only endpoint get `403`; this is covered
-  by tests for every endpoint added in this track.
-- Deactivating an account ends its sessions and prevents sign-in.
-- Every state-changing action of this track appears in the audit log with its actor.
-- No password, password hash, session token or invitation token appears in any API
-  response (other than the one-time invitation link), log line or audit entry.
-- The full quality gate passes on `main`.
+Checked against `main` at `dca8245` on 2026-11-13, after WI-024. Each criterion with the
+tests that prove it.
+
+- [x] On a fresh install, the first visitor creates the Admin account and lands in the app.
+      `tests/e2e/setup.spec.ts`; `src/server/services/setup.integration.test.ts`.
+- [x] An unauthenticated visitor to any app page is sent to the sign-in page; an
+      unauthenticated API call gets the `401` problem body of doc 0004.
+      `src/proxy.test.ts`, `src/app/(app)/layout.integration.test.ts`,
+      `tests/e2e/sign-in.spec.ts`; `src/app/api/v1/me/route.integration.test.ts` and the
+      `401` cases of every route test.
+- [x] An Admin can invite a person, who can then sign in with the role they were given.
+      `tests/e2e/accept-link.spec.ts`, `tests/e2e/people.spec.ts`;
+      `src/app/api/v1/account-links/accept/route.integration.test.ts` (the whole journey).
+- [x] A Viewer, Member and Manager calling an Admin-only endpoint get `403`; this is covered
+      by tests for every endpoint added in this track.
+      `src/app/api/v1/accounts/permissions.integration.test.ts` covers all five Admin-only
+      operations (list, invite, update, reset link, revoke invitation); the guard-rail test
+      of WS-023 checks that every non-public handler calls `requirePermission`, except the
+      four authentication-only operations listed in doc 0004 section 7.
+- [x] Deactivating an account ends its sessions and prevents sign-in.
+      `src/server/services/account-management.integration.test.ts` ("deactivates: sets
+      disabled_at, ends sessions..."); `src/server/auth/authenticate.integration.test.ts`.
+- [x] Every state-changing action of this track appears in the audit log with its actor.
+      All ten state-changing operations reach `recordAudit` through their service:
+      sign-in (and its bounded failures), sign-out, setup, invite, update, reset link,
+      accept link, rename, change password, revoke invitation. Each service test asserts
+      its audit row and actor.
+- [x] No password, password hash, session token or invitation token appears in any API
+      response (other than the one-time invitation link), log line or audit entry.
+      Marker-value tests in the route tests of sign-in, setup, accounts, accept link and
+      change password, and in `setup.integration.test.ts`; `assertAuditDataSafe` refuses
+      secret-looking keys in audit data.
+- [x] The full quality gate passes on `main`: typecheck, lint, format, 513 Vitest tests and
+      28 Playwright tests, with `pnpm db:generate` and `pnpm openapi:generate` leaving no diff
+      (locally on PostgreSQL 16; CI runs PostgreSQL 18).
 
 ## Notes for the implementer
 
@@ -150,7 +174,9 @@ Facts established while preparing this track, recorded so they are not rediscove
    requires it for human accounts, so agent rows (WT-05) need none.
 3. **Resolved:** the owner approved all ten design decisions above as proposed on
    2026-11-12.
-4. **Open, from the review of 2026-11-12:** WI-022 and WI-023 (both done) were added to
-   this track. Three planning gaps that touch this track (recovering the only Admin,
-   correcting or freeing an email, `SETUP_TOKEN`) are listed in `docs/README.md` under
-   Follow-ups and await an owner decision.
+4. **From the review of 2026-11-12:** WI-022 and WI-023 were added to this track, and
+   WI-024 later. Of the planning gaps that touch this track, freeing the email of an
+   invitation that was never accepted is resolved (WI-024). Still open, and not exit
+   criteria of this track: recovering the only Admin, changing the email of an account
+   that has signed in, and `SETUP_TOKEN`. They stay in `docs/README.md` under Follow-ups
+   and await an owner decision.
