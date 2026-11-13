@@ -78,14 +78,12 @@ export const resetLinkResponseSchema = z
 
 export const accountIdParamsSchema = z.strictObject({ accountId: z.uuid() });
 
-const NEEDS_MANAGE = "Needs the `accounts:manage` permission (Admin).";
-
 export const listAccountsContract = {
   method: "get",
   path: "/api/v1/accounts",
   summary: "List accounts",
-  description: `Lists human accounts, oldest first, with keyset pagination. ${NEEDS_MANAGE}`,
-  public: false,
+  description: `Lists human accounts, oldest first, with keyset pagination.`,
+  access: { kind: "permission", permission: "accounts:manage" },
   request: { query: paginationQuerySchema },
   responses: {
     200: { description: "A page of accounts.", schema: accountPageSchema },
@@ -99,8 +97,8 @@ export const inviteAccountContract = {
   summary: "Invite a person",
   description:
     "Creates an account with no password and a one-time link, valid for 7 days, that is shown " +
-    `only in this response. ${NEEDS_MANAGE} Must come from the app's own origin.`,
-  public: false,
+    `only in this response. Must come from the app's own origin.`,
+  access: { kind: "permission", permission: "accounts:manage" },
   request: { body: inviteRequestSchema },
   responses: {
     201: { description: "The account and its link.", schema: inviteResponseSchema },
@@ -117,8 +115,8 @@ export const updateAccountContract = {
   description:
     "Changes the role and/or deactivates or reactivates a human account. A role change or a " +
     "deactivation ends the account's sessions at once. The only active Admin cannot be " +
-    `demoted or deactivated. ${NEEDS_MANAGE} Must come from the app's own origin.`,
-  public: false,
+    `demoted or deactivated. Must come from the app's own origin.`,
+  access: { kind: "permission", permission: "accounts:manage" },
   request: { params: accountIdParamsSchema, body: updateAccountRequestSchema },
   responses: {
     200: { description: "The account after the change.", schema: managedAccountSchema },
@@ -139,8 +137,8 @@ export const resetLinkContract = {
   description:
     "For an invited account it issues a fresh invitation link, for an active one a password " +
     "reset link. Earlier unused links of the account stop working. The link is shown only in " +
-    `this response. ${NEEDS_MANAGE} Must come from the app's own origin.`,
-  public: false,
+    `this response. Must come from the app's own origin.`,
+  access: { kind: "permission", permission: "accounts:manage" },
   request: { params: accountIdParamsSchema },
   responses: {
     201: { description: "The link.", schema: resetLinkResponseSchema },
@@ -157,8 +155,8 @@ export const revokeInvitationContract = {
   description:
     "Removes an invited account that never set a password, with its links, so its email can " +
     "be invited again. An account that has a password is refused with 409: deactivate it " +
-    `instead. ${NEEDS_MANAGE} Must come from the app's own origin.`,
-  public: false,
+    `instead. Must come from the app's own origin.`,
+  access: { kind: "permission", permission: "accounts:manage" },
   request: { params: accountIdParamsSchema },
   responses: {
     204: { description: "The invitation was revoked.", noContent: true },

@@ -1,10 +1,10 @@
 import { notFound } from "@/server/http/errors";
-import { route } from "@/server/http/route";
+import { unknownPathRoute } from "@/server/http/route";
 
 // Public (WS-011): answers every path under /api/ that no endpoint matches with the 404
 // problem body of canonical doc 0004 instead of an HTML page. It exposes no data, is not
 // an endpoint, and is deliberately absent from the OpenAPI document.
-const unknownPath = route(() => {
+const unknownPath = unknownPathRoute(() => {
   throw notFound("There is no API endpoint at this path.");
 });
 

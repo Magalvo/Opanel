@@ -97,9 +97,11 @@ describe("auth contracts", () => {
       contracts.map((contract) => [`${contract.method} ${contract.path}`, contract]),
     );
 
-    expect(byOperation.get("post /api/v1/auth/sign-in")?.public).toBe(true);
-    expect(byOperation.get("post /api/v1/auth/sign-out")?.public).toBe(false);
-    expect(byOperation.get("get /api/v1/me")?.public).toBe(false);
+    expect(byOperation.get("post /api/v1/auth/sign-in")?.access).toEqual({ kind: "public" });
+    expect(byOperation.get("post /api/v1/auth/sign-out")?.access).toEqual({
+      kind: "authenticated",
+    });
+    expect(byOperation.get("get /api/v1/me")?.access).toEqual({ kind: "authenticated" });
   });
 });
 
@@ -130,7 +132,7 @@ describe("setupRequestSchema", () => {
   it("is documented as a public operation", () => {
     const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
 
-    expect(setup?.public).toBe(true);
+    expect(setup?.access).toEqual({ kind: "public" });
     expect(Object.keys(setup?.responses ?? {})).toEqual(
       expect.arrayContaining(["201", "400", "403", "404", "415"]),
     );
@@ -172,7 +174,7 @@ describe("acceptLinkRequestSchema", () => {
       (c) => c.method === "post" && c.path === "/api/v1/account-links/accept",
     );
 
-    expect(accept?.public).toBe(true);
+    expect(accept?.access).toEqual({ kind: "public" });
     expect(Object.keys(accept?.responses ?? {})).toEqual(
       expect.arrayContaining(["200", "400", "403", "404", "415", "429"]),
     );
@@ -247,11 +249,11 @@ describe("own profile contracts", () => {
     const rename = byOperation.get("patch /api/v1/me");
     const password = byOperation.get("post /api/v1/me/password");
 
-    expect(rename?.public).toBe(false);
+    expect(rename?.access).toEqual({ kind: "authenticated" });
     expect(Object.keys(rename?.responses ?? {})).toEqual(
       expect.arrayContaining(["200", "400", "403", "415"]),
     );
-    expect(password?.public).toBe(false);
+    expect(password?.access).toEqual({ kind: "authenticated" });
     expect(Object.keys(password?.responses ?? {})).toEqual(
       expect.arrayContaining(["204", "400", "403", "415", "429"]),
     );

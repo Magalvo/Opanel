@@ -9,17 +9,16 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WT-02 (accounts, human sign-in, roles and the permission layer),
-  closed on 2026-11-13 with every exit criterion checked against `main` (see the track).
+- **Last finished:** WI-025 (`route()` enforces the access declared in each contract),
+  the first item of WT-03, on 2026-11-13.
 - **Awaiting the owner's approval**, from the audit of `main` on 2026-11-13:
   - Amendments A1 to A4 to WT-03 (a people directory, collation of position columns, epic
     fields, two hardening items), in the track's "Proposed amendments" section. A1 and A2
     should be decided before WI-026 to WI-028 are drafted.
   - WI-040 / WS-040, account link hardening.
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Next:** WT-03 (board core) was approved on 2026-11-13. Draft WI-025 and WS-025
-  (checks declared in the `route()` wrapper) as `Proposed` and stop for the owner's
-  approval. WI-025 does not depend on the amendments above.
+- **Next:** the owner decides the amendments above (A1 and A2 first); then draft WI-026
+  (teams) and WS-026 as `Proposed` and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -80,10 +79,11 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 | [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
+| [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission          | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
-WI-025 to WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-026 to WI-039 are outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
@@ -114,7 +114,7 @@ Other follow-ups:
   new link while the same person accepts the previous one cannot deadlock (see WS-024,
   implementation record). Proposed as part of WI-040.
 - Weigh moving authentication, permission and origin checks into the `route()` wrapper at
-  the start of WT-03 (see WS-023, question 1). Approved as WT-03 decision 1 (WI-025).
+  the start of WT-03 (see WS-023, question 1). Done in WI-025.
 - Make `pnpm typecheck` independent of a stale `.next` directory (for example by
   generating route types first). Until then see the note in `CONTRIBUTING.md`.
 - Declare the bearer-token security scheme in the OpenAPI document with WT-05.

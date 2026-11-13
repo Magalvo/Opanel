@@ -99,7 +99,10 @@ describe("account contracts", () => {
     ];
 
     for (const operation of operations) {
-      expect(byOperation.get(operation)?.public, operation).toBe(false);
+      expect(byOperation.get(operation)?.access, operation).toEqual({
+        kind: "permission",
+        permission: "accounts:manage",
+      });
     }
     expect(Object.keys(byOperation.get("post /api/v1/accounts")?.responses ?? {})).toContain("409");
     expect(
@@ -115,7 +118,7 @@ describe("account contracts", () => {
       (c) => c.method === "delete" && c.path === "/api/v1/accounts/{accountId}/invitation",
     );
 
-    expect(revoke?.public).toBe(false);
+    expect(revoke?.access).toEqual({ kind: "permission", permission: "accounts:manage" });
     expect(Object.keys(revoke?.responses ?? {})).toEqual(
       expect.arrayContaining(["204", "400", "404", "409"]),
     );

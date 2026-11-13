@@ -142,11 +142,13 @@ tests that prove it.
 
 Facts established while preparing this track, recorded so they are not rediscovered.
 
-- **A test now enforces the three calls every handler makes (WI-023):**
-  `assertSameOrigin` on state-changing methods, `authenticate` and `requirePermission` on
-  non-public contracts. Its failure message names the file and the missing call.
-- **How an endpoint is written since WI-011.** Wrap the handler with `route()` from
-  `src/server/http/route.ts`; read input with `readJson`, `readQuery` and `readParams`;
+- **Superseded by WI-025:** the three checks are no longer calls in each handler. The
+  contract declares its `access` and `route(contract, handler)` enforces it (doc 0004
+  section 7). Until WI-025 a test (WI-023) searched each handler for `assertSameOrigin`,
+  `authenticate` and `requirePermission`.
+- **How an endpoint is written since WI-011** (since WI-025, `route(contract, handler)`,
+  and the handler receives the caller as its third argument). Wrap the handler with
+  `route()` from `src/server/http/route.ts`; read input with `readJson`, `readQuery` and `readParams`;
   report expected failures by throwing the constructors in `src/server/http/errors.ts`
   (services may throw them too); return `json()` or `noContent()`. Add the endpoint's
   contract, with its `request` schemas, to `src/lib/openapi/contracts.ts` and run
