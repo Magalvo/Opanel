@@ -14,6 +14,13 @@ import {
   signOutContract,
   updateMeContract,
 } from "@/lib/schemas/auth";
+import {
+  createColumnContract,
+  deleteColumnContract,
+  listColumnsContract,
+  moveColumnContract,
+  updateColumnContract,
+} from "@/lib/schemas/columns";
 import { healthContract } from "@/lib/schemas/health";
 import { openApiContract } from "@/lib/schemas/openapi";
 import { listPeopleContract } from "@/lib/schemas/people";
@@ -67,4 +74,9 @@ export const contracts: readonly EndpointContract[] = [
   updateProjectContract,
   archiveProjectContract,
   unarchiveProjectContract,
+  listColumnsContract,
+  createColumnContract,
+  updateColumnContract,
+  moveColumnContract,
+  deleteColumnContract,
 ];

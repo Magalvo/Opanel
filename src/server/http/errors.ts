@@ -93,6 +93,13 @@ export function versionConflict(
   });
 }
 
+/** `409` with the specific code of WS-029: a project keeps at least one `done` column. */
+export function lastDoneColumn(
+  detail = "A project needs at least one done column. Add another one first.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "last_done_column", detail });
+}
+
 /** `409` with the specific code of WS-028: another project has this key. */
 export function projectKeyTaken(detail = "Another project already has this key."): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "project_key_taken", detail });

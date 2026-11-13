@@ -80,14 +80,21 @@ async function findProject(
 
 /**
  * For every write inside a project (WS-028 section 5): resolves the project by id or key,
- * holds a share lock on its row until the transaction ends, so it cannot be archived in
- * between, and refuses an unknown (`404`) or archived (`409 project_archived`) project.
+ * locks its row until the transaction ends, so it cannot be archived in between, and refuses
+ * an unknown (`404`) or archived (`409 project_archived`) project.
+ *
+ * `shared` (the default, `for share`) lets writes run side by side. `exclusive` (`for no key
+ * update`) makes writes that change the project's structure, such as its columns, run one at
+ * a time; a statement that runs after the lock is granted sees what the previous holder
+ * committed (WS-029). Neither blocks inserts that only reference the project.
  */
 export async function lockWritableProject(
   executor: Executor,
   ref: string,
+  mode: "shared" | "exclusive" = "shared",
 ): Promise<{ id: string; key: string }> {
-  const project = await findProject(executor, ref, sql`for share`);
+  const lock = mode === "exclusive" ? sql`for no key update` : sql`for share`;
+  const project = await findProject(executor, ref, lock);
   if (!project) throw projectNotFound();
   if (project.archivedAt !== null) throw projectArchived();
   return { id: project.id, key: project.key };
