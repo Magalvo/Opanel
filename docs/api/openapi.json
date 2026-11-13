@@ -1912,7 +1912,8 @@
               "internal_error",
               "invalid_link",
               "team_name_taken",
-              "account_inactive"
+              "account_inactive",
+              "version_conflict"
             ],
             "description": "Stable, machine-readable error code. This is what clients branch on."
           },
@@ -1946,6 +1947,9 @@
               ],
               "additionalProperties": false
             }
+          },
+          "current": {
+            "description": "Only with `version_conflict`: the entity as it is now, as its `GET` returns it."
           }
         },
         "required": [

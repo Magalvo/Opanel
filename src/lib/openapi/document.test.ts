@@ -10,9 +10,9 @@ import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
 
 import packageJson from "../../../package.json";
 import type { EndpointContract } from "./contract";
-import { versionConflictResponse } from "./responses";
 import { contracts } from "./contracts";
 import { buildOpenApiDocument } from "./document";
+import { versionConflictResponse } from "./responses";
 
 const COMMITTED_FILE = path.join(process.cwd(), "docs/api/openapi.json");
 
@@ -281,13 +281,13 @@ describe("buildOpenApiDocument", () => {
           components: z.object({ schemas: z.record(z.string(), z.unknown()) }),
         })
         .parse(JSON.parse(JSON.stringify(buildOpenApiDocument([updateThing]))));
-      const conflict = document.paths["/api/v1/things/{thingId}"]?.["patch"]?.responses["409"];
+      const conflict = document.paths["/api/v1/things/{thingId}"]?.patch?.responses["409"];
 
       expect(Object.keys(conflict?.content ?? {})).toEqual(["application/problem+json"]);
       expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
         "#/components/schemas/TestThingVersionConflict",
       );
-      expect(document.components.schemas["TestThingVersionConflict"]).toMatchObject({
+      expect(document.components.schemas.TestThingVersionConflict).toMatchObject({
         properties: {
           code: { const: "version_conflict" },
           current: { $ref: "#/components/schemas/TestThing" },

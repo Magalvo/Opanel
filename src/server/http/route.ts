@@ -51,6 +51,7 @@ function problemResponse(error: ApiError, requestId: string): Response {
     detail: error.detail,
     requestId,
     ...(error.errors === undefined ? {} : { errors: [...error.errors] }),
+    ...(error.current === undefined ? {} : { current: error.current }),
   };
   const headers = new Headers({ "Content-Type": PROBLEM_CONTENT_TYPE });
   if (error.retryAfterSeconds !== undefined) {

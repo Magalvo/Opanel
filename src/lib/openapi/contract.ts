@@ -23,8 +23,21 @@ export interface NoContentResponseContract {
   noContent: true;
 }
 
+/**
+ * `409 version_conflict` for an entity (WS-027): a problem body whose `current` is the
+ * entity. Write it with `versionConflictResponse(entitySchema)`. The entity schema needs a
+ * `meta({ id })`, which names the conflict schema `<id>VersionConflict`.
+ */
+export interface VersionConflictResponseContract {
+  description: string;
+  conflictOf: z.ZodType;
+}
+
 export type ResponseContract =
-  JsonResponseContract | ProblemResponseContract | NoContentResponseContract;
+  | JsonResponseContract
+  | ProblemResponseContract
+  | NoContentResponseContract
+  | VersionConflictResponseContract;
 
 /** What the operation accepts. Each part is the strict Zod schema the handler validates with. */
 export interface RequestContract {

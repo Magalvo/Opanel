@@ -212,7 +212,7 @@ describe("route and version conflicts (WS-027)", () => {
     expect(response.status).toBe(409);
     const body = problemSchema.parse(await response.json());
     expect(body).toMatchObject({ code: "version_conflict", current });
-    expect(Object.keys(await other.json())).not.toContain("current");
+    expect(Object.keys(problemSchema.parse(await other.json()))).not.toContain("current");
   });
 });
 

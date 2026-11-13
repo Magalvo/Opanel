@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createDocument } from "zod-openapi";
 
 import { PROBLEM_CONTENT_TYPE, problemSchema } from "@/lib/schemas/problem";
@@ -29,9 +30,34 @@ const CREDENTIAL_RESPONSES: Readonly<Record<number, ResponseContract>> = {
 const SESSION_COOKIE_SCHEME = "sessionCookie";
 const [SESSION_COOKIE, SECURE_SESSION_COOKIE] = SESSION_COOKIE_NAMES;
 
+/** One conflict schema per entity schema, so each is registered under its name only once. */
+const conflictSchemas = new WeakMap<z.ZodType, z.ZodType>();
+
+/** `Problem` with `code: "version_conflict"` and the entity as `current` (WS-027). */
+function versionConflictSchema(entity: z.ZodType): z.ZodType {
+  const known = conflictSchemas.get(entity);
+  if (known) return known;
+
+  const id = entity.meta()?.id;
+  if (id === undefined) {
+    throw new Error("A version conflict needs an entity schema with an id: add .meta({ id }).");
+  }
+  const schema = problemSchema
+    .extend({ code: z.literal("version_conflict"), current: entity })
+    .meta({ id: `${id}VersionConflict` });
+  conflictSchemas.set(entity, schema);
+  return schema;
+}
+
 function toResponse(response: ResponseContract): Responses[StatusCode] {
   if ("noContent" in response) {
     return { description: response.description };
+  }
+  if ("conflictOf" in response) {
+    return {
+      description: response.description,
+      content: { [PROBLEM_CONTENT_TYPE]: { schema: versionConflictSchema(response.conflictOf) } },
+    };
   }
   return {
     description: response.description,
