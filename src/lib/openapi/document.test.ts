@@ -6,9 +6,11 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { healthResponseSchema } from "@/lib/schemas/health";
+import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
 
 import packageJson from "../../../package.json";
 import type { EndpointContract } from "./contract";
+import { contracts } from "./contracts";
 import { buildOpenApiDocument } from "./document";
 
 const COMMITTED_FILE = path.join(process.cwd(), "docs/api/openapi.json");
@@ -45,7 +47,10 @@ const documentSchema = z.object({
       }),
     ),
   ),
-  components: z.object({ schemas: z.record(z.string(), z.unknown()) }),
+  components: z.object({
+    schemas: z.record(z.string(), z.unknown()),
+    securitySchemes: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
+  }),
 });
 
 function parsedDocument(): z.infer<typeof documentSchema> {
@@ -76,6 +81,29 @@ describe("buildOpenApiDocument", () => {
 
   it("marks public endpoints as requiring no credentials", () => {
     expect(parsedDocument().paths["/api/v1/health"]?.get?.security).toEqual([]);
+  });
+
+  it("declares the session cookie as the way to authenticate", () => {
+    const scheme = parsedDocument().components.securitySchemes?.sessionCookie;
+
+    expect(scheme).toMatchObject({ type: "apiKey", in: "cookie", name: SESSION_COOKIE_NAMES[0] });
+    // Over https the cookie has another name; OpenAPI can declare only one.
+    expect(scheme?.description).toContain(SESSION_COOKIE_NAMES[1]);
+    expect(Object.keys(parsedDocument().components.securitySchemes ?? {})).toEqual([
+      "sessionCookie",
+    ]);
+  });
+
+  it("requires the session cookie on every operation that is not public, and only there", () => {
+    const { paths } = parsedDocument();
+
+    for (const contract of contracts) {
+      const security = paths[contract.path]?.[contract.method]?.security;
+      expect(security, `${contract.method} ${contract.path}`).toEqual(
+        contract.public ? [] : [{ sessionCookie: [] }],
+      );
+    }
+    expect(contracts.some((contract) => !contract.public)).toBe(true);
   });
 
   it("derives the health schema from the Zod schema", () => {
@@ -141,6 +169,7 @@ describe("buildOpenApiDocument", () => {
     } satisfies EndpointContract;
 
     const anyOperationSchema = z.object({
+      security: z.array(z.record(z.string(), z.array(z.string()))).optional(),
       parameters: z
         .array(z.object({ name: z.string(), in: z.string(), required: z.boolean().optional() }))
         .optional(),
@@ -205,6 +234,11 @@ describe("buildOpenApiDocument", () => {
       expect(responses["204"]?.description).toBe("Ended.");
       expect(responses["204"]?.content).toBeUndefined();
       expect(Object.keys(responses).sort()).toEqual(["204", "401", "403"]);
+    });
+
+    it("requires the session cookie on the protected one and nothing on the public one", () => {
+      expect(operation(createThing.path, "post").security).toEqual([{ sessionCookie: [] }]);
+      expect(operation(publicThing.path, "get").security).toEqual([]);
     });
 
     it("adds neither to public operations", () => {
