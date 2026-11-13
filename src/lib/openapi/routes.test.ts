@@ -18,10 +18,15 @@ const UNDOCUMENTED_ROUTE_FILES = ["[...path]/route.ts"];
 
 /**
  * Operations that need a session but no permission from the catalogue, because they act on
- * the caller's own session. Approved as an exception to AGENTS.md rule 6 in WS-015
- * (question 3). Adding an entry is a decision for a work-spec, not a convenience.
+ * the caller's own session or account. Approved as an exception to AGENTS.md rule 6 in
+ * WS-015 (question 3) and WS-021 (own name and password). Adding an entry is a decision for a work-spec, not a convenience.
  */
-const AUTHENTICATION_ONLY_OPERATIONS = ["GET /api/v1/me", "POST /api/v1/auth/sign-out"];
+const AUTHENTICATION_ONLY_OPERATIONS = [
+  "GET /api/v1/me",
+  "POST /api/v1/auth/sign-out",
+  "PATCH /api/v1/me",
+  "POST /api/v1/me/password",
+];
 
 /** "/api/v1/accounts/{accountId}" for "v1/accounts/[accountId]/route.ts". */
 function urlPathOf(file: string): string {
@@ -136,10 +141,12 @@ describe("API routes and OpenAPI contracts", () => {
       expect(seen).toEqual(documentedOperations());
     });
 
-    it("exempts exactly the two authentication-only operations of WS-015", () => {
+    it("exempts exactly the authentication-only operations of WS-015 and WS-021", () => {
       expect(AUTHENTICATION_ONLY_OPERATIONS).toEqual([
         "GET /api/v1/me",
         "POST /api/v1/auth/sign-out",
+        "PATCH /api/v1/me",
+        "POST /api/v1/me/password",
       ]);
       for (const operation of AUTHENTICATION_ONLY_OPERATIONS) {
         expect(documentedOperations()).toContain(operation);

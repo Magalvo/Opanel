@@ -35,6 +35,24 @@ describe("authenticate", () => {
     expect(result.account.email).toBe("ada@example.com");
   });
 
+  it("returns the id of the session row the cookie belongs to", async () => {
+    const account = await createTestAccount();
+    await signInCookie();
+    const cookie = await signInCookie();
+    const rows = await getDb().select().from(sessions).where(eq(sessions.accountId, account.id));
+    // The cookie value is the session token, a dot, and its signature.
+    const value = cookie
+      .split("; ")
+      .find((pair) => pair.startsWith("opanel.session_token="))
+      ?.slice("opanel.session_token=".length);
+    const token = decodeURIComponent(value ?? "").split(".")[0];
+
+    const result = await authenticate(request({ Cookie: cookie }));
+
+    expect(rows).toHaveLength(2);
+    expect(result.sessionId).toBe(rows.find((row) => row.token === token)?.id);
+  });
+
   it("answers 401 with no cookie, a garbage cookie, a deleted session or an expired one", async () => {
     const account = await createTestAccount();
     const cookie = await signInCookie();

@@ -5,12 +5,14 @@ import { contracts } from "@/lib/openapi/contracts";
 import {
   acceptLinkRequestSchema,
   accountSummarySchema,
+  changePasswordRequestSchema,
   meResponseSchema,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   passwordSchema,
   setupRequestSchema,
   signInRequestSchema,
+  updateMeRequestSchema,
 } from "./auth";
 
 describe("passwordSchema", () => {
@@ -173,6 +175,85 @@ describe("acceptLinkRequestSchema", () => {
     expect(accept?.public).toBe(true);
     expect(Object.keys(accept?.responses ?? {})).toEqual(
       expect.arrayContaining(["200", "400", "403", "404", "415", "429"]),
+    );
+  });
+});
+
+describe("updateMeRequestSchema", () => {
+  it("accepts a name, trimmed, of 1 to 100 characters", () => {
+    expect(updateMeRequestSchema.parse({ name: "  Ada Lovelace " })).toEqual({
+      name: "Ada Lovelace",
+    });
+    expect(updateMeRequestSchema.safeParse({ name: "x".repeat(100) }).success).toBe(true);
+  });
+
+  it("rejects a blank or long name, a missing name and unknown fields", () => {
+    for (const body of [
+      { name: "   " },
+      { name: "x".repeat(101) },
+      {},
+      { name: "Ada", email: "ada@example.com" },
+      { name: "Ada", role: "admin" },
+    ]) {
+      expect(updateMeRequestSchema.safeParse(body).success).toBe(false);
+    }
+  });
+});
+
+describe("changePasswordRequestSchema", () => {
+  const valid = { currentPassword: "old", newPassword: "a".repeat(12) };
+
+  it("accepts any current password of 1 to 128 characters and a new one of 12 to 128", () => {
+    expect(changePasswordRequestSchema.safeParse(valid).success).toBe(true);
+    expect(
+      changePasswordRequestSchema.safeParse({
+        currentPassword: "x".repeat(128),
+        newPassword: "a".repeat(128),
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects empty or long passwords, a short new one, missing and unknown fields", () => {
+    for (const body of [
+      { ...valid, currentPassword: "" },
+      { ...valid, currentPassword: "x".repeat(129) },
+      { ...valid, newPassword: "a".repeat(11) },
+      { ...valid, newPassword: "a".repeat(129) },
+      { currentPassword: "old" },
+      { newPassword: valid.newPassword },
+      { ...valid, sessions: "keep" },
+    ]) {
+      expect(changePasswordRequestSchema.safeParse(body).success).toBe(false);
+    }
+  });
+
+  it("never echoes a rejected password in its messages", () => {
+    const secret = "short-secret";
+    const result = changePasswordRequestSchema.safeParse({
+      currentPassword: secret,
+      newPassword: secret,
+    });
+
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result.error?.issues)).not.toContain(secret);
+  });
+});
+
+describe("own profile contracts", () => {
+  it("document renaming oneself and changing one's password as authenticated", () => {
+    const byOperation = new Map(
+      contracts.map((contract) => [`${contract.method} ${contract.path}`, contract]),
+    );
+    const rename = byOperation.get("patch /api/v1/me");
+    const password = byOperation.get("post /api/v1/me/password");
+
+    expect(rename?.public).toBe(false);
+    expect(Object.keys(rename?.responses ?? {})).toEqual(
+      expect.arrayContaining(["200", "400", "403", "415"]),
+    );
+    expect(password?.public).toBe(false);
+    expect(Object.keys(password?.responses ?? {})).toEqual(
+      expect.arrayContaining(["204", "400", "403", "415", "429"]),
     );
   });
 });

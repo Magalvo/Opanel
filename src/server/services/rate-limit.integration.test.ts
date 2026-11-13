@@ -6,6 +6,7 @@ import { rateLimits } from "@/server/db/schema";
 
 import {
   ACCEPT_LINK_IP_RULE,
+  CHANGE_PASSWORD_RULE,
   consumeRateLimit,
   LONGEST_WINDOW_SECONDS,
   purgeExpiredRateLimits,
@@ -167,5 +168,12 @@ describe("ACCEPT_LINK_IP_RULE", () => {
 
     expect(refused.allowed).toBe(false);
     expect(refused.retryAfterSeconds).toBeGreaterThan(0);
+  });
+});
+
+describe("CHANGE_PASSWORD_RULE", () => {
+  it("is 10 attempts per 15 minutes and is covered by the purge window", () => {
+    expect(CHANGE_PASSWORD_RULE).toEqual({ max: 10, windowSeconds: 900 });
+    expect(LONGEST_WINDOW_SECONDS).toBeGreaterThanOrEqual(CHANGE_PASSWORD_RULE.windowSeconds);
   });
 });
