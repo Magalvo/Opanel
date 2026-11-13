@@ -153,25 +153,25 @@ Two hardening items from the audit of 2026-11-13 joined the track (amendment A4)
 before WI-038, the first item that shows text written by users. Their work-specs are
 written; each still needs the owner's approval like any other.
 
-| Item                                                             | Title                                                                                    | Status   | Depends on             |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------- | ---------------------- |
-| [WI-025](../work-items/WI-025-route-declares-access.md)          | `route()` declares authentication and permission; existing endpoints converted           | Done     | none                   |
-| [WI-026](../work-items/WI-026-teams-and-people.md)               | Teams and membership, people directory: schema, service, API                             | Done     | WI-025                 |
-| [WI-027](../work-items/WI-027-positions-and-version-conflict.md) | Fractional positions (pure logic) and the `version_conflict` response                    | Done     | none                   |
-| [WI-028](../work-items/WI-028-projects-and-default-columns.md)   | Projects with default columns: schema, service, API (create, edit, archive, list)        | Done     | WI-025, WI-027         |
-| WI-029                                                           | Columns API: create, rename, recategorise, reorder, delete                               | Draft    | WI-028                 |
-| WI-030                                                           | Tasks core: schema, keys, history events; create, get, list, edit, assign; `team_in_use` | Draft    | WI-026, WI-029         |
-| WI-031                                                           | Move a task between and within columns                                                   | Draft    | WI-030                 |
-| WI-032                                                           | Delete and restore a task                                                                | Draft    | WI-030                 |
-| WI-033                                                           | Epics: schema, service, API; a task's epic; progress                                     | Draft    | WI-030                 |
-| WI-034                                                           | Comments: schema, service, API                                                           | Draft    | WI-030                 |
-| WI-035                                                           | Teams page                                                                               | Draft    | WI-026                 |
-| WI-036                                                           | Projects list, navigation and project settings (details, columns, deleted tasks)         | Draft    | WI-029, WI-032         |
-| WI-037                                                           | Board page: columns, cards, create a task, drag and drop                                 | Draft    | WI-031, WI-036         |
-| WI-038                                                           | Task detail: fields, Markdown description, assignment, epic, comments, delete            | Draft    | WI-033, WI-034, WI-037 |
-| WI-039                                                           | Epics page: list, create, edit, close, progress                                          | Draft    | WI-033, WI-036         |
-| [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                    | Proposed | none                   |
-| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)              | Proposed | none; before WI-038    |
+| Item                                                             | Title                                                                                                        | Status   | Depends on             |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ---------------------- |
+| [WI-025](../work-items/WI-025-route-declares-access.md)          | `route()` declares authentication and permission; existing endpoints converted                               | Done     | none                   |
+| [WI-026](../work-items/WI-026-teams-and-people.md)               | Teams and membership, people directory: schema, service, API                                                 | Done     | WI-025                 |
+| [WI-027](../work-items/WI-027-positions-and-version-conflict.md) | Fractional positions (pure logic) and the `version_conflict` response                                        | Done     | none                   |
+| [WI-028](../work-items/WI-028-projects-and-default-columns.md)   | Projects with default columns: schema, service, API (create, edit, archive, list)                            | Done     | WI-025, WI-027         |
+| [WI-029](../work-items/WI-029-columns-api.md)                    | Columns API: create, rename, recategorise, reorder, delete                                                   | Done     | WI-028                 |
+| WI-030                                                           | Tasks core: schema, keys, history events; create, get, list, edit, assign; `team_in_use`, `column_not_empty` | Draft    | WI-026, WI-029         |
+| WI-031                                                           | Move a task between and within columns                                                                       | Draft    | WI-030                 |
+| WI-032                                                           | Delete and restore a task                                                                                    | Draft    | WI-030                 |
+| WI-033                                                           | Epics: schema, service, API; a task's epic; progress                                                         | Draft    | WI-030                 |
+| WI-034                                                           | Comments: schema, service, API                                                                               | Draft    | WI-030                 |
+| WI-035                                                           | Teams page                                                                                                   | Draft    | WI-026                 |
+| WI-036                                                           | Projects list, navigation and project settings (details, columns, deleted tasks)                             | Draft    | WI-029, WI-032         |
+| WI-037                                                           | Board page: columns, cards, create a task, drag and drop                                                     | Draft    | WI-031, WI-036         |
+| WI-038                                                           | Task detail: fields, Markdown description, assignment, epic, comments, delete                                | Draft    | WI-033, WI-034, WI-037 |
+| WI-039                                                           | Epics page: list, create, edit, close, progress                                                              | Draft    | WI-033, WI-036         |
+| [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Proposed | none                   |
+| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Proposed | none; before WI-038    |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 

@@ -109,7 +109,8 @@ is `PATCH`. For WI-029 onwards, `src/server/services/projects.ts` exports
 `lockWritableProject(tx, projectRef)`: it resolves the project, takes `for share` on its
 row (so an archive cannot commit in between), and throws `404` or `409 project_archived`.
 Every later write inside a project calls it first in its transaction. Archiving takes
-`for update`, so it waits for writes in flight.
+`for update`, so it waits for writes in flight. Since WS-029 it also has an exclusive mode
+(`for no key update`) for writes that change a project's structure, such as its columns.
 
 ### 6. Audit
 

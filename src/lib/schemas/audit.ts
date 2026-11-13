@@ -27,6 +27,10 @@ export const AUDIT_ACTIONS = [
   "project.updated",
   "project.archived",
   "project.unarchived",
+  "column.created",
+  "column.updated",
+  "column.moved",
+  "column.deleted",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
