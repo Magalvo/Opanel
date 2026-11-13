@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
 
-const PUBLIC_PATHS = ["/sign-in", "/setup"];
+const PUBLIC_PATHS = ["/sign-in", "/setup", "/accept"];
 
 function isPublic(pathname: string): boolean {
   return (

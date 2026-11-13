@@ -290,6 +290,85 @@
         }
       }
     },
+    "/api/v1/account-links/accept": {
+      "post": {
+        "summary": "Accept an invitation or reset link",
+        "description": "Sets the password of the account a one-time link was issued for, and signs the person in. Public: the token is the credential. Every refusal (unknown, used, expired, replaced, or the account is deactivated) is the same 404 `invalid_link`. All earlier sessions of the account end. Must come from the app's own origin.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The password was set. The session cookie is set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The request does not come from the app's own origin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The link is not valid (code `invalid_link`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts from this address. See Retry-After.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/accounts": {
       "get": {
         "summary": "List accounts",
@@ -684,6 +763,25 @@
         ],
         "additionalProperties": false
       },
+      "AcceptLinkRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43,128}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ],
+        "additionalProperties": false
+      },
       "InviteAccountRequest": {
         "type": "object",
         "properties": {
@@ -830,7 +928,8 @@
               "last_admin",
               "unsupported_media_type",
               "rate_limited",
-              "internal_error"
+              "internal_error",
+              "invalid_link"
             ],
             "description": "Stable, machine-readable error code. This is what clients branch on."
           },

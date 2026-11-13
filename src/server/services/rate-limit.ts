@@ -26,6 +26,13 @@ export const SIGN_IN_EMAIL_RULE: RateLimitRule = { max: 10, windowSeconds: 15 * 
 export const SIGN_IN_IP_RULE: RateLimitRule = { max: 50, windowSeconds: 15 * 60 };
 
 /**
+ * Accepting a one-time link: 30 attempts per address per 15 minutes (WS-019). Applied only
+ * when a client address is known; the token is 256 random bits, so guessing it is not the
+ * risk, and a limit that applied to everyone would let anyone lock out every real link.
+ */
+export const ACCEPT_LINK_IP_RULE: RateLimitRule = { max: 30, windowSeconds: 15 * 60 };
+
+/**
  * Not a limit on signing in: the budget of `auth.sign_in_failed` audit rows for the whole
  * install, 200 per 15 minutes (WS-022). The audit log is append-only, so without it anyone
  * could grow that table by one row per request.
@@ -38,6 +45,7 @@ export const LONGEST_WINDOW_SECONDS = Math.max(
   SIGN_IN_EMAIL_RULE.windowSeconds,
   SIGN_IN_IP_RULE.windowSeconds,
   SIGN_IN_FAILURE_AUDIT_RULE.windowSeconds,
+  ACCEPT_LINK_IP_RULE.windowSeconds,
 );
 
 /**

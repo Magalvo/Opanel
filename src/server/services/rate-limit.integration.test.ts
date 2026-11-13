@@ -5,6 +5,7 @@ import { getDb } from "@/server/db/client";
 import { rateLimits } from "@/server/db/schema";
 
 import {
+  ACCEPT_LINK_IP_RULE,
   consumeRateLimit,
   LONGEST_WINDOW_SECONDS,
   purgeExpiredRateLimits,
@@ -146,5 +147,25 @@ describe("purgeExpiredRateLimits", () => {
       expect(LONGEST_WINDOW_SECONDS).toBeGreaterThanOrEqual(limit.windowSeconds);
     }
     expect(SIGN_IN_FAILURE_AUDIT_RULE).toEqual({ max: 200, windowSeconds: 900 });
+  });
+});
+
+describe("ACCEPT_LINK_IP_RULE", () => {
+  it("is 30 attempts per 15 minutes and is covered by the purge window", () => {
+    expect(ACCEPT_LINK_IP_RULE).toEqual({ max: 30, windowSeconds: 900 });
+    expect(LONGEST_WINDOW_SECONDS).toBeGreaterThanOrEqual(ACCEPT_LINK_IP_RULE.windowSeconds);
+  });
+
+  it("refuses the 31st attempt of one key with a retry delay", async () => {
+    for (let i = 0; i < 30; i++) {
+      expect(
+        (await consumeRateLimit(getDb(), "accept:ip:203.0.113.9", ACCEPT_LINK_IP_RULE)).allowed,
+      ).toBe(true);
+    }
+
+    const refused = await consumeRateLimit(getDb(), "accept:ip:203.0.113.9", ACCEPT_LINK_IP_RULE);
+
+    expect(refused.allowed).toBe(false);
+    expect(refused.retryAfterSeconds).toBeGreaterThan(0);
   });
 });

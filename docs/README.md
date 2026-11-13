@@ -9,13 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-023 (API guard rails) and, before it, WI-022 (sign-in hardening).
-  Both came out of the review of 2026-11-12. WT-02 itself stands at WI-018 (account
-  management API), its eighth item.
-- **Next:** WI-019, accepting an invitation or reset link: set a
-  password (API and page). Links already exist (`<APP_URL>/accept#<token>`, hash only in
-  `account_tokens`); this item redeems them. Draft its work-item and work-spec as
-  `Proposed`, then stop for the owner's approval.
+- **Last finished:** WI-019 (accept an invitation or reset link), the ninth item of WT-02.
+  Before it came WI-023 (API guard rails) and WI-022 (sign-in hardening).
+- **Next:** WI-020, the Admin "People" page, built on the account management API of WI-018.
+  Draft its work-item and work-spec as `Proposed`, then stop for the owner's approval.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
@@ -73,10 +70,11 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                   | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
 | [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu               | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
 | [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
+| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                        | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 
-WI-019 to WI-021 are outlined in WT-02 and get their own files when they are started.
+WI-020 and WI-021 are outlined in WT-02 and get their own files when they are started.
 
 ## Follow-ups
 

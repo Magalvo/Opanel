@@ -35,7 +35,7 @@ describe("proxy", () => {
     expect(redirectTarget(proxy(page("/", "xopanel.session_token=abc")))).not.toBeNull();
   });
 
-  it.each(["/sign-in", "/setup", "/api/v1/health", "/api/v1/me"])(
+  it.each(["/sign-in", "/setup", "/accept", "/api/v1/health", "/api/v1/me"])(
     "never redirects %s, even with no cookie",
     (path) => {
       expect(redirectTarget(proxy(page(path)))).toBeNull();
