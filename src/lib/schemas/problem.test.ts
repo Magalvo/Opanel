@@ -38,6 +38,8 @@ describe("problemSchema", () => {
       "invalid_request",
       "last_admin",
       "not_found",
+      "project_archived",
+      "project_key_taken",
       "rate_limited",
       "team_name_taken",
       "unauthenticated",
