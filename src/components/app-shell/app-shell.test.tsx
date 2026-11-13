@@ -15,9 +15,9 @@ const account = {
   role: "admin",
 };
 
-function renderShell() {
+function renderShell(canManageAccounts = false) {
   return render(
-    <AppShell defaultSidebarOpen account={account}>
+    <AppShell defaultSidebarOpen account={account} canManageAccounts={canManageAccounts}>
       <p>page content</p>
     </AppShell>,
   );
@@ -57,6 +57,22 @@ describe("AppShell", () => {
 
     const navigation = screen.getByRole("navigation", { name: "Main" });
     expect(within(navigation).queryAllByRole("link")).toHaveLength(0);
+  });
+
+  it("shows a People link to /people only to someone who can manage accounts", () => {
+    renderShell(true);
+
+    const navigation = screen.getByRole("navigation", { name: "Main" });
+    expect(within(navigation).getByRole("link", { name: "People" })).toHaveAttribute(
+      "href",
+      "/people",
+    );
+  });
+
+  it("shows no People link to anyone else", () => {
+    renderShell(false);
+
+    expect(screen.queryByRole("link", { name: "People" })).not.toBeInTheDocument();
   });
 
   it("shows the brand as a link to the home page", () => {

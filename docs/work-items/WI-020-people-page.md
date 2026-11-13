@@ -1,6 +1,6 @@
 # WI-020 — Admin "People" page
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-13)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-017](WI-017-sign-in-page-and-protected-shell.md), [WI-018](WI-018-account-management-api.md)
 - Work-spec: [WS-020](../work-specs/WS-020-people-page.md)

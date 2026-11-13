@@ -1,6 +1,6 @@
 # WS-020 — Admin "People" page
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-020](../work-items/WI-020-people-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3;
   [0004](../canonical/0004-api-conventions.md) sections 5 and 7;

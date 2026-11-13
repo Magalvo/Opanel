@@ -11,10 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-019 (accept an invitation or reset link), the ninth item of WT-02.
   Before it came WI-023 (API guard rails) and WI-022 (sign-in hardening).
-- **Next:** WI-020, the Admin "People" page. Work-item and work-spec are drafted and
-  `Proposed`; **waiting for the owner's approval** of
-  [WS-020](work-specs/WS-020-people-page.md), which lists four open questions. No code
-  until it is `Approved`.
+- **Next:** WI-020, the Admin "People" page, `Approved` and in progress. WI-021 (own
+  profile) follows, then the planned WI-024 (revoke an unaccepted invitation).
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
@@ -73,7 +71,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu               | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
 | [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
 | [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                        | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
-| [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                         | Proposed    | [WS-020](work-specs/WS-020-people-page.md)                      | Proposed    |
+| [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                         | Approved | [WS-020](work-specs/WS-020-people-page.md)                      | Approved |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 
@@ -90,7 +88,10 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   the server, that issues a reset link for an Admin.
 - **An email can be neither corrected nor freed.** There is no email change and no account
   deletion, only deactivation, so an invitation sent to a mistyped address keeps that
-  address taken. Decide when drafting WI-020 (the People page), where it shows.
+  address taken. Decided in WS-020: the People page only warns, in the invite dialog, that the
+  email cannot be changed. The real fix, revoking an invitation that was never accepted so
+  its email is free again (new API and a new audit action), is planned as **WI-024**, after
+  WI-021.
 - **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
   the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
