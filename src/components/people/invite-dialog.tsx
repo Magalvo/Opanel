@@ -161,7 +161,7 @@ export function InviteDialog({ onInvited }: Readonly<{ onInvited: (invited: Invi
             {errors.role !== undefined && <p className="text-sm text-destructive">{errors.role}</p>}
           </div>
           <p className="text-sm text-muted-foreground">
-            Check the email: it cannot be changed later.
+            Check the email. If it is wrong, revoke the invitation and invite again.
           </p>
           {formError !== null && (
             <p role="alert" className="text-sm text-destructive">

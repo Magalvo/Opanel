@@ -1,4 +1,4 @@
-import { and, count, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, ne, sql } from "drizzle-orm";
 
 import type {
   AccountLink,
@@ -9,12 +9,12 @@ import type {
 } from "@/lib/schemas/accounts";
 import { type Actor, requirePermission } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
-import { accounts, accountTokens, sessions } from "@/server/db/schema";
+import { accounts, accountTokens, credentials, sessions } from "@/server/db/schema";
 import { getEnv } from "@/server/env";
 import { conflict, lastAdmin, notFound } from "@/server/http/errors";
 import { decodeCursor, encodeCursor } from "@/server/http/pagination";
 
-import { issueLink, type LinkKind } from "./account-tokens";
+import { issueLink, type LinkKind, lockAccount } from "./account-tokens";
 import { recordAudit } from "./audit";
 
 // Serialises every change that can reduce the number of active Admins. Rare actions by
@@ -200,6 +200,9 @@ export async function updateAccount(
             eq(accounts.role, "admin"),
             isNull(accounts.disabledAt),
             ne(accounts.id, accountId),
+            // Only an Admin who can sign in counts: an invited one may never accept (WS-024).
+            sql`exists (select 1 from ${credentials} c
+                        where c.account_id = ${accounts.id} and c.password_hash is not null)`,
           ),
         );
       if ((others?.n ?? 0) === 0) {
@@ -278,4 +281,52 @@ export async function issueResetLink(
   });
 
   return { link: toLink(issued) };
+}
+
+/**
+ * Takes back an invitation that was never accepted (WS-024): the account, which has no
+ * password and so never acted, is deleted with its links, and its email is free again. An
+ * account with a password is refused: it can only be deactivated. A per-account lock, which
+ * accepting a link also takes first, keeps a revocation and an acceptance of the same
+ * invitation from both succeeding.
+ */
+export async function revokeInvitation(
+  actor: Actor,
+  accountId: string,
+  db: Database = getDb(),
+): Promise<void> {
+  requirePermission(actor, "accounts:manage");
+
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${ADMIN_CHANGE_LOCK_KEY})`);
+    await lockAccount(tx, accountId);
+
+    const [account] = await tx
+      .select({ id: accounts.id, role: accounts.role })
+      .from(accounts)
+      .where(and(eq(accounts.id, accountId), eq(accounts.kind, "human")))
+      .limit(1);
+    if (!account) {
+      throw notFound();
+    }
+    const [password] = await tx
+      .select({ id: credentials.id })
+      .from(credentials)
+      .where(and(eq(credentials.accountId, accountId), isNotNull(credentials.passwordHash)))
+      .limit(1);
+    if (password) {
+      throw conflict(
+        "This person has already accepted their invitation. Deactivate the account instead.",
+      );
+    }
+
+    await recordAudit(tx, {
+      actor,
+      action: "account.invitation_revoked",
+      entity: "account",
+      entityId: accountId,
+      data: { role: account.role },
+    });
+    await tx.delete(accounts).where(eq(accounts.id, accountId));
+  });
 }

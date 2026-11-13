@@ -2,6 +2,7 @@ import {
   inviteAccountContract,
   listAccountsContract,
   resetLinkContract,
+  revokeInvitationContract,
   updateAccountContract,
 } from "@/lib/schemas/accounts";
 import {
@@ -33,4 +34,5 @@ export const contracts: readonly EndpointContract[] = [
   inviteAccountContract,
   updateAccountContract,
   resetLinkContract,
+  revokeInvitationContract,
 ];

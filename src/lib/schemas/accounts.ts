@@ -149,3 +149,21 @@ export const resetLinkContract = {
     409: { description: "The account is deactivated.", problem: true },
   },
 } satisfies EndpointContract;
+
+export const revokeInvitationContract = {
+  method: "delete",
+  path: "/api/v1/accounts/{accountId}/invitation",
+  summary: "Revoke an invitation that was never accepted",
+  description:
+    "Removes an invited account that never set a password, with its links, so its email can " +
+    "be invited again. An account that has a password is refused with 409: deactivate it " +
+    `instead. ${NEEDS_MANAGE} Must come from the app's own origin.`,
+  public: false,
+  request: { params: accountIdParamsSchema },
+  responses: {
+    204: { description: "The invitation was revoked.", noContent: true },
+    400: { description: "The path is not valid.", problem: true },
+    404: { description: "There is no such human account.", problem: true },
+    409: { description: "The invitation was already accepted.", problem: true },
+  },
+} satisfies EndpointContract;

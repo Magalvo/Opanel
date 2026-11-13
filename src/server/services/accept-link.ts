@@ -6,7 +6,7 @@ import { type Database, getDb } from "@/server/db/client";
 import { accounts, accountTokens, credentials, sessions } from "@/server/db/schema";
 import { invalidLink, rateLimited } from "@/server/http/errors";
 
-import { hashToken } from "./account-tokens";
+import { hashToken, lockAccount } from "./account-tokens";
 import { recordAudit } from "./audit";
 import { ACCEPT_LINK_IP_RULE, consumeRateLimit, purgeExpiredRateLimits } from "./rate-limit";
 import { signIn, type SignInResult } from "./sign-in";
@@ -43,12 +43,23 @@ export async function acceptLink(
   // Slow, so done before the transaction takes the row lock.
   const passwordHash = await hashPassword(input.password);
 
+  const tokenHash = hashToken(input.token);
   const email = await db.transaction(async (tx) => {
+    // Serialise with a revocation of the same invitation before locking any row (WS-024).
+    const [owner] = await tx
+      .select({ accountId: accountTokens.accountId })
+      .from(accountTokens)
+      .where(eq(accountTokens.tokenHash, tokenHash))
+      .limit(1);
+    if (owner) {
+      await lockAccount(tx, owner.accountId);
+    }
+
     const [row] = await tx
       .select({ link: accountTokens, account: accounts })
       .from(accountTokens)
       .innerJoin(accounts, eq(accounts.id, accountTokens.accountId))
-      .where(eq(accountTokens.tokenHash, hashToken(input.token)))
+      .where(eq(accountTokens.tokenHash, tokenHash))
       .for("update", { of: accountTokens })
       .limit(1);
 

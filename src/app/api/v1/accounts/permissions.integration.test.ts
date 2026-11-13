@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { apiRequest, createTestAccount, signInCookie } from "@/server/auth/testing";
 
+import { DELETE as revoke } from "./[accountId]/invitation/route";
 import { POST as resetLink } from "./[accountId]/reset-link/route";
 import { PATCH } from "./[accountId]/route";
 import { GET, POST } from "./route";
@@ -35,17 +36,23 @@ describe("account management needs accounts:manage", () => {
         }),
         context(target.id),
       ),
+      revoke(
+        apiRequest("DELETE", `/api/v1/accounts/${target.id}/invitation`, {
+          ...(cookie ? { cookie } : {}),
+        }),
+        context(target.id),
+      ),
     ];
 
     for (const role of ["viewer", "member", "manager"] as const) {
       await createTestAccount({ email: `${role}@example.com`, role });
       const cookie = await signInCookie(`${role}@example.com`);
       const statuses = (await Promise.all(calls(cookie))).map((response) => response.status);
-      expect(statuses, role).toEqual([403, 403, 403, 403]);
+      expect(statuses, role).toEqual([403, 403, 403, 403, 403]);
     }
 
     const anonymous = (await Promise.all(calls())).map((response) => response.status);
-    expect(anonymous).toEqual([401, 401, 401, 401]);
+    expect(anonymous).toEqual([401, 401, 401, 401, 401]);
   });
 
   it("answers 403 for a foreign Origin on the state-changing operations, before the body is read", async () => {
@@ -66,6 +73,17 @@ describe("account management needs accounts:manage", () => {
       (
         await resetLink(
           apiRequest("POST", `/api/v1/accounts/${target.id}/reset-link`, {
+            cookie,
+            headers: foreign,
+          }),
+          context(target.id),
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await revoke(
+          apiRequest("DELETE", `/api/v1/accounts/${target.id}/invitation`, {
             cookie,
             headers: foreign,
           }),

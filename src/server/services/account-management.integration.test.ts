@@ -12,7 +12,14 @@ import { getDb } from "@/server/db/client";
 import { accounts, accountTokens, auditLog, sessions } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { inviteAccount, issueResetLink, listAccounts, updateAccount } from "./account-management";
+import { acceptLink } from "./accept-link";
+import {
+  inviteAccount,
+  issueResetLink,
+  listAccounts,
+  revokeInvitation,
+  updateAccount,
+} from "./account-management";
 import { hashToken } from "./account-tokens";
 import { signIn } from "./sign-in";
 
@@ -54,6 +61,7 @@ describe("permissions", () => {
       ).toBe(403);
       expect((await failure(updateAccount(actor, target.id, { role: "viewer" }))).status).toBe(403);
       expect((await failure(issueResetLink(actor, target.id))).status).toBe(403);
+      expect((await failure(revokeInvitation(actor, target.id))).status).toBe(403);
     }
     expect(await getDb().select().from(accountTokens)).toHaveLength(0);
   });
@@ -335,6 +343,27 @@ describe("updateAccount: the last active Admin", () => {
     expect((await updateAccount(actor, member.id, { active: false })).status).toBe("deactivated");
   });
 
+  it("does not count an invited Admin who has no password yet, until they accept", async () => {
+    const { account, actor } = await admin();
+    const invited = await inviteAccount(actor, {
+      name: "Next Admin",
+      email: "next@example.com",
+      role: "admin",
+    });
+
+    for (const change of [{ role: "member" as const }, { active: false }]) {
+      expect((await failure(updateAccount(actor, account.id, change))).code).toBe("last_admin");
+    }
+
+    await acceptLink({
+      token: tokenOf(invited.link),
+      password: "the next admin's password",
+      clientIp: null,
+      headers: new Headers(),
+    });
+    expect((await updateAccount(actor, account.id, { role: "member" })).role).toBe("member");
+  });
+
   it("lets exactly one of two Admins who demote each other at the same moment succeed", async () => {
     const a = await createTestAccount({ email: "a@example.com", role: "admin" });
     const b = await createTestAccount({ email: "b@example.com", role: "admin" });
@@ -390,7 +419,7 @@ describe("issueResetLink", () => {
 });
 
 describe("unknown ids and agents", () => {
-  it("are a 404 for update and reset link", async () => {
+  it("are a 404 for update, reset link and revoke", async () => {
     const { actor } = await admin();
     const [agent] = await getDb()
       .insert(accounts)
@@ -401,6 +430,138 @@ describe("unknown ids and agents", () => {
     for (const id of ids) {
       expect((await failure(updateAccount(actor, id, { active: false }))).status).toBe(404);
       expect((await failure(issueResetLink(actor, id))).status).toBe(404);
+      expect((await failure(revokeInvitation(actor, id))).status).toBe(404);
+    }
+  });
+});
+
+describe("revokeInvitation", () => {
+  const NEW_PASSWORD = "the invited person's password";
+
+  async function invite(actor: ReturnType<typeof testActor>, email = "typo@exmaple.com") {
+    return inviteAccount(actor, { name: "Grace", email, role: "manager" });
+  }
+
+  function accept(token: string) {
+    return acceptLink({ token, password: NEW_PASSWORD, clientIp: null, headers: new Headers() });
+  }
+
+  it("removes the invited account and its links, audits it with the role only, and frees the email", async () => {
+    const { account: adminAccount, actor } = await admin();
+    const invited = await invite(actor);
+    await issueResetLink(actor, invited.account.id);
+
+    await revokeInvitation(actor, invited.account.id);
+
+    expect(
+      await getDb().select().from(accounts).where(eq(accounts.id, invited.account.id)),
+    ).toEqual([]);
+    expect(await getDb().select().from(accountTokens)).toEqual([]);
+    const rows = await getDb()
+      .select()
+      .from(auditLog)
+      .where(eq(auditLog.entityId, invited.account.id))
+      .orderBy(auditLog.id);
+    expect(rows.map((row) => row.action)).toEqual([
+      "account.invited",
+      "account.reset_link_created",
+      "account.invitation_revoked",
+    ]);
+    expect(rows.at(-1)).toMatchObject({
+      actorAccountId: adminAccount.id,
+      entity: "account",
+      data: { role: "manager" },
+    });
+    expect(JSON.stringify(rows.at(-1))).not.toContain("exmaple");
+    expect(JSON.stringify(rows.at(-1))).not.toContain("Grace");
+
+    const again = await invite(actor);
+    expect(again.account.status).toBe("invited");
+  });
+
+  it("refuses the revoked link afterwards with the usual 404 invalid_link", async () => {
+    const { actor } = await admin();
+    const invited = await invite(actor);
+
+    await revokeInvitation(actor, invited.account.id);
+
+    const error = await failure(accept(tokenOf(invited.link)));
+    expect(error.status).toBe(404);
+    expect(error.code).toBe("invalid_link");
+  });
+
+  it("can revoke an invitation whose account was deactivated before it was accepted", async () => {
+    const { actor } = await admin();
+    const invited = await invite(actor);
+    await updateAccount(actor, invited.account.id, { active: false });
+
+    await revokeInvitation(actor, invited.account.id);
+
+    expect(
+      await getDb().select().from(accounts).where(eq(accounts.id, invited.account.id)),
+    ).toEqual([]);
+  });
+
+  it("answers 409 for an account that has a password, active or deactivated, and changes nothing", async () => {
+    const { actor } = await admin();
+    const active = await createTestAccount({ email: "active@example.com" });
+    const off = await createTestAccount({ email: "off@example.com", disabled: true });
+    const accepted = await invite(actor, "accepted@example.com");
+    await accept(tokenOf(accepted.link));
+    const before = await auditActions();
+
+    for (const id of [active.id, off.id, accepted.account.id]) {
+      const error = await failure(revokeInvitation(actor, id));
+      expect(error.status).toBe(409);
+      expect(error.code).toBe("conflict");
+    }
+
+    expect(await getDb().select().from(accounts)).toHaveLength(4);
+    expect(await auditActions()).toEqual(before);
+  });
+
+  it("leaves the account and its link in place when the audit write fails", async () => {
+    const { actor } = await admin();
+    const invited = await invite(actor);
+    const restore = await failAuditFor("account.invitation_revoked");
+
+    try {
+      await expect(revokeInvitation(actor, invited.account.id)).rejects.toThrow();
+    } finally {
+      await restore();
+    }
+
+    expect(
+      await getDb().select().from(accounts).where(eq(accounts.id, invited.account.id)),
+    ).toHaveLength(1);
+    expect(await getDb().select().from(accountTokens)).toHaveLength(1);
+  });
+
+  it("never lets a revocation and an acceptance of the same invitation both win, or fail with another error", async () => {
+    const { actor } = await admin();
+
+    for (let round = 0; round < 10; round++) {
+      const invited = await invite(actor, `race-${String(round)}@example.com`);
+
+      const [revoked, accepted] = await Promise.allSettled([
+        revokeInvitation(actor, invited.account.id),
+        accept(tokenOf(invited.link)),
+      ]);
+
+      const winners = [revoked, accepted].filter((result) => result.status === "fulfilled");
+      expect(winners, `round ${String(round)}`).toHaveLength(1);
+      if (revoked.status === "rejected") {
+        expect((revoked.reason as ApiError).code).toBe("conflict");
+        expect(
+          await getDb().select().from(accounts).where(eq(accounts.id, invited.account.id)),
+        ).toHaveLength(1);
+      }
+      if (accepted.status === "rejected") {
+        expect((accepted.reason as ApiError).code).toBe("invalid_link");
+        expect(
+          await getDb().select().from(accounts).where(eq(accounts.id, invited.account.id)),
+        ).toEqual([]);
+      }
     }
   });
 });
