@@ -146,6 +146,11 @@
       "post": {
         "summary": "Sign out",
         "description": "Ends the current session and clears its cookie. Needs a session, no permission.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "responses": {
           "204": {
             "description": "Signed out."
@@ -177,6 +182,11 @@
       "get": {
         "summary": "The signed-in account",
         "description": "Returns the caller's account and permissions. Needs a session, no permission.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "The caller.",
@@ -284,6 +294,11 @@
       "get": {
         "summary": "List accounts",
         "description": "Lists human accounts, oldest first, with keyset pagination. Needs the `accounts:manage` permission (Admin).",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "in": "query",
@@ -351,6 +366,11 @@
       "post": {
         "summary": "Invite a person",
         "description": "Creates an account with no password and a one-time link, valid for 7 days, that is shown only in this response. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -429,6 +449,11 @@
       "patch": {
         "summary": "Change an account's role or activity",
         "description": "Changes the role and/or deactivates or reactivates a human account. A role change or a deactivation ends the account's sessions at once. The only active Admin cannot be demoted or deactivated. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "in": "path",
@@ -529,6 +554,11 @@
       "post": {
         "summary": "Issue a one-time link for an account",
         "description": "For an invited account it issues a fresh invitation link, for an active one a password reset link. Earlier unused links of the account stop working. The link is shown only in this response. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1041,6 +1071,14 @@
           "link"
         ],
         "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "opanel.session_token",
+        "description": "The session cookie set by `POST /api/v1/auth/sign-in`. When Opanel is served over https the cookie is named `__Secure-opanel.session_token`."
       }
     }
   }
