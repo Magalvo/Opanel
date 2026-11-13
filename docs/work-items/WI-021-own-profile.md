@@ -1,6 +1,6 @@
 # WI-021 — Own profile: change name and password
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-13)
 - Work-track: [WT-02](../work-tracks/WT-02-accounts-and-permissions.md)
 - Depends on: [WI-017](WI-017-sign-in-page-and-protected-shell.md)
 - Work-spec: [WS-021](../work-specs/WS-021-own-profile.md)

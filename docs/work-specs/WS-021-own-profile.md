@@ -1,6 +1,6 @@
 # WS-021 — Own profile: change name and password
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-021](../work-items/WI-021-own-profile.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 7, 8;

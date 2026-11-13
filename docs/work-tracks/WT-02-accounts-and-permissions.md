@@ -91,7 +91,7 @@ Each item leaves the repository green and is one branch/PR.
 | [WI-018](../work-items/WI-018-account-management-api.md)           | Account management API: list, invite, change role, deactivate, reactivate           | Done     | WI-015         |
 | [WI-019](../work-items/WI-019-accept-invitation-or-reset-link.md)  | Accepting an invitation or reset link: set a password (API and page)                | Done     | WI-018         |
 | [WI-020](../work-items/WI-020-people-page.md)                      | Admin "People" page                                                                 | Done     | WI-017, WI-018 |
-| [WI-021](../work-items/WI-021-own-profile.md)                      | Own profile: change name and password                                               | Proposed | WI-017         |
+| [WI-021](../work-items/WI-021-own-profile.md)                      | Own profile: change name and password                                               | Approved | WI-017         |
 | [WI-022](../work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth (from the review of 2026-11-12) | Done     | WI-015         |
 | [WI-023](../work-items/WI-023-api-guard-rails.md)                  | API guard rails: authentication declared in OpenAPI, checks enforced by a test      | Done     | WI-015         |
 
