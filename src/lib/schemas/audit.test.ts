@@ -14,8 +14,14 @@ describe("auditActionSchema", () => {
     }
   });
 
-  it("includes the actions of WT-02, the team actions of WS-026 and the project actions of WS-028", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(22);
+  it("includes the actions of WT-02 and of WS-026, WS-028 and WS-029", () => {
+    expect(AUDIT_ACTIONS).toHaveLength(26);
+    expect(AUDIT_ACTIONS.filter((action) => action.startsWith("column."))).toEqual([
+      "column.created",
+      "column.updated",
+      "column.moved",
+      "column.deleted",
+    ]);
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("project."))).toEqual([
       "project.created",
       "project.updated",

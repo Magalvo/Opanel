@@ -137,6 +137,19 @@ describe("buildOpenApiDocument", () => {
     );
   });
 
+  it("documents the version conflicts of the column writes (WS-029)", () => {
+    const { paths } = parsedDocument();
+
+    for (const conflict of [
+      paths["/api/v1/columns/{columnId}"]?.patch?.responses["409"],
+      paths["/api/v1/columns/{columnId}/move"]?.post?.responses["409"],
+    ]) {
+      expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+        "#/components/schemas/ColumnVersionConflict",
+      );
+    }
+  });
+
   it("derives the health schema from the Zod schema", () => {
     const component = parsedDocument().components.schemas.HealthResponse;
     const { shape } = healthResponseSchema;
