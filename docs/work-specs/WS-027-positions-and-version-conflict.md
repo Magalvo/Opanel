@@ -1,6 +1,6 @@
 # WS-027 — Fractional positions and the `version_conflict` response
 
-- Status: Approved (approved by the owner on 2026-11-13, questions 1 and 2 as proposed)
+- Status: Done (approved by the owner on 2026-11-13, questions 1 and 2 as proposed)
 - Work-item: [WI-027](../work-items/WI-027-positions-and-version-conflict.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0004](../canonical/0004-api-conventions.md) sections 4, 6;
@@ -180,3 +180,25 @@ No endpoint changes. The `Problem` schema in the OpenAPI document gains the opti
 2. **`current` is untyped in the base `Problem` schema.** The precise type is in each
    endpoint's `<Entity>VersionConflict` schema. Clients that only know `Problem` see an
    optional `current` of any shape.
+
+## Deviations from the approved spec
+
+- **Growth when inserting into the same gap.** The spec estimated about one character per
+  six inserts and test 6 bounded 1 000 inserts at 200 characters. Measured: inserting
+  right after the same card 1 000 times gives 202 characters (about one per five); inserting
+  right before the same card, or narrowing from both sides, gives 169. The bound for the
+  "right after" case is 250, with the measurement in a comment; the others keep 200. This
+  is the worst case of decision 5 and does not change the design (question 1 stands).
+
+## Implementation record
+
+- Red: the new tests failed on missing modules (`position.ts`, `version.ts`,
+  `responses.ts`) and on the missing `version_conflict` code and `current` member
+  (committed before any code).
+- Green: 578 Vitest tests (up from 552) and 28 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` leaves no diff; `pnpm openapi:generate` changes only the
+  `Problem` schema (the `version_conflict` code and the optional `current`).
+- `positionBetween` follows Greenspan's algorithm with the 62-digit alphabet:
+  `a0` → `a1`, `az` → `b00`, before `a0` is `Zz`. 10 000 appends or prepends stay within
+  4 characters; 5 000 random inserts (seeded) stay strictly ordered with unique keys.
+- No endpoint uses `versionConflict` yet; WI-028 is the first.
