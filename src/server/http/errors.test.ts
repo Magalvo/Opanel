@@ -10,7 +10,37 @@ import {
   rateLimited,
   unauthenticated,
   unsupportedMediaType,
+  versionConflict,
 } from "./errors";
+
+describe("versionConflict (WS-027)", () => {
+  it("is a 409 version_conflict carrying the current entity", () => {
+    const current = { id: "x", name: "Board", version: 4 };
+
+    const error = versionConflict(current);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(409);
+    expect(error.code).toBe("version_conflict");
+    expect(error.current).toBe(current);
+    expect(error.detail.length).toBeGreaterThan(0);
+  });
+
+  it("is the only constructor that sets current", () => {
+    for (const error of [
+      invalidRequest(),
+      unauthenticated(),
+      forbidden(),
+      notFound(),
+      conflict("x"),
+      unsupportedMediaType(),
+      rateLimited(1),
+      internalError(),
+    ]) {
+      expect(error.current, error.code).toBeUndefined();
+    }
+  });
+});
 
 describe("ApiError constructors", () => {
   it.each([

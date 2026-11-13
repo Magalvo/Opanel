@@ -42,7 +42,20 @@ describe("problemSchema", () => {
       "team_name_taken",
       "unauthenticated",
       "unsupported_media_type",
+      "version_conflict",
     ]);
+  });
+
+  it("accepts the current entity of a version conflict", () => {
+    const problem = {
+      ...minimal,
+      title: "Conflict",
+      status: 409,
+      code: "version_conflict",
+      current: { id: "x", version: 3 },
+    };
+
+    expect(problemSchema.parse(problem)).toEqual(problem);
   });
 
   it("rejects an unknown code", () => {

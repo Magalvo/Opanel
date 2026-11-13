@@ -10,6 +10,7 @@ import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
 
 import packageJson from "../../../package.json";
 import type { EndpointContract } from "./contract";
+import { versionConflictResponse } from "./responses";
 import { contracts } from "./contracts";
 import { buildOpenApiDocument } from "./document";
 
@@ -260,6 +261,51 @@ describe("buildOpenApiDocument", () => {
     it("requires the session cookie on the protected one and nothing on the public one", () => {
       expect(operation(createThing.path, "post").security).toEqual([{ sessionCookie: [] }]);
       expect(operation(publicThing.path, "get").security).toEqual([]);
+    });
+
+    it("describes a version conflict with the entity as current, under its own name", () => {
+      const updateThing = {
+        method: "patch",
+        path: "/api/v1/things/{thingId}",
+        summary: "Update a thing",
+        access: { kind: "permission", permission: "tasks:write" },
+        request: { params: z.strictObject({ thingId: z.uuid() }) },
+        responses: {
+          200: { description: "Updated.", schema: thingSchema },
+          409: versionConflictResponse(thingSchema),
+        },
+      } satisfies EndpointContract;
+      const document = z
+        .object({
+          paths: z.record(z.string(), z.record(z.string(), anyOperationSchema)),
+          components: z.object({ schemas: z.record(z.string(), z.unknown()) }),
+        })
+        .parse(JSON.parse(JSON.stringify(buildOpenApiDocument([updateThing]))));
+      const conflict = document.paths["/api/v1/things/{thingId}"]?.["patch"]?.responses["409"];
+
+      expect(Object.keys(conflict?.content ?? {})).toEqual(["application/problem+json"]);
+      expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+        "#/components/schemas/TestThingVersionConflict",
+      );
+      expect(document.components.schemas["TestThingVersionConflict"]).toMatchObject({
+        properties: {
+          code: { const: "version_conflict" },
+          current: { $ref: "#/components/schemas/TestThing" },
+        },
+      });
+    });
+
+    it("refuses a version conflict for an entity schema without an id", () => {
+      const anonymous = z.strictObject({ id: z.uuid() });
+      const contract = {
+        method: "patch",
+        path: "/api/v1/anonymous",
+        summary: "Update",
+        access: { kind: "authenticated" },
+        responses: { 409: versionConflictResponse(anonymous) },
+      } satisfies EndpointContract;
+
+      expect(() => buildOpenApiDocument([contract])).toThrow(/id/);
     });
 
     it("names the permission on a permission-checked operation only", () => {
