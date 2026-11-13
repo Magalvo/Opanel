@@ -19,6 +19,8 @@ export const PROBLEM_CODES = [
   "team_name_taken",
   "account_inactive",
   "version_conflict",
+  "project_key_taken",
+  "project_archived",
 ] as const;
 
 export const problemCodeSchema = z.enum(PROBLEM_CODES);

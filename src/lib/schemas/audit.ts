@@ -23,6 +23,10 @@ export const AUDIT_ACTIONS = [
   "team.deleted",
   "team.member_added",
   "team.member_removed",
+  "project.created",
+  "project.updated",
+  "project.archived",
+  "project.unarchived",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
