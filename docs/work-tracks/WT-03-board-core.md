@@ -1,6 +1,6 @@
 # WT-03 — Board core: projects, teams, columns, epics, tasks, comments, assignment
 
-- Status: Approved (approved by the owner on 2026-11-13)
+- Status: In progress (approved by the owner on 2026-11-13)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (sections 2 to 5, 9),
   [0002](../canonical/0002-realtime-sync.md) (section 4, consistency rules),
   [0004](../canonical/0004-api-conventions.md),
@@ -59,7 +59,7 @@ implements it. The owner approved all of them as proposed on 2026-11-13.
    methods, and passes the `Actor` to the handler. The guard-rail test then checks the
    declaration against the contract instead of searching handler text. Reason: this track
    adds about 30 endpoints; a handler that cannot exist without declaring its checks is
-   stronger than a text search. The nine existing endpoints are converted first (WI-025),
+   stronger than a text search. The existing endpoints (twelve handlers, plus health and the OpenAPI document) are converted first (WI-025),
    with no behaviour change. Object-level rules (a Member deleting only their own task)
    stay in the services.
 2. **Project keys** are 2 to 10 characters, uppercase letters and digits, starting with a
@@ -180,7 +180,7 @@ integration tests and OpenAPI contracts; UI items include their end-to-end tests
 
 | Item                                                     | Title                                                                             | Status   | Depends on             |
 | -------------------------------------------------------- | --------------------------------------------------------------------------------- | -------- | ---------------------- |
-| WI-025                                                   | `route()` declares authentication and permission; existing endpoints converted    | Draft    | none                   |
+| [WI-025](../work-items/WI-025-route-declares-access.md)  | `route()` declares authentication and permission; existing endpoints converted    | Done     | none                   |
 | WI-026                                                   | Teams and membership: schema, service, API                                        | Draft    | WI-025                 |
 | WI-027                                                   | Fractional positions (pure logic) and the `version_conflict` response             | Draft    | none                   |
 | WI-028                                                   | Projects with default columns: schema, service, API (create, edit, archive, list) | Draft    | WI-025, WI-027         |
