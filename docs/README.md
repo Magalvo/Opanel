@@ -9,13 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-024 (revoke an invitation that was never accepted; the last-Admin
-  rule now counts only Admins with a password). Every item in the WT-02 table is done.
-- **Next:** check WT-02's exit criteria against `main`, mark the track `Done`, then draft
-  WT-03 (board core). The planning gaps below still await an owner decision.
-- **Order after that:** the work-item table in
-  [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
-  decisions the owner approved for the track and notes for whoever implements it.
+- **Last finished:** WT-02 (accounts, human sign-in, roles and the permission layer),
+  closed on 2026-11-13 with every exit criterion checked against `main` (see the track).
+- **Next:** draft WT-03 (board core: projects, teams, columns, epics, tasks, comments,
+  assignment) from canonical doc 0003, as `Proposed`, and stop for the owner's approval.
+  Its first decision is listed under Other follow-ups: whether authentication, permission
+  and origin checks move into the `route()` wrapper (WS-023, question 1).
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -30,10 +29,10 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                  | Title                                                   | Status      |
-| ------------------------------------------------------ | ------------------------------------------------------- | ----------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done        |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | In progress |
+| Track                                                  | Title                                                   | Status |
+| ------------------------------------------------------ | ------------------------------------------------------- | ------ |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done   |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done   |
 
 Planned next, not yet drafted:
 
