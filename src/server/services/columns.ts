@@ -11,8 +11,15 @@ import type {
 } from "@/lib/schemas/columns";
 import { type Actor, requirePermission } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
+import { FOREIGN_KEY_VIOLATION, hasPostgresCode } from "@/server/db/errors";
 import { columns } from "@/server/db/schema";
-import { invalidRequest, lastDoneColumn, notFound, versionConflict } from "@/server/http/errors";
+import {
+  columnNotEmpty,
+  invalidRequest,
+  lastDoneColumn,
+  notFound,
+  versionConflict,
+} from "@/server/http/errors";
 
 import { recordAudit } from "./audit";
 import { getProject, lockWritableProject } from "./projects";
@@ -271,6 +278,16 @@ export async function deleteColumn(
 ): Promise<void> {
   requirePermission(actor, "projects:manage");
 
+  try {
+    await deleteColumnRow(actor, columnId, db);
+  } catch (error) {
+    // A task is still in the column (WS-030).
+    if (hasPostgresCode(error, FOREIGN_KEY_VIOLATION)) throw columnNotEmpty();
+    throw error;
+  }
+}
+
+async function deleteColumnRow(actor: Actor, columnId: string, db: Database): Promise<void> {
   await db.transaction(async (tx) => {
     const { column, all } = await lockForColumn(tx, columnId);
     if (isLastDone(column, all)) throw lastDoneColumn();

@@ -7,5 +7,7 @@ export { credentials } from "./credentials";
 export { projects } from "./projects";
 export { rateLimits } from "./rate-limits";
 export { sessions } from "./sessions";
+export { taskEvents } from "./task-events";
+export { tasks } from "./tasks";
 export { teamMembers, teams } from "./teams";
 export { verification } from "./verification";
