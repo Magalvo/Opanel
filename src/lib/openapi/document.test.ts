@@ -150,6 +150,14 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("documents the version conflict of PATCH /api/v1/tasks/{taskId} (WS-030)", () => {
+    const conflict = parsedDocument().paths["/api/v1/tasks/{taskId}"]?.patch?.responses["409"];
+
+    expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+      "#/components/schemas/TaskVersionConflict",
+    );
+  });
+
   it("derives the health schema from the Zod schema", () => {
     const component = parsedDocument().components.schemas.HealthResponse;
     const { shape } = healthResponseSchema;
