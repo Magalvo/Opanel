@@ -7,6 +7,7 @@ interface ApiErrorInit {
   detail: string;
   errors?: readonly FieldError[] | undefined;
   retryAfterSeconds?: number | undefined;
+  current?: unknown;
 }
 
 /**
@@ -23,6 +24,8 @@ export class ApiError extends Error {
   readonly errors: readonly FieldError[] | undefined;
   /** Only on rate limits: sent as the `Retry-After` header. */
   readonly retryAfterSeconds: number | undefined;
+  /** Only on `version_conflict`: the entity as it is now, sent as `current` (WS-027). */
+  readonly current: unknown;
 
   constructor(init: ApiErrorInit) {
     super(init.detail);
@@ -33,6 +36,7 @@ export class ApiError extends Error {
     this.detail = init.detail;
     this.errors = init.errors;
     this.retryAfterSeconds = init.retryAfterSeconds;
+    this.current = init.current;
   }
 }
 
@@ -70,6 +74,23 @@ export function lastAdmin(
   detail = "This would leave the installation without an active administrator.",
 ): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "last_admin", detail });
+}
+
+/**
+ * `409` with the specific code of WS-027: the change was based on an older `version`.
+ * `current` is the entity as its `GET` returns it, so it holds nothing the caller cannot read.
+ */
+export function versionConflict(
+  current: unknown,
+  detail = "This was changed by someone else. Reload it and try again.",
+): ApiError {
+  return new ApiError({
+    status: 409,
+    title: "Conflict",
+    code: "version_conflict",
+    detail,
+    current,
+  });
 }
 
 /** `409` with the specific code of WS-026: another team has this name, ignoring case. */

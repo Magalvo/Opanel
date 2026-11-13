@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { problemSchema } from "@/lib/schemas/problem";
 
-import { ApiError, notFound, rateLimited } from "./errors";
+import { ApiError, notFound, rateLimited, versionConflict } from "./errors";
 import { json, noContent, readJson, readParams, readQuery, route, unknownPathRoute } from "./route";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -193,6 +193,26 @@ describe("route", () => {
     const response = await handler(get(), context);
 
     expect(await response.json()).toEqual({ method: "GET", id: "abc" });
+  });
+});
+
+describe("route and version conflicts (WS-027)", () => {
+  it("sends the current entity in the problem body, and no current on other problems", async () => {
+    const current = { id: "x", name: "Board", version: 4 };
+    const conflicting = route(publicThing, () => {
+      throw versionConflict(current);
+    });
+    const missing = route(publicThing, () => {
+      throw notFound();
+    });
+
+    const response = await conflicting(get(), undefined);
+    const other = await missing(get(), undefined);
+
+    expect(response.status).toBe(409);
+    const body = problemSchema.parse(await response.json());
+    expect(body).toMatchObject({ code: "version_conflict", current });
+    expect(Object.keys(problemSchema.parse(await other.json()))).not.toContain("current");
   });
 });
 

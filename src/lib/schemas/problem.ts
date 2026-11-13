@@ -18,6 +18,7 @@ export const PROBLEM_CODES = [
   "invalid_link",
   "team_name_taken",
   "account_inactive",
+  "version_conflict",
 ] as const;
 
 export const problemCodeSchema = z.enum(PROBLEM_CODES);
@@ -49,6 +50,10 @@ export const problemSchema = z
       .array(fieldErrorSchema)
       .optional()
       .meta({ description: "Present on validation failures: one entry per failing field." }),
+    current: z.unknown().optional().meta({
+      description:
+        "Only with `version_conflict`: the entity as it is now, as its `GET` returns it.",
+    }),
   })
   .meta({
     id: "Problem",

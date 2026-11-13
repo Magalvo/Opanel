@@ -167,6 +167,11 @@ may be returned as a full `items` array with `nextCursor: null`; the work-spec s
   `null` is cleared.
 - Entities with optimistic concurrency (doc 0002) expose an integer `version`. An update
   sends the `version` it was based on; a mismatch is a `409` with code `version_conflict`.
+  Versions start at 1. The body's `current` is the entity as its `GET` returns it, and the
+  contract declares it with `versionConflictResponse(entitySchema)`, which names the
+  problem schema `<Entity>VersionConflict` in the OpenAPI document (WS-027). Services
+  check and bump in one statement: `update ... set version = version + 1 where id = $id
+and version = $expected`; no row means `404` if the entity is gone, otherwise the conflict.
 - There is no general idempotency-key mechanism in v1. The one endpoint agents retry
   blindly, bug report submission, is idempotent by design through fingerprint dedupe.
 
