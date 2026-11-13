@@ -1,6 +1,6 @@
 # WS-029 — Columns API
 
-- Status: Approved (approved by the owner on 2026-11-13, questions 1 to 3 as proposed)
+- Status: Done (approved by the owner on 2026-11-13, questions 1 to 3 as proposed)
 - Work-item: [WI-029](../work-items/WI-029-columns-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 5;
   [0004](../canonical/0004-api-conventions.md) sections 5, 6;
@@ -145,3 +145,29 @@ Section 1 and 2. All additive. The OpenAPI document gains five operations, the s
    harmless; a limit can be added later without breaking the contract.
 3. **Column names are not unique** within a project, like project names. The UI shows them
    in order, so two "Review" columns are distinguishable by place.
+
+## Deviations from the approved spec
+
+- **Serialised on the project row, not only on the column rows.** Section 3 proposed
+  locking all of the project's column rows (`select ... for update`). Test 10 (ten
+  concurrent creations at the end) failed with a duplicate position: under PostgreSQL's
+  `READ COMMITTED`, a `select ... for update` that waits for another transaction returns
+  the rows of its own snapshot, so it does not see the column the other transaction just
+  inserted, and both compute the same "last" position. Column writes now first take an
+  **exclusive** lock on the project row: `lockWritableProject(tx, ref, "exclusive")`, which
+  is `for no key update`. It conflicts with itself, with the `for share` of ordinary writes
+  inside the project and with archiving (`for update`), and does not block inserts that
+  only reference the project. The column rows are still read `for update` afterwards; that
+  statement starts after the project lock is granted and so sees every committed column.
+  The default mode of `lockWritableProject` (`shared`) is unchanged.
+
+## Implementation record
+
+- Red: the new tests failed on missing modules and on the new code and actions (committed
+  before any code).
+- First green run: 621 of 622 passed; the concurrency test found the problem described
+  above. After the fix the column tests passed three runs in a row.
+- Green: 622 Vitest tests (up from 602) and 28 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` and `pnpm openapi:generate` leave no diff. No migration.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
