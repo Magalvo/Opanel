@@ -1,6 +1,6 @@
 # WS-021 — Own profile: change name and password
 
-- Status: Approved (approved by the owner on 2026-11-13, all open questions accepted as proposed)
+- Status: Done (approved by the owner on 2026-11-13, all open questions accepted as proposed)
 - Work-item: [WI-021](../work-items/WI-021-own-profile.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3, 4, 7;
   [WT-02](../work-tracks/WT-02-accounts-and-permissions.md) decisions 7, 8;
@@ -166,3 +166,31 @@ Technical, settled by the tests:
    is the id of the row in `sessions`. If not, I stop and report.
 7. **The shell after a rename.** The layout reads the account on the server, so
    `router.refresh()` must re-render it with the new name; test 15 checks it in a browser.
+
+## Deviations from the approved spec
+
+1. **Canonical doc 0004 section 7 now lists the authentication-only operations.** It said
+   that every non-public endpoint checks a permission, which was already not true of `me`
+   and `sign-out` (WS-015). The list, now four operations, is written there.
+2. **`renameSelf` reads the old name `FOR UPDATE`** in its transaction, so two renames at the
+   same moment each compare against the name they replace and audit correctly.
+3. **The `/profile` page reads the caller's own account from `requireAccount()`** and does no
+   permission check: it shows nothing but the caller's own name and email, which the shell
+   already shows. This is the case doc 0004 section 7 allows ("needs no permission from the
+   catalogue") for the page as for the API.
+4. **One of my own tests was fixed after the Red run**, without weakening it: the "never
+   echoes a rejected password" schema test used a 12-character value, which is a valid
+   password, so the schema rightly accepted it. It now uses an 11-character one.
+
+## Implementation record
+
+- Red: schema, contract, route-list, menu, profile component, page, limiter, `authenticate`,
+  service and route tests failed on missing modules and behaviour (committed before any
+  code). The `sessionId` test failed with `expected undefined`.
+- Green: 497 Vitest tests (up from 457) and 27 Playwright tests pass. `pnpm db:generate` and
+  `pnpm openapi:generate` leave no diff; typecheck, lint and format pass.
+- Question 6: `response.session.id` of Better Auth 1.7.22's `getSession` is the id of the
+  row in `sessions` (test 6). Question 7: `router.refresh()` re-renders the shell with the
+  new name (browser test).
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

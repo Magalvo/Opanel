@@ -174,6 +174,11 @@ may be returned as a full `items` array with `nextCursor: null`; the work-spec s
   header is present, only the token is considered and cookies are ignored.
 - Both resolve to an `Actor`. Every endpoint that is not declared public authenticates,
   then checks one named permission before calling a service (`AGENTS.md` hard rule 6).
+  The only exception is a short list of **authentication-only** operations that act on the
+  caller's own session or account and so need no permission from the catalogue:
+  `GET /api/v1/me`, `POST /api/v1/auth/sign-out` (WS-015), `PATCH /api/v1/me` and
+  `POST /api/v1/me/password` (WS-021). The list is enforced by a test (WS-023); adding to
+  it is a work-spec decision.
 - **Cross-site request protection.** For cookie-authenticated requests with a method
   other than `GET` or `HEAD`, the `Origin` header must equal the app's own origin;
   otherwise the request is rejected with `403`. Token-authenticated requests are exempt:

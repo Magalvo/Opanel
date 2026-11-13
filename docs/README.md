@@ -9,10 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-020 (Admin People page), the tenth item of WT-02.
-- **In progress:** WI-021, own profile: change name and password (work-spec approved on
-  2026-11-13). Then the planned **WI-024**
-  (revoke an invitation that was never accepted), which needs its own work-item and spec.
+- **Last finished:** WI-021 (own profile: change name and password). Every item in the
+  WT-02 table is done.
+- **Next:** the planned **WI-024** (revoke an invitation that was never accepted, so its
+  email is free again). Draft its work-item and work-spec as `Proposed`, then stop for the
+  owner's approval. After it, WT-02's exit criteria are checked and the track is closed.
 - **Order after that:** the work-item table in
   [WT-02](work-tracks/WT-02-accounts-and-permissions.md), which also holds the ten design
   decisions the owner approved for the track and notes for whoever implements it.
@@ -72,7 +73,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
 | [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                        | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
 | [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                         | Done        | [WS-020](work-specs/WS-020-people-page.md)                      | Done        |
-| [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                     | Approved    | [WS-021](work-specs/WS-021-own-profile.md)                      | Approved    |
+| [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                     | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
 | [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 
@@ -89,8 +90,7 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   deletion, only deactivation, so an invitation sent to a mistyped address keeps that
   address taken. Decided in WS-020: the People page only warns, in the invite dialog, that the
   email cannot be changed. The real fix, revoking an invitation that was never accepted so
-  its email is free again (new API and a new audit action), is planned as **WI-024**, after
-  WI-021.
+  its email is free again (new API and a new audit action), is planned as **WI-024**, next.
 - **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
   the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
