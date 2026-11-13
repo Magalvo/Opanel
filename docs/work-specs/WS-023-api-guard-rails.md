@@ -1,6 +1,6 @@
 # WS-023 — API guard rails: declared authentication and enforced checks
 
-- Status: Approved (by the owner on 2026-11-13)
+- Status: Done (approved by the owner on 2026-11-13)
 - Work-item: [WI-023](../work-items/WI-023-api-guard-rails.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 7; `AGENTS.md`
   hard rules 6 and 9
@@ -67,7 +67,7 @@ of endpoints starts to grow quickly. See question 1.
 | `src/lib/openapi/document.test.ts` | modify (new cases written first)                     |
 | `src/lib/openapi/routes.test.ts`   | modify: the three structural checks                  |
 | `docs/api/openapi.json`            | regenerate                                           |
-| `docs/README.md`                   | modify: remove the closed follow-up                  |
+| `docs/README.md`                   | modify: status (the follow-up was already replaced)  |
 
 No new dependencies. No application code outside the OpenAPI generator changes.
 
@@ -99,6 +99,32 @@ existing behaviour, not a breaking change (doc 0004 section 8).
 Tests 5 to 7 run the checker on sample text so that it is itself tested: a checker that
 always passes would otherwise look green. The checker is a small pure function in a new
 `src/lib/openapi/route-checks.ts`, used only by the test.
+
+## Deviations from the approved spec
+
+1. **The checker's own tests are in a new file**, `src/lib/openapi/route-checks.test.ts`,
+   next to the checker, instead of inside `routes.test.ts`. `routes.test.ts` holds only
+   the checks against the real route files.
+2. **The checker ignores comments.** A call that is only mentioned in a comment does not
+   count; a test covers it.
+3. **One extra test** asserts that the checker looked at every documented operation, so a
+   handler written in a form the checker does not recognise cannot be skipped silently.
+4. **Every operation now carries `security`** in the generated document, also the public
+   ones (`[]`, as before).
+
+## Implementation record
+
+- Red: three document tests failed on the missing scheme and requirement; the two
+  route-check test files failed on the missing module.
+- Green: 398 tests pass (up from 381). Playwright: 22 pass.
+- Checked by hand that the test bites: with `requirePermission` and `assertSameOrigin`
+  removed from `v1/accounts/[accountId]/route.ts`, it failed with
+  "PATCH does not call assertSameOrigin(): ..." and
+  "PATCH does not call requirePermission(): ...". The file was restored.
+- `docs/api/openapi.json` regenerated: `components.securitySchemes.sessionCookie` and a
+  `security` requirement on the six non-public operations. No endpoint changed.
+- `typecheck`, `lint`, `format:check`, `test`, `test:e2e` pass locally, against PostgreSQL
+  16 (no Docker in the sandbox used). CI runs them on the PostgreSQL of `compose.yaml`.
 
 ## Resolved questions
 

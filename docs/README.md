@@ -9,12 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-022 (sign-in hardening). Before it, WI-018 (account management
-  API), the eighth item of WT-02.
-- **In progress:** WI-023 / WS-023, API guard rails, approved on 2026-11-13:
-  authentication declared in the OpenAPI document, and a test that fails when a route
-  handler forgets a check.
-- **Next in the track after that:** WI-019, accepting an invitation or reset link: set a
+- **Last finished:** WI-023 (API guard rails) and, before it, WI-022 (sign-in hardening).
+  Both came out of the review of 2026-11-12. WT-02 itself stands at WI-018 (account
+  management API), its eighth item.
+- **Next:** WI-019, accepting an invitation or reset link: set a
   password (API and page). Links already exist (`<APP_URL>/accept#<token>`, hash only in
   `account_tokens`); this item redeems them. Draft its work-item and work-spec as
   `Proposed`, then stop for the owner's approval.
@@ -76,7 +74,7 @@ WT-07 to WT-10 and the detail of WT-03 come from canonical doc 0003.
 | [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu               | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
 | [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
 | [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
-| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | In progress | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Approved    |
+| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
 
 WI-019 to WI-021 are outlined in WT-02 and get their own files when they are started.
 
