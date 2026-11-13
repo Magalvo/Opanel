@@ -1,6 +1,6 @@
 # WI-028 — Projects with default columns
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 2, 3, 4, 7, 10, 16;
   amendment A2)
 - Depends on: WI-025, WI-027

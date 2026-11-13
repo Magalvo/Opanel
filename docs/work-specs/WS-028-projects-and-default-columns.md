@@ -1,6 +1,6 @@
 # WS-028 — Projects with default columns
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-13, questions 1 to 4 as proposed)
 - Work-item: [WI-028](../work-items/WI-028-projects-and-default-columns.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 5;
   [0004](../canonical/0004-api-conventions.md) sections 3, 5, 6;
