@@ -16,7 +16,7 @@ function member(teamId: string, accountId: string) {
   return { params: Promise.resolve({ teamId, accountId }) };
 }
 
-async function cookieFor(role: "viewer" | "member" | "manager" | "admin", name = role) {
+async function cookieFor(role: "viewer" | "member" | "manager" | "admin", name: string = role) {
   await createTestAccount({ name, email: `${role}@example.com`, role });
   return signInCookie(`${role}@example.com`);
 }

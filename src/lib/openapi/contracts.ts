@@ -16,6 +16,16 @@ import {
 } from "@/lib/schemas/auth";
 import { healthContract } from "@/lib/schemas/health";
 import { openApiContract } from "@/lib/schemas/openapi";
+import { listPeopleContract } from "@/lib/schemas/people";
+import {
+  addTeamMemberContract,
+  createTeamContract,
+  deleteTeamContract,
+  getTeamContract,
+  listTeamsContract,
+  removeTeamMemberContract,
+  updateTeamContract,
+} from "@/lib/schemas/teams";
 
 import type { EndpointContract } from "./contract";
 
@@ -35,4 +45,12 @@ export const contracts: readonly EndpointContract[] = [
   updateAccountContract,
   resetLinkContract,
   revokeInvitationContract,
+  listPeopleContract,
+  listTeamsContract,
+  createTeamContract,
+  getTeamContract,
+  updateTeamContract,
+  deleteTeamContract,
+  addTeamMemberContract,
+  removeTeamMemberContract,
 ];

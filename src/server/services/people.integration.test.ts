@@ -47,6 +47,17 @@ describe("listPeople", () => {
     expect(page.nextCursor).toBeNull();
   });
 
+  it("orders names ignoring case, the same on every install whatever its collation", async () => {
+    const actor = await viewer();
+    for (const name of ["bea", "Al", "Carl", "alma"]) {
+      await createTestAccount({ name, email: `${name.toLowerCase()}@example.com` });
+    }
+
+    const names = (await listPeople(actor, { limit: 50 })).items.map((person) => person.name);
+
+    expect(names).toEqual(["Al", "alma", "bea", "Carl", "Viewer"]);
+  });
+
   it("returns only id, name and active", async () => {
     const actor = await viewer();
 

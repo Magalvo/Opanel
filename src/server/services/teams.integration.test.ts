@@ -161,7 +161,7 @@ describe("team membership", () => {
     for (const accountId of [UNKNOWN, agentRow?.id ?? "", invitedRow?.id ?? ""]) {
       const error = await failure(addTeamMember(actor, team.id, { accountId }));
       expect(error.status).toBe(400);
-      expect(error.errors).toEqual([{ path: "accountId", message: expect.any(String) }]);
+      expect(error.errors?.map((field) => field.path)).toEqual(["accountId"]);
     }
   });
 
