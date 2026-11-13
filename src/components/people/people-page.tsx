@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ManagedAccount } from "@/lib/schemas/accounts";
 
-import { ApiFailure, createLink, listAccounts, updateAccount } from "./api";
+import { ApiFailure, createLink, listAccounts, revokeInvitation, updateAccount } from "./api";
 import { type Invited, InviteDialog } from "./invite-dialog";
 import { LinkDialog, type ShownLink } from "./link-dialog";
 import { PeopleTable } from "./people-table";
@@ -27,10 +27,46 @@ type Phase = "loading" | "error" | "ready";
 
 type Confirmation =
   | { kind: "deactivate"; person: ManagedAccount }
+  | { kind: "revoke"; person: ManagedAccount }
   | { kind: "role"; person: ManagedAccount; role: ManagedAccount["role"] };
 
 const LAST_ADMIN =
   "This is the only active administrator, so they cannot be demoted or deactivated.";
+
+/** What the confirmation dialog says for each change that is asked about first. */
+function confirmationText(
+  asking: Confirmation,
+  isSelf: boolean,
+): { title: string; description: string; action: string } {
+  const { person } = asking;
+  switch (asking.kind) {
+    case "revoke":
+      return {
+        title: `Revoke the invitation of ${person.name}?`,
+        description: `Their link stops working and the account is removed. ${person.email} can be invited again.`,
+        action: "Revoke",
+      };
+    case "role":
+      return {
+        title: "Change your own role?",
+        description: "This ends your session immediately. You will be signed out.",
+        action: "Change role",
+      };
+    case "deactivate":
+      return isSelf
+        ? {
+            title: "Deactivate your own account?",
+            description: "This ends your session immediately. You will be signed out.",
+            action: "Deactivate",
+          }
+        : {
+            title: `Deactivate ${person.name}?`,
+            description:
+              "This ends their sessions immediately and removes their unused links. You can reactivate them later.",
+            action: "Deactivate",
+          };
+  }
+}
 
 /** The Admin "People" page (WS-020): a client of the account management API. */
 export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: string }>) {
@@ -139,6 +175,22 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
     }
   }
 
+  async function revoke(person: ManagedAccount) {
+    try {
+      await revokeInvitation(person.id);
+      setPeople((current) => current.filter((other) => other.id !== person.id));
+      setMessage(`The invitation of ${person.name} was revoked.`);
+    } catch (error) {
+      if (error instanceof ApiFailure && error.status === 409) {
+        // They accepted in the meantime: show the list as it is now.
+        setMessage(`${person.name} has already accepted the invitation.`);
+        listAccounts().then(showFirstPage, () => undefined);
+      } else {
+        setMessage("Could not revoke. Try again.");
+      }
+    }
+  }
+
   function invited({ account, link }: Invited) {
     if (nextCursor === null) {
       setPeople((current) => [...current, account]);
@@ -153,11 +205,13 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
     const current = confirmation;
     setConfirmation(null);
     if (current?.kind === "deactivate") void setActive(current.person, false);
+    if (current?.kind === "revoke") void revoke(current.person);
     if (current?.kind === "role") void changeRole(current.person, current.role);
   }
 
   const self = (person: ManagedAccount) => person.id === currentAccountId;
   const asking = confirmation;
+  const text = asking === null ? null : confirmationText(asking, self(asking.person));
 
   return (
     <div className="grid max-w-5xl gap-4">
@@ -202,6 +256,9 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
             }}
             onReactivate={(person) => void setActive(person, true)}
             onCreateLink={(person) => void newLink(person)}
+            onRevoke={(person) => {
+              setConfirmation({ kind: "revoke", person });
+            }}
           />
           {nextCursor !== null && (
             <div>
@@ -219,29 +276,19 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
           if (!open) setConfirmation(null);
         }}
       >
-        {asking !== null && (
+        {text !== null && (
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                {asking.kind === "role"
-                  ? "Change your own role?"
-                  : self(asking.person)
-                    ? "Deactivate your own account?"
-                    : `Deactivate ${asking.person.name}?`}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {self(asking.person)
-                  ? "This ends your session immediately. You will be signed out."
-                  : "This ends their sessions immediately and removes their unused links. You can reactivate them later."}
-              </AlertDialogDescription>
+              <AlertDialogTitle>{text.title}</AlertDialogTitle>
+              <AlertDialogDescription>{text.description}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                variant={asking.kind === "deactivate" ? "destructive" : "default"}
+                variant={confirmation?.kind === "role" ? "default" : "destructive"}
                 onClick={confirmed}
               >
-                {asking.kind === "role" ? "Change role" : "Deactivate"}
+                {text.action}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -45,6 +45,7 @@ export interface PeopleTableProps {
   onDeactivate: (person: ManagedAccount) => void;
   onReactivate: (person: ManagedAccount) => void;
   onCreateLink: (person: ManagedAccount) => void;
+  onRevoke: (person: ManagedAccount) => void;
 }
 
 /** One row per person: who, role, status, last seen and the actions an Admin can take. */
@@ -54,6 +55,7 @@ export function PeopleTable({
   onDeactivate,
   onReactivate,
   onCreateLink,
+  onRevoke,
 }: Readonly<PeopleTableProps>) {
   return (
     <Table>
@@ -131,6 +133,16 @@ export function PeopleTable({
                           ? "Create a new invitation link"
                           : "Create reset link"}
                       </DropdownMenuItem>
+                      {person.status === "invited" && (
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onSelect={() => {
+                            onRevoke(person);
+                          }}
+                        >
+                          Revoke invitation
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         variant="destructive"
                         onSelect={() => {

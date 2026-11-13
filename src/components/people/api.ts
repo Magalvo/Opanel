@@ -20,21 +20,25 @@ export class ApiFailure extends Error {
   }
 }
 
+async function failureOf(response: Response): Promise<ApiFailure> {
+  const problem = problemSchema.safeParse(await response.json().catch(() => null));
+  return new ApiFailure(
+    response.status,
+    problem.success ? problem.data.code : null,
+    problem.success ? (problem.data.errors ?? []) : [],
+  );
+}
+
 async function call<Schema extends { parse: (value: unknown) => unknown }>(
   url: string,
   init: RequestInit,
   schema: Schema,
 ): Promise<ReturnType<Schema["parse"]>> {
   const response = await fetch(url, init);
-  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    const problem = problemSchema.safeParse(body);
-    throw new ApiFailure(
-      response.status,
-      problem.success ? problem.data.code : null,
-      problem.success ? (problem.data.errors ?? []) : [],
-    );
+    throw await failureOf(response);
   }
+  const body: unknown = await response.json().catch(() => null);
   return schema.parse(body) as ReturnType<Schema["parse"]>;
 }
 
@@ -70,4 +74,12 @@ export function createLink(accountId: string) {
     { method: "POST" },
     resetLinkResponseSchema,
   );
+}
+
+/** Takes back an invitation that was never accepted (WS-024). Answers 204, no body. */
+export async function revokeInvitation(accountId: string): Promise<void> {
+  const response = await fetch(`/api/v1/accounts/${accountId}/invitation`, { method: "DELETE" });
+  if (!response.ok) {
+    throw await failureOf(response);
+  }
 }

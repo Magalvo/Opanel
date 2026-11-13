@@ -17,6 +17,7 @@ export const AUDIT_ACTIONS = [
   "account.deactivated",
   "account.reactivated",
   "account.name_changed",
+  "account.invitation_revoked",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
