@@ -158,7 +158,7 @@ written; each still needs the owner's approval like any other.
 | [WI-025](../work-items/WI-025-route-declares-access.md)          | `route()` declares authentication and permission; existing endpoints converted           | Done     | none                   |
 | [WI-026](../work-items/WI-026-teams-and-people.md)               | Teams and membership, people directory: schema, service, API                             | Done     | WI-025                 |
 | [WI-027](../work-items/WI-027-positions-and-version-conflict.md) | Fractional positions (pure logic) and the `version_conflict` response                    | Done     | none                   |
-| WI-028                                                           | Projects with default columns: schema, service, API (create, edit, archive, list)        | Draft    | WI-025, WI-027         |
+| [WI-028](../work-items/WI-028-projects-and-default-columns.md)   | Projects with default columns: schema, service, API (create, edit, archive, list)        | Done     | WI-025, WI-027         |
 | WI-029                                                           | Columns API: create, rename, recategorise, reorder, delete                               | Draft    | WI-028                 |
 | WI-030                                                           | Tasks core: schema, keys, history events; create, get, list, edit, assign; `team_in_use` | Draft    | WI-026, WI-029         |
 | WI-031                                                           | Move a task between and within columns                                                   | Draft    | WI-030                 |

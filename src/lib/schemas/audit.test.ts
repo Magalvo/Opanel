@@ -14,8 +14,14 @@ describe("auditActionSchema", () => {
     }
   });
 
-  it("includes the thirteen actions of WT-02 and the five team actions of WS-026", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(18);
+  it("includes the actions of WT-02, the team actions of WS-026 and the project actions of WS-028", () => {
+    expect(AUDIT_ACTIONS).toHaveLength(22);
+    expect(AUDIT_ACTIONS.filter((action) => action.startsWith("project."))).toEqual([
+      "project.created",
+      "project.updated",
+      "project.archived",
+      "project.unarchived",
+    ]);
     expect(AUDIT_ACTIONS).toContain("account.invitation_revoked");
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("team."))).toEqual([
       "team.created",

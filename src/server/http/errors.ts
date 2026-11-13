@@ -93,6 +93,18 @@ export function versionConflict(
   });
 }
 
+/** `409` with the specific code of WS-028: another project has this key. */
+export function projectKeyTaken(detail = "Another project already has this key."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "project_key_taken", detail });
+}
+
+/** `409` with the specific code of WS-028: the project is archived, so it is read-only. */
+export function projectArchived(
+  detail = "This project is archived. Unarchive it to change it.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "project_archived", detail });
+}
+
 /** `409` with the specific code of WS-026: another team has this name, ignoring case. */
 export function teamNameTaken(detail = "Another team already has this name."): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "team_name_taken", detail });
