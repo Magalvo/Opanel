@@ -43,21 +43,29 @@ function toResponse(response: ResponseContract): Responses[StatusCode] {
 }
 
 function toOperation(contract: EndpointContract): Operation {
-  const all = contract.public
-    ? contract.responses
-    : { ...CREDENTIAL_RESPONSES, ...contract.responses };
+  const isPublic = contract.access.kind === "public";
+  const all = isPublic ? contract.responses : { ...CREDENTIAL_RESPONSES, ...contract.responses };
   const responses: Responses = {};
   for (const [status, response] of Object.entries(all)) {
     responses[status as StatusCode] = toResponse(response);
   }
 
   const { params, query, body } = contract.request ?? {};
+  const permission = contract.access.kind === "permission" ? contract.access.permission : undefined;
+  const description = [
+    contract.description,
+    permission === undefined ? undefined : `Requires the \`${permission}\` permission.`,
+  ]
+    .filter((part) => part !== undefined)
+    .join("\n\n");
 
   return {
     summary: contract.summary,
-    ...(contract.description === undefined ? {} : { description: contract.description }),
+    ...(description === "" ? {} : { description }),
+    // Agent authors (WT-05) need to know which permission or scope an operation needs.
+    ...(permission === undefined ? {} : { "x-opanel-permission": permission }),
     // An empty list means "no credentials required" for this operation.
-    security: contract.public ? [] : [{ [SESSION_COOKIE_SCHEME]: [] }],
+    security: isPublic ? [] : [{ [SESSION_COOKIE_SCHEME]: [] }],
     ...(params === undefined && query === undefined
       ? {}
       : {

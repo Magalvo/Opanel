@@ -17,7 +17,7 @@ describe("GET /api/v1/health status mapping", () => {
   it("returns 503 when the service reports degraded", async () => {
     checkHealth.mockResolvedValue({ status: "degraded", database: "down" });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/v1/health"), undefined);
 
     expect(response.status).toBe(503);
     expect(response.headers.get("cache-control")).toBe("no-store");
@@ -26,7 +26,7 @@ describe("GET /api/v1/health status mapping", () => {
   it("exposes only the two documented fields when degraded", async () => {
     checkHealth.mockResolvedValue({ status: "degraded", database: "down" });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/v1/health"), undefined);
 
     expect(await response.json()).toStrictEqual({ status: "degraded", database: "down" });
   });
@@ -34,7 +34,7 @@ describe("GET /api/v1/health status mapping", () => {
   it("returns 200 when the service reports ok", async () => {
     checkHealth.mockResolvedValue({ status: "ok", database: "up" });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/v1/health"), undefined);
 
     expect(response.status).toBe(200);
     expect(await response.json()).toStrictEqual({ status: "ok", database: "up" });

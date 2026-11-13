@@ -1,6 +1,11 @@
 import type { z } from "zod";
 
+import type { EndpointContract } from "@/lib/openapi/contract";
 import { type FieldError, type Problem, PROBLEM_CONTENT_TYPE } from "@/lib/schemas/problem";
+import { requirePermission } from "@/server/auth/actor";
+import { authenticate, type Authenticated } from "@/server/auth/authenticate";
+import { assertSameOrigin } from "@/server/auth/origin";
+import { getEnv } from "@/server/env";
 
 import { ApiError, internalError, invalidRequest, unsupportedMediaType } from "./errors";
 
@@ -9,10 +14,33 @@ export type RouteHandler<Context> = (
   context: Context,
 ) => Response | Promise<Response>;
 
+/** What a handler is given about the caller: nothing for a public operation. */
+export type AuthFor<Contract extends EndpointContract> = Contract["access"] extends {
+  kind: "public";
+}
+  ? undefined
+  : Authenticated;
+
+export type ContractHandler<Contract extends EndpointContract, Context> = (
+  request: Request,
+  context: Context,
+  auth: AuthFor<Contract>,
+) => Response | Promise<Response>;
+
+/** A wrapped handler, carrying the contract it enforces (read by the guard-rail test). */
+export interface ContractRoute<Context> {
+  (request: Request, context: Context): Promise<Response>;
+  readonly contract: EndpointContract;
+}
+
 export interface RouteOptions {
   /** Receives a description of an unexpected failure. Never part of the response. */
   logError?: (message: string) => void;
+  /** The app's own origin, for the same-origin check. Defaults to `APP_URL`, read per request. */
+  appUrl?: string;
 }
+
+const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 function problemResponse(error: ApiError, requestId: string): Response {
   const problem: Problem = {
@@ -32,14 +60,14 @@ function problemResponse(error: ApiError, requestId: string): Response {
 }
 
 /**
- * Wraps a route handler with the behaviour every API endpoint shares (canonical doc
- * 0004): a request id, `Cache-Control: no-store`, and the conversion of thrown errors
- * into problem-details responses. An `ApiError` is sent as it is; anything else is logged
- * and answered with `internal_error`, with none of its content.
+ * The behaviour every API response shares (canonical doc 0004): a request id,
+ * `Cache-Control: no-store`, and the conversion of thrown errors into problem-details
+ * responses. An `ApiError` is sent as it is; anything else is logged and answered with
+ * `internal_error`, with none of its content.
  */
-export function route<Context = unknown>(
+function withSharedBehaviour<Context>(
   handler: RouteHandler<Context>,
-  { logError = console.error }: RouteOptions = {},
+  logError: (message: string) => void,
 ): (request: Request, context: Context) => Promise<Response> {
   return async (request, context) => {
     // Always generated here: an id supplied by the client would let it write into logs.
@@ -68,6 +96,57 @@ export function route<Context = unknown>(
       headers,
     });
   };
+}
+
+/**
+ * Wraps the handler of one API operation (WS-025). Before the handler runs, and in this
+ * order: a state-changing request must come from the app's own origin (`403`); unless the
+ * contract is public, the caller is authenticated (`401`); if the contract names a
+ * permission, the caller must hold it (`403`). The handler then receives the authenticated
+ * caller, or `undefined` for a public operation. Object-level rules stay in the services.
+ *
+ * When authentication produced `Set-Cookie` headers (an extended session), they are added
+ * to the handler's response, unless the handler set cookies of its own.
+ */
+export function route<const Contract extends EndpointContract, Context = unknown>(
+  contract: Contract,
+  handler: ContractHandler<Contract, Context>,
+  { logError = console.error, appUrl }: RouteOptions = {},
+): ContractRoute<Context> {
+  const wrapped = withSharedBehaviour<Context>(async (request, context) => {
+    if (STATE_CHANGING_METHODS.has(request.method)) {
+      assertSameOrigin(request, appUrl ?? getEnv().APP_URL);
+    }
+
+    if (contract.access.kind === "public") {
+      // AuthFor<Contract> is undefined exactly when the access is public.
+      return handler(request, context, undefined as AuthFor<Contract>);
+    }
+
+    const auth = await authenticate(request);
+    if (contract.access.kind === "permission") {
+      requirePermission(auth.actor, contract.access.permission);
+    }
+
+    const response = await handler(request, context, auth as AuthFor<Contract>);
+    if (response.headers.getSetCookie().length > 0) {
+      return response;
+    }
+    return withCookies(new Response(response.body, response), auth.headers);
+  }, logError);
+
+  return Object.assign(wrapped, { contract });
+}
+
+/**
+ * For the catch-all of unknown API paths only (WS-011), which is not an operation and has
+ * no contract: the shared headers and error conversion, no checks.
+ */
+export function unknownPathRoute<Context = unknown>(
+  handler: RouteHandler<Context>,
+  { logError = console.error }: Pick<RouteOptions, "logError"> = {},
+): (request: Request, context: Context) => Promise<Response> {
+  return withSharedBehaviour(handler, logError);
 }
 
 /** Copies only the `Set-Cookie` headers of `source` onto `response`, which must be mutable. */

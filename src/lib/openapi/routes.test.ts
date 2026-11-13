@@ -4,6 +4,7 @@ import { globSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import type { EndpointContract } from "./contract";
 import { contracts } from "./contracts";
@@ -70,14 +71,16 @@ function urlPathOf(file: string): string {
 async function exportedHandlers(): Promise<ExportedHandler[]> {
   const handlers: ExportedHandler[] = [];
   for (const file of routeFiles()) {
-    const module: Record<string, unknown> = await import(path.join(API_ROOT, file));
+    const exports = z
+      .record(z.string(), z.unknown())
+      .parse(await import(path.join(API_ROOT, file)));
     for (const method of HTTP_METHODS) {
-      if (method in module) {
+      if (method in exports) {
         handlers.push({
           file,
           operation: `${method} ${urlPathOf(file)}`,
           method,
-          value: module[method],
+          value: exports[method],
         });
       }
     }

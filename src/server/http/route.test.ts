@@ -1,11 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+import type { EndpointContract } from "@/lib/openapi/contract";
 import { problemSchema } from "@/lib/schemas/problem";
 
 import { ApiError, notFound, rateLimited } from "./errors";
-import type { EndpointContract } from "@/lib/openapi/contract";
-
 import { json, noContent, readJson, readParams, readQuery, route, unknownPathRoute } from "./route";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -235,14 +234,16 @@ describe("route with a public contract", () => {
   });
 
   it("needs no Origin on GET, and hands the handler no authentication", async () => {
-    const handler = vi.fn((_request: Request, _context: unknown, auth: undefined) =>
-      json({ auth: auth === undefined }),
-    );
+    const received: unknown[] = [];
+    const handler = vi.fn((_request: Request, _context: unknown, auth: undefined) => {
+      received.push(auth);
+      return json({ ok: true });
+    });
 
     const response = await route(publicThing, handler, options)(get(), undefined);
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ auth: true });
+    expect(received).toEqual([undefined]);
   });
 
   it("exposes the contract it was built from", () => {

@@ -12,7 +12,7 @@ export const openApiContract = {
   path: "/api/v1/openapi.json",
   summary: "API description",
   description: "This document: the OpenAPI 3.1 description of the Opanel API.",
-  public: true,
+  access: { kind: "public" },
   responses: {
     200: {
       description: "The OpenAPI document.",

@@ -118,7 +118,7 @@ describe("buildOpenApiDocument", () => {
       const where = `${contract.method} ${contract.path}`;
       if (contract.access.kind === "permission") {
         expect(operation?.["x-opanel-permission"], where).toBe(contract.access.permission);
-        expect(operation?.["description"], where).toContain(
+        expect(operation?.description, where).toContain(
           `Requires the \`${contract.access.permission}\` permission.`,
         );
       } else {
@@ -270,13 +270,13 @@ describe("buildOpenApiDocument", () => {
         })
         .parse(document).paths;
 
-      expect(paths[createThing.path]?.["post"]?.["x-opanel-permission"]).toBe("tasks:write");
-      expect(paths[createThing.path]?.["post"]?.["description"]).toBe(
+      expect(paths[createThing.path]?.post?.["x-opanel-permission"]).toBe("tasks:write");
+      expect(paths[createThing.path]?.post?.description).toBe(
         "Requires the `tasks:write` permission.",
       );
-      expect(paths[endSession.path]?.["post"]?.["x-opanel-permission"]).toBeUndefined();
-      expect(paths[endSession.path]?.["post"]?.["description"]).toBeUndefined();
-      expect(paths[publicThing.path]?.["get"]?.["x-opanel-permission"]).toBeUndefined();
+      expect(paths[endSession.path]?.post?.["x-opanel-permission"]).toBeUndefined();
+      expect(paths[endSession.path]?.post?.description).toBeUndefined();
+      expect(paths[publicThing.path]?.get?.["x-opanel-permission"]).toBeUndefined();
     });
 
     it("adds neither to public operations", () => {

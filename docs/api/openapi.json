@@ -519,7 +519,8 @@
     "/api/v1/accounts": {
       "get": {
         "summary": "List accounts",
-        "description": "Lists human accounts, oldest first, with keyset pagination. Needs the `accounts:manage` permission (Admin).",
+        "description": "Lists human accounts, oldest first, with keyset pagination.\n\nRequires the `accounts:manage` permission.",
+        "x-opanel-permission": "accounts:manage",
         "security": [
           {
             "sessionCookie": []
@@ -591,7 +592,8 @@
       },
       "post": {
         "summary": "Invite a person",
-        "description": "Creates an account with no password and a one-time link, valid for 7 days, that is shown only in this response. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "description": "Creates an account with no password and a one-time link, valid for 7 days, that is shown only in this response. Must come from the app's own origin.\n\nRequires the `accounts:manage` permission.",
+        "x-opanel-permission": "accounts:manage",
         "security": [
           {
             "sessionCookie": []
@@ -674,7 +676,8 @@
     "/api/v1/accounts/{accountId}": {
       "patch": {
         "summary": "Change an account's role or activity",
-        "description": "Changes the role and/or deactivates or reactivates a human account. A role change or a deactivation ends the account's sessions at once. The only active Admin cannot be demoted or deactivated. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "description": "Changes the role and/or deactivates or reactivates a human account. A role change or a deactivation ends the account's sessions at once. The only active Admin cannot be demoted or deactivated. Must come from the app's own origin.\n\nRequires the `accounts:manage` permission.",
+        "x-opanel-permission": "accounts:manage",
         "security": [
           {
             "sessionCookie": []
@@ -779,7 +782,8 @@
     "/api/v1/accounts/{accountId}/reset-link": {
       "post": {
         "summary": "Issue a one-time link for an account",
-        "description": "For an invited account it issues a fresh invitation link, for an active one a password reset link. Earlier unused links of the account stop working. The link is shown only in this response. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "description": "For an invited account it issues a fresh invitation link, for an active one a password reset link. Earlier unused links of the account stop working. The link is shown only in this response. Must come from the app's own origin.\n\nRequires the `accounts:manage` permission.",
+        "x-opanel-permission": "accounts:manage",
         "security": [
           {
             "sessionCookie": []
@@ -864,7 +868,8 @@
     "/api/v1/accounts/{accountId}/invitation": {
       "delete": {
         "summary": "Revoke an invitation that was never accepted",
-        "description": "Removes an invited account that never set a password, with its links, so its email can be invited again. An account that has a password is refused with 409: deactivate it instead. Needs the `accounts:manage` permission (Admin). Must come from the app's own origin.",
+        "description": "Removes an invited account that never set a password, with its links, so its email can be invited again. An account that has a password is refused with 409: deactivate it instead. Must come from the app's own origin.\n\nRequires the `accounts:manage` permission.",
+        "x-opanel-permission": "accounts:manage",
         "security": [
           {
             "sessionCookie": []

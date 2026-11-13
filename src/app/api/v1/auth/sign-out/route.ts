@@ -1,15 +1,11 @@
-import { authenticate } from "@/server/auth/authenticate";
-import { assertSameOrigin } from "@/server/auth/origin";
-import { getEnv } from "@/server/env";
+import { signOutContract } from "@/lib/schemas/auth";
 import { noContent, route } from "@/server/http/route";
 import { signOut } from "@/server/services/sign-in";
 
-// Authenticated, no permission: it acts on the caller's own session (WS-015).
+// Authentication only (WS-015): it acts on the caller's own session. Its response clears
+// the session cookie, so route() adds no refreshed one.
 export const dynamic = "force-dynamic";
 
-export const POST = route(async (request) => {
-  assertSameOrigin(request, getEnv().APP_URL);
-  const { actor } = await authenticate(request);
-
+export const POST = route(signOutContract, async (request, _context, { actor }) => {
   return noContent(await signOut({ actor, headers: request.headers }));
 });

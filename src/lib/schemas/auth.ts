@@ -71,7 +71,7 @@ export const signInContract = {
     "Signs a person in with email and password and sets the session cookie. Public: it cannot " +
     "require credentials. A wrong password, an unknown email and a deactivated account are " +
     "answered identically. Must come from the app's own origin.",
-  public: true,
+  access: { kind: "public" },
   request: { body: signInRequestSchema },
   responses: {
     200: { description: "Signed in. The session cookie is set.", schema: accountSummarySchema },
@@ -88,7 +88,7 @@ export const signOutContract = {
   path: "/api/v1/auth/sign-out",
   summary: "Sign out",
   description: "Ends the current session and clears its cookie. Needs a session, no permission.",
-  public: false,
+  access: { kind: "authenticated" },
   responses: { 204: { description: "Signed out.", noContent: true } },
 } satisfies EndpointContract;
 
@@ -118,7 +118,7 @@ export const meContract = {
   path: "/api/v1/me",
   summary: "The signed-in account",
   description: "Returns the caller's account and permissions. Needs a session, no permission.",
-  public: false,
+  access: { kind: "authenticated" },
   responses: { 200: { description: "The caller.", schema: meResponseSchema } },
 } satisfies EndpointContract;
 
@@ -130,7 +130,7 @@ export const setupContract = {
     "First-run setup. Creates the first Admin and signs them in. Public, because before the " +
     "first account exists there is nobody to authenticate. Once any account exists it answers " +
     "404, like an unknown path. Must come from the app's own origin.",
-  public: true,
+  access: { kind: "public" },
   request: { body: setupRequestSchema },
   responses: {
     201: {
@@ -153,7 +153,7 @@ export const acceptLinkContract = {
     "Public: the token is the credential. Every refusal (unknown, used, expired, replaced, or " +
     "the account is deactivated) is the same 404 `invalid_link`. All earlier sessions of the " +
     "account end. Must come from the app's own origin.",
-  public: true,
+  access: { kind: "public" },
   request: { body: acceptLinkRequestSchema },
   responses: {
     200: {
@@ -175,7 +175,7 @@ export const updateMeContract = {
   description:
     "Changes the caller's name and returns the caller as `GET /api/v1/me` does. Needs a " +
     "session, no permission. Must come from the app's own origin.",
-  public: false,
+  access: { kind: "authenticated" },
   request: { body: updateMeRequestSchema },
   responses: {
     200: { description: "The name was changed.", schema: meResponseSchema },
@@ -194,7 +194,7 @@ export const changePasswordContract = {
     "session of the account; the session that made the request stays signed in. A wrong " +
     "current password is a 400 with a field error on `currentPassword`. Limited per account. " +
     "Needs a session, no permission. Must come from the app's own origin.",
-  public: false,
+  access: { kind: "authenticated" },
   request: { body: changePasswordRequestSchema },
   responses: {
     204: { description: "The password was changed.", noContent: true },
