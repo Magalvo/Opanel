@@ -43,6 +43,16 @@ describe("task requests", () => {
     }
   });
 
+  it("take an epic: an id on create, an id or null on update (WS-033)", () => {
+    expect(createTaskRequestSchema.parse({ title: "T", epicId: UUID }).epicId).toBe(UUID);
+    expect(createTaskRequestSchema.safeParse({ title: "T", epicId: null }).success).toBe(false);
+    expect(updateTaskRequestSchema.parse({ epicId: null, version: 1 })).toEqual({
+      epicId: null,
+      version: 1,
+    });
+    expect(updateTaskRequestSchema.safeParse({ epicId: "x", version: 1 }).success).toBe(false);
+  });
+
   it("update: needs version and a field; assignees may be null to clear", () => {
     expect(
       updateTaskRequestSchema.parse({ assigneeTeamId: null, assigneeAccountId: null, version: 2 }),

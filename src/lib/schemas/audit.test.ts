@@ -14,8 +14,14 @@ describe("auditActionSchema", () => {
     }
   });
 
-  it("includes the actions of WT-02 and of WS-026, WS-028 and WS-029", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(26);
+  it("includes the actions of WT-02 and of WS-026, WS-028, WS-029 and WS-033", () => {
+    expect(AUDIT_ACTIONS).toHaveLength(30);
+    expect(AUDIT_ACTIONS.filter((action) => action.startsWith("epic."))).toEqual([
+      "epic.created",
+      "epic.updated",
+      "epic.closed",
+      "epic.reopened",
+    ]);
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("column."))).toEqual([
       "column.created",
       "column.updated",
