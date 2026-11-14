@@ -13,8 +13,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Next:** draft WI-031 (move a task between and within columns) and WS-031 as `Proposed`,
-  and stop for the owner's approval.
+- **Next:** the owner reviews WI-031 and WS-031 (move a task), drafted on 2026-11-14 as
+  `Proposed`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -81,10 +81,11 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-028](work-items/WI-028-projects-and-default-columns.md)     | Projects with default columns                             | Done        | [WS-028](work-specs/WS-028-projects-and-default-columns.md)     | Done        |
 | [WI-029](work-items/WI-029-columns-api.md)                      | Columns API                                               | Done        | [WS-029](work-specs/WS-029-columns-api.md)                      | Done        |
 | [WI-030](work-items/WI-030-tasks-core.md)                       | Tasks core                                                | Done        | [WS-030](work-specs/WS-030-tasks-core.md)                       | Done        |
+| [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                    | Proposed    | [WS-031](work-specs/WS-031-move-task.md)                        | Proposed    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
-WI-031 to WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-032 to WI-039 are outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
