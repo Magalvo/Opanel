@@ -1,6 +1,6 @@
 # WS-032 — Delete and restore a task
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
 - Work-item: [WI-032](../work-items/WI-032-delete-and-restore-task.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 9, 13;
   [0004](../canonical/0004-api-conventions.md) sections 5, 6;

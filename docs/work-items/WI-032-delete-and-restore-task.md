@@ -1,6 +1,6 @@
 # WI-032 — Delete and restore a task
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 4, 11, 12, 13)
 - Depends on: WI-030
 - Work-spec: [WS-032](../work-specs/WS-032-delete-and-restore-task.md)
