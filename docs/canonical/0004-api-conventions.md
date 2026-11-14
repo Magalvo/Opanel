@@ -120,6 +120,9 @@ Rules:
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged
   server-side with the request id.
+- The log line of an unexpected error holds the request id, the error's class name and, for
+  a database error, its code and constraint name. It never holds the message, the query,
+  its parameters or a stack trace: the ORM puts the parameters in its message (WS-042).
 - `401` does not say why credentials were rejected (unknown, expired and revoked tokens
   look the same). Sign-in failures do not reveal whether the email exists.
 - A path under `/api/` that matches no endpoint returns the `404` problem body, not an

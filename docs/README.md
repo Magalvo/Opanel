@@ -9,14 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-033 (epics), on 2026-11-14.
+- **Last finished:** WI-042 (safe error logging), on 2026-11-14.
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-  - WI-042 / WS-042, safe error logging (audit finding A-04). Suggested first: the installed
-    `drizzle-orm` puts query parameters in its error message, and that message is logged.
-  - WI-043 / WS-043, first-run setup refuses before hashing (audit finding A-01).
-  - WI-044 / WS-044, request body size limit (audit finding A-03).
+- **Approved, not started:** WI-043 / WS-043 (setup refuses before hashing), then WI-044 /
+  WS-044 (request body size limit), both from the audit of 2026-11-14.
 - **Next:** draft WI-034 (comments: schema, service, API) and WS-034 as `Proposed`, and stop
   for the owner's approval. Decision 19 applies: `kind` and a nullable author.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -90,9 +88,9 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
-| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                        | Proposed    | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Proposed    |
-| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                    | Proposed    | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Proposed    |
-| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                   | Proposed    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Proposed    |
+| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                        | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
+| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                    | Approved    | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Approved    |
+| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                   | Approved    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Approved    |
 
 WI-034 to WI-039 are outlined in WT-03 and get their own files when they are started.
 
@@ -128,6 +126,9 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   question 1). Needed before any install is reachable from the internet.
 
 Other follow-ups:
+
+- Check whether Better Auth and Next.js can write request data to their own logs, and
+  define log access and retention, in the production work-track (WS-042, question 2).
 
 - Give WS-009, WS-010 and WS-012 the "Implementation record" and "Deviations" sections that
   every other finished work-spec has (audit of 2026-11-13). Format only.

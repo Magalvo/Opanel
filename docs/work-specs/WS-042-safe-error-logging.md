@@ -1,6 +1,6 @@
 # WS-042 — Safe error logging
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done
 - Work-item: [WI-042](../work-items/WI-042-safe-error-logging.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4; `AGENTS.md` hard
   rule 7; audit of 2026-11-14, finding A-04
@@ -13,7 +13,7 @@
 `src/server/services/health.ts` log `` `${error.name}: ${error.message}` ``. In the
 installed `drizzle-orm@0.45.4` (`node_modules/drizzle-orm/errors.js`),
 `DrizzleQueryError` is built as `super(`Failed query: ${query}\nparams: ${params}`)`. The
-node-postgres driver's own error (the `cause`) also carries a `detail` such as
+driver's own error (`postgres-js`, the `cause`) also carries a `detail` such as
 `Key (email)=(x@y.z) already exists`. So the message of a failed query can hold the
 parameters of the query: the password hash on an insert into `credentials`, an email, a task
 description. The response to the client is already generic; only the log leaks.
@@ -27,7 +27,7 @@ pure function and builds the text only from an allow-list, never from free text:
 - from the error and its `cause` chain (at most 5 levels, cycles ignored), the first
   `code` that matches `^(?:[0-9A-Z]{5}|E[A-Z0-9_]{2,20})$` (a PostgreSQL SQLSTATE such as
   `23505`, or a Node system code such as `ECONNREFUSED`), written as `code=...`;
-- the first `constraint` property matching `^[a-z0-9_]{1,63}$` (a schema identifier, not
+- the first `constraint_name` property (the name `postgres-js` gives it) matching `^[a-z0-9_]{1,63}$` (a schema identifier, not
   data), written as `constraint=...`;
 - for a value that is not an `Error`, the text `unknown error`.
 
@@ -98,3 +98,24 @@ the audit's finding.
    (`route.ts` and `health.ts`). Better Auth and Next.js write their own logs; whether they
    can include request data was not examined. Recorded as a follow-up for the production
    work-track (log access and retention).
+
+## Deviations from the approved spec
+
+- The driver is `postgres-js`, not node-postgres, so the constraint is read from its
+  `constraint_name` property. The spec text was corrected before any code.
+- `DrizzleQueryError` does not set `name`, so `error.name` is just `Error`. The class name
+  is therefore taken from the constructor when `name` is the generic `Error`, still only if
+  it matches the allow-list pattern.
+
+## Implementation record
+
+- Red: `safe-error.test.ts` and `safe-error.integration.test.ts` failed on the missing
+  module; the route and health tests failed on log lines that still held the message (the
+  health line contained `Failed query: select 1`, which confirmed the audit's finding on
+  `drizzle-orm@0.45.4`).
+- Green: 701 Vitest tests and 28 Playwright tests pass. Typecheck, lint and format pass.
+- One assertion of mine wrongly required that the constraint name `accounts_email_unique`
+  not contain `accounts`; it was removed. The SQL itself is still asserted absent.
+- Locally the database was PostgreSQL 16 started in the sandbox (no Docker); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
+- Better Auth's and Next.js's own logs were not examined (open question 2); recorded below.

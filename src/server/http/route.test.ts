@@ -1,3 +1,4 @@
+import { DrizzleQueryError } from "drizzle-orm/errors";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
@@ -120,7 +121,36 @@ describe("route", () => {
 
     expect(logError).toHaveBeenCalledTimes(1);
     expect(logError.mock.calls[0]?.[0]).toContain(requestId);
-    expect(logError.mock.calls[0]?.[0]).toContain("TypeError: boom");
+    expect(logError.mock.calls[0]?.[0]).toContain("TypeError");
+  });
+
+  it("logs the class of an unexpected exception and never its message", async () => {
+    const logError = vi.fn<(message: string) => void>();
+    const failedQuery = new DrizzleQueryError(
+      "insert into credentials (password_hash) values ($1)",
+      ["marker-7f3a9c"],
+      Object.assign(new Error("duplicate key marker-7f3a9c"), {
+        code: "23505",
+        constraint_name: "credentials_provider_unique",
+      }),
+    );
+    const handler = route(
+      publicThing,
+      () => {
+        throw failedQuery;
+      },
+      { logError },
+    );
+
+    const response = await handler(get(), undefined);
+    const requestId = response.headers.get("X-Request-Id") ?? "missing";
+
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      `Request ${requestId} failed: DrizzleQueryError code=23505 constraint=credentials_provider_unique`,
+    );
+    expect(await response.clone().text()).not.toContain("marker-7f3a9c");
+    expect(response.status).toBe(500);
   });
 
   it("does not log expected API errors", async () => {

@@ -1,6 +1,6 @@
 # WS-044 — Request body size limit
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved
 - Work-item: [WI-044](../work-items/WI-044-request-body-limit.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3 and 4; audit of
   2026-11-14, finding A-03

@@ -1,6 +1,6 @@
 # WI-044 — Request body size limit
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-14,
   finding A-03; the code it touches was built in WT-01)
 - Depends on: none

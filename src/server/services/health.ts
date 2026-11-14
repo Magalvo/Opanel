@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 
 import type { HealthResponse } from "@/lib/schemas/health";
+import { describeError } from "@/server/http/safe-error";
 
 /** The one database capability the health check needs. */
 export interface HealthProbeTarget {
@@ -42,8 +43,7 @@ export async function checkHealth(
     await Promise.race([db.execute(sql`select 1`), timeout]);
     return { status: "ok", database: "up" };
   } catch (error) {
-    const reason = error instanceof Error ? `${error.name}: ${error.message}` : "unknown error";
-    logError(`Health check failed: database unreachable (${reason})`);
+    logError(`Health check failed: database unreachable (${describeError(error)})`);
     return { status: "degraded", database: "down" };
   } finally {
     clearTimeout(timer);
