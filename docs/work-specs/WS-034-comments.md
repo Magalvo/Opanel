@@ -1,6 +1,6 @@
 # WS-034 — Comments
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner, with the proposals of questions 1 to 5)
 - Work-item: [WI-034](../work-items/WI-034-comments.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3 and 9;
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 3 and 6;

@@ -1,6 +1,6 @@
 # WI-034 — Comments
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 12, 13, 14, 16, 19)
 - Depends on: WI-030
 - Work-spec: [WS-034](../work-specs/WS-034-comments.md)
