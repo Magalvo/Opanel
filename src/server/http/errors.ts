@@ -93,6 +93,20 @@ export function versionConflict(
   });
 }
 
+/** `409` with the specific code of WS-030: a task is assigned to the team. */
+export function teamInUse(
+  detail = "Tasks are assigned to this team. Reassign them before deleting it.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "team_in_use", detail });
+}
+
+/** `409` with the specific code of WS-030: the column holds tasks. */
+export function columnNotEmpty(
+  detail = "This column holds tasks. Move them before deleting it.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "column_not_empty", detail });
+}
+
 /** `409` with the specific code of WS-029: a project keeps at least one `done` column. */
 export function lastDoneColumn(
   detail = "A project needs at least one done column. Add another one first.",

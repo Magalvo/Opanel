@@ -212,13 +212,14 @@ describe("archived projects", () => {
     const id = todo?.id ?? "";
     await archiveProject(actor, "OPA");
 
+    // Each call starts only when awaited, so no rejection is left unhandled.
     for (const attempt of [
-      createColumn(actor, "OPA", { name: "X", category: "todo" }),
-      updateColumn(actor, id, { name: "X", version: 1 }),
-      moveColumn(actor, id, { afterColumnId: null, version: 1 }),
-      deleteColumn(actor, id),
+      () => createColumn(actor, "OPA", { name: "X", category: "todo" }),
+      () => updateColumn(actor, id, { name: "X", version: 1 }),
+      () => moveColumn(actor, id, { afterColumnId: null, version: 1 }),
+      () => deleteColumn(actor, id),
     ]) {
-      expect((await failure(attempt)).code).toBe("project_archived");
+      expect((await failure(attempt())).code).toBe("project_archived");
     }
     expect(await names(actor)).toHaveLength(3);
   });

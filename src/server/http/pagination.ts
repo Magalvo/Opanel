@@ -70,3 +70,41 @@ export function decodeNameCursor(value: string): NameCursor {
   }
   return { name: result.data.n, id: result.data.i };
 }
+
+/**
+ * Where a page in board order ended (WS-030): the last task's column position, its own
+ * position and its id. Positions compare byte by byte (WT-03 amendment A2).
+ */
+export interface BoardCursor {
+  columnPosition: string;
+  position: string;
+  id: string;
+}
+
+const boardCursorSchema = z.strictObject({
+  c: z.string().min(1).max(2000),
+  p: z.string().min(1).max(2000),
+  i: z.uuid(),
+});
+
+export function encodeBoardCursor(cursor: BoardCursor): string {
+  return Buffer.from(
+    JSON.stringify({ c: cursor.columnPosition, p: cursor.position, i: cursor.id }),
+  ).toString("base64url");
+}
+
+/** Throws `400` naming the field `cursor` if the value is not a board cursor of this API. */
+export function decodeBoardCursor(value: string): BoardCursor {
+  const invalid = invalidRequest([{ path: "cursor", message: "Invalid cursor." }]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch {
+    throw invalid;
+  }
+  const result = boardCursorSchema.safeParse(parsed);
+  if (!result.success) {
+    throw invalid;
+  }
+  return { columnPosition: result.data.c, position: result.data.p, id: result.data.i };
+}

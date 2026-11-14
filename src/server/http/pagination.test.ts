@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "./errors";
-import { decodeCursor, decodeNameCursor, encodeCursor, encodeNameCursor } from "./pagination";
+import {
+  decodeBoardCursor,
+  decodeCursor,
+  decodeNameCursor,
+  encodeBoardCursor,
+  encodeCursor,
+  encodeNameCursor,
+} from "./pagination";
 
 const cursor = {
   createdAt: "2026-11-12T10:00:00.123456Z",
@@ -81,5 +88,35 @@ describe("name cursors (WS-026)", () => {
 
   it("are not accepted where a creation-time cursor is expected", () => {
     expect(failure(encodeNameCursor(nameCursor)).status).toBe(400);
+  });
+});
+
+describe("board cursors (WS-030)", () => {
+  const board = {
+    columnPosition: "a1",
+    position: "a0V",
+    id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+  };
+
+  it("round-trip and are URL-safe", () => {
+    expect(decodeBoardCursor(encodeBoardCursor(board))).toEqual(board);
+    expect(encodeBoardCursor(board)).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("refuse other cursors and garbage with a 400 naming cursor", () => {
+    for (const value of [
+      encodeCursor(cursor),
+      encodeNameCursor({ name: "A", id: board.id }),
+      "x!",
+    ]) {
+      let error: unknown;
+      try {
+        decodeBoardCursor(value);
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).errors).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
+    }
   });
 });

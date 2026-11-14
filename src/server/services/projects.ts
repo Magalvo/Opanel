@@ -100,6 +100,35 @@ export async function lockWritableProject(
   return { id: project.id, key: project.key };
 }
 
+/** The project's id and key, or undefined; for services that read inside a project. */
+export async function findProjectRef(
+  executor: Executor,
+  ref: string,
+): Promise<{ id: string; key: string } | undefined> {
+  const project = await findProject(executor, ref);
+  return project === undefined ? undefined : { id: project.id, key: project.key };
+}
+
+/**
+ * Takes the next task number of a writable project (WT-03 decision 3, WS-030 section 3).
+ * The update locks the project's row until the transaction ends, so task creations in one
+ * project run one at a time. Refuses an unknown (`404`) or archived (`409`) project.
+ */
+export async function claimTaskNumber(
+  executor: Executor,
+  ref: string,
+): Promise<{ id: string; key: string; number: number }> {
+  const [claimed] = await executor.execute<{ id: string; key: string; number: number }>(sql`
+    update projects p set next_task_number = p.next_task_number + 1
+    where ${matches(ref)} and p.archived_at is null
+    returning p.id, p.key, p.next_task_number - 1 as number`);
+  if (claimed) return claimed;
+
+  const project = await findProject(executor, ref);
+  if (!project) throw projectNotFound();
+  throw projectArchived();
+}
+
 export async function listProjects(
   actor: Actor,
   query: ProjectQuery,

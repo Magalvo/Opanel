@@ -4,8 +4,15 @@ import type { PaginationQuery } from "@/lib/schemas/pagination";
 import type { AddMemberRequest, Team, TeamNameRequest, TeamPage } from "@/lib/schemas/teams";
 import { type Actor, requirePermission } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
+import { hasPostgresCode, isReferenceViolation, UNIQUE_VIOLATION } from "@/server/db/errors";
 import { teamMembers, teams } from "@/server/db/schema";
-import { accountInactive, invalidRequest, notFound, teamNameTaken } from "@/server/http/errors";
+import {
+  accountInactive,
+  invalidRequest,
+  notFound,
+  teamInUse,
+  teamNameTaken,
+} from "@/server/http/errors";
 import { decodeNameCursor, encodeNameCursor } from "@/server/http/pagination";
 
 import { recordAudit } from "./audit";
@@ -14,18 +21,9 @@ import { isPerson, type PersonRow, toPerson } from "./people";
 type Executor = Pick<Database, "execute">;
 
 const ISO_MS = sql`'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
-const UNIQUE_VIOLATION = "23505";
 
 function teamNotFound() {
   return notFound("There is no such team.");
-}
-
-/** True for PostgreSQL's unique violation, whether or not the driver error is wrapped. */
-function isUniqueViolation(error: unknown): boolean {
-  for (let current = error; current instanceof Error; current = current.cause) {
-    if ("code" in current && current.code === UNIQUE_VIOLATION) return true;
-  }
-  return false;
 }
 
 interface TeamRow extends Record<string, unknown> {
@@ -171,7 +169,7 @@ export async function renameTeam(
       return readTeam(tx, teamId);
     });
   } catch (error) {
-    if (isUniqueViolation(error)) throw teamNameTaken();
+    if (hasPostgresCode(error, UNIQUE_VIOLATION)) throw teamNameTaken();
     throw error;
   }
 }
@@ -183,6 +181,16 @@ export async function deleteTeam(
 ): Promise<void> {
   requirePermission(actor, "teams:manage");
 
+  try {
+    await deleteTeamRow(actor, teamId, db);
+  } catch (error) {
+    // A task still refers to the team (WS-030).
+    if (isReferenceViolation(error)) throw teamInUse();
+    throw error;
+  }
+}
+
+async function deleteTeamRow(actor: Actor, teamId: string, db: Database): Promise<void> {
   await db.transaction(async (tx) => {
     const { name } = await lockTeam(tx, teamId);
     const [counted] = await tx.execute<{ count: number }>(

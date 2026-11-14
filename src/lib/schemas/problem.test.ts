@@ -31,6 +31,7 @@ describe("problemSchema", () => {
   it("knows the base codes of canonical doc 0004 and the specific ones of work-specs", () => {
     expect([...PROBLEM_CODES].sort()).toEqual([
       "account_inactive",
+      "column_not_empty",
       "conflict",
       "forbidden",
       "internal_error",
@@ -42,6 +43,7 @@ describe("problemSchema", () => {
       "project_archived",
       "project_key_taken",
       "rate_limited",
+      "team_in_use",
       "team_name_taken",
       "unauthenticated",
       "unsupported_media_type",
