@@ -1,6 +1,6 @@
 # WS-031 — Move a task between and within columns
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
 - Work-item: [WI-031](../work-items/WI-031-move-task.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0003](../canonical/0003-task-management.md) sections 5, 9;

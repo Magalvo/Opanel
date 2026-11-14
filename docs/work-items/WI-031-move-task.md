@@ -1,6 +1,6 @@
 # WI-031 — Move a task between and within columns
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 4, 5, 6, 7, 13)
 - Depends on: WI-030
 - Work-spec: [WS-031](../work-specs/WS-031-move-task.md)
