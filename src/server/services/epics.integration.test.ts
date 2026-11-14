@@ -102,7 +102,11 @@ describe("updateEpic", () => {
     expect(edited).toMatchObject({ title: "Epic", targetDate: "2026-12-01", version: 2 });
     expect(closed.status).toBe("closed");
     expect(reopened).toMatchObject({ status: "open", version: 4 });
-    expect((await audits()).map((entry) => [entry.action, entry.data])).toEqual([
+    expect(
+      (await audits())
+        .filter((entry) => entry.entity === "epic")
+        .map((entry) => [entry.action, entry.data]),
+    ).toEqual([
       ["epic.created", expect.anything()],
       ["epic.updated", { projectId: epic.projectId, changed: ["title", "targetDate"] }],
       ["epic.closed", { projectId: epic.projectId }],

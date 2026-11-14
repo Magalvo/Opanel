@@ -21,6 +21,12 @@ import {
   moveColumnContract,
   updateColumnContract,
 } from "@/lib/schemas/columns";
+import {
+  createEpicContract,
+  getEpicContract,
+  listEpicsContract,
+  updateEpicContract,
+} from "@/lib/schemas/epics";
 import { healthContract } from "@/lib/schemas/health";
 import { openApiContract } from "@/lib/schemas/openapi";
 import { listPeopleContract } from "@/lib/schemas/people";
@@ -95,4 +101,8 @@ export const contracts: readonly EndpointContract[] = [
   moveTaskContract,
   deleteTaskContract,
   restoreTaskContract,
+  listEpicsContract,
+  createEpicContract,
+  getEpicContract,
+  updateEpicContract,
 ];
