@@ -11,10 +11,16 @@ import type {
   TaskType,
   UpdateTaskRequest,
 } from "@/lib/schemas/tasks";
-import { type Actor, requirePermission } from "@/server/auth/actor";
+import { type Actor, canDeleteTask, requirePermission } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { tasks } from "@/server/db/schema";
-import { accountInactive, invalidRequest, notFound, versionConflict } from "@/server/http/errors";
+import {
+  accountInactive,
+  forbidden,
+  invalidRequest,
+  notFound,
+  versionConflict,
+} from "@/server/http/errors";
 import { decodeBoardCursor, encodeBoardCursor } from "@/server/http/pagination";
 
 import { isPerson } from "./people";
@@ -34,6 +40,7 @@ const TASK_SELECT = sql`
     a.name as assignee_name, a.disabled_at is null as assignee_active,
     r.id as reporter_id, r.name as reporter_name,
     t.version, c.position as column_position, t.position,
+    to_char(t.deleted_at at time zone 'utc', ${ISO_MS}) as deleted_at,
     to_char(t.created_at at time zone 'utc', ${ISO_MS}) as created_at,
     to_char(t.updated_at at time zone 'utc', ${ISO_MS}) as updated_at
   from tasks t
@@ -64,6 +71,7 @@ interface TaskRow extends Record<string, unknown> {
   position: string;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 function toSummary(row: TaskRow): TaskSummary {
@@ -91,6 +99,7 @@ function toSummary(row: TaskRow): TaskSummary {
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    deletedAt: row.deleted_at,
   };
 }
 
@@ -125,6 +134,18 @@ async function findTask(
   return row;
 }
 
+/** Like `findTask`, deleted or not: only restoring looks at deleted tasks by id or key. */
+async function findAnyTask(
+  executor: Executor,
+  ref: string,
+  lock: SQL = sql``,
+): Promise<TaskRow | undefined> {
+  const [row] = await executor.execute<TaskRow>(
+    sql`${TASK_SELECT} where ${matchesTask(ref)} ${lock}`,
+  );
+  return row;
+}
+
 /** Throws unless the team exists. */
 async function assertTeam(executor: Executor, teamId: string): Promise<void> {
   const [team] = await executor.execute(sql`select 1 from teams where id = ${teamId}`);
@@ -154,6 +175,9 @@ export async function listTasks(
   db: Database = getDb(),
 ): Promise<TaskPage> {
   requirePermission(actor, "tasks:read");
+  // Only Managers and Admins see deleted tasks (WT-03 decision 11).
+  const deleted = query.deleted === "true";
+  if (deleted) requirePermission(actor, "tasks:delete_any");
   const project = await findProjectRef(db, projectRef);
   if (!project) throw notFound("There is no such project.");
 
@@ -181,7 +205,9 @@ export async function listTasks(
 
   const rows = await db.execute<TaskRow>(sql`
     ${TASK_SELECT}
-    where t.project_id = ${project.id} and t.deleted_at is null ${inColumn} ${after}
+    where t.project_id = ${project.id}
+      and ${deleted ? sql`t.deleted_at is not null` : sql`t.deleted_at is null`}
+      ${inColumn} ${after}
     order by c.position, t.position, t.id
     limit ${query.limit + 1}`);
 
@@ -426,5 +452,57 @@ export async function moveTask(
     const moved = await findTask(tx, before.id);
     if (!moved) throw taskNotFound();
     return toTask(moved);
+  });
+}
+
+/**
+ * Soft-deletes a task (WT-03 decision 12, WS-032): it keeps its key, column and place, and
+ * disappears from every view but the deleted list. Members delete only tasks they
+ * reported; Managers and Admins any (`canDeleteTask`).
+ */
+export async function deleteTask(actor: Actor, ref: string, db: Database = getDb()): Promise<void> {
+  requirePermission(actor, "tasks:delete_own");
+
+  await db.transaction(async (tx) => {
+    const found = await findTask(tx, ref);
+    if (!found) throw taskNotFound();
+    await lockWritableProject(tx, found.project_id);
+    const task = await findTask(tx, found.id, sql`for update of t`);
+    if (!task) throw taskNotFound();
+    if (!canDeleteTask(actor, { reporterId: task.reporter_id })) throw forbidden();
+
+    await tx.execute(sql`
+      update tasks set deleted_at = now(), deleted_by = ${actor.accountId},
+        version = version + 1, updated_at = now()
+      where id = ${task.id}`);
+    await recordTaskEvent(tx, { taskId: task.id, actor, type: "deleted" });
+  });
+}
+
+/** Brings a deleted task back where it was. A task that is not deleted is returned as is. */
+export async function restoreTask(
+  actor: Actor,
+  ref: string,
+  db: Database = getDb(),
+): Promise<Task> {
+  requirePermission(actor, "tasks:delete_any");
+
+  return db.transaction(async (tx) => {
+    const found = await findAnyTask(tx, ref);
+    if (!found) throw taskNotFound();
+    await lockWritableProject(tx, found.project_id);
+    const task = await findAnyTask(tx, found.id, sql`for update of t`);
+    if (!task) throw taskNotFound();
+    if (task.deleted_at === null) return toTask(task);
+
+    await tx.execute(sql`
+      update tasks set deleted_at = null, deleted_by = null,
+        version = version + 1, updated_at = now()
+      where id = ${task.id}`);
+    await recordTaskEvent(tx, { taskId: task.id, actor, type: "restored" });
+
+    const restored = await findTask(tx, task.id);
+    if (!restored) throw taskNotFound();
+    return toTask(restored);
   });
 }

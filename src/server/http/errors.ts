@@ -95,7 +95,7 @@ export function versionConflict(
 
 /** `409` with the specific code of WS-030: a task is assigned to the team. */
 export function teamInUse(
-  detail = "Tasks are assigned to this team. Reassign them before deleting it.",
+  detail = "Tasks are assigned to this team, including deleted ones. Reassign them before deleting it.",
 ): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "team_in_use", detail });
 }
