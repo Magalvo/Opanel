@@ -4,6 +4,7 @@ import { contracts } from "@/lib/openapi/contracts";
 
 import {
   createTaskRequestSchema,
+  moveTaskRequestSchema,
   taskListQuerySchema,
   taskParamsSchema,
   updateTaskRequestSchema,
@@ -67,6 +68,31 @@ describe("task requests", () => {
   });
 });
 
+describe("move request (WS-031)", () => {
+  it("needs a column and a version, and takes at most one anchor", () => {
+    expect(moveTaskRequestSchema.parse({ columnId: UUID, version: 1 })).toEqual({
+      columnId: UUID,
+      version: 1,
+    });
+    expect(
+      moveTaskRequestSchema.safeParse({ columnId: UUID, afterTaskId: UUID, version: 1 }).success,
+    ).toBe(true);
+    expect(
+      moveTaskRequestSchema.safeParse({ columnId: UUID, beforeTaskId: UUID, version: 1 }).success,
+    ).toBe(true);
+    for (const body of [
+      { version: 1 },
+      { columnId: UUID },
+      { columnId: UUID, afterTaskId: UUID, beforeTaskId: UUID, version: 1 },
+      { columnId: UUID, afterTaskId: "OPA-1", version: 1 },
+      { columnId: UUID, afterTaskId: null, version: 1 },
+      { columnId: UUID, position: "a0", version: 1 },
+    ]) {
+      expect(moveTaskRequestSchema.safeParse(body).success, JSON.stringify(body)).toBe(false);
+    }
+  });
+});
+
 describe("task contracts", () => {
   it("declare tasks:read and tasks:write", () => {
     const byOperation = new Map(
@@ -79,5 +105,6 @@ describe("task contracts", () => {
     expect(byOperation.get("GET /api/v1/tasks/{taskId}")?.access).toEqual(read);
     expect(byOperation.get("POST /api/v1/projects/{projectId}/tasks")?.access).toEqual(write);
     expect(byOperation.get("PATCH /api/v1/tasks/{taskId}")?.access).toEqual(write);
+    expect(byOperation.get("POST /api/v1/tasks/{taskId}/move")?.access).toEqual(write);
   });
 });
