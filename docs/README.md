@@ -13,6 +13,10 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
+  - WI-042 / WS-042, safe error logging (audit finding A-04). Suggested first: the installed
+    `drizzle-orm` puts query parameters in its error message, and that message is logged.
+  - WI-043 / WS-043, first-run setup refuses before hashing (audit finding A-01).
+  - WI-044 / WS-044, request body size limit (audit finding A-03).
 - **Next:** draft WI-034 (comments: schema, service, API) and WS-034 as `Proposed`, and stop
   for the owner's approval. Decision 19 applies: `kind` and a nullable author.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -86,8 +90,20 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
+| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                        | Proposed    | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Proposed    |
+| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                    | Proposed    | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Proposed    |
+| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                   | Proposed    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Proposed    |
 
 WI-034 to WI-039 are outlined in WT-03 and get their own files when they are started.
+
+## Audit reports
+
+| Report                                                           | Status                                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------- |
+| [2026-11-14 — Project audit](audits/2026-11-14-project-audit.md) | For review; implementation recommendations not approved |
+
+Reviewed against the code on 2026-11-14: A-01, A-02, A-03 and A-04 are confirmed. A-02 is
+already covered by WS-040. A-01, A-03 and A-04 became WI-043, WI-044 and WI-042.
 
 ## Follow-ups
 
@@ -104,7 +120,9 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 - **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
   the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
-  https are documented for operators. `Strict-Transport-Security` waits for it too (see WI-041).
+  https are documented for operators. `Strict-Transport-Security` waits for it too (see
+  WI-041). The proxy must also allow request bodies of at least the budget of WS-044
+  (512 KiB) and should refuse larger ones itself.
 - **Optional `SETUP_TOKEN` for the first-run setup:** if set, the form and endpoint require
   it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
   question 1). Needed before any install is reachable from the internet.
