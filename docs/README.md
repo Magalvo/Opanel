@@ -9,12 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-042 (safe error logging), on 2026-11-14.
+- **Last finished:** WI-043 (first-run setup refuses before hashing), on 2026-11-14.
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Approved, not started:** WI-043 / WS-043 (setup refuses before hashing), then WI-044 /
-  WS-044 (request body size limit), both from the audit of 2026-11-14.
+- **Approved, not started:** WI-044 / WS-044 (request body size limit), from the audit of
+  2026-11-14.
 - **Next:** draft WI-034 (comments: schema, service, API) and WS-034 as `Proposed`, and stop
   for the owner's approval. Decision 19 applies: `kind` and a nullable author.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -89,7 +89,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                        | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
-| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                    | Approved    | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Approved    |
+| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                    | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                   | Approved    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Approved    |
 
 WI-034 to WI-039 are outlined in WT-03 and get their own files when they are started.

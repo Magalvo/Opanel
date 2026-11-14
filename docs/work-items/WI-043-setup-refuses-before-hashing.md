@@ -1,6 +1,6 @@
 # WI-043 — First-run setup refuses before hashing
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-14,
   finding A-01; the code it touches was built in WT-02)
 - Depends on: none
@@ -14,16 +14,16 @@ installed server do that work with a well-formed body, and no limiter sits on th
 
 ## Acceptance criteria
 
-- [ ] With any account present (human, agent, deactivated), setup answers `404` and the
+- [x] With any account present (human, agent, deactivated), setup answers `404` and the
       password hasher is not called.
-- [ ] On an empty install the first Admin is still created, with credential and audit
+- [x] On an empty install the first Admin is still created, with credential and audit
       entries, exactly as before.
-- [ ] Concurrent setups still create exactly one account; the check inside the transaction
+- [x] Concurrent setups still create exactly one account; the check inside the transaction
       still decides.
-- [ ] An account created between the first look and the transaction still yields `404` and
+- [x] An account created between the first look and the transaction still yields `404` and
       writes nothing.
-- [ ] No endpoint, body or status code changes.
-- [ ] The full quality gate passes.
+- [x] No endpoint, body or status code changes.
+- [x] The full quality gate passes.
 
 ## Notes
 

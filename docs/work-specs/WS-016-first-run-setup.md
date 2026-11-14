@@ -174,3 +174,6 @@ Technical, settled by the tests:
   `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
 - Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
   PostgreSQL 18 of `compose.yaml`.
+- Later change: [WS-043](WS-043-setup-refuses-before-hashing.md) adds a cheap first look, so
+  an installed server answers `404` before computing the password hash. The check inside the
+  transaction still decides.

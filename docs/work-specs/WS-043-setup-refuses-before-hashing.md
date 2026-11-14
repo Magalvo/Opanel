@@ -1,6 +1,6 @@
 # WS-043 — First-run setup refuses before hashing
 
-- Status: Approved
+- Status: Done
 - Work-item: [WI-043](../work-items/WI-043-setup-refuses-before-hashing.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md); WS-016; audit of 2026-11-14,
   finding A-01
@@ -72,3 +72,17 @@ None. `POST /api/v1/setup` keeps its body and status codes.
 2. **The empty-install exposure is not fixed here.** An empty install still hashes for every
    request. **Owner: should `SETUP_TOKEN` (WS-016 question 1) be scheduled now, since it is
    the real fix for that case and is needed before any internet-facing install?**
+
+## Deviations from the approved spec
+
+None.
+
+## Implementation record
+
+- Red: the two tests that need the injectable hasher (hashes once; account appears while it
+  hashes) failed. The two "does not hash" tests passed vacuously at that point, because the
+  old code ignored the hasher argument; they only became meaningful with the new signature,
+  and would fail if the first look were removed.
+- Green: all setup service and route tests pass, with the existing ones unchanged.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
