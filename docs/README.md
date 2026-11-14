@@ -13,10 +13,12 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
+  - WI-035 / WS-035, teams page (drafted 2026-11-14).
+  - WT-03 amendment A5: list WI-042 to WI-044 in the track (WT-03 question 7).
 - **Approved, not started:** WI-044 / WS-044 (request body size limit), from the audit of
   2026-11-14.
-- **Next:** propose WT-03 amendment A5 (add WI-042 to WI-044 to the track) and split the
-  audit work-items into their own branches; then draft WI-035 (teams page) as `Proposed`.
+- **Next:** on approval of WS-035, implement WI-035 (tests first). Still open: split the
+  audit work-items into their own branches (needs the owner's leave to push new branches).
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -87,13 +89,14 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
+| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Proposed    | [WS-035](work-specs/WS-035-teams-page.md)                       | Proposed    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                        | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
 | [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                    | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                   | Approved    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Approved    |
 
-WI-035 to WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-036 to WI-039 are outlined in WT-03 and get their own files when they are started.
 
 ## Audit reports
 

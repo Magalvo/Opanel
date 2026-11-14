@@ -153,6 +153,12 @@ Two hardening items from the audit of 2026-11-13 joined the track (amendment A4)
 before WI-038, the first item that shows text written by users. Their work-specs are
 written; each still needs the owner's approval like any other.
 
+Three hardening items from the audit of 2026-11-14 are proposed to join the track
+(amendment A5, awaiting the owner's approval): WI-042 (safe error logging), WI-043 (first-run
+setup refuses before hashing) and WI-044 (request body size limit). They have no dependency
+on the board work and are independent of one another. WI-042 and WI-043 are done; WI-044 is
+approved and not started. They are listed after WI-041 and do not delay WI-035 to WI-039.
+
 | Item                                                             | Title                                                                                                        | Status   | Depends on             |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ---------------------- |
 | [WI-025](../work-items/WI-025-route-declares-access.md)          | `route()` declares authentication and permission; existing endpoints converted                               | Done     | none                   |
@@ -165,13 +171,16 @@ written; each still needs the owner's approval like any other.
 | [WI-032](../work-items/WI-032-delete-and-restore-task.md)        | Delete and restore a task                                                                                    | Done     | WI-030                 |
 | [WI-033](../work-items/WI-033-epics.md)                          | Epics: schema, service, API; a task's epic; progress                                                         | Done     | WI-030                 |
 | [WI-034](../work-items/WI-034-comments.md)                       | Comments: schema, service, API                                                                               | Done     | WI-030                 |
-| WI-035                                                           | Teams page                                                                                                   | Draft    | WI-026                 |
+| [WI-035](../work-items/WI-035-teams-page.md)                     | Teams page                                                                                                   | Proposed | WI-026                 |
 | WI-036                                                           | Projects list, navigation and project settings (details, columns, deleted tasks)                             | Draft    | WI-029, WI-032         |
 | WI-037                                                           | Board page: columns, cards, create a task, drag and drop                                                     | Draft    | WI-031, WI-036         |
 | WI-038                                                           | Task detail: fields, Markdown description, assignment, epic, comments, delete                                | Draft    | WI-033, WI-034, WI-037 |
 | WI-039                                                           | Epics page: list, create, edit, close, progress                                                              | Draft    | WI-033, WI-036         |
 | [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Proposed | none                   |
 | [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Proposed | none; before WI-038    |
+| [WI-042](../work-items/WI-042-safe-error-logging.md)             | Safe error logging (audit of 2026-11-14, A-04)                                                               | Done     | none                   |
+| [WI-043](../work-items/WI-043-setup-refuses-before-hashing.md)   | First-run setup refuses before hashing (audit of 2026-11-14, A-01)                                           | Done     | none                   |
+| [WI-044](../work-items/WI-044-request-body-limit.md)             | Request body size limit (audit of 2026-11-14, A-03)                                                          | Approved | none                   |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 
@@ -218,3 +227,8 @@ Questions 1 to 4 were resolved by the owner on 2026-11-13, by approving the prop
 6. **Resolved: the audit of 2026-11-13.** The owner approved amendments A1 to A4 on
    2026-11-13, A1 with `projects:read` as proposed. They are folded into decisions 5, 8, 17,
    18 and 19 and the work-items table.
+7. **Proposed: amendment A5 (the audit of 2026-11-14).** The audit confirmed four findings.
+   A-02 (two links issued at once) is already covered by WI-040. The other three became
+   WI-042, WI-043 and WI-044. The owner approved their work-specs on 2026-11-14; what this
+   amendment asks is only that they are listed in this track, as A4 did for WI-040 and
+   WI-041. Nothing else in the track changes.
