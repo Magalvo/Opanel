@@ -62,9 +62,11 @@ describe("task requests", () => {
     }
   });
 
-  it("list query: optional column filter with pagination", () => {
+  it("list query: optional column filter and deleted flag, with pagination", () => {
     expect(taskListQuerySchema.parse({ columnId: UUID })).toEqual({ limit: 50, columnId: UUID });
+    expect(taskListQuerySchema.parse({ deleted: "true" })).toEqual({ limit: 50, deleted: "true" });
     expect(taskListQuerySchema.safeParse({ columnId: "x" }).success).toBe(false);
+    expect(taskListQuerySchema.safeParse({ deleted: "yes" }).success).toBe(false);
   });
 });
 
@@ -106,5 +108,13 @@ describe("task contracts", () => {
     expect(byOperation.get("POST /api/v1/projects/{projectId}/tasks")?.access).toEqual(write);
     expect(byOperation.get("PATCH /api/v1/tasks/{taskId}")?.access).toEqual(write);
     expect(byOperation.get("POST /api/v1/tasks/{taskId}/move")?.access).toEqual(write);
+    expect(byOperation.get("DELETE /api/v1/tasks/{taskId}")?.access).toEqual({
+      kind: "permission",
+      permission: "tasks:delete_own",
+    });
+    expect(byOperation.get("POST /api/v1/tasks/{taskId}/restore")?.access).toEqual({
+      kind: "permission",
+      permission: "tasks:delete_any",
+    });
   });
 });

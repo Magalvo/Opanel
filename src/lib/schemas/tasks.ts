@@ -47,6 +47,10 @@ const taskFields = {
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  deletedAt: z.iso
+    .datetime()
+    .nullable()
+    .meta({ description: "Set only on deleted tasks, which only the deleted list shows." }),
 };
 
 /** A task in a list: everything but the description. */
@@ -66,6 +70,14 @@ export type TaskPage = z.infer<typeof taskPageSchema>;
 
 export const taskListQuerySchema = paginationQuerySchema.extend({
   columnId: z.uuid().optional().meta({ description: "Only the tasks of this column." }),
+  deleted: z
+    .enum(["true", "false"])
+    .optional()
+    .meta({
+      description:
+        "`true` lists only deleted tasks, and needs the `tasks:delete_any` permission (Managers " +
+        "and Admins).",
+    }),
 });
 
 export type TaskListQuery = z.infer<typeof taskListQuerySchema>;
@@ -216,5 +228,43 @@ export const moveTaskContract = {
     404: NO_TASK,
     409: versionConflictResponse(taskSchema),
     415: NOT_JSON,
+  },
+} satisfies EndpointContract;
+
+export const deleteTaskContract = {
+  method: "delete",
+  path: "/api/v1/tasks/{taskId}",
+  summary: "Delete a task",
+  description:
+    "A soft delete: the task leaves every view and can be restored by a Manager or Admin. " +
+    "Members may delete only tasks they reported; Managers and Admins any task.",
+  access: { kind: "permission", permission: "tasks:delete_own" },
+  request: { params: taskParamsSchema },
+  responses: {
+    204: { description: "The task was deleted.", noContent: true },
+    400: { description: "The path is not valid.", problem: true },
+    403: {
+      description: "The actor may not delete this task, or lacks the permission.",
+      problem: true,
+    },
+    404: NO_TASK,
+    409: { description: "The project is archived (code `project_archived`).", problem: true },
+  },
+} satisfies EndpointContract;
+
+export const restoreTaskContract = {
+  method: "post",
+  path: "/api/v1/tasks/{taskId}/restore",
+  summary: "Restore a deleted task",
+  description:
+    "Brings the task back to its column and place, with its key. Restoring a task that is " +
+    "not deleted changes nothing.",
+  access: { kind: "permission", permission: "tasks:delete_any" },
+  request: { params: taskParamsSchema },
+  responses: {
+    200: { description: "The task.", schema: taskSchema },
+    400: { description: "The path is not valid.", problem: true },
+    404: NO_TASK,
+    409: { description: "The project is archived (code `project_archived`).", problem: true },
   },
 } satisfies EndpointContract;

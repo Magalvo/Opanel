@@ -34,9 +34,11 @@ import {
 } from "@/lib/schemas/projects";
 import {
   createTaskContract,
+  deleteTaskContract,
   getTaskContract,
   listTasksContract,
   moveTaskContract,
+  restoreTaskContract,
   updateTaskContract,
 } from "@/lib/schemas/tasks";
 import {
@@ -91,4 +93,6 @@ export const contracts: readonly EndpointContract[] = [
   getTaskContract,
   updateTaskContract,
   moveTaskContract,
+  deleteTaskContract,
+  restoreTaskContract,
 ];

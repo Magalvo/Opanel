@@ -23,6 +23,7 @@ import {
 
 import { recordAudit } from "./audit";
 import { getProject, lockWritableProject } from "./projects";
+import { recordTaskEvent } from "./task-events";
 
 type Executor = Pick<Database, "execute">;
 
@@ -287,10 +288,55 @@ export async function deleteColumn(
   }
 }
 
+/**
+ * Deleted tasks do not keep a column from being deleted (WS-032 section 3): they move, in
+ * their order, to the end of the project's first remaining column, each with a `moved`
+ * event. The caller holds the project's exclusive lock, so no creation, move or restore
+ * runs in the project meanwhile.
+ */
+async function moveDeletedTasksOut(
+  executor: Executor & Pick<Database, "insert">,
+  actor: Actor,
+  column: ColumnRow,
+  all: readonly ColumnRow[],
+): Promise<void> {
+  const deleted = await executor.execute<{ id: string }>(
+    sql`select id from tasks where column_id = ${column.id} order by position`,
+  );
+  const target = all.find((row) => row.id !== column.id);
+  if (deleted.length === 0 || !target) return;
+
+  const [last] = await executor.execute<{ position: string }>(
+    sql`select position from tasks where column_id = ${target.id} order by position desc limit 1`,
+  );
+  let previous = last?.position ?? null;
+  for (const task of deleted) {
+    const position = positionBetween(previous, null);
+    await executor.execute(sql`
+      update tasks set column_id = ${target.id}, position = ${position},
+        version = version + 1, updated_at = now()
+      where id = ${task.id}`);
+    await recordTaskEvent(executor, {
+      taskId: task.id,
+      actor,
+      type: "moved",
+      oldValue: { columnId: column.id },
+      newValue: { columnId: target.id },
+    });
+    previous = position;
+  }
+}
+
 async function deleteColumnRow(actor: Actor, columnId: string, db: Database): Promise<void> {
   await db.transaction(async (tx) => {
     const { column, all } = await lockForColumn(tx, columnId);
     if (isLastDone(column, all)) throw lastDoneColumn();
+
+    const [live] = await tx.execute(
+      sql`select 1 from tasks where column_id = ${column.id} and deleted_at is null limit 1`,
+    );
+    if (live) throw columnNotEmpty();
+    await moveDeletedTasksOut(tx, actor, column, all);
 
     await tx.delete(columns).where(eq(columns.id, column.id));
     await recordAudit(tx, {
