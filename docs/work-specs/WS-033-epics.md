@@ -1,6 +1,6 @@
 # WS-033 — Epics
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
 - Work-item: [WI-033](../work-items/WI-033-epics.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 4, 5, 9;
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 3 (`tasks:read` reads epics);

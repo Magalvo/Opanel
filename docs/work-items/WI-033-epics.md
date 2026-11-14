@@ -1,6 +1,6 @@
 # WI-033 — Epics
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 4, 7, 13, 16, 18)
 - Depends on: WI-030
 - Work-spec: [WS-033](../work-specs/WS-033-epics.md)
