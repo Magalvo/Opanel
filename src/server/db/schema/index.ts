@@ -4,6 +4,7 @@ export { accounts } from "./accounts";
 export { auditLog } from "./audit-log";
 export { columns } from "./columns";
 export { credentials } from "./credentials";
+export { epics } from "./epics";
 export { projects } from "./projects";
 export { rateLimits } from "./rate-limits";
 export { sessions } from "./sessions";

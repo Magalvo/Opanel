@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { versionConflictResponse } from "@/lib/openapi/responses";
 
+import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
 import { projectParamsSchema } from "./projects";
@@ -43,6 +44,7 @@ const taskFields = {
   columnId: z.uuid(),
   assigneeTeam: teamRefSchema.nullable(),
   assignee: personSchema.nullable(),
+  epic: epicRefSchema.nullable(),
   reporter: z.strictObject({ id: z.uuid(), name: z.string() }),
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
@@ -93,6 +95,7 @@ export const createTaskRequestSchema = z
       .meta({ description: "A column of the project. By default the first column." }),
     assigneeTeamId: z.uuid().optional(),
     assigneeAccountId: z.uuid().optional(),
+    epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
   })
   .meta({ id: "CreateTaskRequest" });
 
@@ -105,6 +108,11 @@ export const updateTaskRequestSchema = z
     type: taskTypeSchema.optional(),
     assigneeTeamId: z.uuid().nullable().optional().meta({ description: "`null` clears it." }),
     assigneeAccountId: z.uuid().nullable().optional().meta({ description: "`null` clears it." }),
+    epicId: z
+      .uuid()
+      .nullable()
+      .optional()
+      .meta({ description: "An epic of the project; `null` takes the task out of its epic." }),
     version: versionSchema,
   })
   .refine(
@@ -113,7 +121,8 @@ export const updateTaskRequestSchema = z
       body.description !== undefined ||
       body.type !== undefined ||
       body.assigneeTeamId !== undefined ||
-      body.assigneeAccountId !== undefined,
+      body.assigneeAccountId !== undefined ||
+      body.epicId !== undefined,
     { message: "Send at least one field to change." },
   )
   .meta({ id: "UpdateTaskRequest" });

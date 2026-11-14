@@ -35,7 +35,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Every column of a task's API shape, plus the two positions for the board cursor. */
 const TASK_SELECT = sql`
   select t.id, t.number, p.key as project_key, t.project_id, t.type, t.title, t.description,
-    t.column_id, t.assignee_team_id, t.assignee_account_id,
+    t.column_id, t.assignee_team_id, t.assignee_account_id, t.epic_id,
+    e.title as epic_title,
     tm.name as team_name,
     a.name as assignee_name, a.disabled_at is null as assignee_active,
     r.id as reporter_id, r.name as reporter_name,
@@ -48,7 +49,8 @@ const TASK_SELECT = sql`
   join columns c on c.id = t.column_id
   join accounts r on r.id = t.reporter_account_id
   left join teams tm on tm.id = t.assignee_team_id
-  left join accounts a on a.id = t.assignee_account_id`;
+  left join accounts a on a.id = t.assignee_account_id
+  left join epics e on e.id = t.epic_id`;
 
 interface TaskRow extends Record<string, unknown> {
   id: string;
@@ -61,6 +63,8 @@ interface TaskRow extends Record<string, unknown> {
   column_id: string;
   assignee_team_id: string | null;
   assignee_account_id: string | null;
+  epic_id: string | null;
+  epic_title: string | null;
   team_name: string | null;
   assignee_name: string | null;
   assignee_active: boolean | null;
@@ -95,6 +99,7 @@ function toSummary(row: TaskRow): TaskSummary {
             name: row.assignee_name ?? "",
             active: row.assignee_active ?? false,
           },
+    epic: row.epic_id === null ? null : { id: row.epic_id, title: row.epic_title ?? "" },
     reporter: { id: row.reporter_id, name: row.reporter_name },
     version: row.version,
     createdAt: row.created_at,
@@ -150,6 +155,14 @@ async function findAnyTask(
 async function assertTeam(executor: Executor, teamId: string): Promise<void> {
   const [team] = await executor.execute(sql`select 1 from teams where id = ${teamId}`);
   if (!team) throw fieldError("assigneeTeamId", "There is no such team.");
+}
+
+/** Throws unless the epic belongs to the project (WS-033); open and closed epics both do. */
+async function assertEpic(executor: Executor, epicId: string, projectId: string): Promise<void> {
+  const [epic] = await executor.execute(
+    sql`select 1 from epics where id = ${epicId} and project_id = ${projectId}`,
+  );
+  if (!epic) throw fieldError("epicId", "Not an epic of this project.");
 }
 
 /** Throws unless the account is an active person (WS-026). */
@@ -252,6 +265,7 @@ export async function createTask(
     if (input.assigneeAccountId !== undefined) {
       await assertAssignablePerson(tx, input.assigneeAccountId);
     }
+    if (input.epicId !== undefined) await assertEpic(tx, input.epicId, project.id);
 
     // Deleted tasks keep their place, so they count here too.
     const [last] = await tx.execute<{ position: string }>(
@@ -270,6 +284,7 @@ export async function createTask(
         position: positionBetween(last?.position ?? null, null),
         assigneeTeamId: input.assigneeTeamId ?? null,
         assigneeAccountId: input.assigneeAccountId ?? null,
+        epicId: input.epicId ?? null,
         reporterAccountId: actor.accountId,
       })
       .returning({ id: tasks.id });
@@ -296,6 +311,7 @@ const EDITABLE = [
   ["type", "type"],
   ["assigneeTeamId", "assignee_team_id"],
   ["assigneeAccountId", "assignee_account_id"],
+  ["epicId", "epic_id"],
 ] as const;
 
 export async function updateTask(
@@ -324,6 +340,7 @@ export async function updateTask(
         input.assigneeAccountId === undefined
           ? before.assignee_account_id
           : input.assigneeAccountId,
+      epicId: input.epicId === undefined ? before.epic_id : input.epicId,
     };
     if (after.assigneeTeamId !== null && after.assigneeTeamId !== before.assignee_team_id) {
       await assertTeam(tx, after.assigneeTeamId);
@@ -334,11 +351,15 @@ export async function updateTask(
     ) {
       await assertAssignablePerson(tx, after.assigneeAccountId);
     }
+    if (after.epicId !== null && after.epicId !== before.epic_id) {
+      await assertEpic(tx, after.epicId, before.project_id);
+    }
 
     await tx.execute(sql`
       update tasks set
         title = ${after.title}, description = ${after.description}, type = ${after.type},
         assignee_team_id = ${after.assigneeTeamId}, assignee_account_id = ${after.assigneeAccountId},
+        epic_id = ${after.epicId},
         version = version + 1, updated_at = now()
       where id = ${before.id}`);
 

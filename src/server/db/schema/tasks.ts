@@ -13,6 +13,7 @@ import {
 import { accounts } from "./accounts";
 import { byteOrderedText } from "./collated-text";
 import { columns } from "./columns";
+import { epics } from "./epics";
 import { projects } from "./projects";
 import { teams } from "./teams";
 
@@ -38,6 +39,7 @@ export const tasks = pgTable(
     assigneeAccountId: uuid("assignee_account_id").references(() => accounts.id, {
       onDelete: "restrict",
     }),
+    epicId: uuid("epic_id").references(() => epics.id, { onDelete: "restrict" }),
     reporterAccountId: uuid("reporter_account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
@@ -55,5 +57,6 @@ export const tasks = pgTable(
     uniqueIndex("tasks_column_position_idx").on(table.columnId, table.position),
     index("tasks_assignee_team_idx").on(table.assigneeTeamId),
     index("tasks_assignee_account_idx").on(table.assigneeAccountId),
+    index("tasks_epic_idx").on(table.epicId),
   ],
 );

@@ -31,6 +31,10 @@ export const AUDIT_ACTIONS = [
   "column.updated",
   "column.moved",
   "column.deleted",
+  "epic.created",
+  "epic.updated",
+  "epic.closed",
+  "epic.reopened",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
