@@ -108,6 +108,24 @@ export const updateTaskRequestSchema = z
 
 export type UpdateTaskRequest = z.infer<typeof updateTaskRequestSchema>;
 
+export const moveTaskRequestSchema = z
+  .strictObject({
+    columnId: z.uuid().meta({ description: "A column of the task's project; may be its own." }),
+    afterTaskId: z.uuid().optional().meta({ description: "Place the task right after this one." }),
+    beforeTaskId: z
+      .uuid()
+      .optional()
+      .meta({ description: "Or right before this one. Without either, at the end." }),
+    version: versionSchema,
+  })
+  .refine((body) => body.afterTaskId === undefined || body.beforeTaskId === undefined, {
+    message: "Send afterTaskId or beforeTaskId, not both.",
+    path: ["beforeTaskId"],
+  })
+  .meta({ id: "MoveTaskRequest" });
+
+export type MoveTaskRequest = z.infer<typeof moveTaskRequestSchema>;
+
 const READ = { kind: "permission", permission: "tasks:read" } as const;
 const WRITE = { kind: "permission", permission: "tasks:write" } as const;
 const NO_TASK = { description: "There is no such task.", problem: true } as const;
@@ -176,6 +194,24 @@ export const updateTaskContract = {
   request: { params: taskParamsSchema, body: updateTaskRequestSchema },
   responses: {
     200: { description: "The task after the change.", schema: taskSchema },
+    400: { description: "The path or the body is not valid.", problem: true },
+    404: NO_TASK,
+    409: versionConflictResponse(taskSchema),
+    415: NOT_JSON,
+  },
+} satisfies EndpointContract;
+
+export const moveTaskContract = {
+  method: "post",
+  path: "/api/v1/tasks/{taskId}/move",
+  summary: "Move a task",
+  description:
+    "Moves the task to the end of a column of its project, or right after or right before a " +
+    "task of that column. Send the `version` the move is based on.",
+  access: WRITE,
+  request: { params: taskParamsSchema, body: moveTaskRequestSchema },
+  responses: {
+    200: { description: "The task after the move.", schema: taskSchema },
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TASK,
     409: versionConflictResponse(taskSchema),

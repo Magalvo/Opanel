@@ -36,6 +36,7 @@ import {
   createTaskContract,
   getTaskContract,
   listTasksContract,
+  moveTaskContract,
   updateTaskContract,
 } from "@/lib/schemas/tasks";
 import {
@@ -89,4 +90,5 @@ export const contracts: readonly EndpointContract[] = [
   createTaskContract,
   getTaskContract,
   updateTaskContract,
+  moveTaskContract,
 ];

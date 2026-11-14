@@ -3,6 +3,7 @@ import { type SQL, sql } from "drizzle-orm";
 import { positionBetween } from "@/lib/position";
 import type {
   CreateTaskRequest,
+  MoveTaskRequest,
   Task,
   TaskListQuery,
   TaskPage,
@@ -211,10 +212,13 @@ export async function createTask(
     // Locks the project: creations in it run one at a time (WS-030 section 3).
     const project = await claimTaskNumber(tx, projectRef);
 
+    // Locks the column: creations and moves into it run one at a time (WS-031 section 3).
     const [column] = await tx.execute<{ id: string }>(
       input.columnId === undefined
-        ? sql`select id from columns where project_id = ${project.id} order by position limit 1`
-        : sql`select id from columns where id = ${input.columnId} and project_id = ${project.id}`,
+        ? sql`select id from columns where project_id = ${project.id}
+              order by position limit 1 for no key update`
+        : sql`select id from columns where id = ${input.columnId} and project_id = ${project.id}
+              for no key update`,
     );
     if (!column) throw fieldError("columnId", "Not a column of this project.");
 
@@ -330,5 +334,97 @@ export async function updateTask(
     const updated = await findTask(tx, before.id);
     if (!updated) throw taskNotFound();
     return toTask(updated);
+  });
+}
+
+/**
+ * Moves a task to the end of a column, or right after or right before a task of it
+ * (WS-031). Locks, in order: the project (shared), the target column, the task. Moves and
+ * creations into one column therefore run one at a time, and the neighbours read here are
+ * the ones committed. Records a `moved` event only when the column changes.
+ */
+export async function moveTask(
+  actor: Actor,
+  ref: string,
+  input: MoveTaskRequest,
+  db: Database = getDb(),
+): Promise<Task> {
+  requirePermission(actor, "tasks:write");
+
+  return db.transaction(async (tx) => {
+    const found = await findTask(tx, ref);
+    if (!found) throw taskNotFound();
+    await lockWritableProject(tx, found.project_id);
+
+    const [column] = await tx.execute(sql`
+      select id from columns where id = ${input.columnId} and project_id = ${found.project_id}
+      for no key update`);
+    if (!column) throw fieldError("columnId", "Not a column of this project.");
+
+    const before = await findTask(tx, found.id, sql`for update of t`);
+    if (!before) throw taskNotFound();
+    if (before.version !== input.version) throw versionConflict(toTask(before));
+
+    // Neighbours are read over every task of the column, deleted or not (deleted tasks keep
+    // their place), leaving the moved task out. Positions compare byte by byte (A2).
+    const others = sql`column_id = ${input.columnId} and id <> ${before.id}`;
+    let previous: string | null;
+    let next: string | null;
+    const anchorField = input.afterTaskId !== undefined ? "afterTaskId" : "beforeTaskId";
+    const anchorId = input.afterTaskId ?? input.beforeTaskId;
+    if (anchorId === undefined) {
+      const [last] = await tx.execute<{ position: string }>(
+        sql`select position from tasks where ${others} order by position desc limit 1`,
+      );
+      previous = last?.position ?? null;
+      next = null;
+    } else {
+      const [anchor] = await tx.execute<{ position: string }>(sql`
+        select position from tasks
+        where id = ${anchorId} and ${others} and deleted_at is null`);
+      if (!anchor) throw fieldError(anchorField, "Not another task of the target column.");
+      if (anchorField === "afterTaskId") {
+        previous = anchor.position;
+        const [following] = await tx.execute<{ position: string }>(sql`
+          select position from tasks
+          where ${others} and position > ${anchor.position}::text collate "C"
+          order by position limit 1`);
+        next = following?.position ?? null;
+      } else {
+        next = anchor.position;
+        const [preceding] = await tx.execute<{ position: string }>(sql`
+          select position from tasks
+          where ${others} and position < ${anchor.position}::text collate "C"
+          order by position desc limit 1`);
+        previous = preceding?.position ?? null;
+      }
+    }
+
+    // Already in that gap: keep the key, so a no-op move changes no position.
+    const sameColumn = before.column_id === input.columnId;
+    const inGap =
+      sameColumn &&
+      (previous === null || previous < before.position) &&
+      (next === null || before.position < next);
+    const position = inGap ? before.position : positionBetween(previous, next);
+
+    await tx.execute(sql`
+      update tasks set column_id = ${input.columnId}, position = ${position},
+        version = version + 1, updated_at = now()
+      where id = ${before.id}`);
+
+    if (!sameColumn) {
+      await recordTaskEvent(tx, {
+        taskId: before.id,
+        actor,
+        type: "moved",
+        oldValue: { columnId: before.column_id },
+        newValue: { columnId: input.columnId },
+      });
+    }
+
+    const moved = await findTask(tx, before.id);
+    if (!moved) throw taskNotFound();
+    return toTask(moved);
   });
 }
