@@ -1,6 +1,6 @@
 # WS-031 — Move a task between and within columns
 
-- Status: Approved (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
+- Status: Done (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
 - Work-item: [WI-031](../work-items/WI-031-move-task.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0003](../canonical/0003-task-management.md) sections 5, 9;
@@ -127,3 +127,22 @@ with `TaskVersionConflict`.
    `moved` event for every reorder.
 3. **Moves into one column wait for each other** (section 3). With short transactions this
    is milliseconds; the alternative, retrying on a duplicate key, makes failures possible.
+
+## Deviations from the approved spec
+
+None.
+
+## Implementation record
+
+- Red: the schema, contract and OpenAPI tests failed on the missing `moveTaskRequestSchema`
+  and contract; the integration tests on the missing `moveTask` and route (committed before
+  any code).
+- Green: 661 Vitest tests (up from 651) and 28 Playwright tests pass, with no unhandled
+  errors. Typecheck, lint and format pass; `pnpm db:generate` leaves no diff (no
+  migration); `pnpm openapi:generate` adds the operation and `MoveTaskRequest`.
+- The two concurrency tests (ten moves and ten creations into one column; two moves right
+  after the same task) and the task tests passed three runs in a row.
+- "Already in that gap" is decided in JavaScript with `<` on the keys (code-unit order,
+  amendment A2); neighbour reads in SQL compare under `collate "C"`.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
