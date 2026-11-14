@@ -11,7 +11,11 @@ import { archiveProject, createProject } from "./projects";
 import { createTask, deleteTask, restoreTask, updateTask } from "./tasks";
 
 async function setup() {
-  const managerAccount = await createTestAccount({ email: "manager@example.com", role: "manager" });
+  const managerAccount = await createTestAccount({
+    name: "Max",
+    email: "manager@example.com",
+    role: "manager",
+  });
   const manager = testActor(managerAccount);
   const miaAccount = await createTestAccount({
     name: "Mia",
@@ -170,7 +174,7 @@ describe("listComments", () => {
     const page = await listComments(member, "OPA-1", { limit: 50 });
 
     expect(page.items.map((comment) => comment.body)).toEqual(["one", "two", "three"]);
-    expect(page.items.map((comment) => comment.author?.name)).toEqual(["Mia", "manager", "Mia"]);
+    expect(page.items.map((comment) => comment.author?.name)).toEqual(["Mia", "Max", "Mia"]);
     expect(page.nextCursor).toBeNull();
   });
 

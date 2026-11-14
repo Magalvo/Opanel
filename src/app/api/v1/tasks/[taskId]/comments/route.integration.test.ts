@@ -4,8 +4,8 @@ import { commentPageSchema, commentSchema } from "@/lib/schemas/comments";
 import { problemSchema } from "@/lib/schemas/problem";
 import { apiRequest, createTestAccount, signInCookie } from "@/server/auth/testing";
 
-import { POST as createProject } from "../../../projects/route";
 import { POST as createTask } from "../../../projects/[projectId]/tasks/route";
+import { POST as createProject } from "../../../projects/route";
 import { GET, POST } from "./route";
 
 const task = { params: Promise.resolve({ taskId: "OPA-1" }) };

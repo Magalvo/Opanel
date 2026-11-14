@@ -139,6 +139,15 @@ async function findTask(
   return row;
 }
 
+/** The id and project of a task that is not deleted, for services that work on a task (WS-034). */
+export async function findTaskRef(
+  executor: Executor,
+  ref: string,
+): Promise<{ id: string; projectId: string } | undefined> {
+  const row = await findTask(executor, ref);
+  return row === undefined ? undefined : { id: row.id, projectId: row.project_id };
+}
+
 /** Like `findTask`, deleted or not: only restoring looks at deleted tasks by id or key. */
 async function findAnyTask(
   executor: Executor,

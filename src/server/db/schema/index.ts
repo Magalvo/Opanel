@@ -3,6 +3,7 @@ export { accountTokens } from "./account-tokens";
 export { accounts } from "./accounts";
 export { auditLog } from "./audit-log";
 export { columns } from "./columns";
+export { comments } from "./comments";
 export { credentials } from "./credentials";
 export { epics } from "./epics";
 export { projects } from "./projects";

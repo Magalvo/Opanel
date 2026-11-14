@@ -1,6 +1,6 @@
 # WS-034 — Comments
 
-- Status: Approved (by the owner, with the proposals of questions 1 to 5)
+- Status: Done (approved by the owner, with the proposals of questions 1 to 5)
 - Work-item: [WI-034](../work-items/WI-034-comments.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3 and 9;
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 3 and 6;
@@ -149,4 +149,22 @@ For the owner:
 
 ## Deviations from the approved spec
 
-(none yet)
+None. One note on section 4: a comment and a concurrent delete of the same task are not
+ordered by a task row lock (the comment holds the project's shared lock, as every write
+does). A comment that lands just as its task is deleted exists but is hidden, and shows
+again if the task is restored; nothing is lost.
+
+## Implementation record
+
+- Red: committed first (`4d7f7d2`); the schema, service and route tests failed on the
+  missing module and table.
+- Green: 730 Vitest tests (up from 705) and 28 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` leaves no diff after `0011_comments` (the trigger was
+  appended to the generated file); `pnpm openapi:generate` adds the two operations and the
+  comment schemas.
+- `findTaskRef` was added to `tasks.ts` so the comments service can find a live task without
+  repeating its query.
+- One of my tests expected the manager's name to be `manager`; the test helper's default name
+  is `Ada`, so the test now names the account.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
