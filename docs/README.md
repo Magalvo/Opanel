@@ -9,12 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-031 (move a task between and within columns), on 2026-11-14.
+- **Last finished:** WI-032 (delete and restore a task), on 2026-11-14.
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Next:** the owner reviews WI-032 and WS-032 (delete and restore a task), drafted on
-  2026-11-14 as `Proposed`.
+- **Next:** draft WI-033 (epics: schema, service, API; a task's epic; progress) and WS-033
+  as `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -82,7 +82,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-029](work-items/WI-029-columns-api.md)                      | Columns API                                               | Done        | [WS-029](work-specs/WS-029-columns-api.md)                      | Done        |
 | [WI-030](work-items/WI-030-tasks-core.md)                       | Tasks core                                                | Done        | [WS-030](work-specs/WS-030-tasks-core.md)                       | Done        |
 | [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                    | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
-| [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Proposed    | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Proposed    |
+| [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 

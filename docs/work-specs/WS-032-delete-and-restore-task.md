@@ -1,6 +1,6 @@
 # WS-032 — Delete and restore a task
 
-- Status: Approved (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
+- Status: Done (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
 - Work-item: [WI-032](../work-items/WI-032-delete-and-restore-task.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 9, 13;
   [0004](../canonical/0004-api-conventions.md) sections 5, 6;
@@ -122,3 +122,23 @@ Section 1. Additive: two operations, the `deleted` query parameter, and `deleted
    reuse the list and its cursor; WT-08's filters and sorting can add another order.
 3. **No hard delete.** Deleted tasks stay in the database for good in v1, as doc 0003 asks
    ("always a restorable soft delete").
+
+## Deviations from the approved spec
+
+None. The `DELETE` contract documents its own `403` description ("may not delete this
+task, or lacks the permission"), since the object-level refusal shares that status.
+
+## Implementation record
+
+- Red: the schema and contract tests failed on the missing `deleted` query and contracts;
+  the integration tests on the missing `deleteTask`, `restoreTask` and routes (committed
+  before any code).
+- Green: 671 Vitest tests (up from 661) and 28 Playwright tests pass, with no unhandled
+  errors. Typecheck, lint and format pass; `pnpm db:generate` leaves no diff (no
+  migration); `pnpm openapi:generate` adds the two operations, the `deleted` parameter and
+  `deletedAt`.
+- `deleteColumn` now refuses a column with a live task before touching anything, then
+  moves the column's deleted tasks to the end of the first remaining column; the foreign
+  key stays as the last guard.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
