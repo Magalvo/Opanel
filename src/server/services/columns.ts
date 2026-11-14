@@ -11,7 +11,7 @@ import type {
 } from "@/lib/schemas/columns";
 import { type Actor, requirePermission } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
-import { FOREIGN_KEY_VIOLATION, hasPostgresCode } from "@/server/db/errors";
+import { isReferenceViolation } from "@/server/db/errors";
 import { columns } from "@/server/db/schema";
 import {
   columnNotEmpty,
@@ -282,7 +282,7 @@ export async function deleteColumn(
     await deleteColumnRow(actor, columnId, db);
   } catch (error) {
     // A task is still in the column (WS-030).
-    if (hasPostgresCode(error, FOREIGN_KEY_VIOLATION)) throw columnNotEmpty();
+    if (isReferenceViolation(error)) throw columnNotEmpty();
     throw error;
   }
 }

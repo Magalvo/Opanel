@@ -4,7 +4,7 @@ import type { PaginationQuery } from "@/lib/schemas/pagination";
 import type { AddMemberRequest, Team, TeamNameRequest, TeamPage } from "@/lib/schemas/teams";
 import { type Actor, requirePermission } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
-import { FOREIGN_KEY_VIOLATION, hasPostgresCode, UNIQUE_VIOLATION } from "@/server/db/errors";
+import { hasPostgresCode, isReferenceViolation, UNIQUE_VIOLATION } from "@/server/db/errors";
 import { teamMembers, teams } from "@/server/db/schema";
 import {
   accountInactive,
@@ -185,7 +185,7 @@ export async function deleteTeam(
     await deleteTeamRow(actor, teamId, db);
   } catch (error) {
     // A task still refers to the team (WS-030).
-    if (hasPostgresCode(error, FOREIGN_KEY_VIOLATION)) throw teamInUse();
+    if (isReferenceViolation(error)) throw teamInUse();
     throw error;
   }
 }

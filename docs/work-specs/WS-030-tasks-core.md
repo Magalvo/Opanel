@@ -269,3 +269,11 @@ version = $expected`. The `field_changed` events need the exact state the change
   error `23503`), mapped by `deleteTeam` and `deleteColumn`.
 - Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
   PostgreSQL 18 of `compose.yaml`.
+- **Found by CI on PostgreSQL 18:** deleting a row still referenced through
+  `on delete restrict` is reported as `23001` (`restrict_violation`) by PostgreSQL 18 and
+  as `23503` (`foreign_key_violation`) by 16, so `team_in_use` and `column_not_empty` were
+  not recognised in CI. `isReferenceViolation` in `src/server/db/errors.ts` accepts both
+  codes, with a unit test; `deleteTeam` and `deleteColumn` use it.
+- **Also fixed:** a test of WI-029 ("refuse every column write") created its four calls
+  before awaiting them one by one, which could leave a rejection unhandled depending on
+  timing; each call now starts when it is awaited.
