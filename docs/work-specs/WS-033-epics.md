@@ -1,6 +1,6 @@
 # WS-033 — Epics
 
-- Status: Approved (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
+- Status: Done (approved by the owner on 2026-11-14, questions 1 to 3 as proposed)
 - Work-item: [WI-033](../work-items/WI-033-epics.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 4, 5, 9;
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 3 (`tasks:read` reads epics);
@@ -155,3 +155,22 @@ and `epicId` / `epic` on tasks.
    lock it. The alternative is a `409` for putting a task in a closed epic.
 2. **The epic list shows open epics by default.** `status=all` shows every epic.
 3. **Epics cannot be deleted**, only closed, as doc 0003 lists.
+
+## Deviations from the approved spec
+
+- **Progress is computed with two correlated subqueries per epic** inside the one query that
+  reads the epics, rather than a separate grouped query. Same result, one round trip, and
+  the same SQL serves a single epic and a list.
+
+## Implementation record
+
+- Red: the schema, contract, audit-list and OpenAPI tests failed on the missing epic schemas,
+  `epicId` and actions; the integration tests on the missing service and routes (committed
+  before any code).
+- Green: 690 Vitest tests (up from 671) and 28 Playwright tests pass, with no unhandled
+  errors. Typecheck, lint and format pass; `pnpm db:generate` leaves no diff after
+  `0010_epics`; `pnpm openapi:generate` adds the four operations and the epic schemas.
+- One test of mine first compared the whole audit log and also saw the setup's
+  `project.created`; it now looks at epic entries only.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
