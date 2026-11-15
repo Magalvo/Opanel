@@ -21,6 +21,7 @@ import {
   moveColumnContract,
   updateColumnContract,
 } from "@/lib/schemas/columns";
+import { createCommentContract, listCommentsContract } from "@/lib/schemas/comments";
 import {
   createEpicContract,
   getEpicContract,
@@ -105,4 +106,6 @@ export const contracts: readonly EndpointContract[] = [
   createEpicContract,
   getEpicContract,
   updateEpicContract,
+  listCommentsContract,
+  createCommentContract,
 ];
