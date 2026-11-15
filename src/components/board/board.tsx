@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Column } from "@/lib/schemas/columns";
 import type { Project } from "@/lib/schemas/projects";
-import { type TaskSummary, taskTitleSchema } from "@/lib/schemas/tasks";
+import { taskSchema, type TaskSummary, taskTitleSchema } from "@/lib/schemas/tasks";
 
 import { ApiFailure, createTask, listAllTasks, listColumns, moveTask } from "./api";
 import { BoardColumn } from "./board-column";
@@ -97,6 +97,56 @@ export function Board({ project, canWrite, archived }: Readonly<BoardProps>) {
       setPhase("error");
     }
   }
+
+  // The task detail, in a dialog over this board, tells it what changed (WS-038 section 4).
+  useEffect(() => {
+    function updated(event: Event) {
+      const task = taskSchema.safeParse((event as CustomEvent<unknown>).detail);
+      if (!task.success || task.data.projectId !== project.id) return;
+      const summary = summaryOf(task.data);
+      setBoard((current) => {
+        if (current === null) return current;
+        const stays = (current.cards[summary.columnId] ?? []).some(
+          (card) => card.id === summary.id,
+        );
+        const cards = Object.fromEntries(
+          Object.entries(current.cards).map(([columnId, list]) => [
+            columnId,
+            stays && columnId === summary.columnId
+              ? list.map((card) => (card.id === summary.id ? summary : card))
+              : list.filter((card) => card.id !== summary.id),
+          ]),
+        );
+        if (!stays && cards[summary.columnId] !== undefined) {
+          cards[summary.columnId] = [...(cards[summary.columnId] ?? []), summary];
+        }
+        return { columns: current.columns, cards };
+      });
+    }
+    function deleted(event: Event) {
+      const id = (event as CustomEvent<unknown>).detail;
+      if (typeof id !== "string") return;
+      setBoard((current) =>
+        current === null
+          ? current
+          : {
+              columns: current.columns,
+              cards: Object.fromEntries(
+                Object.entries(current.cards).map(([columnId, list]) => [
+                  columnId,
+                  list.filter((card) => card.id !== id),
+                ]),
+              ),
+            },
+      );
+    }
+    window.addEventListener("opanel:task-updated", updated);
+    window.addEventListener("opanel:task-deleted", deleted);
+    return () => {
+      window.removeEventListener("opanel:task-updated", updated);
+      window.removeEventListener("opanel:task-deleted", deleted);
+    };
+  }, [project.id]);
 
   function reload() {
     setPhase("loading");

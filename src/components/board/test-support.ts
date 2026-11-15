@@ -47,7 +47,10 @@ export function task(
 }
 
 /** What the move and create endpoints answer: the task, with its description. */
-export function fullTask(summary: TaskSummary, overrides: Partial<TaskSummary> = {}) {
+export function fullTask(
+  summary: TaskSummary,
+  overrides: Partial<TaskSummary & { description: string }> = {},
+) {
   return { ...summary, description: "", ...overrides };
 }
 

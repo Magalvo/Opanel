@@ -9,12 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-037 (the board page), on 2026-11-15.
+- **Last finished:** WI-038 (task detail), on 2026-11-15.
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
-- **In progress:** WI-038 (task detail), WS-038 approved on 2026-11-15; the failing tests are
-  committed, the screen is next. Branch `claude/wi-038-task-detail` joins the branches of WI-034,
-  WI-037 and WI-041.
+- **Next:** WI-039 (epics page) is the last item of WT-03. Draft WI-039 and WS-039 as
+  `Proposed`, and stop for the owner's approval. WI-040 (account link hardening) is still
+  awaiting approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -88,7 +88,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
 | [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
 | [WI-037](work-items/WI-037-board-page.md)                       | Board page                                                | Proposed    | [WS-037](work-specs/WS-037-board-page.md)                       | Proposed    |
-| [WI-038](work-items/WI-038-task-detail.md)                      | Task detail                                               | Approved    | [WS-038](work-specs/WS-038-task-detail.md)                      | Approved    |
+| [WI-038](work-items/WI-038-task-detail.md)                      | Task detail                                               | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 

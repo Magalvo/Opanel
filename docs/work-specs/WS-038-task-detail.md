@@ -1,6 +1,6 @@
 # WS-038 — Task detail
 
-- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 7)
+- Status: Done (approved by the owner on 2026-11-15, with the proposals of questions 1 to 7)
 - Work-item: [WI-038](../work-items/WI-038-task-detail.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 4, 5;
   [0004](../canonical/0004-api-conventions.md) sections 4, 6, 7;
@@ -187,3 +187,39 @@ For the owner:
 7. **Dependencies on other branches.** This item needs WI-034 (comments API) and WI-041 (the
    policy) merged first, as they sit on branches of their own. The implementation branch is cut
    from a branch that has both.
+
+## Deviations from the approved spec
+
+1. **The pages cannot pass `onLeave`.** A server component cannot hand a function to a client
+   one, so each route renders a small client wrapper that supplies it: `TaskPageView` (goes to
+   the board with the router) and `TaskDialog` (closes the dialog with `router.back()`). Both
+   take the same props the tests state. The shared loading and the permission rules are in
+   `src/app/(app)/projects/load-task.ts`.
+2. **Two more files in the `@modal` slot**, from the Next.js guide: `[...catchAll]/page.tsx`
+   (so a soft navigation to the project's settings does not leave the dialog open) and
+   `default.tsx`. `[projectKey]/default.tsx` exists as the spec said.
+3. **A Markdown link with an unsafe or relative address is an `<a>` with no `href`**, so it is
+   not a link for assistive technology either. The unit test reads the `href`; the end-to-end
+   test finds it by its text, since an anchor without `href` has no `link` role.
+4. **The message region is named "Task messages"**, like the board's, so tests find it among
+   other live regions.
+5. **The tabs' names** ("Write description", "Preview comment") are screen-reader text; the
+   visible words are "Write" and "Preview".
+6. **Moving from the column select keeps unsaved edits** in the other fields: it replaces only
+   the task's column and version, and a save afterwards sends the new version.
+7. **A test helper corrected**: `fullTask` accepts a `description` override.
+
+## Implementation record
+
+- Red: committed first on this branch; the screen, Markdown, pages and board changes failed on
+  the missing modules and links.
+- Green: 882 Vitest tests and 68 Playwright tests (ten new in `task-detail.spec.ts`) pass, twice
+  in a row. Typecheck, lint and format pass; `pnpm openapi:generate` leaves no diff. The
+  end-to-end suite runs under the Content Security Policy of WI-041 with its violation check,
+  so `react-markdown` and the dialog produce none.
+- The intercepting route works as the guide describes: a card opens the dialog at its own URL
+  over the live board, Back closes it, a reload shows the page.
+- The board of 1 003 tasks still shows its last card in under a second (934 and 829 ms).
+- `react-markdown` 10.1.0 was added with `pnpm add -E`; its README and API were read first.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

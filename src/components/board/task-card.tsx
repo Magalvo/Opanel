@@ -3,6 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVerticalIcon } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { CardMenu, type MoveAction } from "./card-menu";
 
 const TYPE_LABELS = { bug: "Bug", story: "Story" } as const;
 
-/** What a card shows: key, title, type, assignee, team and epic (WS-037). Not a link yet. */
+/** What a card shows: key, title, type, assignee, team and epic (WS-037). The title opens the task (WS-038). */
 export function CardBody({ card }: Readonly<{ card: TaskSummary }>) {
   return (
     <div className="grid min-w-0 flex-1 gap-1">
@@ -21,7 +22,14 @@ export function CardBody({ card }: Readonly<{ card: TaskSummary }>) {
         <span className="font-mono text-xs text-muted-foreground">{card.key}</span>
         {card.type !== "task" && <Badge variant="outline">{TYPE_LABELS[card.type]}</Badge>}
       </div>
-      <p className="text-sm font-medium break-words">{card.title}</p>
+      <p className="text-sm font-medium break-words">
+        <Link
+          href={`/projects/${card.key.slice(0, card.key.lastIndexOf("-"))}/tasks/${card.key}`}
+          className="underline-offset-4 hover:underline"
+        >
+          {card.title}
+        </Link>
+      </p>
       <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
         {card.assignee !== null && (
           <span className="flex items-center gap-1">

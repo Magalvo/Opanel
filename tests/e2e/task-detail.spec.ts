@@ -180,7 +180,7 @@ member(
     expect(await page.evaluate(() => "injected" in window)).toBe(false);
     await expect(page.locator("main script")).toHaveCount(0);
     await expect(page.locator("main img")).toHaveCount(0);
-    const bad = page.getByRole("link", { name: "bad" });
+    const bad = page.locator("main a", { hasText: "bad" }).first();
     expect((await bad.getAttribute("href")) ?? "").toBe("");
     const good = page.getByRole("link", { name: "good" }).first();
     await expect(good).toHaveAttribute("href", "https://example.org/a");
