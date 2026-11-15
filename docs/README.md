@@ -11,10 +11,9 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-038 (task detail), on 2026-11-15.
 - **Awaiting the owner's approval:**
+  - WI-039 / WS-039, epics page (drafted 2026-11-15).
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
-- **Next:** WI-039 (epics page) is the last item of WT-03. Draft WI-039 and WS-039 as
-  `Proposed`, and stop for the owner's approval. WI-040 (account link hardening) is still
-  awaiting approval.
+- **Next:** on approval of WS-039, implement WI-039 (tests first), the last item of WT-03.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -89,10 +88,9 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
 | [WI-037](work-items/WI-037-board-page.md)                       | Board page                                                | Proposed    | [WS-037](work-specs/WS-037-board-page.md)                       | Proposed    |
 | [WI-038](work-items/WI-038-task-detail.md)                      | Task detail                                               | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
+| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page                                                | Proposed    | [WS-039](work-specs/WS-039-epics-page.md)                       | Proposed    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
-
-WI-039 is outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
