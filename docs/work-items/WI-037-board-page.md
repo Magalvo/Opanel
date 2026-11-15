@@ -1,6 +1,6 @@
 # WI-037 — Board page
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 5, 6, 7, 11, 15; risk 5)
 - Depends on: WI-031, WI-036 (the board takes the place of the project page's body)
 - Work-spec: [WS-037](../work-specs/WS-037-board-page.md)

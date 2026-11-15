@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestAccount, signInCookie, testActor } from "@/server/auth/testing";
-import { createProject } from "@/server/services/projects";
+import { archiveProject, createProject } from "@/server/services/projects";
 
 vi.mock("next/headers", () => ({ headers: vi.fn() }));
 
@@ -33,6 +33,31 @@ describe("the /projects/[projectKey] page (WS-036)", () => {
 
     expect(element.props.project).toMatchObject({ key: "OPA", name: "Opanel" });
     expect(element.props.canManage).toBe(true);
+    expect(element.props.canWrite).toBe(true);
+  });
+
+  it.each([
+    ["member", true],
+    ["viewer", false],
+  ] as const)("lets a %s write on the board: %s", async (role, canWrite) => {
+    const manager = await createTestAccount({ email: "m@example.com", role: "manager" });
+    await createProject(testActor(manager), { key: "OPA", name: "Opanel" });
+    await signedInAs(role);
+
+    const element = (await ProjectRoute(params("OPA"))) as Element;
+
+    expect(element.props.canWrite).toBe(canWrite);
+  });
+
+  it("passes an archived project on, so the board is read-only", async () => {
+    const manager = await signedInAs("manager");
+    const actor = testActor(manager);
+    await createProject(actor, { key: "OPA", name: "Opanel" });
+    await archiveProject(actor, "OPA");
+
+    const element = (await ProjectRoute(params("OPA"))) as Element;
+
+    expect(element.props.project?.archivedAt).not.toBeNull();
   });
 
   it("renders read-only for a Member", async () => {

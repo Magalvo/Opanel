@@ -19,6 +19,8 @@ describe("ProjectHeader", () => {
     expect(screen.getByText("<script>alert(1)</script> and **bold**")).toBeInTheDocument();
     expect(document.querySelector("script")).toBeNull();
     expect(document.querySelector("strong")).toBeNull();
+    // The board of WI-037 replaces the placeholder line of WI-036.
+    expect(screen.queryByText("The board comes next.")).not.toBeInTheDocument();
   });
 
   it("offers Settings only to someone who can manage", () => {

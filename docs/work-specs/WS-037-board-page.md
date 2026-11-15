@@ -1,6 +1,6 @@
 # WS-037 — Board page
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 7)
 - Work-item: [WI-037](../work-items/WI-037-board-page.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0003](../canonical/0003-task-management.md) sections 2, 5;

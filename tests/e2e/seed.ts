@@ -63,3 +63,28 @@ export async function sessionExpiry(email: string): Promise<Date> {
     await client.end();
   }
 }
+
+/**
+ * Adds `count` tasks to the first column of a project, straight in the database, so a test
+ * can load a big board without a thousand requests. Positions are valid ordering keys.
+ */
+export async function seedTasks(projectKey: string, count: number): Promise<void> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    const [project] = await client<{ id: string; next: number }[]>`
+      select id, next_task_number as next from projects where key = ${projectKey}`;
+    if (!project) throw new Error("no such project");
+    await client`
+      insert into tasks (project_id, number, title, column_id, position, reporter_account_id)
+      select ${project.id}::uuid, n, 'Seeded task ' || n,
+        (select id from columns where project_id = ${project.id}::uuid order by position limit 1),
+        'c' || substr('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', (n / 3844) % 62 + 1, 1)
+            || substr('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', (n / 62) % 62 + 1, 1)
+            || substr('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', n % 62 + 1, 1),
+        (select id from accounts order by created_at limit 1)
+      from generate_series(${project.next}, ${project.next + count - 1}) n`;
+    await client`update projects set next_task_number = ${project.next + count} where id = ${project.id}::uuid`;
+  } finally {
+    await client.end();
+  }
+}
