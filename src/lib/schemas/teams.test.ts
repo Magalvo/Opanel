@@ -6,6 +6,7 @@ import { peopleQuerySchema } from "./people";
 import {
   addMemberRequestSchema,
   createTeamRequestSchema,
+  deleteTeamContract,
   teamIdParamsSchema,
   teamMemberParamsSchema,
   updateTeamRequestSchema,
@@ -68,5 +69,14 @@ describe("team and people contracts", () => {
     expect(access.get("DELETE /api/v1/teams/{teamId}")).toEqual(manage);
     expect(access.get("POST /api/v1/teams/{teamId}/members")).toEqual(manage);
     expect(access.get("DELETE /api/v1/teams/{teamId}/members/{accountId}")).toEqual(manage);
+  });
+});
+
+describe("team contracts", () => {
+  it("document that a team in use cannot be deleted (409 team_in_use)", () => {
+    const responses: Record<number, { description: string }> = deleteTeamContract.responses;
+
+    expect(Object.keys(responses).map(Number)).toContain(409);
+    expect(responses[409]?.description).toContain("team_in_use");
   });
 });

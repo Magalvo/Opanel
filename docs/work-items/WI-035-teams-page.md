@@ -1,6 +1,6 @@
 # WI-035 — Teams page
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 8, 9, 17)
 - Depends on: WI-026
 - Work-spec: [WS-035](../work-specs/WS-035-teams-page.md)

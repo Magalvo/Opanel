@@ -1,6 +1,6 @@
 # WS-035 — Teams page
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner, with the proposals of questions 1 to 5)
 - Work-item: [WI-035](../work-items/WI-035-teams-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5 and 7;
