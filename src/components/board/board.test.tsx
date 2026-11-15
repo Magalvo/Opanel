@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -139,10 +139,21 @@ describe("Board: cards", () => {
     expect(within(listOf("To do")).getByText("Deactivated")).toBeInTheDocument();
   });
 
-  it("are not links yet", async () => {
+  it("link their titles to the task", async () => {
     await renderBoard();
 
-    expect(within(listOf("To do")).queryByRole("link")).not.toBeInTheDocument();
+    const link = within(listOf("To do")).getByRole("link", { name: "Fix login" });
+    expect(link).toHaveAttribute("href", "/projects/OPA/tasks/OPA-1");
+    expect(within(listOf("Done")).getByRole("link", { name: "Ship it" })).toHaveAttribute(
+      "href",
+      "/projects/OPA/tasks/OPA-4",
+    );
+  });
+
+  it("are not links on a board nobody can change either, since reading a task is allowed", async () => {
+    await renderBoard({ canWrite: false });
+
+    expect(within(listOf("To do")).getAllByRole("link")).toHaveLength(2);
   });
 });
 
@@ -412,5 +423,60 @@ describe("Board: accessibility", () => {
     // dnd-kit has a live region of its own, so ours is found by its name.
     expect(screen.getAllByRole("status", { name: "Board messages" })).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+  });
+});
+
+describe("Board: changes made in the task detail", () => {
+  function announce(type: string, detail: unknown) {
+    act(() => {
+      window.dispatchEvent(new CustomEvent(type, { detail }));
+    });
+  }
+
+  it("shows a task that was saved there, in place", async () => {
+    await renderBoard();
+
+    announce("opanel:task-updated", fullTask(t1, { title: "Renamed", version: 2 }));
+
+    await waitFor(() => {
+      expect(within(listOf("To do")).getByRole("link", { name: "Renamed" })).toBeInTheDocument();
+    });
+    expect(keysIn("To do")).toEqual(["OPA-1", "OPA-2"]);
+  });
+
+  it("moves a card that was moved there to the end of its new column", async () => {
+    await renderBoard();
+
+    announce("opanel:task-updated", fullTask(t1, { columnId: DOING, version: 2 }));
+
+    await waitFor(() => {
+      expect(keysIn("In progress")).toEqual(["OPA-3", "OPA-1"]);
+    });
+    expect(keysIn("To do")).toEqual(["OPA-2"]);
+  });
+
+  it("removes a task that was deleted there", async () => {
+    await renderBoard();
+
+    announce("opanel:task-deleted", t2.id);
+
+    await waitFor(() => {
+      expect(keysIn("To do")).toEqual(["OPA-1"]);
+    });
+  });
+
+  it("ignores a task of another project and a malformed event", async () => {
+    await renderBoard();
+
+    announce("opanel:task-updated", {
+      ...fullTask(t1),
+      projectId: "99999999-0000-4000-8000-000000000000",
+      title: "Elsewhere",
+    });
+    announce("opanel:task-updated", { nonsense: true });
+    announce("opanel:task-deleted", 42);
+
+    expect(keysIn("To do")).toEqual(["OPA-1", "OPA-2"]);
+    expect(screen.queryByRole("link", { name: "Elsewhere" })).not.toBeInTheDocument();
   });
 });

@@ -1,13 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import {
-  type APIRequestContext,
-  type Browser,
-  expect,
-  type Page,
-  test as base,
-  test,
-} from "@playwright/test";
+import { type APIRequestContext, type Browser, type Page } from "@playwright/test";
 
+import { expect, test as base, test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { seedAccount, seedTasks } from "./seed";
 
