@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { hashPassword } from "@/server/auth/password";
 import { createTestAccount, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, credentials } from "@/server/db/schema";
@@ -109,5 +110,67 @@ describe("createFirstAdmin", () => {
 
     expect(await getDb().select().from(accounts)).toHaveLength(0);
     expect(await getDb().select().from(credentials)).toHaveLength(0);
+  });
+});
+
+describe("createFirstAdmin refuses before hashing (WS-043)", () => {
+  /** A hasher that counts its calls and otherwise behaves like the real one. */
+  function countingHasher() {
+    return vi.fn<(password: string) => Promise<string>>((password) => hashPassword(password));
+  }
+
+  it("does not hash when a human account exists", async () => {
+    await createTestAccount({ email: "ada@example.com" });
+    const hash = countingHasher();
+
+    await expect(createFirstAdmin(input, getDb(), hash)).rejects.toMatchObject({ status: 404 });
+
+    expect(hash).not.toHaveBeenCalled();
+    expect(await getDb().select().from(accounts)).toHaveLength(1);
+  });
+
+  it("does not hash when the only account is deactivated or an agent", async () => {
+    for (const make of [
+      () => createTestAccount({ email: "off@example.com", disabled: true }),
+      () =>
+        getDb()
+          .insert(accounts)
+          .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" }),
+    ]) {
+      await make();
+      const hash = countingHasher();
+
+      await expect(createFirstAdmin(input, getDb(), hash)).rejects.toMatchObject({ status: 404 });
+
+      expect(hash).not.toHaveBeenCalled();
+      await getDb().delete(accounts);
+    }
+  });
+
+  it("hashes once on an empty install and creates the admin as before", async () => {
+    const hash = countingHasher();
+
+    const { account } = await createFirstAdmin(input, getDb(), hash);
+
+    expect(hash).toHaveBeenCalledOnce();
+    expect(hash).toHaveBeenCalledWith(TEST_PASSWORD);
+    expect(account).toMatchObject({ role: "admin", email: "ada@example.com" });
+  });
+
+  it("still answers 404 and writes nothing when an account appears while it hashes", async () => {
+    // The race between the first look and the lock: the check inside the transaction decides.
+    const hash = vi.fn<(password: string) => Promise<string>>(async (password) => {
+      await createTestAccount({ email: "winner@example.com" });
+      return hashPassword(password);
+    });
+
+    await expect(createFirstAdmin(input, getDb(), hash)).rejects.toMatchObject({ status: 404 });
+
+    expect(hash).toHaveBeenCalledOnce();
+    const rows = await getDb().select().from(accounts);
+    expect(rows.map((row) => row.email)).toEqual(["winner@example.com"]);
+    expect(await getDb().select().from(credentials)).toHaveLength(1);
+    const actions = (await getDb().select().from(auditLog)).map((row) => row.action);
+    expect(actions).not.toContain("setup.first_admin_created");
   });
 });

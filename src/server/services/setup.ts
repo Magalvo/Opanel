@@ -27,17 +27,25 @@ export async function isSetupNeeded(db: Pick<Database, "select"> = getDb()): Pro
 }
 
 /**
- * Creates the first Admin and signs them in. Answers `404` if any account exists, however
- * many requests arrive at once: a transaction-scoped advisory lock makes them queue, so
- * exactly one sees an empty table. The account, its credential and the audit entry commit
+ * Creates the first Admin and signs them in. Answers `404` if any account exists, without
+ * hashing the password (WS-043), however many requests arrive at once: a transaction-scoped
+ * advisory lock makes them queue, so exactly one sees an empty table. The account, its credential and the audit entry commit
  * together; the sign-in that follows creates a session outside that transaction.
  */
 export async function createFirstAdmin(
   input: CreateFirstAdminInput,
   db: Database = getDb(),
+  hash: (password: string) => Promise<string> = hashPassword,
 ): Promise<SignInResult> {
+  // A cheap first look (WS-043): once the install has accounts, a request is refused before
+  // the slow hash below, so an installed server cannot be made to hash for anyone. It does
+  // not close the race on an empty install; the check inside the transaction decides.
+  if (!(await isSetupNeeded(db))) {
+    throw notFound();
+  }
+
   // Slow, so done before the transaction takes the lock.
-  const passwordHash = await hashPassword(input.password);
+  const passwordHash = await hash(input.password);
   const email = input.email.trim().toLowerCase();
 
   await db.transaction(async (tx) => {
