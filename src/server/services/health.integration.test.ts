@@ -16,13 +16,18 @@ describe("checkHealth against PostgreSQL", () => {
     const client = postgres("postgres://opanel:opanel@127.0.0.1:1/opanel_test", {
       connect_timeout: 1,
     });
-    const logError = vi.fn();
+    const logError = vi.fn<(message: string) => void>();
 
     try {
       const result = await checkHealth(drizzle({ client }), { logError });
 
       expect(result).toEqual({ status: "degraded", database: "down" });
       expect(logError).toHaveBeenCalledOnce();
+      const line = logError.mock.calls[0]?.[0] ?? "";
+      expect(line).toContain("database unreachable");
+      expect(line).toContain("code=ECONNREFUSED");
+      expect(line).not.toContain("127.0.0.1");
+      expect(line).not.toContain("opanel");
     } finally {
       await client.end({ timeout: 1 });
     }

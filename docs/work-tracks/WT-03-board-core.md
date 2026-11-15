@@ -156,7 +156,7 @@ written; each still needs the owner's approval like any other.
 Three hardening items from the audit of 2026-11-14 are proposed to join the track
 (amendment A5, awaiting the owner's approval): WI-042 (safe error logging), WI-043 (first-run
 setup refuses before hashing) and WI-044 (request body size limit). They have no dependency
-on the board work and are independent of one another. All three are approved and not started. They are listed after WI-041 and do not delay WI-035 to WI-039.
+on the board work and are independent of one another. WI-042 is done; WI-043 and WI-044 are approved and not started. They are listed after WI-041 and do not delay WI-035 to WI-039.
 
 | Item                                                             | Title                                                                                                        | Status   | Depends on             |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ---------------------- |
@@ -177,7 +177,7 @@ on the board work and are independent of one another. All three are approved and
 | WI-039                                                           | Epics page: list, create, edit, close, progress                                                              | Draft    | WI-033, WI-036         |
 | [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Proposed | none                   |
 | [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Proposed | none; before WI-038    |
-| [WI-042](../work-items/WI-042-safe-error-logging.md)             | Safe error logging (audit of 2026-11-14, A-04)                                                               | Approved | none                   |
+| [WI-042](../work-items/WI-042-safe-error-logging.md)             | Safe error logging (audit of 2026-11-14, A-04)                                                               | Done     | none                   |
 | [WI-043](../work-items/WI-043-setup-refuses-before-hashing.md)   | First-run setup refuses before hashing (audit of 2026-11-14, A-01)                                           | Approved | none                   |
 | [WI-044](../work-items/WI-044-request-body-limit.md)             | Request body size limit (audit of 2026-11-14, A-03)                                                          | Approved | none                   |
 
