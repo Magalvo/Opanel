@@ -1,4 +1,4 @@
-import { SettingsIcon } from "lucide-react";
+import { LayersIcon, SettingsIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,15 +21,24 @@ export function ProjectHeader({
           <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs">{project.key}</span>
           {project.archivedAt !== null && <Badge variant="outline">Archived</Badge>}
         </div>
-        {canManage && (
+        <div className="flex items-center gap-4">
           <Link
-            href={`/projects/${project.key}/settings`}
+            href={`/projects/${project.key}/epics`}
             className="inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
           >
-            <SettingsIcon aria-hidden="true" className="size-4" />
-            Settings
+            <LayersIcon aria-hidden="true" className="size-4" />
+            Epics
           </Link>
-        )}
+          {canManage && (
+            <Link
+              href={`/projects/${project.key}/settings`}
+              className="inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+            >
+              <SettingsIcon aria-hidden="true" className="size-4" />
+              Settings
+            </Link>
+          )}
+        </div>
       </div>
       {project.description !== "" && (
         <p className="text-sm whitespace-pre-wrap text-muted-foreground">{project.description}</p>

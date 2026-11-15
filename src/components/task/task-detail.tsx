@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Markdown } from "@/components/markdown";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +48,6 @@ import {
   updateTask,
 } from "./api";
 import { CommentsSection } from "./comments-section";
-import { MarkdownEditor } from "./markdown-editor";
 
 const NONE = "none";
 const SEARCH_PAUSE_MS = 250;

@@ -1,6 +1,7 @@
 # WT-03 — Board core: projects, teams, columns, epics, tasks, comments, assignment
 
-- Status: In progress (approved by the owner on 2026-11-13)
+- Status: Done (closed on 2026-11-15, verified on the integration branch
+  `claude/wi-039-epics-page`; `main` has it once the branches are merged. WI-040 stays proposed)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (sections 2 to 5, 9),
   [0002](../canonical/0002-realtime-sync.md) (section 4, consistency rules),
   [0004](../canonical/0004-api-conventions.md),
@@ -177,27 +178,47 @@ As before, each item gets its work-item and work-spec files just before it is st
 
 ## Exit criteria
 
-- [ ] A Manager creates a project, finds it with "To do", "In progress" and "Done", renames,
+- [x] A Manager creates a project, finds it with "To do", "In progress" and "Done", renames,
       reorders and adds columns, and cannot delete a non-empty column or the last `done`
       column.
-- [ ] A Member creates tasks on the board; they get keys `KEY-1`, `KEY-2`, ... with no gap or
+- [x] A Member creates tasks on the board; they get keys `KEY-1`, `KEY-2`, ... with no gap or
       duplicate under concurrent creation; they can be fetched by id or by key.
-- [ ] A Member moves a card by drag and drop and by keyboard; the order survives a reload.
-- [ ] A Member assigns a task to a team, a person or both, sets its epic, edits its Markdown
+- [x] A Member moves a card by drag and drop and by keyboard; the order survives a reload.
+- [x] A Member assigns a task to a team, a person or both, sets its epic, edits its Markdown
       description (rendered with no raw HTML), comments, and deletes a task they reported
       but not another person's; a Manager restores it.
-- [ ] A Viewer sees projects, boards, tasks, epics and comments and gets `403` from every
+- [x] A Viewer sees projects, boards, tasks, epics and comments and gets `403` from every
       write endpoint of this track; this is tested for every endpoint.
-- [ ] An update or move with a stale `version` returns `409 version_conflict` with the
+- [x] An update or move with a stale `version` returns `409 version_conflict` with the
       current entity.
-- [ ] Every task change produces exactly one history event per changed field in the same
+- [x] Every task change produces exactly one history event per changed field in the same
       transaction, and none after a rollback; every configuration change is in the audit
       log with its actor.
-- [ ] Writes to an archived project return `409 project_archived`.
-- [ ] Every endpoint declares its authentication and permission through `route()`, checked
+- [x] Writes to an archived project return `409 project_archived`.
+- [x] Every endpoint declares its authentication and permission through `route()`, checked
       by the guard-rail test.
-- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
+- [x] The full quality gate passes on `main`, with `pnpm db:generate` and
       `pnpm openapi:generate` leaving no diff.
+
+### Closing verification (2026-11-15)
+
+Each criterion was checked against the running application and the test that proves it.
+
+| #   | Criterion                                        | Evidence                                                                                                                                                                                     |
+| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Projects, default columns, columns               | `projects.integration.test.ts` (three default columns), `columns.integration.test.ts` (`column_not_empty`, `last_done_column`), end-to-end `projects.spec.ts` (create, rename, move, delete) |
+| 2   | Task keys, no gap or duplicate                   | `tasks.integration.test.ts`: twenty concurrent creations give `OPA-1` to `OPA-20`; fetch by id and key in `tasks.integration.test.ts` and the task route tests                               |
+| 3   | Drag, keyboard, reload                           | end-to-end `board.spec.ts`: mouse between and within columns, keyboard (Space, arrows, Space; Escape), order kept after a reload                                                             |
+| 4   | Assign, epic, Markdown, comment, delete, restore | end-to-end `task-detail.spec.ts` (all fields, comments, Markdown with a script that does not run, the reporter deletes and another Member cannot), `projects.spec.ts` (a Manager restores)   |
+| 5   | Viewer: 403 on every write                       | new `viewer-writes.integration.test.ts`, which tries every write operation of the API; plus the per-endpoint Viewer tests                                                                    |
+| 6   | Stale `version`: 409 with `current`              | service and route tests for tasks, moves, columns, projects and epics; end-to-end for the task detail and the board                                                                          |
+| 7   | History and audit                                | `tasks.integration.test.ts` (one event per changed field; rollback when the event cannot be written), `comments.integration.test.ts`, the audit tests of every configuration service         |
+| 8   | Archived: 409 `project_archived`                 | tasks, moves, delete and restore, comments, columns (all four writes), epics, projects, in the service tests; shown read-only in the pages                                                   |
+| 9   | `route()` declares access                        | `src/lib/openapi/routes.test.ts` and `route-access.integration.test.ts`                                                                                                                      |
+| 10  | Quality gate, no diff                            | typecheck, lint, format, 919 Vitest and 72 Playwright tests pass, twice; `pnpm db:generate` and `pnpm openapi:generate` leave no diff. Run on the integration branch, not yet on `main`      |
+
+Left open on purpose: WI-040 (account link hardening) is part of the track's list but is not
+an exit criterion, and still awaits the owner's approval.
 
 ## Risks and open questions
 

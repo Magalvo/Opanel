@@ -1,6 +1,6 @@
 # WS-039 — Epics page
 
-- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 6)
+- Status: Done (approved by the owner on 2026-11-15, with the proposals of questions 1 to 6)
 - Work-item: [WI-039](../work-items/WI-039-epics-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5, 6, 7;
@@ -137,3 +137,32 @@ For the owner:
 6. **Closing WT-03 in this item.** Once the page exists, the 10 exit criteria of the track are
    checked against the running application and the track is marked Done, with a note of
    what was verified. Agree that this belongs to WI-039 rather than to a separate item?
+
+## Deviations from the approved spec
+
+1. **The link-style button for an epic's title is not `variant="link"`.** Its blue is 3.77:1 on
+   the dark background and axe refuses it (4.5:1 needed); the title is a plain ghost button with
+   the foreground colour and an underline. Found by the dark-mode end-to-end test.
+2. **Three test helpers use `hidden: true`** to find rows while a modal dialog hides the page
+   behind it from assistive technology (the same as for teams): the tests check that the list
+   under the dialog is updated.
+3. **A test was added that the spec did not list**: `src/app/api/v1/viewer-writes.integration.test.ts`
+   tries every write operation of the API with a Viewer's session and asks for `403`. WT-03's
+   exit criteria say this "is tested for every endpoint", and until now it was only tested
+   operation by operation. It is the test that makes that sentence true, found while closing
+   the track (question 6).
+4. **Focus after closing the epic dialog** is given back by the page (the dialog is opened from
+   code, so Radix has no trigger), as for teams and projects.
+
+## Implementation record
+
+- Red: committed first on this branch; the page, components, editor and link failed on the
+  missing modules.
+- Green: 919 Vitest tests and 72 Playwright tests (four new in `epics.spec.ts`) pass, twice in
+  a row. Typecheck, lint and format pass; `pnpm openapi:generate` and `pnpm db:generate` leave
+  no diff.
+- `MarkdownEditor` moved to `src/components/` with a test of its own; the task components were
+  not otherwise changed.
+- WT-03 was closed in this item, as question 6 agreed: see "Closing verification" in the track.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

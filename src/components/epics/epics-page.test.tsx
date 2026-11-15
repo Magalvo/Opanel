@@ -39,8 +39,9 @@ async function renderPage(
   return user;
 }
 
+/** A table row, found even while a modal dialog hides the page behind it from assistive technology. */
 function row(title: string) {
-  return screen.getByRole("row", { name: new RegExp(title) });
+  return screen.getByRole("row", { name: new RegExp(title), hidden: true });
 }
 
 function pageMessages() {
@@ -290,6 +291,7 @@ describe("EpicsPage: editing", () => {
     expect(
       within(row("Identity")).getByRole("progressbar", {
         name: "Progress of Identity: 3 of 5 tasks done",
+        hidden: true,
       }),
     ).toBeInTheDocument();
 
@@ -335,7 +337,9 @@ describe("EpicsPage: editing", () => {
     expect(dialogMessages(dialog)).toHaveTextContent(
       "Someone else changed this epic. Your edit was not saved; the current values are shown.",
     );
-    expect(within(row("Theirs")).getByRole("button", { name: "Theirs" })).toBeInTheDocument();
+    expect(
+      within(row("Theirs")).getByRole("button", { name: "Theirs", hidden: true }),
+    ).toBeInTheDocument();
   });
 
   it("makes the page read-only when the project turns out to be archived", async () => {
