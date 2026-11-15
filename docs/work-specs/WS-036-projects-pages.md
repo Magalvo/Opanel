@@ -1,6 +1,6 @@
 # WS-036 — Projects list, navigation and project settings
 
-- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 6)
+- Status: Done (approved by the owner on 2026-11-15, with the proposals of questions 1 to 6)
 - Work-item: [WI-036](../work-items/WI-036-projects-pages.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 5;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5, 6, 7;
@@ -164,3 +164,30 @@ For the owner:
    list. Agree?
 6. **A stale `version` discards the editor's change** (it is shown the current values and told),
    as the API does, instead of offering to merge. Agree?
+
+## Deviations from the approved spec
+
+1. **The pages read the project through the service**, not through `GET /api/v1/projects/{key}`
+   as section 1 said: a server component calling the service is what `AGENTS.md` section 3
+   describes, and an HTTP call to oneself adds nothing. An unknown or malformed key is the
+   same not-found page. The check lives in `src/app/(app)/projects/load-project.ts`.
+2. **`ApiFailure` has an optional `current`** (the entity of a `version_conflict`), added in
+   `src/components/people/api.ts`, which the teams and projects clients reuse.
+3. **The settings page has a fifth section, "Archive"**, next to Details, Columns and
+   Deleted tasks, so the archive controls and the read-only notice have their own heading.
+4. **Focus after the archive confirmation** is given back with `onCloseAutoFocus`, because the
+   dialog is opened from code and has no trigger (the same cause as WS-035).
+5. **A test of mine was corrected**: Playwright matches a role's name as a substring, so
+   `Name` also matched `New column name`; the end-to-end test now asks for an exact name.
+6. **Shared test helpers** live in `src/components/projects/test-support.ts`.
+
+## Implementation record
+
+- Red: committed first on this branch; the pages, components and sidebar test failed on the
+  missing modules and links.
+- Green: 765 Vitest tests and 38 Playwright tests (six new) pass. Typecheck, lint and format
+  pass; `pnpm openapi:generate` leaves no diff (no API change).
+- `pnpm typecheck` needed `next typegen` once, as `CONTRIBUTING.md` explains, because the
+  route types of an earlier build did not know the new pages.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

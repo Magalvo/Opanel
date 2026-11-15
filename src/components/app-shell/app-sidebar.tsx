@@ -1,4 +1,4 @@
-import { UsersIcon, UsersRoundIcon } from "lucide-react";
+import { FolderKanbanIcon, UsersIcon, UsersRoundIcon } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -31,6 +31,14 @@ export function AppSidebar({ canManageAccounts }: Readonly<{ canManageAccounts: 
         {/* More items arrive with the first screens of WT-03. */}
         <nav aria-label="Main" className="flex-1">
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/projects">
+                  <FolderKanbanIcon aria-hidden="true" />
+                  Projects
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/teams">

@@ -16,7 +16,9 @@ async function signedInAs(role: "viewer" | "member" | "manager" | "admin") {
   return account;
 }
 
-type Element = { props: { project?: { key?: string; name?: string }; canManage?: unknown } };
+interface Element {
+  props: { project?: { key?: string; name?: string }; canManage?: unknown };
+}
 
 describe("the /projects/[projectKey] page (WS-036)", () => {
   beforeEach(() => {

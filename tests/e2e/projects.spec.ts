@@ -77,7 +77,7 @@ manager(
     await page.getByRole("link", { name: "Settings" }).click();
     await expect(page).toHaveURL(new RegExp(`/projects/${key}/settings$`));
 
-    await page.getByRole("textbox", { name: "Name" }).fill("Renamed project");
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Renamed project");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("status")).toContainText("Saved the details.");
 

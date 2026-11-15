@@ -14,6 +14,8 @@ export class ApiFailure extends Error {
     readonly status: number,
     readonly code: string | null,
     readonly errors: readonly FieldError[],
+    /** Only with `version_conflict`: the entity as it is now. */
+    readonly current?: unknown,
   ) {
     super(`The API answered ${String(status)}.`);
     this.name = "ApiFailure";
@@ -26,6 +28,7 @@ export async function failureOf(response: Response): Promise<ApiFailure> {
     response.status,
     problem.success ? problem.data.code : null,
     problem.success ? (problem.data.errors ?? []) : [],
+    problem.success ? problem.data.current : undefined,
   );
 }
 

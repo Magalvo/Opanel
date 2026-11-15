@@ -11,8 +11,9 @@ const { default: SettingsRoute } = await import("./page");
 const params = (projectKey: string) => ({ params: Promise.resolve({ projectKey }) });
 
 async function signedInAs(role: "viewer" | "member" | "manager" | "admin") {
-  const account = await createTestAccount({ email: `${role}@example.com`, role });
-  vi.mocked(headers).mockResolvedValue(new Headers({ cookie: await signInCookie(account.email) }));
+  const email = `${role}@example.com`;
+  await createTestAccount({ email, role });
+  vi.mocked(headers).mockResolvedValue(new Headers({ cookie: await signInCookie(email) }));
 }
 
 async function seedProject() {
