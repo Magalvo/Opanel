@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { versionConflictResponse } from "@/lib/openapi/responses";
+import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { projectParamsSchema } from "./projects";
@@ -139,6 +139,7 @@ export const createEpicContract = {
     404: { description: "There is no such project.", problem: true },
     409: { description: "The project is archived (code `project_archived`).", problem: true },
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -170,5 +171,6 @@ export const updateEpicContract = {
     404: { description: "There is no such epic.", problem: true },
     409: versionConflictResponse(epicSchema),
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;

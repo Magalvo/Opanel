@@ -119,6 +119,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -279,6 +289,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -337,6 +357,16 @@
           },
           "403": {
             "description": "The request does not come from the app's own origin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -424,6 +454,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -485,6 +525,16 @@
           },
           "404": {
             "description": "The link is not valid (code `invalid_link`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -660,6 +710,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -758,6 +818,16 @@
           },
           "409": {
             "description": "The change would leave no active Admin (code `last_admin`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1174,6 +1244,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -1354,6 +1434,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -1519,6 +1609,16 @@
           },
           "409": {
             "description": "The person is deactivated (code `account_inactive`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1776,6 +1876,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -1972,6 +2082,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectVersionConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -2348,6 +2468,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -2450,6 +2580,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ColumnVersionConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -2633,6 +2773,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ColumnVersionConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -2880,6 +3030,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -3076,6 +3236,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/TaskVersionConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -3279,6 +3449,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/TaskVersionConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -3612,6 +3792,16 @@
               }
             }
           },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "415": {
             "description": "The body is not JSON.",
             "content": {
@@ -3788,6 +3978,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/EpicVersionConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -4486,6 +4686,7 @@
               "conflict",
               "last_admin",
               "unsupported_media_type",
+              "payload_too_large",
               "rate_limited",
               "internal_error",
               "invalid_link",

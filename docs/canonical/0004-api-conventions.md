@@ -68,6 +68,7 @@ Agreed with the owner in WS-005: this doc is written at the start of WT-02.
 | `403` | Valid credentials, but the actor lacks the permission or scope                |
 | `404` | The resource does not exist                                                   |
 | `409` | The request conflicts with current state (stale `version`, duplicate, ...)    |
+| `413` | The JSON body is larger than 512 KiB; it is refused before it is parsed       |
 | `415` | Unsupported request content type                                              |
 | `429` | Rate limited; `Retry-After` gives the wait in seconds                         |
 | `500` | Unexpected server error; no internal detail is returned                       |
@@ -105,6 +106,7 @@ Base codes:
 | `403`  | `forbidden`              |
 | `404`  | `not_found`              |
 | `409`  | `conflict`               |
+| `413`  | `payload_too_large`      |
 | `415`  | `unsupported_media_type` |
 | `429`  | `rate_limited`           |
 | `500`  | `internal_error`         |

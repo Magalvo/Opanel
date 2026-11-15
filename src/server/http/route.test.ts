@@ -542,7 +542,8 @@ describe("readJson: the size of the body", () => {
     });
 
     expect(await statusOf(request)).toBe(413);
-    expect(watch.pulled).toBe(0);
+    // A stream queues one chunk as soon as it is made; nothing is read from it after that.
+    expect(watch.pulled).toBeLessThanOrEqual(1);
   });
 
   it("counts a body that declares no length, and cancels the stream soon after the budget", async () => {

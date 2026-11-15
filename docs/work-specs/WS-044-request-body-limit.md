@@ -1,6 +1,6 @@
 # WS-044 — Request body size limit
 
-- Status: Approved
+- Status: Done
 - Work-item: [WI-044](../work-items/WI-044-request-body-limit.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3 and 4; audit of
   2026-11-14, finding A-03
@@ -115,3 +115,31 @@ framework's or a proxy's handling of the transport.
    to wait until an endpoint needs it.
 3. **Only JSON bodies.** No endpoint takes another body type in v1 (no file uploads), so
    the limit lives in `readJson`. A future work-spec that adds one must bound it too.
+
+## Deviations from the approved spec
+
+1. **The shared `413` response is `PAYLOAD_TOO_LARGE` in `src/lib/openapi/responses.ts`**, next to
+   `versionConflictResponse`, not a `TOO_LARGE` in `problem.ts`: it is a response contract, and
+   that file already holds the other one. Seven schema files import it.
+2. **Test 2 allows one chunk pulled** from a refused request's stream. A `ReadableStream` queues
+   one chunk as soon as it is made; what the test shows is that nothing is read after that.
+3. **For the branches that join later.** The `413`-with-`415` test checks every contract, so when
+   the comments contract (WI-034) and any later one with a body meet this branch they must add
+   `413: PAYLOAD_TOO_LARGE` to pass: the test is the reminder. The end-to-end spec here uses
+   Playwright's own `test`, because `tests/e2e/base.ts` lives on the WI-041 branch; on
+   integration it takes `test` from there like every other spec.
+4. The proxy line of the production follow-up (it must allow 512 KiB and should refuse more
+   itself) is already in `docs/README.md` from the audit branch.
+
+## Implementation record
+
+- Red: committed first on this branch; the errors, route, contract and problem-code tests failed
+  on the missing `payloadTooLarge`, `MAX_JSON_BODY_BYTES` and the undocumented `413`.
+- Green: 705 Vitest tests and 31 Playwright tests (three new in `body-limit.spec.ts`) pass, twice
+  in a row. Typecheck, lint and format pass; `pnpm openapi:generate` adds the `413` to the 20
+  operations with a body and the generated file is committed; `pnpm db:generate` leaves no diff.
+- Against the running server: a body of `512 KiB + 1` byte is `413` with a problem body and a
+  request id; one of exactly 512 KiB is read; a chunked body with no `Content-Length` is
+  counted and refused as well.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

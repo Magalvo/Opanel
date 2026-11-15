@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { versionConflictResponse } from "@/lib/openapi/responses";
+import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { accountNameSchema } from "./accounts";
 import { pageSchema, paginationQuerySchema } from "./pagination";
@@ -109,6 +109,7 @@ export const createProjectContract = {
     400: { description: "The body is not valid.", problem: true },
     409: { description: "The key is taken (code `project_key_taken`).", problem: true },
     415: { description: "The body is not JSON.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -140,6 +141,7 @@ export const updateProjectContract = {
     404: NO_PROJECT,
     409: versionConflictResponse(projectSchema),
     415: { description: "The body is not JSON.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 

@@ -7,7 +7,13 @@ import { authenticate, type Authenticated } from "@/server/auth/authenticate";
 import { assertSameOrigin } from "@/server/auth/origin";
 import { getEnv } from "@/server/env";
 
-import { ApiError, internalError, invalidRequest, unsupportedMediaType } from "./errors";
+import {
+  ApiError,
+  internalError,
+  invalidRequest,
+  payloadTooLarge,
+  unsupportedMediaType,
+} from "./errors";
 
 export type RouteHandler<Context> = (
   request: Request,
@@ -208,7 +214,58 @@ function isJson(request: Request): boolean {
   return mediaType === "application/json";
 }
 
-/** Reads and validates a JSON request body. Throws `415` or `400` (`ApiError`). */
+/**
+ * The most bytes of JSON body any endpoint reads (WS-044). The longest field the API accepts is
+ * 50 000 characters, at most 6 bytes each in JSON, so every valid request fits with room.
+ * A new field that could not fit must raise it in its own work-spec.
+ */
+export const MAX_JSON_BODY_BYTES = 512 * 1024;
+
+/**
+ * The body as text, read with a budget. A `Content-Length` over the budget is refused without
+ * reading; a missing, malformed or untrue one is not believed, so the bytes are counted as they
+ * arrive and the stream is cancelled once the budget is passed. Throws `413`, or `400` if the
+ * body stops arriving.
+ */
+async function readBodyText(request: Request): Promise<string> {
+  const declared = request.headers.get("Content-Length");
+  if (declared !== null && /^\d+$/.test(declared) && Number(declared) > MAX_JSON_BODY_BYTES) {
+    throw payloadTooLarge();
+  }
+  if (request.body === null) {
+    return "";
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_JSON_BODY_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        throw payloadTooLarge();
+      }
+      chunks.push(value);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw invalidRequest(undefined, "The request body could not be read.");
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  // The same decoding as `request.json()`: UTF-8, with a byte order mark dropped.
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+/** Reads and validates a JSON request body. Throws `413`, `415` or `400` (`ApiError`). */
 export async function readJson<Schema extends z.ZodType>(
   request: Request,
   schema: Schema,
@@ -217,9 +274,10 @@ export async function readJson<Schema extends z.ZodType>(
     throw unsupportedMediaType();
   }
 
+  const text = await readBodyText(request);
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(text);
   } catch {
     throw invalidRequest(undefined, "The request body is not valid JSON.");
   }

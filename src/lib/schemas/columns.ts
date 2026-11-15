@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { versionConflictResponse } from "@/lib/openapi/responses";
+import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { accountNameSchema } from "./accounts";
 import { projectParamsSchema } from "./projects";
@@ -106,6 +106,7 @@ export const createColumnContract = {
     404: { description: "There is no such project.", problem: true },
     409: { description: "The project is archived (code `project_archived`).", problem: true },
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -125,6 +126,7 @@ export const updateColumnContract = {
     404: NO_COLUMN,
     409: versionConflictResponse(columnSchema),
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -141,6 +143,7 @@ export const moveColumnContract = {
     404: NO_COLUMN,
     409: versionConflictResponse(columnSchema),
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 

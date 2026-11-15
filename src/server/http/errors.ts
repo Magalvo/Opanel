@@ -146,6 +146,19 @@ export function invalidLink(
   return new ApiError({ status: 404, title: "Not Found", code: "invalid_link", detail });
 }
 
+/**
+ * A body over the budget (WS-044). The detail does not state the limit: it is documented, and
+ * a client has no use for a number the server may change.
+ */
+export function payloadTooLarge(detail = "The request body is too large."): ApiError {
+  return new ApiError({
+    status: 413,
+    title: "Content Too Large",
+    code: "payload_too_large",
+    detail,
+  });
+}
+
 export function unsupportedMediaType(
   detail = "The request body must be sent as application/json.",
 ): ApiError {

@@ -11,3 +11,9 @@ export function versionConflictResponse(entity: z.ZodType): VersionConflictRespo
     conflictOf: entity,
   };
 }
+
+/** The `413` of every operation that takes a JSON body (WS-044). */
+export const PAYLOAD_TOO_LARGE = {
+  description: "The body is larger than 512 KiB (code `payload_too_large`).",
+  problem: true,
+} as const;

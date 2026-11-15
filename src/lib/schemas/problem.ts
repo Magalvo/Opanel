@@ -13,6 +13,7 @@ export const PROBLEM_CODES = [
   "conflict",
   "last_admin",
   "unsupported_media_type",
+  "payload_too_large",
   "rate_limited",
   "internal_error",
   "invalid_link",

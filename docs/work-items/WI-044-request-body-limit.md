@@ -1,6 +1,6 @@
 # WI-044 — Request body size limit
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-14,
   finding A-03; the code it touches was built in WT-01)
 - Depends on: none
@@ -14,16 +14,16 @@ whole body into memory; the field length limits in the Zod schemas only apply af
 
 ## Acceptance criteria
 
-- [ ] A body over the budget is answered `413` with the problem body, whether the request
+- [x] A body over the budget is answered `413` with the problem body, whether the request
       declares its length, declares a wrong one, or declares none.
-- [ ] Reading stops once the budget is exceeded; the rest of the body is not buffered.
-- [ ] A body at exactly the budget is still processed as before.
-- [ ] The budget counts bytes, not characters.
-- [ ] Every operation that accepts a JSON body documents `413` in its contract and in the
+- [x] Reading stops once the budget is exceeded; the rest of the body is not buffered.
+- [x] A body at exactly the budget is still processed as before.
+- [x] The budget counts bytes, not characters.
+- [x] Every operation that accepts a JSON body documents `413` in its contract and in the
       generated OpenAPI document.
-- [ ] A test against the running server (not only a constructed `Request`) proves it.
-- [ ] Canonical doc 0004 lists the status and the code.
-- [ ] The full quality gate passes.
+- [x] A test against the running server (not only a constructed `Request`) proves it.
+- [x] Canonical doc 0004 lists the status and the code.
+- [x] The full quality gate passes.
 
 ## Notes
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { versionConflictResponse } from "@/lib/openapi/responses";
+import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
@@ -188,6 +188,7 @@ export const createTaskContract = {
       problem: true,
     },
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -219,6 +220,7 @@ export const updateTaskContract = {
     404: NO_TASK,
     409: versionConflictResponse(taskSchema),
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -237,6 +239,7 @@ export const moveTaskContract = {
     404: NO_TASK,
     409: versionConflictResponse(taskSchema),
     415: NOT_JSON,
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 

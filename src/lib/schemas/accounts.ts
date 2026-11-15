@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { humanRoleSchema } from "./permissions";
@@ -105,6 +106,7 @@ export const inviteAccountContract = {
     400: { description: "The body is not valid.", problem: true },
     409: { description: "An account with this email already exists.", problem: true },
     415: { description: "The body is not JSON.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
@@ -127,6 +129,7 @@ export const updateAccountContract = {
       problem: true,
     },
     415: { description: "The body is not JSON.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
   },
 } satisfies EndpointContract;
 
