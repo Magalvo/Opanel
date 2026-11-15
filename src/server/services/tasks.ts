@@ -139,6 +139,19 @@ async function findTask(
   return row;
 }
 
+/**
+ * The id and project of a task that is not deleted, or undefined; for services that work on
+ * a task's children, such as comments (WS-034). `lock` as for `findTask`.
+ */
+export async function findLiveTask(
+  executor: Executor,
+  ref: string,
+  lock: SQL = sql``,
+): Promise<{ id: string; projectId: string } | undefined> {
+  const row = await findTask(executor, ref, lock);
+  return row && { id: row.id, projectId: row.project_id };
+}
+
 /** Like `findTask`, deleted or not: only restoring looks at deleted tasks by id or key. */
 async function findAnyTask(
   executor: Executor,
