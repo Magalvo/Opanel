@@ -5,7 +5,16 @@ import type { EndpointContract } from "@/lib/openapi/contract";
 import { problemSchema } from "@/lib/schemas/problem";
 
 import { ApiError, notFound, rateLimited, versionConflict } from "./errors";
-import { json, noContent, readJson, readParams, readQuery, route, unknownPathRoute } from "./route";
+import {
+  json,
+  MAX_JSON_BODY_BYTES,
+  noContent,
+  readJson,
+  readParams,
+  readQuery,
+  route,
+  unknownPathRoute,
+} from "./route";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const URL_BASE = "http://localhost/api/v1/things";
@@ -457,5 +466,151 @@ describe("readParams", () => {
 describe("ApiError outside the wrapper", () => {
   it("is what the helpers throw", () => {
     expect(() => readQuery(new Request(`${URL_BASE}?x=1`), z.strictObject({}))).toThrow(ApiError);
+  });
+});
+
+// WS-044: a body is read with a budget of bytes, counted as it arrives.
+describe("readJson: the size of the body", () => {
+  const CHUNK = 64 * 1024;
+
+  /** `{"title":"aaa…"}` of exactly this many bytes. */
+  function bodyOfBytes(bytes: number): string {
+    const frame = new TextEncoder().encode('{"title":""}').length;
+    return `{"title":"${"a".repeat(bytes - frame)}"}`;
+  }
+
+  /** A request whose body is a stream the test can watch: how much was pulled, and whether it was cancelled. */
+  function streamed(
+    options: { chunks: number; failAfter?: number; headers?: Record<string, string> } = {
+      chunks: 0,
+    },
+  ) {
+    const watch = { pulled: 0, cancelled: false };
+    const chunk = new TextEncoder().encode(`${"a".repeat(CHUNK - 1)}\n`);
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (options.failAfter !== undefined && watch.pulled >= options.failAfter) {
+          controller.error(new Error("connection lost"));
+          return;
+        }
+        if (watch.pulled >= options.chunks) {
+          controller.close();
+          return;
+        }
+        watch.pulled += 1;
+        controller.enqueue(chunk);
+      },
+      cancel() {
+        watch.cancelled = true;
+      },
+    });
+    const request = new Request(URL_BASE, {
+      method: "POST",
+      body: stream,
+      duplex: "half",
+      headers: { Origin: APP_URL, "Content-Type": "application/json", ...options.headers },
+    } as RequestInit);
+    return { request, watch };
+  }
+
+  async function statusOf(request: Request): Promise<number> {
+    return (await throughRoute(request, (incoming) => readJson(incoming, thingSchema))).status;
+  }
+
+  it("has a budget of 512 KiB", () => {
+    expect(MAX_JSON_BODY_BYTES).toBe(512 * 1024);
+  });
+
+  it("accepts a body of exactly the budget and refuses one byte more with 413", async () => {
+    expect(await statusOf(post(bodyOfBytes(MAX_JSON_BODY_BYTES)))).toBe(200);
+
+    const response = await throughRoute(post(bodyOfBytes(MAX_JSON_BODY_BYTES + 1)), (request) =>
+      readJson(request, thingSchema),
+    );
+
+    expect(response.status).toBe(413);
+    const problem = await problemOf(response);
+    expect(problem).toMatchObject({ code: "payload_too_large", status: 413 });
+    expect(problem.detail).toBe("The request body is too large.");
+    expect(JSON.stringify(problem)).not.toContain("524288");
+  });
+
+  it("refuses a Content-Length over the budget without reading the body", async () => {
+    const { request, watch } = streamed({
+      chunks: 4,
+      headers: { "Content-Length": String(MAX_JSON_BODY_BYTES + 1) },
+    });
+
+    expect(await statusOf(request)).toBe(413);
+    expect(watch.pulled).toBe(0);
+  });
+
+  it("counts a body that declares no length, and cancels the stream soon after the budget", async () => {
+    const { request, watch } = streamed({ chunks: 80 });
+
+    expect(await statusOf(request)).toBe(413);
+    expect(watch.cancelled).toBe(true);
+    // The budget is eight chunks; the stream is never read to its end.
+    expect(watch.pulled).toBeLessThan(20);
+  });
+
+  it("does not trust a Content-Length that says the body is small", async () => {
+    const { request, watch } = streamed({ chunks: 80, headers: { "Content-Length": "10" } });
+
+    expect(await statusOf(request)).toBe(413);
+    expect(watch.cancelled).toBe(true);
+  });
+
+  it("ignores a malformed Content-Length: a small body passes, a large one is refused", async () => {
+    for (const header of ["abc", "-1", "1e9", ""]) {
+      const small = new Request(URL_BASE, {
+        method: "POST",
+        body: '{"title":"A"}',
+        headers: { Origin: APP_URL, "Content-Type": "application/json", "Content-Length": header },
+      });
+      expect(await statusOf(small), header).toBe(200);
+      const { request } = streamed({ chunks: 80, headers: { "Content-Length": header } });
+      expect(await statusOf(request), header).toBe(413);
+    }
+  });
+
+  it("counts bytes, not characters: 200 000 three-byte characters are over the budget", async () => {
+    const text = JSON.stringify({ title: "€".repeat(200_000) });
+    expect(text.length).toBeLessThan(MAX_JSON_BODY_BYTES);
+
+    expect(await statusOf(post(text))).toBe(413);
+  });
+
+  it("keeps the 415 first, and 400 for malformed JSON within the budget", async () => {
+    expect(await statusOf(post(bodyOfBytes(MAX_JSON_BODY_BYTES + 1), "text/plain"))).toBe(415);
+
+    const response = await throughRoute(post('{"title":'), (request) =>
+      readJson(request, thingSchema),
+    );
+
+    expect(response.status).toBe(400);
+    expect((await problemOf(response)).detail).toBe("The request body is not valid JSON.");
+  });
+
+  it("answers 400, not 500, when the body stops arriving half way", async () => {
+    const { request } = streamed({ chunks: 4, failAfter: 2 });
+
+    const response = await throughRoute(request, (incoming) => readJson(incoming, thingSchema));
+
+    expect(response.status).toBe(400);
+    expect((await problemOf(response)).code).toBe("invalid_request");
+  });
+
+  it("parses as request.json() does: a byte order mark and multibyte text", async () => {
+    const bytes = new TextEncoder().encode('\uFEFF{"title":"héllo € 日本"}');
+    const request = new Request(URL_BASE, {
+      method: "POST",
+      body: bytes,
+      headers: { Origin: APP_URL, "Content-Type": "application/json" },
+    });
+
+    const response = await throughRoute(request, (incoming) => readJson(incoming, thingSchema));
+
+    expect(await response.json()).toEqual({ title: "héllo € 日本" });
   });
 });
