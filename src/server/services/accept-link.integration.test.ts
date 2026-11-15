@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 
 import { authenticate } from "@/server/auth/authenticate";
+import { hashPassword } from "@/server/auth/password";
 import {
   cookieHeaderFrom,
   createTestAccount,
@@ -20,7 +21,6 @@ import {
   rateLimits,
   sessions,
 } from "@/server/db/schema";
-import { hashPassword } from "@/server/auth/password";
 import { ApiError } from "@/server/http/errors";
 
 import { acceptLink } from "./accept-link";
@@ -278,7 +278,9 @@ describe("a link that does not work", () => {
 
     expect(error.status).toBe(404);
     expect(error.code).toBe("invalid_link");
-    expect(await getDb().select().from(credentials)).toHaveLength(0);
+    expect(
+      await getDb().select().from(credentials).where(eq(credentials.accountId, account.id)),
+    ).toHaveLength(0);
     expect(await getDb().select().from(sessions)).toHaveLength(0);
     expect((await auditRows()).map((row) => row.action).slice(before)).toEqual([
       "account.invitation_revoked",

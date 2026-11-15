@@ -264,6 +264,9 @@ export async function issueResetLink(
   requirePermission(actor, "accounts:manage");
 
   const issued = await db.transaction(async (tx) => {
+    // Before any row lock, as in acceptLink and revokeInvitation, so issuing a new link while
+    // the previous one is accepted cannot deadlock (WS-040).
+    await lockAccount(tx, accountId);
     const target = await loadManaged(tx, accountId);
     if (target.status === "deactivated") {
       throw conflict("This account is deactivated. Reactivate it first.");

@@ -32,6 +32,14 @@ export interface SignInInput {
 export interface SignInOptions {
   /** The install-wide budget of failure audit rows. Tests lower it. */
   failureAuditRule?: RateLimitRule;
+  /**
+   * Only for callers that have just set this password themselves, in a committed
+   * transaction, from input that passed its own check: accepting a valid one-time link and
+   * first-run setup (WS-040). The sign-in limiter neither refuses nor counts the attempt;
+   * its counters are left as they are. The password is still verified. Never set it from
+   * request input: the sign-in endpoint calls `signIn` without options.
+   */
+  trusted?: boolean;
 }
 
 export interface SignInResult {
@@ -83,15 +91,14 @@ async function auditFailure(
 }
 
 /**
- * Signs a person in. Wrong password, unknown email and deactivated account are one and the
- * same `401`. Limits are checked before the password is, so a blocked caller learns
- * nothing about it.
+ * Consumes the sign-in limiter's counters for one attempt, and refuses it with `429` when
+ * the email or the address is over its limit.
  */
-export async function signIn(
+async function checkLimits(
+  db: Database,
   input: SignInInput,
-  db: Database = getDb(),
-  { failureAuditRule = SIGN_IN_FAILURE_AUDIT_RULE }: SignInOptions = {},
-): Promise<SignInResult> {
+  failureAuditRule: RateLimitRule,
+): Promise<void> {
   if (Math.random() < 0.02) {
     await purgeExpiredRateLimits(db);
   }
@@ -108,6 +115,21 @@ export async function signIn(
       await auditFailure(db, failureAuditRule, "rate_limited", undefined);
     }
     throw rateLimited(Math.max(...blocked.map((attempt) => attempt.retryAfterSeconds)));
+  }
+}
+
+/**
+ * Signs a person in. Wrong password, unknown email and deactivated account are one and the
+ * same `401`. Limits are checked before the password is, so a blocked caller learns
+ * nothing about it. A `trusted` caller skips the limits (see `SignInOptions`).
+ */
+export async function signIn(
+  input: SignInInput,
+  db: Database = getDb(),
+  { failureAuditRule = SIGN_IN_FAILURE_AUDIT_RULE, trusted = false }: SignInOptions = {},
+): Promise<SignInResult> {
+  if (!trusted) {
+    await checkLimits(db, input, failureAuditRule);
   }
 
   const account = await findAccountByEmail(db, input.email);
