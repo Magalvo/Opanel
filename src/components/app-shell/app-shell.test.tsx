@@ -52,7 +52,7 @@ describe("AppShell", () => {
     expect(within(topBar).getByRole("button", { name: "Account menu" })).toHaveTextContent("A");
   });
 
-  it("has a main navigation with a Teams link for everyone and no People link", () => {
+  it("has a main navigation with Projects and Teams links for everyone and no People link", () => {
     renderShell();
 
     const navigation = screen.getByRole("navigation", { name: "Main" });
@@ -60,7 +60,11 @@ describe("AppShell", () => {
       within(navigation)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Teams"]);
+    ).toEqual(["Projects", "Teams"]);
+    expect(within(navigation).getByRole("link", { name: "Projects" })).toHaveAttribute(
+      "href",
+      "/projects",
+    );
     expect(within(navigation).getByRole("link", { name: "Teams" })).toHaveAttribute(
       "href",
       "/teams",
