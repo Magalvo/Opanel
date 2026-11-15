@@ -1,6 +1,6 @@
 # WS-039 — Epics page
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 6)
 - Work-item: [WI-039](../work-items/WI-039-epics-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5, 6, 7;

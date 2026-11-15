@@ -48,4 +48,17 @@ describe("ProjectHeader", () => {
 
     expect(screen.getByText("Archived")).toBeInTheDocument();
   });
+
+  it("links to the project's epics for every role", () => {
+    const { rerender } = render(<ProjectHeader project={project()} canManage={false} />);
+    expect(screen.getByRole("link", { name: "Epics" })).toHaveAttribute(
+      "href",
+      "/projects/OPA/epics",
+    );
+
+    rerender(<ProjectHeader project={project()} canManage />);
+
+    expect(screen.getByRole("link", { name: "Epics" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
+  });
 });
