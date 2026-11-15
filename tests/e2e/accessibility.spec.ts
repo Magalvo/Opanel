@@ -1,5 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+
+import { test } from "./base";
 
 for (const colorScheme of ["light", "dark"] as const) {
   test(`the home page has no accessibility violations in ${colorScheme} mode`, async ({ page }) => {

@@ -1,6 +1,6 @@
 # WS-041 — Security headers and Content Security Policy
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 and 2)
 - Work-item: [WI-041](../work-items/WI-041-security-headers.md)
 - Canonical docs: `AGENTS.md` section 2 and hard rule 13; WT-03 design decision 14
 

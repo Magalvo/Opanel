@@ -1,6 +1,6 @@
 # WI-041 — Security headers and Content Security Policy
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-13)
 - Depends on: none. Must be done before WI-038, which first shows text written by users.
 - Work-spec: [WS-041](../work-specs/WS-041-security-headers.md)

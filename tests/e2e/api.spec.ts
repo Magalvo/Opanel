@@ -1,8 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { z } from "zod";
 
 import { healthResponseSchema } from "@/lib/schemas/health";
 import { problemSchema } from "@/lib/schemas/problem";
+
+import { test } from "./base";
 
 test.describe("public API", () => {
   test("GET /api/v1/health reports a healthy service", async ({ request }) => {
