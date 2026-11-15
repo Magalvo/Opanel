@@ -124,13 +124,19 @@ export const deleteTeamContract = {
   method: "delete",
   path: "/api/v1/teams/{teamId}",
   summary: "Delete a team",
-  description: "Deletes the team and its memberships. The people stay.",
+  description:
+    "Deletes the team and its memberships. The people stay. A team that any task is assigned " +
+    "to cannot be deleted.",
   access: MANAGE,
   request: { params: teamIdParamsSchema },
   responses: {
     204: { description: "The team was deleted.", noContent: true },
     400: { description: "The path is not valid.", problem: true },
     404: NO_TEAM,
+    409: {
+      description: "Tasks are assigned to the team (code `team_in_use`).",
+      problem: true,
+    },
   },
 } satisfies EndpointContract;
 

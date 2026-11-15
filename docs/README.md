@@ -9,12 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-033 (epics), on 2026-11-14.
+- **Last finished:** WI-035 (teams page), on 2026-11-14.
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **In progress:** WI-035 (teams page), WS-035 approved on 2026-11-15; the failing tests are
-  committed, the page is next.
+- **Next:** draft WI-036 (projects list, navigation and project settings) and WS-036 as
+  `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -84,7 +84,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                    | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
 | [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
-| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Approved    | [WS-035](work-specs/WS-035-teams-page.md)                       | Approved    |
+| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 

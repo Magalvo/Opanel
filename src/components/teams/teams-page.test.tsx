@@ -78,8 +78,9 @@ async function renderLoaded(canManage: boolean, items: TeamSummary[] = [platform
   return user;
 }
 
+/** A table row, found even while a modal dialog hides the page behind it from assistive technology. */
 function row(name: string) {
-  return screen.getByRole("row", { name: new RegExp(name) });
+  return screen.getByRole("row", { name: new RegExp(name), hidden: true });
 }
 
 async function openTeam(
@@ -147,9 +148,11 @@ describe("TeamsPage: the list", () => {
   });
 
   it("says so when there are no teams", async () => {
-    await renderLoaded(false, []);
+    on("GET /api/v1/teams?limit=50", list([]));
+    render(<TeamsPage canManage={false} />);
 
-    expect(screen.getByText("There are no teams yet.")).toBeInTheDocument();
+    expect(await screen.findByText("There are no teams yet.")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 });
 
@@ -227,7 +230,7 @@ describe("TeamsPage: creating", () => {
     expect(
       await within(dialog).findByText("A team with this name already exists."),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("row")).toHaveLength(2);
+    expect(screen.getAllByRole("row", { hidden: true })).toHaveLength(2);
   });
 });
 
@@ -411,6 +414,9 @@ describe("TeamsPage: accessibility", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
-    expect(opener).toHaveFocus();
+    // Radix gives focus back in the next tick.
+    await waitFor(() => {
+      expect(opener).toHaveFocus();
+    });
   });
 });

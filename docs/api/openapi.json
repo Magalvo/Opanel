@@ -1368,7 +1368,7 @@
       },
       "delete": {
         "summary": "Delete a team",
-        "description": "Deletes the team and its memberships. The people stay.\n\nRequires the `teams:manage` permission.",
+        "description": "Deletes the team and its memberships. The people stay. A team that any task is assigned to cannot be deleted.\n\nRequires the `teams:manage` permission.",
         "x-opanel-permission": "teams:manage",
         "security": [
           {
@@ -1423,6 +1423,16 @@
           },
           "404": {
             "description": "There is no such team.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Tasks are assigned to the team (code `team_in_use`).",
             "content": {
               "application/problem+json": {
                 "schema": {

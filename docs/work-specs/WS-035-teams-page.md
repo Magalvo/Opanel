@@ -1,6 +1,6 @@
 # WS-035 — Teams page
 
-- Status: Approved (by the owner, with the proposals of questions 1 to 5)
+- Status: Done (approved by the owner on 2026-11-15, with the proposals of questions 1 to 5)
 - Work-item: [WI-035](../work-items/WI-035-teams-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5 and 7;
@@ -127,3 +127,28 @@ For the owner:
 5. **The contract fix** (`409 team_in_use` listed on delete) is a small change to WI-026's
    contract that WT-03 decision 9 already promised. Included here rather than as its own
    work-item because it is one line and the page depends on it. Agree?
+
+## Deviations from the approved spec
+
+1. **Focus after closing a dialog is given back by the page**, not by Radix. The team dialog
+   is opened from code, with no `DialogTrigger`, so Radix has nothing to return focus to.
+   `TeamsPage` remembers the button and focuses it when the dialog closes (test 11).
+2. **Three of my tests were corrected, not weakened.** Rows are found with `hidden: true`
+   because a modal dialog hides the page behind it from assistive technology, and the tests
+   check that the list underneath is updated; the empty-list test no longer waits for a
+   table, which does not exist then; the focus assertion waits for the next tick.
+3. **The remove button is icon-only** with an accessible name (`Remove Mia`), so the text of
+   a member's list item is only the name and the badge.
+4. **`ApiFailure`, `call`, `failureOf` and `jsonBody` are now exported from
+   `src/components/people/api.ts`** and reused by the teams page, instead of copying them.
+5. **The page's own `role="status"` is for creating, deleting and loading**; the team dialog
+   has another for renaming, adding and removing, as the tests state.
+
+## Implementation record
+
+- Red: committed first on this branch; the component, page, sidebar and contract tests
+  failed on the missing module, rows and the missing `409`.
+- Green: 713 Vitest tests and 33 Playwright tests (five new) pass. Typecheck, lint and
+  format pass; `pnpm openapi:generate` adds the `409` to deleting a team.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

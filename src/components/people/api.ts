@@ -20,7 +20,7 @@ export class ApiFailure extends Error {
   }
 }
 
-async function failureOf(response: Response): Promise<ApiFailure> {
+export async function failureOf(response: Response): Promise<ApiFailure> {
   const problem = problemSchema.safeParse(await response.json().catch(() => null));
   return new ApiFailure(
     response.status,
@@ -29,7 +29,7 @@ async function failureOf(response: Response): Promise<ApiFailure> {
   );
 }
 
-async function call<Schema extends { parse: (value: unknown) => unknown }>(
+export async function call<Schema extends { parse: (value: unknown) => unknown }>(
   url: string,
   init: RequestInit,
   schema: Schema,
@@ -42,7 +42,7 @@ async function call<Schema extends { parse: (value: unknown) => unknown }>(
   return schema.parse(body) as ReturnType<Schema["parse"]>;
 }
 
-function jsonBody(body: unknown): RequestInit {
+export function jsonBody(body: unknown): RequestInit {
   return {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
