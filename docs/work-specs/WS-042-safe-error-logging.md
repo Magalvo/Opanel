@@ -1,6 +1,6 @@
 # WS-042 — Safe error logging
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved
 - Work-item: [WI-042](../work-items/WI-042-safe-error-logging.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4; `AGENTS.md` hard
   rule 7; audit of 2026-11-14, finding A-04

@@ -1,6 +1,6 @@
 # WI-043 — First-run setup refuses before hashing
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-14,
   finding A-01; the code it touches was built in WT-02)
 - Depends on: none

@@ -1,6 +1,6 @@
 # WS-043 — First-run setup refuses before hashing
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved
 - Work-item: [WI-043](../work-items/WI-043-setup-refuses-before-hashing.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md); WS-016; audit of 2026-11-14,
   finding A-01
