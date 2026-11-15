@@ -13,7 +13,6 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-  - WI-037 / WS-037, the board page (drafted 2026-11-15).
 - **Next:** WI-041 (security headers) must be approved and done before WI-038 (task detail).
   Draft WI-038 and WS-038 as `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
