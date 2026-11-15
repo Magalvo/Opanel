@@ -1,6 +1,6 @@
 # WI-038 — Task detail
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 8, 12, 14, 15; question 3)
 - Depends on: WI-033 (epics), WI-034 (comments), WI-037 (the board), WI-041 (the Content
   Security Policy, which the Markdown renderer must run under)

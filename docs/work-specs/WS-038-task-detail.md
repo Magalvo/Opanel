@@ -1,6 +1,6 @@
 # WS-038 — Task detail
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 7)
 - Work-item: [WI-038](../work-items/WI-038-task-detail.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3, 4, 5;
   [0004](../canonical/0004-api-conventions.md) sections 4, 6, 7;
