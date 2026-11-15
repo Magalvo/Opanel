@@ -1,6 +1,6 @@
 # WI-040 — Account link hardening
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-13;
   the code it touches was built in WT-02)
 - Depends on: none

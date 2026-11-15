@@ -1,6 +1,6 @@
 # WS-040 — Account link hardening
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-15; question 2: `trusted` accepted as proposed)
 - Work-item: [WI-040](../work-items/WI-040-account-link-hardening.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4; WT-02
   design decisions 5, 6 and 10; WS-019, WS-024
