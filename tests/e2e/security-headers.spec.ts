@@ -63,12 +63,13 @@ test.describe("security headers", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- reason: document.write is the one way to make a parser-inserted script, which is what an HTML injection is
       document.write("<script>window.injected = true;</script><p>after</p>");
       document.close();
     });
 
     await expect
-      .poll(() => reports.some((text) => /Content Security Policy/.test(text)))
+      .poll(() => reports.some((text) => text.includes("Content Security Policy")))
       .toBe(true);
     expect(await page.evaluate(() => "injected" in window)).toBe(false);
   });
