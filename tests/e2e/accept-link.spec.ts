@@ -1,7 +1,8 @@
-import { type Browser, expect, request as playwrightRequest, test } from "@playwright/test";
+import { type Browser, expect, request as playwrightRequest } from "@playwright/test";
 
 import { inviteResponseSchema, resetLinkResponseSchema } from "@/lib/schemas/accounts";
 
+import { test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { seedAccount } from "./seed";
 

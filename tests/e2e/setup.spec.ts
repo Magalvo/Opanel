@@ -1,7 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { meResponseSchema } from "@/lib/schemas/auth";
 
+import { test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 
 const password = "an e2e password, long enough";

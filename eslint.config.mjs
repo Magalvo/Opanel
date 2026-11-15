@@ -59,7 +59,15 @@ export default defineConfig([
   // AGENTS.md hard rule 4: configuration is read only through the validated env module.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/server/env.ts", "src/server/env-files.ts", "src/instrumentation.ts"],
+    // `src/proxy.ts` reads only NODE_ENV, to allow 'unsafe-eval' in development (WS-041). It is
+    // no configuration and no secret, and Next.js inlines it at build time; getEnv() would
+    // validate every variable in the proxy.
+    ignores: [
+      "src/server/env.ts",
+      "src/server/env-files.ts",
+      "src/instrumentation.ts",
+      "src/proxy.ts",
+    ],
     rules: {
       "no-restricted-properties": [
         "error",

@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { test as signedIn } from "./fixtures";
 import { ageSessions, seedAccount, sessionExpiry } from "./seed";
