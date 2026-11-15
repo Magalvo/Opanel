@@ -9,11 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-040 (account link hardening), on 2026-11-15.
+- **Last finished:** WI-040 (account link hardening) and WI-034 (comments), both on
+  2026-11-15.
 - **Awaiting the owner's approval:** WI-041 / WS-041, security headers and Content Security
   Policy. Needed before WI-038.
-- **Next:** draft WI-034 (comments: schema, service, API) and WS-034 as `Proposed`, and stop
-  for the owner's approval. Decision 19 applies: `kind` and a nullable author.
+- **Next:** draft WI-035 (teams page) and WS-035 as `Proposed`, and stop for the owner's
+  approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -83,10 +84,11 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                    | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
 | [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
+| [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
-WI-034 to WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-035 to WI-039 are outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
