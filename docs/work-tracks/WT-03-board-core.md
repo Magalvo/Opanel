@@ -171,7 +171,7 @@ written; each still needs the owner's approval like any other.
 | WI-038                                                           | Task detail: fields, Markdown description, assignment, epic, comments, delete                                | Draft    | WI-033, WI-034, WI-037 |
 | WI-039                                                           | Epics page: list, create, edit, close, progress                                                              | Draft    | WI-033, WI-036         |
 | [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Proposed | none                   |
-| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Proposed | none; before WI-038    |
+| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Done     | none; before WI-038    |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 

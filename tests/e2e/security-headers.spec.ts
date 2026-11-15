@@ -49,30 +49,28 @@ test.describe("security headers", () => {
     expect(nonces[0]).not.toBe(nonces[1]);
   });
 
-  test("a script added to the page without the nonce does not run, and is reported", async ({
+  test("a script that reaches the page's markup without the nonce does not run, and is reported", async ({
     page,
   }) => {
+    // What an HTML injection produces: a script the parser meets, with no nonce. (A script made
+    // by code that is already trusted is allowed by `'strict-dynamic'`, by design, so it is not
+    // the case that matters.)
+    const reports: string[] = [];
+    page.on("console", (message) => {
+      reports.push(message.text());
+    });
     await page.goto("/sign-in");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-    const outcome = await page.evaluate(
-      () =>
-        new Promise<{ ran: boolean; blocked: string | null }>((resolve) => {
-          const win = window as unknown as { injected?: boolean };
-          document.addEventListener("securitypolicyviolation", (event) => {
-            resolve({ ran: win.injected === true, blocked: event.violatedDirective });
-          });
-          const script = document.createElement("script");
-          script.textContent = "window.injected = true;";
-          document.body.append(script);
-          setTimeout(() => {
-            resolve({ ran: win.injected === true, blocked: null });
-          }, 2000);
-        }),
-    );
+    await page.evaluate(() => {
+      document.write("<script>window.injected = true;</script><p>after</p>");
+      document.close();
+    });
 
-    expect(outcome.ran).toBe(false);
-    expect(outcome.blocked).toMatch(/^script-src/);
+    await expect
+      .poll(() => reports.some((text) => /Content Security Policy/.test(text)))
+      .toBe(true);
+    expect(await page.evaluate(() => "injected" in window)).toBe(false);
   });
 
   test("the first paint follows a dark system setting, with the theme script allowed", async ({

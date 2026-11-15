@@ -1,6 +1,6 @@
 # WS-041 — Security headers and Content Security Policy
 
-- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 and 2)
+- Status: Done (approved by the owner on 2026-11-15, with the proposals of questions 1 and 2)
 - Work-item: [WI-041](../work-items/WI-041-security-headers.md)
 - Canonical docs: `AGENTS.md` section 2 and hard rule 13; WT-03 design decision 14
 
@@ -136,3 +136,34 @@ None. API responses gain two headers; bodies and status codes are unchanged.
 4. **If the nonce cannot reach `next-themes`** in the installed versions, the theme script
    is blocked and the page flashes the wrong theme. I would then stop and report, with the
    option of setting the theme class on the server from a cookie instead.
+
+## Deviations from the approved spec
+
+1. **The violation check is in a shared `tests/e2e/base.ts`**, not only in `fixtures.ts`: every
+   existing specification now imports `test` from it, so test 9 covers all of them and not
+   only the ones that sign in. `security-headers.spec.ts` uses Playwright's own `test`.
+   Specifications written later (teams, projects, board) must import it too.
+2. **`eslint.config.mjs` exempts `src/proxy.ts` from the rule on `process.env`**, with a
+   comment: the proxy reads only `NODE_ENV`, to allow `'unsafe-eval'` in development, which is
+   neither configuration nor a secret; `getEnv()` would validate every variable in the proxy.
+3. **The injected-script test uses `document.write`**, not a script element created in the
+   page. A script made by code that is already trusted is allowed by `'strict-dynamic'`, by
+   design, so that shape does not model an injection. A parser-inserted script without the
+   nonce, which is what an HTML injection produces, is blocked and reported.
+4. **`headers()` in `next.config.ts` is not `async`** (it returns a promise), because the
+   repository's lint rule refuses an `async` function with no `await`.
+5. `STATIC_SECURITY_HEADERS` lives in `src/lib/security-headers.ts` with the policy, and
+   `next.config.ts` imports it, so one file names every header.
+
+## Implementation record
+
+- Red: committed first on this branch; the policy and proxy unit tests failed on the missing
+  module and headers.
+- Green: 702 Vitest tests and 39 Playwright tests pass, with every existing spec running
+  under the policy and the console fixture. Typecheck, lint and format pass.
+- `pnpm build`: every page, `/accept` included, is `ƒ` (dynamic), as section 5 expected; the
+  API routes were already dynamic. The proxy is listed as `Proxy (Middleware)`.
+- Test 11 (manual, once): `next dev` answers with the policy including `'unsafe-eval'`, and
+  loading `/sign-in` in Chromium reports no violation.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
