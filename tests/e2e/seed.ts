@@ -82,7 +82,7 @@ export async function seedTasks(projectKey: string, count: number): Promise<void
             || substr('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', (n / 62) % 62 + 1, 1)
             || substr('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', n % 62 + 1, 1),
         (select id from accounts order by created_at limit 1)
-      from generate_series(${project.next}, ${project.next + count - 1}) n`;
+      from generate_series(${project.next}::int, ${project.next + count - 1}::int) n`;
     await client`update projects set next_task_number = ${project.next + count} where id = ${project.id}::uuid`;
   } finally {
     await client.end();

@@ -37,7 +37,7 @@ export function task(
     assigneeTeam: null,
     assignee: null,
     epic: null,
-    reporter: MIA,
+    reporter: { id: MIA.id, name: MIA.name },
     version: 1,
     createdAt: `2026-11-12T10:00:0${String(counter % 10)}.000Z`,
     updatedAt: "2026-11-12T10:00:00.000Z",

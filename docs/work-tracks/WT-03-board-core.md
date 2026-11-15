@@ -214,7 +214,8 @@ Questions 1 to 4 were resolved by the owner on 2026-11-13, by approving the prop
 4. **Resolved: projects have no default teams.** Teams matter for assignment now and for
    routing in WT-06.
 5. **Open risk, large boards:** the board loads every page of tasks. Acceptable until WT-07
-   moves unscheduled work to the backlog; measured in WI-037 with 1 000 tasks.
+   moves unscheduled work to the backlog. Measured in WI-037 with 1 003 tasks: the last card is
+   visible after 0.7 to 1.5 seconds, so the risk stays accepted.
 6. **Resolved: the audit of 2026-11-13.** The owner approved amendments A1 to A4 on
    2026-11-13, A1 with `projects:read` as proposed. They are folded into decisions 5, 8, 17,
    18 and 19 and the work-items table.

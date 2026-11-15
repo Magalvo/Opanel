@@ -7,7 +7,7 @@ import type { Project } from "@/lib/schemas/projects";
 /**
  * A project's name, key and description (WS-036). The description is stored as Markdown and
  * shown here as plain text until `react-markdown` arrives with WI-038. The board of WI-037
- * takes the place of the line under it.
+ * is drawn under it by `ProjectView`.
  */
 export function ProjectHeader({
   project,
@@ -34,7 +34,6 @@ export function ProjectHeader({
       {project.description !== "" && (
         <p className="text-sm whitespace-pre-wrap text-muted-foreground">{project.description}</p>
       )}
-      <p className="text-sm text-muted-foreground">The board comes next.</p>
     </div>
   );
 }

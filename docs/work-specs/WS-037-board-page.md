@@ -1,6 +1,6 @@
 # WS-037 — Board page
 
-- Status: Approved (by the owner on 2026-11-15, with the proposals of questions 1 to 7)
+- Status: Done (approved by the owner on 2026-11-15, with the proposals of questions 1 to 7)
 - Work-item: [WI-037](../work-items/WI-037-board-page.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0003](../canonical/0003-task-management.md) sections 2, 5;
@@ -175,3 +175,40 @@ For the owner:
    write the drag handling by hand, which I do not recommend. Agree to the dependencies?
 7. **The thousand-task bound** of 15 seconds in an end-to-end test is deliberately loose, and
    the real figure is recorded rather than asserted tightly. Agree?
+
+## Deviations from the approved spec
+
+1. **The board's messages are a status region named "Board messages".** dnd-kit renders a live
+   region of its own with `role="status"`, so the page has two; ours is found by its name in
+   tests (unit and end-to-end).
+2. **The "is over" announcement is not made while a card is over itself.** dnd-kit announces
+   it right after "Picked up", which replaced the pick-up announcement at once for a screen
+   reader. Found by the keyboard end-to-end test, which waits for the words.
+3. **Test 14 does not check a `moved` event.** There is no endpoint that reads task history
+   before WT-08, so the test checks that the order survives a reload.
+4. **A new server component, `ProjectView`,** draws the header and the board, so the page
+   passes `canManage`, `canWrite` and the project to one element. `Board` takes `project`,
+   `canWrite` and `archived`, as the spec said.
+5. **The add field ignores a second Enter while one is on its way** and clears itself only if
+   nothing else was typed meanwhile (a unit test fails without it). Two creations in flight
+   could otherwise reach the server in either order.
+6. **Test fixture corrected:** a task's `reporter` is `{ id, name }`, not a person with `active`.
+7. **Handles, not whole cards, start a drag** (`Drag OPA-1`), as the tests state, so the card's
+   menu is not nested inside a draggable and a touch scroll over a card is a scroll.
+8. The installed packages' documentation (type definitions and README under
+   `node_modules/@dnd-kit`) was read before the code (hard rule 13).
+
+## Implementation record
+
+- Red: committed first on this branch; the board, state and page tests failed on the missing
+  modules and the old header.
+- Green: 799 Vitest tests and 47 Playwright tests (nine new) pass, twice in a row. Typecheck,
+  lint and format pass; `pnpm openapi:generate` leaves no diff.
+- **A thousand tasks (WT-03 risk 5):** 1 003 tasks (1 000 seeded plus three), measured in the
+  end-to-end test on this sandbox: the last card is visible after 0.7 to 1.5 seconds
+  (721, 886, 1 286, 1 278, 1 467 ms over five runs). That is comfortable, so the risk stays
+  accepted until WT-07 moves unscheduled work to the backlog; the bound of the test is 15 s.
+- Dragging with the mouse within and between columns, and with the keyboard (Space, arrows,
+  Space; Escape to cancel), work in Chromium.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

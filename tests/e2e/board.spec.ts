@@ -95,6 +95,9 @@ member(
     const field = page.getByRole("textbox", { name: "Add a task to In progress" });
     await field.fill("Alpha");
     await field.press("Enter");
+    // Like a person, wait for the first card before typing the next: two creations in flight
+    // may reach the server in either order.
+    await expect(keysIn(page, "In progress")).toHaveCount(1);
     await field.fill("Beta");
     await field.press("Enter");
 
@@ -135,16 +138,25 @@ member(
     await page.goto(`/projects/${key}`);
     const handle = page.getByRole("button", { name: `Drag ${key}-1` });
 
+    // dnd-kit announces each step in a live region of its own; waiting for the words keeps the
+    // key presses from outrunning the library.
+    const live = page.locator("[aria-live=assertive]").first();
     await handle.focus();
     await page.keyboard.press("Space");
+    await expect(live).toContainText("Picked up");
     await page.keyboard.press("ArrowRight");
+    await expect(live).toContainText("is over In progress");
     await page.keyboard.press("Escape");
+    await expect(live).toContainText("Move cancelled");
     await expect(keysIn(page, "To do")).toHaveCount(3);
 
     await handle.focus();
     await page.keyboard.press("Space");
+    await expect(live).toContainText("Picked up");
     await page.keyboard.press("ArrowRight");
+    await expect(live).toContainText("is over In progress");
     await page.keyboard.press("Space");
+    await expect(live).toContainText("Dropped");
     await expect(keysIn(page, "To do")).toHaveCount(2);
     await expect(keysIn(page, "In progress").first()).toContainText(`${key}-1`);
     await page.reload();
@@ -181,7 +193,7 @@ member(
     await page.getByRole("button", { name: `Actions for ${key}-1` }).click();
     await page.getByRole("menuitem", { name: "Move to In progress" }).click();
 
-    await expect(page.getByRole("status")).toContainText(
+    await expect(page.getByRole("status", { name: "Board messages" })).toContainText(
       "Someone else changed the board. It was reloaded.",
     );
     await expect(keysIn(page, "Done").first()).toContainText(`${key}-1`);

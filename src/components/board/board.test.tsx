@@ -161,7 +161,32 @@ describe("Board: adding a task", () => {
     expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ title: "New one", columnId: DOING });
     expect(field).toHaveValue("");
     expect(field).toHaveFocus();
-    expect(screen.getByRole("status")).toHaveTextContent("Added OPA-5.");
+    expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+      "Added OPA-5.",
+    );
+  });
+
+  it("does not wipe what was typed while the task was being added", async () => {
+    const user = await renderBoard();
+    const field = screen.getByRole("textbox", { name: "Add a task to To do" });
+    let answer: (response: Response) => void = () => undefined;
+    const pending = new Promise<Response>((resolve) => {
+      answer = resolve;
+    });
+    const original = globalThis.fetch;
+    globalThis.fetch = (input: Parameters<typeof fetch>[0], init?: RequestInit) =>
+      init?.method === "POST" ? pending : original(input, init);
+
+    await user.type(field, "First{Enter}");
+    await user.clear(field);
+    await user.type(field, "Second");
+    answer(Response.json(fullTask(task("OPA-5", "First", TODO)), { status: 201 }));
+
+    await waitFor(() => {
+      expect(keysIn("To do")).toContain("OPA-5");
+    });
+    expect(field).toHaveValue("Second");
+    globalThis.fetch = original;
   });
 
   it("refuses a blank title without a request", async () => {
@@ -171,7 +196,9 @@ describe("Board: adding a task", () => {
     await user.click(screen.getByRole("button", { name: "Add to To do" }));
 
     expect(calls("POST")).toHaveLength(0);
-    expect(screen.getByRole("status")).toHaveTextContent("Enter a title.");
+    expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+      "Enter a title.",
+    );
   });
 
   it("says when adding failed, and that the project is archived on 409", async () => {
@@ -181,14 +208,16 @@ describe("Board: adding a task", () => {
     on(`POST ${BASE}/tasks`, () => problem(500, { code: "internal_error" }));
     await user.type(field, "One{Enter}");
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent("Could not add the task. Try again.");
+      expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+        "Could not add the task. Try again.",
+      );
     });
     expect(field).toHaveValue("One");
 
     on(`POST ${BASE}/tasks`, () => problem(409, { code: "project_archived" }));
     await user.type(field, "{Enter}");
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(
+      expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
         "The project is archived, so the board is read-only.",
       );
     });
@@ -222,7 +251,9 @@ describe("Board: the move menu", () => {
       afterTaskId: t3.id,
       version: 1,
     });
-    expect(screen.getByRole("status")).toHaveTextContent("Moved OPA-1 to In progress.");
+    expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+      "Moved OPA-1 to In progress.",
+    );
   });
 
   it("moves a card down after its neighbour and up before it", async () => {
@@ -299,7 +330,7 @@ describe("Board: a move that fails", () => {
     await chooseMenuItem(user, "OPA-1", "Move to In progress");
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(
+      expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
         "Could not move the task. It is back where it was.",
       );
     });
@@ -317,7 +348,7 @@ describe("Board: a move that fails", () => {
     await chooseMenuItem(user, "OPA-1", "Move to In progress");
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(
+      expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
         "Someone else changed the board. It was reloaded.",
       );
     });
@@ -331,7 +362,7 @@ describe("Board: a move that fails", () => {
     await chooseMenuItem(user, "OPA-1", "Move to In progress");
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(
+      expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
         "The project is archived, so the board is read-only.",
       );
     });
@@ -378,7 +409,8 @@ describe("Board: accessibility", () => {
     for (const name of ["To do", "In progress", "Done"]) {
       expect(within(region).getByRole("list", { name })).toBeInTheDocument();
     }
-    expect(screen.getAllByRole("status")).toHaveLength(1);
+    // dnd-kit has a live region of its own, so ours is found by its name.
+    expect(screen.getAllByRole("status", { name: "Board messages" })).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
   });
 });

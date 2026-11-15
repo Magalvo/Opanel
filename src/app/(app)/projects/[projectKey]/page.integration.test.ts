@@ -17,7 +17,11 @@ async function signedInAs(role: "viewer" | "member" | "manager" | "admin") {
 }
 
 interface Element {
-  props: { project?: { key?: string; name?: string }; canManage?: unknown };
+  props: {
+    project?: { key?: string; name?: string; archivedAt?: string | null };
+    canManage?: unknown;
+    canWrite?: unknown;
+  };
 }
 
 describe("the /projects/[projectKey] page (WS-036)", () => {
