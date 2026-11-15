@@ -13,8 +13,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **Next:** draft WI-037 (the board page) and WS-037 as `Proposed`, and stop for the owner's
-  approval. It needs `@dnd-kit`; WI-041 (security headers) is due before WI-038.
+  - WI-037 / WS-037, the board page (drafted 2026-11-15).
+- **Next:** on approval of WS-037, implement WI-037 (tests first).
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -86,10 +86,11 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
 | [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
+| [WI-037](work-items/WI-037-board-page.md)                       | Board page                                                | Proposed    | [WS-037](work-specs/WS-037-board-page.md)                       | Proposed    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
-WI-034 and WI-037 to WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-034, WI-038 and WI-039 are outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
