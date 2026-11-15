@@ -20,10 +20,11 @@ import {
   rateLimits,
   sessions,
 } from "@/server/db/schema";
+import { hashPassword } from "@/server/auth/password";
 import { ApiError } from "@/server/http/errors";
 
 import { acceptLink } from "./accept-link";
-import { inviteAccount, issueResetLink } from "./account-management";
+import { inviteAccount, issueResetLink, revokeInvitation } from "./account-management";
 import { hashToken } from "./account-tokens";
 import { signIn } from "./sign-in";
 
@@ -33,13 +34,33 @@ function tokenOf(link: { url: string }): string {
   return new URL(link.url).hash.slice(1);
 }
 
-function accept(token: string, overrides: { password?: string; clientIp?: string | null } = {}) {
-  return acceptLink({
-    token,
-    password: overrides.password ?? NEW_PASSWORD,
-    clientIp: overrides.clientIp ?? null,
-    headers: new Headers(),
-  });
+function accept(
+  token: string,
+  overrides: {
+    password?: string;
+    clientIp?: string | null;
+    hashPassword?: (password: string) => Promise<string>;
+  } = {},
+) {
+  return acceptLink(
+    {
+      token,
+      password: overrides.password ?? NEW_PASSWORD,
+      clientIp: overrides.clientIp ?? null,
+      headers: new Headers(),
+    },
+    undefined,
+    overrides.hashPassword ? { hashPassword: overrides.hashPassword } : {},
+  );
+}
+
+/** Fails ordinary sign-ins for an email until the limiter refuses it. */
+async function exhaustSignInLimit(email: string): Promise<void> {
+  for (let i = 0; i < 11; i++) {
+    await failure(
+      signIn({ email, password: "wrong password!", clientIp: null, headers: new Headers() }),
+    );
+  }
 }
 
 async function failure(promise: Promise<unknown>): Promise<ApiError> {
@@ -204,10 +225,11 @@ describe("a link that does not work", () => {
       .set({ expiresAt: new Date(Date.now() - 1000) })
       .where(eq(accountTokens.tokenHash, hashToken(expired)));
     const before = (await auditRows()).length;
+    const hasher = vi.fn(hashPassword);
 
     const errors = [];
     for (const token of ["x".repeat(43), used, replaced, expired, deactivated]) {
-      errors.push(await failure(accept(token)));
+      errors.push(await failure(accept(token, { hashPassword: hasher })));
     }
 
     for (const error of errors) {
@@ -216,7 +238,70 @@ describe("a link that does not work", () => {
       expect(error.detail).toBe(errors[0]?.detail);
     }
     expect((await auditRows()).length).toBe(before);
+    expect(hasher).not.toHaveBeenCalled();
   });
+
+  it("hashes the password exactly once for a valid link", async () => {
+    const { token } = await invited();
+    const hasher = vi.fn(hashPassword);
+
+    await accept(token, { hashPassword: hasher });
+
+    expect(hasher).toHaveBeenCalledTimes(1);
+    expect(
+      (
+        await signIn({
+          email: "grace@example.com",
+          password: NEW_PASSWORD,
+          clientIp: null,
+          headers: new Headers(),
+        })
+      ).account.email,
+    ).toBe("grace@example.com");
+    const [link] = await getDb().select().from(accountTokens);
+    expect(link?.usedAt).toBeInstanceOf(Date);
+  });
+
+  it("is refused by the locked check when it is revoked after the first look, and writes nothing", async () => {
+    const { actor, account, token } = await invited();
+    const before = (await auditRows()).length;
+
+    const error = await failure(
+      accept(token, {
+        hashPassword: async (password) => {
+          // Runs between the first look and the transaction.
+          await revokeInvitation(actor, account.id);
+          return hashPassword(password);
+        },
+      }),
+    );
+
+    expect(error.status).toBe(404);
+    expect(error.code).toBe("invalid_link");
+    expect(await getDb().select().from(credentials)).toHaveLength(0);
+    expect(await getDb().select().from(sessions)).toHaveLength(0);
+    expect((await auditRows()).map((row) => row.action).slice(before)).toEqual([
+      "account.invitation_revoked",
+    ]);
+  });
+
+  it("finishes when a new link is issued while the previous one is accepted, 20 times over", async () => {
+    const { actor } = await admin();
+    const member = await createTestAccount({ email: "m@example.com" });
+
+    for (let i = 0; i < 20; i++) {
+      const previous = tokenOf((await issueResetLink(actor, member.id)).link);
+      await Promise.allSettled([
+        accept(previous, { password: `${NEW_PASSWORD} ${String(i)}` }),
+        issueResetLink(actor, member.id),
+      ]);
+
+      const unused = (
+        await getDb().select().from(accountTokens).where(eq(accountTokens.accountId, member.id))
+      ).filter((link) => link.usedAt === null);
+      expect(unused.length).toBeLessThanOrEqual(1);
+    }
+  }, 60_000);
 
   it("works for exactly one of five simultaneous requests", async () => {
     const { account, token } = await invited();
@@ -299,6 +384,40 @@ describe("limits and log growth", () => {
       expect(error.status).toBe(404);
     }
   }, 30_000);
+});
+
+describe("the sign-in limiter", () => {
+  it("signs a person in with a valid link even while the limiter refuses their email", async () => {
+    const { account, token } = await invited();
+    await exhaustSignInLimit("grace@example.com");
+
+    const result = await accept(token);
+
+    expect(result.account.id).toBe(account.id);
+    const session = await authenticate(
+      new Request("http://localhost:3000/api/v1/me", {
+        headers: { Cookie: cookieHeaderFrom(result.headers) },
+      }),
+    );
+    expect(session.actor.accountId).toBe(account.id);
+  });
+
+  it("leaves the limiter refusing ordinary sign-ins for that email afterwards", async () => {
+    const { token } = await invited();
+    await exhaustSignInLimit("grace@example.com");
+    await accept(token);
+
+    const refused = await failure(
+      signIn({
+        email: "grace@example.com",
+        password: NEW_PASSWORD,
+        clientIp: null,
+        headers: new Headers(),
+      }),
+    );
+
+    expect(refused.status).toBe(429);
+  });
 });
 
 describe("secrets", () => {

@@ -65,6 +65,28 @@ describe("POST /api/v1/auth/sign-in", () => {
     expect(Number(response.headers.get("retry-after"))).toBeGreaterThan(0);
   });
 
+  it("cannot sign in past the limiter: the 11th attempt is refused even with the right password", async () => {
+    await createTestAccount();
+    for (let i = 0; i < 10; i++) {
+      await POST(
+        postRequest(path, { email: "ada@example.com", password: "wrong password!" }),
+        undefined,
+      );
+    }
+
+    const right = await POST(
+      postRequest(path, { email: "ada@example.com", password: TEST_PASSWORD }),
+      undefined,
+    );
+    const claimingTrust = await POST(
+      postRequest(path, { email: "ada@example.com", password: TEST_PASSWORD, trusted: true }),
+      undefined,
+    );
+
+    expect(right.status).toBe(429);
+    expect(claimingTrust.status).toBe(400);
+  });
+
   it("rejects a foreign Origin with 403 before reading the body", async () => {
     await createTestAccount();
     const request = postRequest(
