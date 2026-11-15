@@ -1,6 +1,6 @@
 # WS-034 — Comments
 
-- Status: Approved (approved by the owner on 2026-11-15, questions 1 and 2 as proposed)
+- Status: Done (approved by the owner on 2026-11-15, questions 1 and 2 as proposed)
 - Work-item: [WI-034](../work-items/WI-034-comments.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 9;
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 3, 6 and 7 (`comments`,
@@ -154,3 +154,30 @@ audit tests do.
    **Owner: acceptable?**
 3. **Comments on an archived project can still be read**, like everything in it; only
    writing is refused (decision 4).
+
+## Deviations from the approved spec
+
+- **`findLiveTask`** is the task finder exported from `tasks.ts`: it returns only the
+  task's id and project, not the whole internal row.
+- **The `kind` check is named `comments_kind_check`** and the author check
+  `comments_author_kind`, following the existing `*_check` names.
+- **Extra tests:** a system comment inserted directly is listed with `author: null`, and
+  an archived project's comments can still be read (question 3).
+
+## Implementation record
+
+- Red: the schema, contract, service and route tests failed on the missing module and the
+  missing `comments` table (committed before any code).
+- Green: 714 Vitest tests (up from 690 on `main`) and 28 Playwright tests pass. Typecheck,
+  lint and format pass; `pnpm db:generate` leaves no diff after `0011_comments` and
+  `0012_comments_append_only`; `pnpm openapi:generate` adds the two operations and the
+  comment schemas.
+- **Test 8 (comment racing a delete) is probabilistic.** With the `for share` re-read
+  removed on purpose, it failed in one of three runs; with it in place it passes every time.
+  It stays as a regression check; the lock order is what makes the rule hold.
+- `drizzle-kit` needs a `.env`; a local one was made from `.env.example` (gitignored).
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
+- Another session pushed a separate, unapproved WI-034 to the branch
+  `claude/wi-034-comments` on 2026-11-15. On the owner's decision this work went to a
+  new branch, `claude/wi-034-comments-v2`; that other branch was not used.
