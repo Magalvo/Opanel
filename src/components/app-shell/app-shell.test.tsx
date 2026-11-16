@@ -52,7 +52,7 @@ describe("AppShell", () => {
     expect(within(topBar).getByRole("button", { name: "Account menu" })).toHaveTextContent("A");
   });
 
-  it("has a main navigation area whose only link, for someone who is not an Admin, is Teams", () => {
+  it("has a main navigation area whose links, for someone who is not an Admin, are Projects and Teams", () => {
     renderShell();
 
     const navigation = screen.getByRole("navigation", { name: "Main" });
@@ -60,7 +60,18 @@ describe("AppShell", () => {
       within(navigation)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Teams"]);
+    ).toEqual(["Projects", "Teams"]);
+  });
+
+  it("shows a Projects link to /projects first, to everyone (WS-036)", () => {
+    for (const canManageAccounts of [false, true]) {
+      const { unmount } = renderShell(canManageAccounts);
+
+      const links = within(screen.getByRole("navigation", { name: "Main" })).getAllByRole("link");
+      expect(links[0]).toHaveTextContent("Projects");
+      expect(links[0]).toHaveAttribute("href", "/projects");
+      unmount();
+    }
   });
 
   it("shows a Teams link to /teams to everyone (WS-035)", () => {

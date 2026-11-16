@@ -2,9 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
 import type { TeamSummary } from "@/lib/schemas/teams";
-
-import { bodyOf, calls, installFetch, on, problem } from "./testing";
 
 const router = { replace: vi.fn(), refresh: vi.fn(), push: vi.fn() };
 
