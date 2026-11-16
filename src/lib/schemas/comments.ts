@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { taskParamsSchema } from "./tasks";
@@ -80,6 +81,7 @@ export const createCommentContract = {
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TASK,
     409: { description: "The project is archived (code `project_archived`).", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
 } satisfies EndpointContract;

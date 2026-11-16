@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { versionConflictResponse } from "@/lib/openapi/responses";
+import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
@@ -187,6 +187,7 @@ export const createTaskContract = {
         "(code `account_inactive`).",
       problem: true,
     },
+    413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
 } satisfies EndpointContract;
@@ -218,6 +219,7 @@ export const updateTaskContract = {
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TASK,
     409: versionConflictResponse(taskSchema),
+    413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
 } satisfies EndpointContract;
@@ -236,6 +238,7 @@ export const moveTaskContract = {
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TASK,
     409: versionConflictResponse(taskSchema),
+    413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
 } satisfies EndpointContract;

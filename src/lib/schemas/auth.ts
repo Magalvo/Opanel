@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
 import { accountNameSchema } from "./accounts";
 import { permissionSchema } from "./permissions";
@@ -78,6 +79,7 @@ export const signInContract = {
     400: { description: "The body is not valid.", problem: true },
     401: { description: "Invalid email or password.", problem: true },
     403: { description: "The request does not come from the app's own origin.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
     429: { description: "Too many attempts. See Retry-After.", problem: true },
   },
@@ -140,6 +142,7 @@ export const setupContract = {
     400: { description: "The body is not valid.", problem: true },
     403: { description: "The request does not come from the app's own origin.", problem: true },
     404: { description: "The installation is already set up.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
 } satisfies EndpointContract;
@@ -163,6 +166,7 @@ export const acceptLinkContract = {
     400: { description: "The body is not valid.", problem: true },
     403: { description: "The request does not come from the app's own origin.", problem: true },
     404: { description: "The link is not valid (code `invalid_link`).", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
     429: { description: "Too many attempts from this address. See Retry-After.", problem: true },
   },
@@ -181,6 +185,7 @@ export const updateMeContract = {
     200: { description: "The name was changed.", schema: meResponseSchema },
     400: { description: "The body is not valid.", problem: true },
     403: { description: "The request does not come from the app's own origin.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
 } satisfies EndpointContract;
@@ -203,6 +208,7 @@ export const changePasswordContract = {
       problem: true,
     },
     403: { description: "The request does not come from the app's own origin.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
     429: { description: "Too many attempts for this account. See Retry-After.", problem: true },
   },

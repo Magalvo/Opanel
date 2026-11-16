@@ -58,6 +58,8 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Static assets need neither a session nor a policy.
-  matcher: "/((?!_next/static|_next/image|favicon.ico).*)",
+  // Static assets need neither a session nor a policy. API requests never enter the proxy:
+  // with a proxy in place Next.js buffers each request body in memory (up to 10 MB) before
+  // the route reads it, and the API bounds its bodies itself (WS-044).
+  matcher: "/((?!api/|_next/static|_next/image|favicon.ico).*)",
 };

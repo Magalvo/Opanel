@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import type { VersionConflictResponseContract } from "./contract";
+import type { ProblemResponseContract, VersionConflictResponseContract } from "./contract";
 
 /** The `409` of an update that sends `version` (canonical doc 0004 section 6, WS-027). */
 export function versionConflictResponse(entity: z.ZodType): VersionConflictResponseContract {
@@ -11,3 +11,9 @@ export function versionConflictResponse(entity: z.ZodType): VersionConflictRespo
     conflictOf: entity,
   };
 }
+
+/** The `413` of every operation that takes a JSON body (WS-044). */
+export const PAYLOAD_TOO_LARGE = {
+  description: "The request body is larger than 512 KiB (code `payload_too_large`).",
+  problem: true,
+} as const satisfies ProblemResponseContract;

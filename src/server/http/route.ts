@@ -7,7 +7,13 @@ import { authenticate, type Authenticated } from "@/server/auth/authenticate";
 import { assertSameOrigin } from "@/server/auth/origin";
 import { getEnv } from "@/server/env";
 
-import { ApiError, internalError, invalidRequest, unsupportedMediaType } from "./errors";
+import {
+  ApiError,
+  internalError,
+  invalidRequest,
+  payloadTooLarge,
+  unsupportedMediaType,
+} from "./errors";
 
 export type RouteHandler<Context> = (
   request: Request,
@@ -208,7 +214,62 @@ function isJson(request: Request): boolean {
   return mediaType === "application/json";
 }
 
-/** Reads and validates a JSON request body. Throws `415` or `400` (`ApiError`). */
+/**
+ * The most bytes a JSON request body may have (WS-044): 512 KiB, which covers the largest
+ * field today (a 50 000-character description is at most 300 000 bytes as JSON) with room.
+ */
+export const MAX_JSON_BODY_BYTES = 512 * 1024;
+
+/** A `Content-Length` that is a plain non-negative integer, or `null` for anything else. */
+function declaredLength(request: Request): number | null {
+  const value = request.headers.get("Content-Length")?.trim() ?? "";
+  return /^\d+$/.test(value) ? Number(value) : null;
+}
+
+/**
+ * The body's bytes, counted as they arrive: `413` as soon as they pass the budget, whatever
+ * `Content-Length` says; `400` if the body breaks off.
+ */
+async function readBounded(request: Request): Promise<Uint8Array> {
+  const declared = declaredLength(request);
+  if (declared !== null && declared > MAX_JSON_BODY_BYTES) {
+    await request.body?.cancel().catch(() => undefined);
+    throw payloadTooLarge();
+  }
+  if (request.body === null) return new Uint8Array();
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    let result: ReadableStreamReadResult<Uint8Array>;
+    try {
+      result = await reader.read();
+    } catch {
+      throw invalidRequest(undefined, "The request body could not be read.");
+    }
+    if (result.done) break;
+    total += result.value.byteLength;
+    if (total > MAX_JSON_BODY_BYTES) {
+      await reader.cancel().catch(() => undefined);
+      throw payloadTooLarge();
+    }
+    chunks.push(result.value);
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
+/**
+ * Reads and validates a JSON request body, within the budget of WS-044. Throws `415`, `413`
+ * or `400` (`ApiError`), in that order of checks.
+ */
 export async function readJson<Schema extends z.ZodType>(
   request: Request,
   schema: Schema,
@@ -217,9 +278,11 @@ export async function readJson<Schema extends z.ZodType>(
     throw unsupportedMediaType();
   }
 
+  const bytes = await readBounded(request);
   let body: unknown;
   try {
-    body = await request.json();
+    // TextDecoder drops a byte order mark, as request.json() does.
+    body = JSON.parse(new TextDecoder("utf-8").decode(bytes));
   } catch {
     throw invalidRequest(undefined, "The request body is not valid JSON.");
   }

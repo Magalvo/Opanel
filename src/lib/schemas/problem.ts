@@ -10,6 +10,7 @@ export const PROBLEM_CODES = [
   "unauthenticated",
   "forbidden",
   "not_found",
+  "payload_too_large",
   "conflict",
   "last_admin",
   "unsupported_media_type",

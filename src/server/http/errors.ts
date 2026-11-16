@@ -157,6 +157,16 @@ export function unsupportedMediaType(
   });
 }
 
+/** `413` (WS-044): the JSON body is larger than the budget. The detail does not state it. */
+export function payloadTooLarge(): ApiError {
+  return new ApiError({
+    status: 413,
+    title: "Content Too Large",
+    code: "payload_too_large",
+    detail: "The request body is too large.",
+  });
+}
+
 export function rateLimited(retryAfterSeconds: number): ApiError {
   return new ApiError({
     status: 429,
