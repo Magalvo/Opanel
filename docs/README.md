@@ -11,8 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-042 (safe error logging), on 2026-11-16; its branch is stacked on
   WI-044 (PR #37), so its pull request follows #37.
-- **Awaiting the owner's approval:** WI-043 / WS-043, the first-run setup refuses before
-  hashing (five questions in WS-043). Its branch is stacked on WI-042, itself on WI-044.
+- **In progress:** WI-043 / WS-043, the first-run setup refuses before hashing (approved
+  2026-11-16); its branch is stacked on WI-042, itself on WI-044.
 - **Next:** once WS-043 is approved, implement it; then WT-04.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
@@ -97,7 +97,7 @@ above and comes after WT-06.
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
-| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Proposed    | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Proposed    |
+| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Approved    | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Approved    |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
 
 ## Follow-ups

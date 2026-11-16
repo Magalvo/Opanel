@@ -1,6 +1,6 @@
 # WS-043 — First-run setup refuses before hashing
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-043](../work-items/WI-043-setup-refuses-before-hashing.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md);
   [WS-016](WS-016-first-run-setup.md) (first-run setup); audit of 2026-11-14, finding A-01
