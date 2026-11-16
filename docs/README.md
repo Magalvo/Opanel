@@ -10,9 +10,8 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 Updated at the end of every work-item, so that a new session can start from here.
 
 - **Last finished:** WI-035 (teams page), on 2026-11-16.
-- **Awaiting the owner's approval:**
-  - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
-  - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
+- **Awaiting the owner's approval:** WI-041 / WS-041, security headers and Content Security
+  Policy. Needed before WI-038.
 - **Next:** draft WI-036 (projects list, navigation and project settings) and WS-036 as
   `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -86,7 +85,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
 | [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
-| [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
+| [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
 WI-036 to WI-039 are outlined in WT-03 and get their own files when they are started.
@@ -116,9 +115,6 @@ Other follow-ups:
 - Give WS-009, WS-010 and WS-012 the "Implementation record" and "Deviations" sections that
   every other finished work-spec has (audit of 2026-11-13). Format only.
 
-- Take the per-account lock of WS-024 (`lockAccount`) in `issueResetLink` too, so issuing a
-  new link while the same person accepts the previous one cannot deadlock (see WS-024,
-  implementation record). Proposed as part of WI-040.
 - Weigh moving authentication, permission and origin checks into the `route()` wrapper at
   the start of WT-03 (see WS-023, question 1). Done in WI-025.
 - Make `pnpm typecheck` independent of a stale `.next` directory (for example by

@@ -9,7 +9,7 @@ import {
   testActor,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
-import { accounts, auditLog, sessions } from "@/server/db/schema";
+import { accounts, auditLog, rateLimits, sessions } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
 import { signIn, signOut } from "./sign-in";
@@ -135,6 +135,62 @@ describe("signIn", () => {
     const reasons = audit.map((row) => (row.data as { reason: string }).reason);
     expect(reasons.filter((reason) => reason === "rate_limited")).toHaveLength(1);
     expect(audit).toHaveLength(11);
+  });
+
+  describe("trusted, after the caller has just set the password", () => {
+    async function exhaust(email: string): Promise<void> {
+      for (let i = 0; i < 11; i++) {
+        await failure(signIn({ ...base, email, password: "wrong password!" }));
+      }
+    }
+
+    it("signs in, sets last_seen_at and audits it while the limiter refuses the email", async () => {
+      const account = await createTestAccount();
+      await exhaust("ada@example.com");
+
+      const result = await signIn(
+        { ...base, email: "ada@example.com", password: TEST_PASSWORD },
+        undefined,
+        { trusted: true },
+      );
+
+      expect(result.account.id).toBe(account.id);
+      expect(result.headers.getSetCookie().length).toBeGreaterThan(0);
+      const [row] = await getDb().select().from(accounts).where(eq(accounts.id, account.id));
+      expect(row?.lastSeenAt).toBeInstanceOf(Date);
+      const audit = await getDb().select().from(auditLog).orderBy(auditLog.id);
+      expect(audit.at(-1)).toMatchObject({ action: "auth.sign_in", actorAccountId: account.id });
+    });
+
+    it("neither consumes nor resets the counters, so ordinary sign-ins stay refused", async () => {
+      await createTestAccount();
+      await exhaust("ada@example.com");
+      const counters = await getDb().select().from(rateLimits).orderBy(rateLimits.key);
+
+      await signIn(
+        { ...base, clientIp: "203.0.113.7", email: "ada@example.com", password: TEST_PASSWORD },
+        undefined,
+        { trusted: true },
+      );
+
+      expect(await getDb().select().from(rateLimits).orderBy(rateLimits.key)).toEqual(counters);
+      const refused = await failure(
+        signIn({ ...base, email: "ada@example.com", password: TEST_PASSWORD }),
+      );
+      expect(refused.status).toBe(429);
+    });
+
+    it("still verifies the password", async () => {
+      await createTestAccount();
+
+      const wrong = await failure(
+        signIn({ ...base, email: "ada@example.com", password: "wrong password!" }, undefined, {
+          trusted: true,
+        }),
+      );
+
+      expect(wrong.status).toBe(401);
+    });
   });
 
   describe("with the failure audit budget used up", () => {

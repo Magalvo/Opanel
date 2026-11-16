@@ -7,6 +7,7 @@ import { accounts, auditLog, credentials } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
 import { createFirstAdmin, isSetupNeeded } from "./setup";
+import { signIn } from "./sign-in";
 
 const input = {
   name: "  Ada Admin ",
@@ -55,6 +56,17 @@ describe("createFirstAdmin", () => {
       entity: "account",
       entityId: account.id,
     });
+  });
+
+  it("signs the new admin in even while the limiter refuses that email", async () => {
+    for (let i = 0; i < 11; i++) {
+      await signIn({ ...input, password: "wrong password!" }).catch(() => undefined);
+    }
+
+    const result = await createFirstAdmin(input);
+
+    expect(result.account.email).toBe("ada@example.com");
+    expect(result.headers.getSetCookie().length).toBeGreaterThan(0);
   });
 
   it("answers 404 and creates nothing when any account exists, even a deactivated one", async () => {
