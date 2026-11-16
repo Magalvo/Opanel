@@ -186,4 +186,12 @@ describe("API routes and OpenAPI contracts", () => {
       expect(declaredPublic).toEqual([...PUBLIC_OPERATIONS].sort());
     });
   });
+  it("documents 413 on every operation that documents 415, and the reverse (WS-044)", () => {
+    const unpaired = contracts
+      .filter((contract) => 415 in contract.responses !== 413 in contract.responses)
+      .map(operationOf);
+
+    expect(unpaired).toEqual([]);
+    expect(contracts.filter((contract) => 413 in contract.responses).length).toBeGreaterThan(0);
+  });
 });

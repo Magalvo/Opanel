@@ -37,7 +37,8 @@ Agreed with the owner in WS-005: this doc is written at the start of WT-02.
 ## 3. Requests and responses
 
 - Bodies are JSON (`Content-Type: application/json`). A body-carrying request with another
-  content type is rejected with `415`.
+  content type is rejected with `415`. A JSON body larger than 512 KiB is rejected with
+  `413`, counted in bytes as it arrives, whatever `Content-Length` says (WS-044).
 - Field names are `camelCase`. Enum values are lower `snake_case` strings (`in_progress`).
 - A successful response for one resource is the resource object itself, not wrapped in an
   envelope. This matches the bug report responses already defined in doc 0001.
@@ -68,6 +69,7 @@ Agreed with the owner in WS-005: this doc is written at the start of WT-02.
 | `403` | Valid credentials, but the actor lacks the permission or scope                |
 | `404` | The resource does not exist                                                   |
 | `409` | The request conflicts with current state (stale `version`, duplicate, ...)    |
+| `413` | The JSON request body is larger than 512 KiB (WS-044)                         |
 | `415` | Unsupported request content type                                              |
 | `429` | Rate limited; `Retry-After` gives the wait in seconds                         |
 | `500` | Unexpected server error; no internal detail is returned                       |
@@ -105,6 +107,7 @@ Base codes:
 | `403`  | `forbidden`              |
 | `404`  | `not_found`              |
 | `409`  | `conflict`               |
+| `413`  | `payload_too_large`      |
 | `415`  | `unsupported_media_type` |
 | `429`  | `rate_limited`           |
 | `500`  | `internal_error`         |

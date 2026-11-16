@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
 import { accountNameSchema } from "./accounts";
 import { pageSchema, paginationQuerySchema } from "./pagination";
@@ -88,6 +89,7 @@ export const createTeamContract = {
     201: { description: "The new team, with no members.", schema: teamSchema },
     400: { description: "The body is not valid.", problem: true },
     409: NAME_TAKEN,
+    413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
 } satisfies EndpointContract;
@@ -116,6 +118,7 @@ export const updateTeamContract = {
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TEAM,
     409: NAME_TAKEN,
+    413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
 } satisfies EndpointContract;
@@ -155,6 +158,7 @@ export const addTeamMemberContract = {
     },
     404: NO_TEAM,
     409: { description: "The person is deactivated (code `account_inactive`).", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
 } satisfies EndpointContract;

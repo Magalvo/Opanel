@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { humanRoleSchema } from "./permissions";
@@ -104,6 +105,7 @@ export const inviteAccountContract = {
     201: { description: "The account and its link.", schema: inviteResponseSchema },
     400: { description: "The body is not valid.", problem: true },
     409: { description: "An account with this email already exists.", problem: true },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
 } satisfies EndpointContract;
@@ -126,6 +128,7 @@ export const updateAccountContract = {
       description: "The change would leave no active Admin (code `last_admin`).",
       problem: true,
     },
+    413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
 } satisfies EndpointContract;

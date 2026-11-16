@@ -7,6 +7,7 @@ import {
   internalError,
   invalidRequest,
   notFound,
+  payloadTooLarge,
   rateLimited,
   unauthenticated,
   unsupportedMediaType,
@@ -56,6 +57,7 @@ describe("ApiError constructors", () => {
       "Unsupported Media Type",
       "unsupported_media_type",
     ],
+    ["payloadTooLarge", payloadTooLarge(), 413, "Content Too Large", "payload_too_large"],
     ["rateLimited", rateLimited(30), 429, "Too Many Requests", "rate_limited"],
     ["internalError", internalError(), 500, "Internal Server Error", "internal_error"],
   ])("%s carries the status and code of doc 0004", (_name, error, status, title, code) => {
@@ -82,5 +84,12 @@ describe("ApiError constructors", () => {
   it("keeps the wait of a rate limit, in whole seconds", () => {
     expect(rateLimited(30).retryAfterSeconds).toBe(30);
     expect(rateLimited(0.2).retryAfterSeconds).toBe(1);
+  });
+});
+
+describe("payloadTooLarge (WS-044)", () => {
+  it("does not state the limit in its detail", () => {
+    expect(payloadTooLarge().detail).toBe("The request body is too large.");
+    expect(payloadTooLarge().detail).not.toMatch(/\d/);
   });
 });
