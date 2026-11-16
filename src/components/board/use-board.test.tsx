@@ -10,7 +10,7 @@ const t1 = task(1, todo.id);
 const t2 = task(2, todo.id, { version: 4 });
 const t3 = task(3, doing.id);
 
-function keys(board: Record<string, { key: string }[]>, columnId: string): string[] {
+function keys(board: Readonly<Record<string, readonly { key: string }[]>>, columnId: string) {
   return (board[columnId] ?? []).map((item) => item.key);
 }
 

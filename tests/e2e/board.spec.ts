@@ -93,6 +93,15 @@ async function drag(page: Page, from: Locator, to: Locator): Promise<void> {
   await page.mouse.up();
 }
 
+/**
+ * Picks up the focused card with Space. `@dnd-kit`'s keyboard sensor starts listening for
+ * arrow keys in a timer after the pick-up, so one page timer is let run first.
+ */
+async function pickUp(page: Page): Promise<void> {
+  await page.keyboard.press("Space");
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+}
+
 function moved(page: Page) {
   return page.waitForResponse(
     (response) => response.url().endsWith("/move") && response.request().method() === "POST",
@@ -161,7 +170,7 @@ test("a Member moves a card by keyboard only, and the drop is announced", async 
 
   const echo = column(page, "To do").getByRole("button", { name: /Echo/ });
   await echo.focus();
-  await page.keyboard.press("Space");
+  await pickUp(page);
   await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(`Picked up ${key}-1.`);
   await page.keyboard.press("ArrowRight");
   const response = moved(page);
@@ -170,12 +179,16 @@ test("a Member moves a card by keyboard only, and the drop is announced", async 
   await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
     `${key}-1 was moved to In progress, position 1 of 1.`,
   );
+  // The keyboard stays on the card that moved, which can be picked up again once saved.
+  const echoMoved = column(page, "In progress").getByRole("button", { name: /Echo/ });
+  await expect(echoMoved).toBeFocused();
+  await expect(echoMoved).toHaveAttribute("aria-disabled", "false");
 
   // Back to To do, below Foxtrot.
-  await column(page, "In progress").getByRole("button", { name: /Echo/ }).focus();
-  await page.keyboard.press("Space");
+  await pickUp(page);
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(`Picked up ${key}-1.`);
   await page.keyboard.press("ArrowLeft");
-  await page.keyboard.press("ArrowDown");
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText("is in To do");
   const again = moved(page);
   await page.keyboard.press("Space");
   expect((await again).status()).toBe(200);
@@ -264,7 +277,9 @@ test("a board of 1 000 tasks loads, and a card can still be moved", async ({ pag
   const started = Date.now();
   await page.goto(`/projects/${key}`);
   for (const lastKey of last) {
-    await expect(page.getByRole("button", { name: new RegExp(`^${lastKey} `) })).toBeVisible({
+    await expect(
+      page.getByRole("button", { name: new RegExp(`^${lastKey}(?![0-9])`) }),
+    ).toBeVisible({
       timeout: 60_000,
     });
   }
@@ -273,9 +288,9 @@ test("a board of 1 000 tasks loads, and a card can still be moved", async ({ pag
   process.stdout.write(`WS-037: a board of 1 000 tasks appeared in ${String(elapsed)} ms\n`);
   await expect(column(page, "To do")).toContainText("334 tasks");
 
-  const card = page.getByRole("button", { name: new RegExp(`^${last[0] ?? ""} `) });
+  const card = page.getByRole("button", { name: new RegExp(`^${last[0] ?? ""}(?![0-9])`) });
   await card.focus();
-  await page.keyboard.press("Space");
+  await pickUp(page);
   await page.keyboard.press("ArrowRight");
   const response = moved(page);
   await page.keyboard.press("Space");

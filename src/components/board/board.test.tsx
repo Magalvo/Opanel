@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -153,7 +153,9 @@ describe("Board: adding a task", () => {
     });
     const cards = within(columnRegion("In progress")).getAllByRole("listitem");
     expect(cards[1]).toHaveTextContent("OPA-4");
-    expect(screen.getByRole("status")).toHaveTextContent("OPA-4 was added to In progress.");
+    expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+      "OPA-4 was added to In progress.",
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -196,7 +198,9 @@ describe("Board: adding a task", () => {
     expect(
       await screen.findByText("This project is archived. The board is read-only."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("The project is archived.");
+    expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+      "The project is archived.",
+    );
     expect(screen.queryByRole("button", { name: "Add task" })).not.toBeInTheDocument();
   });
 
@@ -208,7 +212,9 @@ describe("Board: adding a task", () => {
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(button).toHaveFocus();
+    await waitFor(() => {
+      expect(button).toHaveFocus();
+    });
   });
 });
 
@@ -219,7 +225,10 @@ describe("Board: who may change it", () => {
     const card = within(columnRegion("To do")).getByRole("button", { name: /OPA-1/ });
     expect(card).toHaveAttribute("aria-roledescription", "sortable");
     expect(card).toHaveAttribute("tabindex", "0");
-    expect(card).toHaveAccessibleDescription(/Space or Enter/);
+    // `@dnd-kit` mounts the instructions after its first render.
+    await waitFor(() => {
+      expect(card).toHaveAccessibleDescription(/Space or Enter/);
+    });
   });
 
   it("is read-only for someone without tasks:write: no Add task, no draggable cards", async () => {
