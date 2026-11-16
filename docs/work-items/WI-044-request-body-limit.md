@@ -1,6 +1,6 @@
 # WI-044 — Request body size limit
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: none: a hardening item from the audit of 2026-11-14, done before WT-04
 - Depends on: none
 - Work-spec: [WS-044](../work-specs/WS-044-request-body-limit.md)

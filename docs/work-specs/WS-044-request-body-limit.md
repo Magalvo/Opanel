@@ -1,6 +1,6 @@
 # WS-044 — Request body size limit
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-044](../work-items/WI-044-request-body-limit.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3 and 4; `AGENTS.md`
   hard rules 4, 9 and 13; [WS-011](WS-011-api-foundations.md) (`readJson`),
