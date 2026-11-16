@@ -1,6 +1,6 @@
 # WI-042 — Safe error logging
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: none: a hardening item from the audit of 2026-11-14, done before WT-04
 - Depends on: none (its branch is stacked on WI-044, which touches the same files)
 - Work-spec: [WS-042](../work-specs/WS-042-safe-error-logging.md)

@@ -1,6 +1,6 @@
 # WS-042 — Safe error logging
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 4 as proposed)
 - Work-item: [WI-042](../work-items/WI-042-safe-error-logging.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4; `AGENTS.md` hard
   rules 7 and 13; [WS-011](WS-011-api-foundations.md) (the route wrapper),
