@@ -167,11 +167,11 @@ written; each still needs the owner's approval like any other.
 | [WI-034](../work-items/WI-034-comments.md)                       | Comments: schema, service, API                                                                               | Done     | WI-030                 |
 | [WI-035](../work-items/WI-035-teams-page.md)                     | Teams page                                                                                                   | Done     | WI-026                 |
 | [WI-036](../work-items/WI-036-projects-pages.md)                 | Projects list, navigation and project settings (details, columns, deleted tasks)                             | Done     | WI-029, WI-032         |
-| WI-037                                                           | Board page: columns, cards, create a task, drag and drop                                                     | Draft    | WI-031, WI-036         |
+| [WI-037](../work-items/WI-037-board-page.md)                     | Board page: columns, cards, create a task, drag and drop                                                     | Done     | WI-031, WI-036         |
 | WI-038                                                           | Task detail: fields, Markdown description, assignment, epic, comments, delete                                | Draft    | WI-033, WI-034, WI-037 |
 | WI-039                                                           | Epics page: list, create, edit, close, progress                                                              | Draft    | WI-033, WI-036         |
 | [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Done     | none                   |
-| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Proposed | none; before WI-038    |
+| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Approved | none; before WI-038    |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 
@@ -182,7 +182,7 @@ As before, each item gets its work-item and work-spec files just before it is st
       column.
 - [ ] A Member creates tasks on the board; they get keys `KEY-1`, `KEY-2`, ... with no gap or
       duplicate under concurrent creation; they can be fetched by id or by key.
-- [ ] A Member moves a card by drag and drop and by keyboard; the order survives a reload.
+- [x] A Member moves a card by drag and drop and by keyboard; the order survives a reload.
 - [ ] A Member assigns a task to a team, a person or both, sets its epic, edits its Markdown
       description (rendered with no raw HTML), comments, and deletes a task they reported
       but not another person's; a Manager restores it.
@@ -214,7 +214,8 @@ Questions 1 to 4 were resolved by the owner on 2026-11-13, by approving the prop
 4. **Resolved: projects have no default teams.** Teams matter for assignment now and for
    routing in WT-06.
 5. **Open risk, large boards:** the board loads every page of tasks. Acceptable until WT-07
-   moves unscheduled work to the backlog; measured in WI-037 with 1 000 tasks.
+   moves unscheduled work to the backlog; measured in WI-037 with 1 000 tasks: the board
+   appeared in under 2 s locally (WS-037, implementation record).
 6. **Resolved: the audit of 2026-11-13.** The owner approved amendments A1 to A4 on
    2026-11-13, A1 with `projects:read` as proposed. They are folded into decisions 5, 8, 17,
    18 and 19 and the work-items table.

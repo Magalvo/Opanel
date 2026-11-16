@@ -62,7 +62,25 @@ describe("the /projects/KEY layout and board page", () => {
     expect(digest).toContain("NEXT_REDIRECT;replace;/sign-in;");
   });
 
-  it("has a board page that renders", () => {
-    expect(BoardRoute()).toBeTruthy();
+  it.each([
+    ["admin", true],
+    ["manager", true],
+    ["member", true],
+    ["viewer", false],
+  ] as const)("renders the board for a %s, with canWriteTasks %s", async (role, canWrite) => {
+    await createTestAccount({ role });
+    withCookie(await signInCookie());
+
+    const board = await BoardRoute();
+
+    expect(board.props).toEqual({ canWriteTasks: canWrite });
+  });
+
+  it("redirects the board page to /sign-in without a session", async () => {
+    vi.mocked(headers).mockResolvedValue(new Headers());
+
+    await expect(BoardRoute()).rejects.toMatchObject({
+      digest: expect.stringContaining("NEXT_REDIRECT;replace;/sign-in;") as unknown,
+    });
   });
 });

@@ -72,10 +72,19 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(
       (await page.request.post("/api/v1/projects", { headers, data: { key, name: key } })).status(),
     ).toBe(201);
+    expect(
+      (
+        await page.request.post(`/api/v1/projects/${key}/tasks`, {
+          headers,
+          data: { title: "A card on the board" },
+        })
+      ).status(),
+    ).toBe(201);
     await page.emulateMedia({ colorScheme });
 
     for (const [path, loaded] of [
       ["/projects", page.getByRole("table")],
+      [`/projects/${key}`, page.getByRole("button", { name: /A card on the board/ })],
       [`/projects/${key}/settings`, page.getByRole("row", { name: /In progress/ })],
     ] as const) {
       await page.goto(path);
