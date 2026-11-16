@@ -340,7 +340,10 @@ describe("ProjectSettings: columns", () => {
 
 describe("ProjectSettings: deleted tasks", () => {
   it("lists deleted tasks with key, title and time, and restores one", async () => {
-    on(`POST /api/v1/tasks/${deleted.id}/restore`, json({ ...deleted, deletedAt: null }));
+    on(
+      `POST /api/v1/tasks/${deleted.id}/restore`,
+      json({ ...deleted, description: "", deletedAt: null }),
+    );
     const user = await renderSettings();
     const tasks = section("Deleted tasks");
     const row = within(tasks).getByRole("row", { name: /OPA-3/ });

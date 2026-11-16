@@ -131,8 +131,13 @@ test("a Viewer sees projects but no New project, no Settings, and not the settin
   await expect(page.getByRole("heading", { level: 1, name: `Viewed ${key}` })).toBeVisible();
   await expect(page.getByRole("link", { name: "Settings" })).toHaveCount(0);
 
-  const response = await page.goto(`/projects/${key}/settings`);
-  expect(response?.status()).toBe(404);
+  // A not-found page. Its status stays 200 because the response is already streaming when
+  // the settings page refuses (the project layout comes first), so Next.js marks it
+  // noindex instead (WS-036, "Deviations").
+  await page.goto(`/projects/${key}/settings`);
+  await expect(page.getByRole("heading", { name: "This page could not be found." })).toBeVisible();
+  await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1);
+  await expect(page.getByRole("region", { name: "Details" })).toHaveCount(0);
 });
 
 test("at phone width the projects pages have no horizontal page scroll", async ({ page }) => {

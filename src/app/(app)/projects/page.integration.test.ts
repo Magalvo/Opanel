@@ -38,8 +38,8 @@ describe("the /projects page", () => {
     await createTestAccount({ role: "viewer" });
     withCookie(await signInCookie());
 
-    expect((await ProjectsRoute(query("archived"))).props.view).toBe("archived");
-    expect((await ProjectsRoute(query("other"))).props.view).toBe("active");
+    expect((await ProjectsRoute(query("archived"))).props).toMatchObject({ view: "archived" });
+    expect((await ProjectsRoute(query("other"))).props).toMatchObject({ view: "active" });
   });
 
   it("redirects to /sign-in without a session", async () => {
