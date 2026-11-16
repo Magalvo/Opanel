@@ -3,6 +3,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
+import { positionsBetween } from "@/lib/position";
 import { hashPassword } from "@/server/auth/password";
 import * as schema from "@/server/db/schema";
 
@@ -60,6 +61,60 @@ export async function sessionExpiry(email: string): Promise<Date> {
       where account_id = (select id from accounts where email = ${email})`;
     if (!row) throw new Error("no session");
     return row.expires_at;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Adds `count` tasks to a project directly in the database, spread evenly over its columns
+ * in board order, numbered after its existing tasks and reported by `reporterEmail`
+ * (WS-037 section 8: a large board). Returns the keys of the last task of each column.
+ */
+export async function seedTasks(input: {
+  projectKey: string;
+  count: number;
+  reporterEmail: string;
+}): Promise<string[]> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    return await client.begin(async (sql) => {
+      const [project] = await sql<{ id: string; next: number }[]>`
+        select id, next_task_number as next from projects where key = ${input.projectKey}
+        for update`;
+      const [reporter] = await sql<{ id: string }[]>`
+        select id from accounts where email = ${input.reporterEmail}`;
+      if (!project || !reporter) throw new Error("no such project or reporter");
+      const columns = await sql<{ id: string }[]>`
+        select id from columns where project_id = ${project.id} order by position`;
+      const perColumn = Math.ceil(input.count / columns.length);
+      const last: string[] = [];
+      let number = project.next;
+      let left = input.count;
+      for (const column of columns) {
+        const take = Math.min(perColumn, left);
+        if (take === 0) break;
+        const [max] = await sql<{ position: string | null }[]>`
+          select max(position) as position from tasks where column_id = ${column.id}`;
+        const rows = positionsBetween(max?.position ?? null, null, take).map((position) => {
+          const row = {
+            project_id: project.id,
+            number,
+            title: `Seeded task ${String(number)}`,
+            column_id: column.id,
+            position,
+            reporter_account_id: reporter.id,
+          };
+          number += 1;
+          return row;
+        });
+        await sql`insert into tasks ${sql(rows)}`;
+        last.push(`${input.projectKey}-${String(number - 1)}`);
+        left -= take;
+      }
+      await sql`update projects set next_task_number = ${number} where id = ${project.id}`;
+      return last;
+    });
   } finally {
     await client.end();
   }
