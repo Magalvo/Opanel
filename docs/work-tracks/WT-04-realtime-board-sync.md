@@ -229,11 +229,11 @@ Test plan by item, from doc 0002 section 7:
 
 Questions 1 to 3 were resolved by the owner on 2026-11-16, by approving the proposals.
 
-1. **Resolved: The amendment to doc 0002** (decision 1): `task.restored`, `project.changed`,
+1. **Resolved: the amendment to doc 0002** (decision 1): `task.restored`, `project.changed`,
    `projectId` on every event, `taskId` on `comment.created`, `version: null` for
    comments. Doc 0002 is Approved, so this needs the owner's explicit yes.
-2. **Resolved: The cap** (decision 7): 10 streams per account per process, `429 too_many_streams`.
-3. **Resolved: Session re-check on every heartbeat** (decision 6), one authentication query per open
+2. **Resolved: the cap** (decision 7): 10 streams per account per process, `429 too_many_streams`.
+3. **Resolved: session re-check on every heartbeat** (decision 6), one authentication query per open
    stream every 25 seconds. At the scale of a self-hosted install this is negligible;
    the alternative is a fixed stream lifetime.
 4. **Risk, buffering on the way to the browser.** Next.js compression or a reverse proxy
