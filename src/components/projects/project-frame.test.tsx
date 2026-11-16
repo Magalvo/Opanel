@@ -101,6 +101,22 @@ describe("ProjectFrame", () => {
     );
   });
 
+  it("keeps the Board tab current while a task is open (WS-038)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    pathname = "/projects/OPA/tasks/OPA-12";
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects>
+        page
+      </ProjectFrame>,
+    );
+
+    const nav = await screen.findByRole("navigation", { name: "Project" });
+    expect(within(nav).getByRole("link", { name: "Board" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   it("says a project the API does not know does not exist, without the page", async () => {
     on("GET /api/v1/projects/OPA", problem(404, "not_found"));
 

@@ -166,3 +166,49 @@ describe("useBoard: moving", () => {
     expect(onArchived).toHaveBeenCalledOnce();
   });
 });
+
+describe("useBoard: changes made in the task detail (WS-038 section 4)", () => {
+  function dispatch(name: string, detail: unknown) {
+    act(() => {
+      window.dispatchEvent(new CustomEvent(name, { detail }));
+    });
+  }
+
+  it("replaces a changed task in place", async () => {
+    const { result } = await renderBoard();
+
+    dispatch("opanel:task-changed", full({ ...t2, title: "Renamed", version: 5 }));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+    expect(result.current.board[todo.id]?.[1]).toMatchObject({ title: "Renamed", version: 5 });
+    expect(result.current.board[todo.id]?.[1]).not.toHaveProperty("description");
+  });
+
+  it("moves a task that changed column to the end of that column", async () => {
+    const { result } = await renderBoard();
+
+    dispatch("opanel:task-changed", full({ ...t1, columnId: doing.id, version: 2 }));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+    expect(keys(result.current.board, doing.id)).toEqual(["OPA-3", "OPA-1"]);
+  });
+
+  it("removes a deleted task", async () => {
+    const { result } = await renderBoard();
+
+    dispatch("opanel:task-deleted", { id: t1.id });
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+  });
+
+  it("ignores unknown tasks and malformed events", async () => {
+    const { result } = await renderBoard();
+    const before = result.current.board;
+
+    dispatch("opanel:task-changed", full(task(9, todo.id)));
+    dispatch("opanel:task-changed", { nonsense: true });
+    dispatch("opanel:task-deleted", { id: "not a uuid" });
+
+    expect(result.current.board).toEqual(before);
+  });
+});

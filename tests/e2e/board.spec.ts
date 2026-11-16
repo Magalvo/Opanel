@@ -286,7 +286,7 @@ test("a board of 1 000 tasks loads, and a card can still be moved", async ({ pag
   await page.goto(`/projects/${key}`);
   for (const lastKey of last) {
     await expect(
-      page.getByRole("button", { name: new RegExp(`^${lastKey}(?![0-9])`) }),
+      page.getByRole("button", { name: new RegExp(`^Move ${lastKey}(?![0-9])`) }),
     ).toBeVisible({
       timeout: 60_000,
     });
@@ -296,7 +296,7 @@ test("a board of 1 000 tasks loads, and a card can still be moved", async ({ pag
   process.stdout.write(`WS-037: a board of 1 000 tasks appeared in ${String(elapsed)} ms\n`);
   await expect(column(page, "To do")).toContainText("334 tasks");
 
-  const card = page.getByRole("button", { name: new RegExp(`^${last[0] ?? ""}(?![0-9])`) });
+  const card = page.getByRole("button", { name: new RegExp(`^Move ${last[0] ?? ""}(?![0-9])`) });
   await card.focus();
   await pickUp(page);
   await page.keyboard.press("ArrowRight");
