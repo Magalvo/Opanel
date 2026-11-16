@@ -1,6 +1,6 @@
 # WI-037 — Board page: columns, cards, create a task, drag and drop
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 4, 5, 6, 7, 11, 15;
   risk 5)
 - Depends on: WI-031, WI-036
@@ -18,27 +18,27 @@ endpoints.
 
 ## Acceptance criteria
 
-- [ ] `/projects/KEY` shows the columns in board order with name, category and task count,
+- [x] `/projects/KEY` shows the columns in board order with name, category and task count,
       and every task of the project as a card in board order (all pages of the task list
       are loaded). A card shows key, title, type, and the assignee (person, team or both).
-- [ ] A person with `tasks:write` adds a task to a column (title and type); it appears at
+- [x] A person with `tasks:write` adds a task to a column (title and type); it appears at
       the end of that column with its new key, and the outcome is announced.
-- [ ] A person with `tasks:write` moves a card within a column and to another column, empty
+- [x] A person with `tasks:write` moves a card within a column and to another column, empty
       or not, by pointer and by keyboard. The move sends the right `afterTaskId` /
       `beforeTaskId` and the card's `version`, and the order is the same after a reload.
-- [ ] A move is shown at once and kept with the task the API returns. A
+- [x] A move is shown at once and kept with the task the API returns. A
       `409 version_conflict`, `project_archived` or any other failure reloads the board
       and says so in plain words; nothing is left in a state the server does not hold.
-- [ ] A Viewer sees the board with no "Add task" and cannot drag. On an archived project
+- [x] A Viewer sees the board with no "Add task" and cannot drag. On an archived project
       nobody can add or drag, and a line says why.
-- [ ] Loading, empty column, and "could not load the board" (with Retry) states exist.
-- [ ] Drag and drop announces pick-up, position and drop by task key and column name.
-- [ ] The board has no accessibility violations in light and dark mode; at phone width the
+- [x] Loading, empty column, and "could not load the board" (with Retry) states exist.
+- [x] Drag and drop announces pick-up, position and drop by task key and column name.
+- [x] The board has no accessibility violations in light and dark mode; at phone width the
       board scrolls inside its own region and the page has no horizontal scroll.
-- [ ] A board of 1 000 tasks loads and is usable; the measured load time is recorded in
+- [x] A board of 1 000 tasks loads and is usable; the measured load time is recorded in
       the work-spec's implementation record (WT-03 risk 5).
-- [ ] `@dnd-kit` is added with exact pinned versions.
-- [ ] The full quality gate passes.
+- [x] `@dnd-kit` is added with exact pinned versions.
+- [x] The full quality gate passes.
 
 ## Notes
 

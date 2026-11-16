@@ -1,6 +1,6 @@
 # WS-037 — Board page: columns, cards, create a task, drag and drop
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-037](../work-items/WI-037-board-page.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0003](../canonical/0003-task-management.md) sections 2, 4 and 5;
@@ -218,3 +218,53 @@ Technical, settled by the tests:
 7. **Order across pages.** The task list is ordered by column position, then task
    position; grouping keeps that order, so a column split across two pages is still in
    order (test 5).
+
+## Deviations from the approved spec
+
+- **The board's state is a hook, `useBoard`** (`src/components/board/use-board.ts`), tested
+  with `renderHook` in `use-board.test.tsx`: loading every page, adding, and each answer to
+  a move (test plan 5 and 8). The spec said the unit tests would call "the board's drop
+  handler"; the hook's `drop` is that handler. The board's tests share their data through
+  `src/components/board/test-data.ts`. Three files more than the spec's list.
+- **Sensors: `MouseSensor`, `TouchSensor` and `KeyboardSensor`**, not `PointerSensor` with
+  `TouchSensor`: the pointer sensor also reacts to touch, so the touch press delay would
+  not hold.
+- **Collision detection is the board's own:** the cards under the pointer first; with the
+  pointer over a column but no card, the column's closest card, or the column itself when
+  empty; without a pointer (keyboard), `closestCorners`. Droppables are measured always
+  (`MeasuringStrategy.Always`), as cards change columns while dragged.
+- **The status region is named "Board messages".** `@dnd-kit` adds its own live region,
+  also `role="status"`, for the drag announcements; the name tells the two apart.
+- **A card's accessible name is its own text.** A shorter `aria-label` was tried first and
+  failed axe's `label-content-name-mismatch` (WCAG 2.5.3).
+- **"Add task" gets the focus back explicitly.** The dialog has no `DialogTrigger` (one
+  button per column opens it), and without one Radix moves the focus to the page body on
+  close.
+- **After a keyboard drop or cancel, the focus is put back on the card**, which a move to
+  another column mounts anew.
+- **Only a new place is announced while dragging**, so the card's own place, reported when
+  it is picked up, does not hide "Picked up OPA-12.".
+- **The keyboard end-to-end steps wait one page timer after the pick-up** (`pickUp` in
+  `tests/e2e/board.spec.ts`): `@dnd-kit`'s keyboard sensor starts listening for arrow keys
+  in a timer. A person never presses that fast; the test did, and was flaky until then.
+
+## Implementation record
+
+- Red: the unit, integration and end-to-end tests failed on the missing modules and on
+  the placeholder page (committed before any code).
+- Test fixtures of mine fixed after Red, not the code: problem codes that do not exist
+  (`validation_failed`, `internal`); the status region queried by its name once
+  `@dnd-kit`'s live region was there too; `waitFor` for the drag instructions, which
+  `@dnd-kit` mounts after its first render, and for the focus Radix restores in a timer; a
+  helper typed with mutable arrays; the keyboard steps described above.
+- `@dnd-kit/core` 6.3.1, `@dnd-kit/sortable` 10.0.0 and `@dnd-kit/utilities` 3.2.2, pinned
+  exactly. Their bundled type declarations and code were read for the installed versions
+  (hard rule 13): `DndContext` props, `Announcements`, `useSortable`, the keyboard sensor.
+- Large board (WT-03 risk 5): with 1 000 seeded tasks, the board of the production build
+  appeared in 0.9 to 1.7 s locally (headless Chromium, six runs), and a card was moved by
+  keyboard. Acceptable; no follow-up needed. The time on CI is logged by the test.
+- Green: 853 Vitest tests (up from 813) and 46 Playwright tests (up from 40) pass; the
+  board spec passed five repeated runs. Typecheck, lint and format pass;
+  `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
