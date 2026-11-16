@@ -1,6 +1,6 @@
 # WS-035 — Teams page
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-035](../work-items/WI-035-teams-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3 ("Manage teams and
   team membership": Manager and Admin; reading: every role);
