@@ -128,7 +128,13 @@ describe("TeamsPage: a new team", () => {
   });
 
   it("creates the team and goes to its page", async () => {
-    const created = { ...qa, members: [], updatedAt: qa.createdAt };
+    const created = {
+      id: qa.id,
+      name: qa.name,
+      members: [],
+      createdAt: qa.createdAt,
+      updatedAt: qa.createdAt,
+    };
     on("POST /api/v1/teams", () => Response.json(created, { status: 201 }));
     const user = await renderLoaded();
 

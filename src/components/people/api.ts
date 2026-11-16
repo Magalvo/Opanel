@@ -1,3 +1,4 @@
+import { ApiFailure, call, callNoContent, jsonBody } from "@/lib/api-client";
 import {
   accountPageSchema,
   type InviteRequest,
@@ -6,48 +7,8 @@ import {
   resetLinkResponseSchema,
   type UpdateAccountRequest,
 } from "@/lib/schemas/accounts";
-import { type FieldError, problemSchema } from "@/lib/schemas/problem";
 
-/** A non-2xx answer of the API, reduced to what the screen needs. */
-export class ApiFailure extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string | null,
-    readonly errors: readonly FieldError[],
-  ) {
-    super(`The API answered ${String(status)}.`);
-    this.name = "ApiFailure";
-  }
-}
-
-async function failureOf(response: Response): Promise<ApiFailure> {
-  const problem = problemSchema.safeParse(await response.json().catch(() => null));
-  return new ApiFailure(
-    response.status,
-    problem.success ? problem.data.code : null,
-    problem.success ? (problem.data.errors ?? []) : [],
-  );
-}
-
-async function call<Schema extends { parse: (value: unknown) => unknown }>(
-  url: string,
-  init: RequestInit,
-  schema: Schema,
-): Promise<ReturnType<Schema["parse"]>> {
-  const response = await fetch(url, init);
-  if (!response.ok) {
-    throw await failureOf(response);
-  }
-  const body: unknown = await response.json().catch(() => null);
-  return schema.parse(body) as ReturnType<Schema["parse"]>;
-}
-
-function jsonBody(body: unknown): RequestInit {
-  return {
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  };
-}
+export { ApiFailure };
 
 export const PAGE_SIZE = 50;
 
@@ -77,9 +38,6 @@ export function createLink(accountId: string) {
 }
 
 /** Takes back an invitation that was never accepted (WS-024). Answers 204, no body. */
-export async function revokeInvitation(accountId: string): Promise<void> {
-  const response = await fetch(`/api/v1/accounts/${accountId}/invitation`, { method: "DELETE" });
-  if (!response.ok) {
-    throw await failureOf(response);
-  }
+export function revokeInvitation(accountId: string): Promise<void> {
+  return callNoContent(`/api/v1/accounts/${accountId}/invitation`, { method: "DELETE" });
 }

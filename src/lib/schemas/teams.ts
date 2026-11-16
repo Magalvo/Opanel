@@ -131,6 +131,10 @@ export const deleteTeamContract = {
     204: { description: "The team was deleted.", noContent: true },
     400: { description: "The path is not valid.", problem: true },
     404: NO_TEAM,
+    409: {
+      description: "Tasks are assigned to this team (code `team_in_use`).",
+      problem: true,
+    },
   },
 } satisfies EndpointContract;
 

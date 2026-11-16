@@ -1430,6 +1430,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Tasks are assigned to this team (code `team_in_use`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
