@@ -122,7 +122,9 @@ Rules:
   current entity with a version conflict, as `current`). Codes are never renamed or reused.
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged
-  server-side with the request id.
+  server-side with the request id, its class name and, when present, the database or
+  system error code and the constraint name, and never with its message, query,
+  parameters, detail or stack, which can hold the request's data (WS-042).
 - `401` does not say why credentials were rejected (unknown, expired and revoked tokens
   look the same). Sign-in failures do not reveal whether the email exists.
 - A path under `/api/` that matches no endpoint returns the `404` problem body, not an

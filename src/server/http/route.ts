@@ -14,6 +14,7 @@ import {
   payloadTooLarge,
   unsupportedMediaType,
 } from "./errors";
+import { describeError } from "./safe-error";
 
 export type RouteHandler<Context> = (
   request: Request,
@@ -87,8 +88,8 @@ function withSharedBehaviour<Context>(
       if (error instanceof ApiError) {
         response = problemResponse(error, requestId);
       } else {
-        const reason = error instanceof Error ? `${error.name}: ${error.message}` : "unknown error";
-        logError(`Request ${requestId} failed: ${reason}`);
+        // Never the message: a failed query's message holds its parameters (WS-042).
+        logError(`Request ${requestId} failed: ${describeError(error)}`);
         response = problemResponse(internalError(), requestId);
       }
     }
