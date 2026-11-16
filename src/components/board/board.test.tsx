@@ -219,23 +219,39 @@ describe("Board: adding a task", () => {
 });
 
 describe("Board: who may change it", () => {
-  it("makes cards draggable for a writer, with instructions", async () => {
+  it("gives each card a drag handle for the keyboard, with instructions (WS-038)", async () => {
     await renderBoard();
 
-    const card = within(columnRegion("To do")).getByRole("button", { name: /OPA-1/ });
-    expect(card).toHaveAttribute("aria-roledescription", "sortable");
-    expect(card).toHaveAttribute("tabindex", "0");
+    const handle = within(columnRegion("To do")).getByRole("button", {
+      name: "Move OPA-1 Write the board",
+    });
+    expect(handle).toHaveAttribute("aria-roledescription", "sortable");
+    expect(handle).toHaveAttribute("tabindex", "0");
     // `@dnd-kit` mounts the instructions after its first render.
     await waitFor(() => {
-      expect(card).toHaveAccessibleDescription(/Space or Enter/);
+      expect(handle).toHaveAccessibleDescription(/Space or Enter/);
     });
+  });
+
+  it("links each card's title to its task, for writers and readers", async () => {
+    await renderBoard();
+    expect(
+      within(columnRegion("To do")).getByRole("link", { name: "Write the board" }),
+    ).toHaveAttribute("href", "/projects/OPA/tasks/OPA-1");
+  });
+
+  it("links the title of a read-only card too", async () => {
+    await renderBoard({ canWriteTasks: false });
+    expect(
+      within(columnRegion("To do")).getByRole("link", { name: "Write the board" }),
+    ).toHaveAttribute("href", "/projects/OPA/tasks/OPA-1");
   });
 
   it("is read-only for someone without tasks:write: no Add task, no draggable cards", async () => {
     await renderBoard({ canWriteTasks: false });
 
     expect(screen.queryByRole("button", { name: "Add task" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /OPA-1/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Move OPA-1/ })).not.toBeInTheDocument();
     expect(screen.getByText("Write the board")).toBeInTheDocument();
     expect(
       screen.queryByText("This project is archived. The board is read-only."),
@@ -249,6 +265,6 @@ describe("Board: who may change it", () => {
       screen.getByText("This project is archived. The board is read-only."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add task" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /OPA-1/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Move OPA-1/ })).not.toBeInTheDocument();
   });
 });

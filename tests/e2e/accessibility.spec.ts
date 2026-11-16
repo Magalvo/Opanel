@@ -85,6 +85,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     for (const [path, loaded] of [
       ["/projects", page.getByRole("table")],
       [`/projects/${key}`, page.getByRole("button", { name: /A card on the board/ })],
+      [`/projects/${key}/tasks/${key}-1`, page.getByRole("region", { name: "Comments" })],
       [`/projects/${key}/settings`, page.getByRole("row", { name: /In progress/ })],
     ] as const) {
       await page.goto(path);
@@ -97,5 +98,17 @@ for (const colorScheme of ["light", "dark"] as const) {
         path,
       ).toEqual([]);
     }
+
+    // The task as a dialog over the board (WS-038).
+    await page.goto(`/projects/${key}`);
+    await page.getByRole("link", { name: "A card on the board" }).click();
+    await expect(page.getByRole("dialog").getByRole("region", { name: "Comments" })).toBeVisible();
+    const dialog = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(
+      dialog.violations.map((violation) => violation.id),
+      "task dialog",
+    ).toEqual([]);
   });
 }

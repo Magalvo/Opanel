@@ -13,7 +13,7 @@ function withCookie(cookie: string): void {
 }
 
 function args(projectKey: string) {
-  return { children: "the page", params: Promise.resolve({ projectKey }) };
+  return { children: "the page", modal: "the dialog", params: Promise.resolve({ projectKey }) };
 }
 
 describe("the /projects/KEY layout and board page", () => {
@@ -36,6 +36,7 @@ describe("the /projects/KEY layout and board page", () => {
       projectKey: "OPA",
       canManageProjects: canManage,
       children: "the page",
+      modal: "the dialog",
     });
   });
 

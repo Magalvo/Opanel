@@ -9,10 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-041 (security headers and Content Security Policy), on 2026-11-16.
-- **Next:** draft WI-038 (task detail: fields, Markdown description, assignment, epic,
-  comments, delete) and WS-038 as `Proposed`, and stop for the owner's approval. WI-039
-  (epics page) can follow.
+- **Last finished:** WI-038 (task detail: fields, Markdown, assignment, comments, delete), on
+  2026-11-16.
+- **Next:** draft WI-039 (epics page: list, create, edit, close, progress) and WS-039 as
+  `Proposed`, and stop for the owner's approval. It is the last item of WT-03.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -52,49 +52,50 @@ above and comes after WT-06.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
-| Item                                                            | Title                                                     | Item status | Spec                                                            | Spec status |
-| --------------------------------------------------------------- | --------------------------------------------------------- | ----------- | --------------------------------------------------------------- | ----------- |
-| [WI-001](work-items/WI-001-app-skeleton.md)                     | App skeleton: Next.js, strict TypeScript, Vitest          | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)                     | Done        |
-| [WI-002](work-items/WI-002-lint-and-format.md)                  | ESLint and Prettier                                       | Done        | [WS-002](work-specs/WS-002-lint-and-format.md)                  | Done        |
-| [WI-003](work-items/WI-003-validated-env.md)                    | Validated environment variables                           | Done        | [WS-003](work-specs/WS-003-validated-env.md)                    | Done        |
-| [WI-004](work-items/WI-004-database.md)                         | PostgreSQL, Drizzle and the integration test harness      | Done        | [WS-004](work-specs/WS-004-database.md)                         | Done        |
-| [WI-005](work-items/WI-005-health-endpoint.md)                  | Health endpoint: the first vertical slice                 | Done        | [WS-005](work-specs/WS-005-health-endpoint.md)                  | Done        |
-| [WI-006](work-items/WI-006-openapi.md)                          | OpenAPI document generated from Zod                       | Done        | [WS-006](work-specs/WS-006-openapi.md)                          | Done        |
-| [WI-007](work-items/WI-007-e2e.md)                              | Playwright end-to-end tests                               | Done        | [WS-007](work-specs/WS-007-e2e.md)                              | Done        |
-| [WI-008](work-items/WI-008-ui-foundation.md)                    | UI foundation: Tailwind, shadcn/ui and the app shell      | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)                    | Done        |
-| [WI-009](work-items/WI-009-ci.md)                               | Continuous integration                                    | Done        | [WS-009](work-specs/WS-009-ci.md)                               | Done        |
-| [WI-010](work-items/WI-010-contributor-docs.md)                 | Contributor docs: README and CONTRIBUTING                 | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)                 | Done        |
-| [WI-011](work-items/WI-011-api-foundations.md)                  | API foundations: errors, validation helpers, request id   | Done        | [WS-011](work-specs/WS-011-api-foundations.md)                  | Done        |
-| [WI-012](work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type    | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)            | Done        |
-| [WI-013](work-items/WI-013-accounts-and-better-auth.md)         | Accounts, sessions schema and Better Auth                 | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)         | Done        |
-| [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                                | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
-| [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter            | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
-| [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                   | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
-| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu               | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
-| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                    | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
-| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                        | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
-| [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                         | Done        | [WS-020](work-specs/WS-020-people-page.md)                      | Done        |
-| [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                     | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
-| [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth       | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
-| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
-| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted              | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
-| [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission          | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
-| [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                | Done        | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Done        |
-| [WI-027](work-items/WI-027-positions-and-version-conflict.md)   | Fractional positions and the `version_conflict` response  | Done        | [WS-027](work-specs/WS-027-positions-and-version-conflict.md)   | Done        |
-| [WI-028](work-items/WI-028-projects-and-default-columns.md)     | Projects with default columns                             | Done        | [WS-028](work-specs/WS-028-projects-and-default-columns.md)     | Done        |
-| [WI-029](work-items/WI-029-columns-api.md)                      | Columns API                                               | Done        | [WS-029](work-specs/WS-029-columns-api.md)                      | Done        |
-| [WI-030](work-items/WI-030-tasks-core.md)                       | Tasks core                                                | Done        | [WS-030](work-specs/WS-030-tasks-core.md)                       | Done        |
-| [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                    | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
-| [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
-| [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
-| [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
-| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
-| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
-| [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop  | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
-| [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
-| [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
+| Item                                                            | Title                                                       | Item status | Spec                                                            | Spec status |
+| --------------------------------------------------------------- | ----------------------------------------------------------- | ----------- | --------------------------------------------------------------- | ----------- |
+| [WI-001](work-items/WI-001-app-skeleton.md)                     | App skeleton: Next.js, strict TypeScript, Vitest            | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)                     | Done        |
+| [WI-002](work-items/WI-002-lint-and-format.md)                  | ESLint and Prettier                                         | Done        | [WS-002](work-specs/WS-002-lint-and-format.md)                  | Done        |
+| [WI-003](work-items/WI-003-validated-env.md)                    | Validated environment variables                             | Done        | [WS-003](work-specs/WS-003-validated-env.md)                    | Done        |
+| [WI-004](work-items/WI-004-database.md)                         | PostgreSQL, Drizzle and the integration test harness        | Done        | [WS-004](work-specs/WS-004-database.md)                         | Done        |
+| [WI-005](work-items/WI-005-health-endpoint.md)                  | Health endpoint: the first vertical slice                   | Done        | [WS-005](work-specs/WS-005-health-endpoint.md)                  | Done        |
+| [WI-006](work-items/WI-006-openapi.md)                          | OpenAPI document generated from Zod                         | Done        | [WS-006](work-specs/WS-006-openapi.md)                          | Done        |
+| [WI-007](work-items/WI-007-e2e.md)                              | Playwright end-to-end tests                                 | Done        | [WS-007](work-specs/WS-007-e2e.md)                              | Done        |
+| [WI-008](work-items/WI-008-ui-foundation.md)                    | UI foundation: Tailwind, shadcn/ui and the app shell        | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)                    | Done        |
+| [WI-009](work-items/WI-009-ci.md)                               | Continuous integration                                      | Done        | [WS-009](work-specs/WS-009-ci.md)                               | Done        |
+| [WI-010](work-items/WI-010-contributor-docs.md)                 | Contributor docs: README and CONTRIBUTING                   | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)                 | Done        |
+| [WI-011](work-items/WI-011-api-foundations.md)                  | API foundations: errors, validation helpers, request id     | Done        | [WS-011](work-specs/WS-011-api-foundations.md)                  | Done        |
+| [WI-012](work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type      | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)            | Done        |
+| [WI-013](work-items/WI-013-accounts-and-better-auth.md)         | Accounts, sessions schema and Better Auth                   | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)         | Done        |
+| [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                                  | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
+| [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter              | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
+| [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                     | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
+| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu                 | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
+| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                      | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
+| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                          | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
+| [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                           | Done        | [WS-020](work-specs/WS-020-people-page.md)                      | Done        |
+| [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                       | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
+| [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth         | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
+| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks   | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
+| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted                | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
+| [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission            | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
+| [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                  | Done        | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Done        |
+| [WI-027](work-items/WI-027-positions-and-version-conflict.md)   | Fractional positions and the `version_conflict` response    | Done        | [WS-027](work-specs/WS-027-positions-and-version-conflict.md)   | Done        |
+| [WI-028](work-items/WI-028-projects-and-default-columns.md)     | Projects with default columns                               | Done        | [WS-028](work-specs/WS-028-projects-and-default-columns.md)     | Done        |
+| [WI-029](work-items/WI-029-columns-api.md)                      | Columns API                                                 | Done        | [WS-029](work-specs/WS-029-columns-api.md)                      | Done        |
+| [WI-030](work-items/WI-030-tasks-core.md)                       | Tasks core                                                  | Done        | [WS-030](work-specs/WS-030-tasks-core.md)                       | Done        |
+| [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                      | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
+| [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                   | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
+| [WI-033](work-items/WI-033-epics.md)                            | Epics                                                       | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
+| [WI-034](work-items/WI-034-comments.md)                         | Comments                                                    | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
+| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                  | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
+| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings              | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
+| [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop    | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
+| [WI-038](work-items/WI-038-task-detail.md)                      | Task detail: fields, Markdown, assignment, comments, delete | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
+| [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
+| [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 
-WI-038 and WI-039 are outlined in WT-03 and get their own files when they are started.
+WI-039 is outlined in WT-03 and get their own files when they are started.
 
 ## Follow-ups
 
@@ -140,6 +141,9 @@ Other follow-ups:
   close Radix moves the focus to the page body instead of the button that opened them
   (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
   explicitly, see WS-037 "Deviations"). Needs its own work-item.
+- Delete the superseded remote branches `claude/wi-038-task-detail`,
+  `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
+  in WS-038, question 6).
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).

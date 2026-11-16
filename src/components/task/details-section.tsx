@@ -1,0 +1,365 @@
+"use client";
+
+import { useId, useState } from "react";
+
+import { TYPE_LABELS } from "@/components/board/task-card";
+import { Markdown } from "@/components/markdown";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ApiFailure } from "@/lib/api-client";
+import type { Column } from "@/lib/schemas/columns";
+import type { Epic } from "@/lib/schemas/epics";
+import type { Person } from "@/lib/schemas/people";
+import {
+  type Task,
+  taskSchema,
+  taskTitleSchema,
+  type TaskType,
+  taskTypeSchema,
+  type UpdateTaskRequest,
+} from "@/lib/schemas/tasks";
+import type { TeamSummary } from "@/lib/schemas/teams";
+
+import { updateTask } from "./api";
+import { MarkdownEditor } from "./markdown-editor";
+import { PersonField, personLabel } from "./person-field";
+
+const SELECT =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:text-sm dark:bg-input/30";
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleString();
+}
+
+function Row({ term, children }: Readonly<{ term: string; children: React.ReactNode }>) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{term}</dt>
+      <dd className="min-w-0 break-words">{children}</dd>
+    </>
+  );
+}
+
+interface Draft {
+  title: string;
+  type: TaskType;
+  description: string;
+  teamId: string;
+  assignee: Person | null;
+  epicId: string;
+}
+
+function draftOf(task: Task): Draft {
+  return {
+    title: task.title,
+    type: task.type,
+    description: task.description,
+    teamId: task.assigneeTeam?.id ?? "",
+    assignee: task.assignee,
+    epicId: task.epic?.id ?? "",
+  };
+}
+
+/** Only what changed, as the update request expects it. */
+function changesOf(task: Task, draft: Draft): Omit<UpdateTaskRequest, "version"> {
+  const changes: Omit<UpdateTaskRequest, "version"> = {};
+  if (draft.title !== task.title) changes.title = draft.title;
+  if (draft.type !== task.type) changes.type = draft.type;
+  if (draft.description !== task.description) changes.description = draft.description;
+  if (draft.teamId !== (task.assigneeTeam?.id ?? "")) {
+    changes.assigneeTeamId = draft.teamId === "" ? null : draft.teamId;
+  }
+  if ((draft.assignee?.id ?? null) !== (task.assignee?.id ?? null)) {
+    changes.assigneeAccountId = draft.assignee?.id ?? null;
+  }
+  if (draft.epicId !== (task.epic?.id ?? "")) {
+    changes.epicId = draft.epicId === "" ? null : draft.epicId;
+  }
+  return changes;
+}
+
+/** A conflict's `current` task, when the problem carries one. */
+export function currentOf(failure: ApiFailure): Task | null {
+  if (typeof failure.body !== "object" || failure.body === null) return null;
+  const parsed = taskSchema.safeParse((failure.body as { current?: unknown }).current);
+  return parsed.success ? parsed.data : null;
+}
+
+export interface DetailsProps {
+  task: Task;
+  columns: readonly Column[];
+  teams: readonly TeamSummary[];
+  epics: readonly Epic[];
+  editable: boolean;
+  busy: boolean;
+  /** How many conflicts the screen has shown: a new one starts the form again. */
+  conflicts: number;
+  /** Runs a write; the detail shows its outcome. */
+  onSaved: (task: Task, message: string) => void;
+  onConflict: (current: Task) => void;
+  onFailure: (failure: unknown, fallback: string) => void;
+  onMove: (columnId: string) => void;
+  setBusy: (busy: boolean) => void;
+}
+
+/**
+ * The task's fields (WS-038 section 2). Editable: one form saved with one `PATCH` carrying
+ * only the changed fields and the `version`, plus the column select, which moves at once.
+ * Otherwise the same values as text.
+ */
+export function DetailsSection(props: Readonly<DetailsProps>) {
+  const id = useId();
+  const { task, columns, editable } = props;
+  const column = columns.find((item) => item.id === task.columnId);
+
+  return (
+    <section aria-labelledby={`${id}-heading`} className="grid min-w-0 gap-4">
+      <h3 id={`${id}-heading`} className="sr-only">
+        Details
+      </h3>
+      {editable ? (
+        <DetailsForm {...props} />
+      ) : (
+        <>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            <Row term="Type">
+              <Badge variant="outline">{TYPE_LABELS[task.type]}</Badge>
+            </Row>
+            <Row term="Column">{column?.name ?? "Unknown"}</Row>
+            <Row term="Team">{task.assigneeTeam?.name ?? "No team"}</Row>
+            <Row term="Person">
+              {task.assignee === null ? "No one" : personLabel(task.assignee)}
+            </Row>
+            <Row term="Epic">{task.epic?.title ?? "No epic"}</Row>
+            <Row term="Reporter">{task.reporter.name}</Row>
+            <Row term="Created">{formatTime(task.createdAt)}</Row>
+            <Row term="Updated">{formatTime(task.updatedAt)}</Row>
+          </dl>
+          {task.description.trim() === "" ? (
+            <p className="text-sm text-muted-foreground">No description.</p>
+          ) : (
+            <Markdown>{task.description}</Markdown>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function DetailsForm({
+  task,
+  columns,
+  teams,
+  epics,
+  busy,
+  conflicts,
+  onSaved,
+  onConflict,
+  onFailure,
+  onMove,
+  setBusy,
+}: Readonly<DetailsProps>) {
+  const id = useId();
+  const [draft, setDraft] = useState<Draft>(() => draftOf(task));
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  // A new version of the task. After a conflict the form starts again from what the
+  // server holds; after a save or a move, edits not saved yet are kept and every other field
+  // takes the new value. The form stays mounted, so the keyboard focus stays where it was.
+  const [basedOn, setBasedOn] = useState({ task, conflicts });
+  if (basedOn.task !== task || basedOn.conflicts !== conflicts) {
+    const fresh = draftOf(task);
+    if (basedOn.conflicts === conflicts) {
+      const before = draftOf(basedOn.task);
+      for (const key of Object.keys(fresh) as (keyof Draft)[]) {
+        if (draft[key] !== before[key]) Object.assign(fresh, { [key]: draft[key] });
+      }
+    }
+    setBasedOn({ task, conflicts });
+    setDraft(fresh);
+    setErrors({});
+  }
+  const changes = changesOf(task, draft);
+  const changed = Object.keys(changes).length > 0;
+
+  function set<Key extends keyof Draft>(key: Key, value: Draft[Key]) {
+    setDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  const ownEpicMissing = task.epic !== null && !epics.some((epic) => epic.id === task.epic?.id);
+
+  async function save(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!taskTitleSchema.safeParse(draft.title).success) {
+      setErrors({
+        title: draft.title.trim() === "" ? "Enter a title." : "Use at most 200 characters.",
+      });
+      return;
+    }
+    setErrors({});
+    setBusy(true);
+    try {
+      onSaved(await updateTask(task.key, { ...changes, version: task.version }), "Saved.");
+    } catch (failure) {
+      if (failure instanceof ApiFailure && failure.code === "version_conflict") {
+        const current = currentOf(failure);
+        if (current !== null) {
+          onConflict(current);
+          return;
+        }
+      }
+      if (failure instanceof ApiFailure && failure.errors.length > 0) {
+        setErrors(Object.fromEntries(failure.errors.map((error) => [error.path, error.message])));
+      }
+      onFailure(failure, "Could not save the task. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function described(field: string) {
+    return errors[field] === undefined
+      ? {}
+      : { "aria-invalid": true, "aria-describedby": `${id}-${field}-error` };
+  }
+
+  function errorText(field: string) {
+    const message = errors[field];
+    return message === undefined ? null : (
+      <p id={`${id}-${field}-error`} className="text-sm text-destructive">
+        {message}
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={(event) => void save(event)} className="grid min-w-0 gap-4" noValidate>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-1.5 sm:col-span-2">
+          <label htmlFor={`${id}-title`} className="text-sm font-medium">
+            Title
+          </label>
+          <Input
+            id={`${id}-title`}
+            value={draft.title}
+            autoComplete="off"
+            onChange={(event) => {
+              set("title", event.target.value);
+            }}
+            {...described("title")}
+          />
+          {errorText("title")}
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-type`} className="text-sm font-medium">
+            Type
+          </label>
+          <select
+            id={`${id}-type`}
+            value={draft.type}
+            className={SELECT}
+            onChange={(event) => {
+              set("type", taskTypeSchema.parse(event.target.value));
+            }}
+          >
+            {taskTypeSchema.options.map((option) => (
+              <option key={option} value={option}>
+                {TYPE_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-column`} className="text-sm font-medium">
+            Column
+          </label>
+          <select
+            id={`${id}-column`}
+            value={task.columnId}
+            disabled={busy}
+            className={SELECT}
+            onChange={(event) => {
+              onMove(event.target.value);
+            }}
+          >
+            {columns.map((column) => (
+              <option key={column.id} value={column.id}>
+                {column.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-team`} className="text-sm font-medium">
+            Team
+          </label>
+          <select
+            id={`${id}-team`}
+            value={draft.teamId}
+            className={SELECT}
+            onChange={(event) => {
+              set("teamId", event.target.value);
+            }}
+          >
+            <option value="">No team</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-epic`} className="text-sm font-medium">
+            Epic
+          </label>
+          <select
+            id={`${id}-epic`}
+            value={draft.epicId}
+            className={SELECT}
+            onChange={(event) => {
+              set("epicId", event.target.value);
+            }}
+          >
+            <option value="">No epic</option>
+            {epics.map((epic) => (
+              <option key={epic.id} value={epic.id}>
+                {epic.title}
+              </option>
+            ))}
+            {ownEpicMissing && task.epic !== null && (
+              <option value={task.epic.id}>{task.epic.title} (closed)</option>
+            )}
+          </select>
+        </div>
+        <div className="sm:col-span-2">
+          <PersonField
+            value={draft.assignee}
+            disabled={busy}
+            onChange={(person) => {
+              set("assignee", person);
+            }}
+          />
+        </div>
+      </div>
+      <MarkdownEditor
+        label="Description"
+        value={draft.description}
+        error={errors.description ?? null}
+        onChange={(value) => {
+          set("description", value);
+        }}
+      />
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+        <Row term="Reporter">{task.reporter.name}</Row>
+        <Row term="Created">{formatTime(task.createdAt)}</Row>
+        <Row term="Updated">{formatTime(task.updatedAt)}</Row>
+      </dl>
+      <div>
+        <Button type="submit" disabled={!changed || busy}>
+          Save changes
+        </Button>
+      </div>
+    </form>
+  );
+}
