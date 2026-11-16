@@ -110,7 +110,7 @@ export function createEnvAccessor(readSource: () => EnvSource): () => Env {
   };
 }
 
-/** The validated server configuration. The only place `process.env` is read. */
+/** The validated server configuration. With `getNodeEnv`, the only readers of `process.env`. */
 export const getEnv = createEnvAccessor(() => process.env);
 
 /**
