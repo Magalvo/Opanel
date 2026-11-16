@@ -10,9 +10,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 Updated at the end of every work-item, so that a new session can start from here.
 
 - **Last finished:** WI-039 (epics page), on 2026-11-16, which closes WT-03 (board core).
-- **Next:** draft WT-04 (real-time board sync, canonical doc 0002) as `Proposed`, and stop
-  for the owner's approval. Also awaiting a decision: bringing the security items of the
-  audit of 2026-11-14 (WI-042 to WI-044, on unmerged branches) to `main` (see Follow-ups).
+- **Awaiting the owner's approval:** WI-044 / WS-044, request body size limit (five
+  questions in WS-044), the first of the audit's security items (WI-042 to WI-044), done
+  before WT-04 on the owner's decision of 2026-11-16.
+- **Next:** once WS-044 is approved, implement it; then WI-042 (safe error logging) and
+  WI-043 (setup refuses before hashing); then WT-04.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -95,6 +97,7 @@ above and comes after WT-06.
 | [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
+| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Proposed    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Proposed    |
 
 ## Follow-ups
 
@@ -143,8 +146,8 @@ Other follow-ups:
 - The audit of 2026-11-14 proposed three security items that exist only on unmerged
   branches: WI-042 (log errors without their message), WI-043 (refuse the first-run setup
   before hashing once the install has accounts) and WI-044 (bound the JSON request body,
-  `413 payload_too_large`). They are not in these docs. Owner to decide whether to redo
-  them on `main` as new work-items.
+  `413 payload_too_large`). On 2026-11-16 the owner decided to redo them on `main` before
+  WT-04, starting with WI-044.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
   in WS-038, question 6).
