@@ -38,6 +38,7 @@ Three pillars:
 | Password hashing       | Argon2id via @node-rs/argon2                                       |
 | Agent auth             | Custom scoped API tokens (canonical doc 0001)                      |
 | Live sync              | Server-Sent Events + PostgreSQL LISTEN/NOTIFY (canonical doc 0002) |
+| Agent tools            | MCP server over stdio, a client of `/api/v1` (canonical doc 0005)  |
 | ORM, migrations        | Drizzle ORM + drizzle-kit                                          |
 | Validation             | Zod (single source for runtime validation, types and OpenAPI)      |
 | UI                     | React, Tailwind CSS, shadcn/ui                                     |
@@ -74,6 +75,7 @@ src/
     schemas/            Zod schemas shared by API, UI and OpenAPI
 tests/
   e2e/                  Playwright specs
+mcp/                    MCP server package (doc 0005, WT-11): a client of /api/v1, no DB access
 ```
 
 Layering rules:
