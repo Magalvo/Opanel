@@ -13,6 +13,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Next:** draft WI-038 (task detail: fields, Markdown description, assignment, epic,
   comments, delete) and WS-038 as `Proposed`, and stop for the owner's approval. WI-039
   (epics page) can follow.
+- **Awaiting the owner's approval:** canonical doc 0005 (MCP server) and the outline of
+  WT-11, four questions in doc 0005 section 11. Not urgent: WT-11 comes after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -24,6 +26,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [0002](canonical/0002-realtime-sync.md)           | Real-time board sync                                        | Approved |
 | [0003](canonical/0003-task-management.md)         | Task management: roles, tickets, boards and planning        | Approved |
 | [0004](canonical/0004-api-conventions.md)         | API conventions                                             | Approved |
+| [0005](canonical/0005-mcp-server.md)              | MCP server: Opanel as tools for AI assistants               | Proposed |
 
 ## Work-tracks (`work-tracks/`)
 
@@ -32,6 +35,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
 | [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
 | [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Approved |
+| [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Proposed |
 
 Planned next, not yet drafted:
 
@@ -43,7 +47,8 @@ Planned next, not yet drafted:
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 come from canonical doc 0003.
+WT-07 to WT-10 come from canonical doc 0003. WT-11, the MCP server (doc 0005), is outlined
+above and comes after WT-06.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
