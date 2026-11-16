@@ -82,6 +82,7 @@ export function ProjectFrame({
 
   const boardHref = `/projects/${projectKey}` as const;
   const settingsHref = `/projects/${projectKey}/settings` as const;
+  const epicsHref = `/projects/${projectKey}/epics` as const;
   // A task, as a dialog over the board or as its own page, belongs to the board (WS-038).
   const onBoard = pathname === boardHref || pathname.startsWith(`${boardHref}/tasks/`);
 
@@ -142,6 +143,13 @@ export function ProjectFrame({
                 className={tabClass(onBoard)}
               >
                 Board
+              </Link>
+              <Link
+                href={epicsHref}
+                aria-current={pathname === epicsHref ? "page" : undefined}
+                className={tabClass(pathname === epicsHref)}
+              >
+                Epics
               </Link>
               {canManageProjects && (
                 <Link

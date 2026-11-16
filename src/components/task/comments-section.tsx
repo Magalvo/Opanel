@@ -3,12 +3,12 @@
 import { useId, useState } from "react";
 
 import { Markdown } from "@/components/markdown";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import { Button } from "@/components/ui/button";
 import type { Comment } from "@/lib/schemas/comments";
 import { commentBodySchema } from "@/lib/schemas/comments";
 
 import { addComment, listComments } from "./api";
-import { MarkdownEditor } from "./markdown-editor";
 
 /**
  * A task's comments, oldest first, as Markdown, and the form to add one (WS-038 section 2,

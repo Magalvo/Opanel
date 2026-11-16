@@ -74,7 +74,7 @@ describe("ProjectFrame", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Board"]);
+    ).toEqual(["Board", "Epics"]);
     expect(within(nav).getByRole("link", { name: "Board" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -99,6 +99,32 @@ describe("ProjectFrame", () => {
     expect(within(managed).getByRole("link", { name: "Board" })).not.toHaveAttribute(
       "aria-current",
     );
+  });
+
+  it("links Epics for everyone, between Board and Settings, current on its page (WS-039)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    pathname = "/projects/OPA/epics";
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects>
+        page
+      </ProjectFrame>,
+    );
+
+    const nav = await screen.findByRole("navigation", { name: "Project" });
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Board", "Epics", "Settings"]);
+    expect(within(nav).getByRole("link", { name: "Epics" })).toHaveAttribute(
+      "href",
+      "/projects/OPA/epics",
+    );
+    expect(within(nav).getByRole("link", { name: "Epics" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(nav).getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current");
   });
 
   it("keeps the Board tab current while a task is open (WS-038)", async () => {
