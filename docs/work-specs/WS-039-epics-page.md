@@ -1,6 +1,6 @@
 # WS-039 — Epics page: list, create, edit, close, progress
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 7 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 7 as proposed)
 - Work-item: [WI-039](../work-items/WI-039-epics-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0004](../canonical/0004-api-conventions.md) sections 4 to 7;
@@ -178,3 +178,34 @@ Technical, settled by the tests:
    page does not try to recompute it.
 9. **A closed epic's title stays shown on its tasks** (WS-033); nothing on the board changes
    when an epic is closed.
+
+## Deviations from the approved spec
+
+- **The epic dialog has its own status region**, also named "Epic messages", showing the
+  page's latest message. A modal dialog hides the rest of the page from assistive
+  technology, so the page's region alone could not be heard while editing. Found by the
+  unit tests, which could not see the page's region either.
+- **An epic that no longer matches the list stays until its dialog closes** (closing one
+  under "Open"), so the dialog does not vanish from under the person using it.
+- **The epic dialog returns the focus to the title button that opened it**, explicitly, as
+  the board's "Add task" does (WS-037), because one dialog serves every row and has no
+  `DialogTrigger`.
+- **Unsaved edits are kept across a close or reopen**, and a conflict starts the form again,
+  as in the task form (WS-038).
+- **No separate `MarkdownEditor` test file**: there was none before the move; the task and
+  epic tests exercise it from its new place.
+
+## Implementation record
+
+- Red: the unit and integration tests failed on the missing modules and the missing Epics
+  tab (committed before any code). As in WS-038, the end-to-end tests were not run red,
+  because `next build` type-checks tests whose modules do not exist yet.
+- Exit check of WT-03 (section 6): nine criteria were covered by existing tests; criterion 5
+  got `src/app/api/v1/viewer-writes.integration.test.ts`, which passed at once since the
+  behaviour already existed, and was shown to fail with a Member's session instead. The
+  mapping is recorded in WT-03, which is now Done.
+- Green: 953 Vitest tests (up from 921) and 59 Playwright tests (up from 56) pass, under
+  the CSP guard; the epics and accessibility specs passed three repeated runs. Typecheck,
+  lint and format pass; `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

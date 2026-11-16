@@ -1,6 +1,6 @@
 # WI-039 — Epics page: list, create, edit, close, progress
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 14 and 18)
 - Depends on: WI-033, WI-036, WI-038 (the Markdown renderer and editor)
 - Work-spec: [WS-039](../work-specs/WS-039-epics-page.md)
@@ -16,27 +16,27 @@ and the track closed.
 
 ## Acceptance criteria
 
-- [ ] The project's navigation shows "Epics" to everyone, between Board and Settings, marked
+- [x] The project's navigation shows "Epics" to everyone, between Board and Settings, marked
       current on the epics page.
-- [ ] `/projects/KEY/epics` lists the open epics by title with status, start and target
+- [x] `/projects/KEY/epics` lists the open epics by title with status, start and target
       dates, and progress; a "Show" select also lists Closed and All; "Load more" while
       there are more.
-- [ ] Progress is a progress bar with an accessible name ("2 of 5 tasks done") and the
+- [x] Progress is a progress bar with an accessible name ("2 of 5 tasks done") and the
       numbers as text; an epic with no tasks says "No tasks".
-- [ ] Opening an epic shows its title, dates, status, progress and the description rendered
+- [x] Opening an epic shows its title, dates, status, progress and the description rendered
       safely as Markdown.
-- [ ] A person with `epics:manage` creates an epic (title, description with a preview,
+- [x] A person with `epics:manage` creates an epic (title, description with a preview,
       optional dates) and edits one, saving only the changes with the epic's `version`. A
       target date before the start date is refused at the field. A version conflict shows
       the current values and says so.
-- [ ] Closing and reopening send the new status with the `version`; closing an epic whose
+- [x] Closing and reopening send the new status with the `version`; closing an epic whose
       tasks are not all done asks first and says how many are left.
-- [ ] Members and Viewers, and everyone on an archived project, see the epics with no create,
+- [x] Members and Viewers, and everyone on an archived project, see the epics with no create,
       edit, close or reopen control; on an archived project a line says why.
-- [ ] The page works by keyboard, announces outcomes, has no accessibility violations in
+- [x] The page works by keyboard, announces outcomes, has no accessibility violations in
       light and dark mode, and has no horizontal page scroll at phone width.
-- [ ] Every exit criterion of WT-03 is checked and recorded, and WT-03 is marked Done.
-- [ ] The full quality gate passes.
+- [x] Every exit criterion of WT-03 is checked and recorded, and WT-03 is marked Done.
+- [x] The full quality gate passes.
 
 ## Notes
 

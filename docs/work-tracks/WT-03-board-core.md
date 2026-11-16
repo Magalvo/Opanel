@@ -1,6 +1,6 @@
 # WT-03 — Board core: projects, teams, columns, epics, tasks, comments, assignment
 
-- Status: In progress (approved by the owner on 2026-11-13)
+- Status: Done (approved by the owner on 2026-11-13; closed on 2026-11-16 by WI-039)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (sections 2 to 5, 9),
   [0002](../canonical/0002-realtime-sync.md) (section 4, consistency rules),
   [0004](../canonical/0004-api-conventions.md),
@@ -153,51 +153,82 @@ Two hardening items from the audit of 2026-11-13 joined the track (amendment A4)
 before WI-038, the first item that shows text written by users. Their work-specs are
 written; each still needs the owner's approval like any other.
 
-| Item                                                             | Title                                                                                                        | Status   | Depends on                     |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------ |
-| [WI-025](../work-items/WI-025-route-declares-access.md)          | `route()` declares authentication and permission; existing endpoints converted                               | Done     | none                           |
-| [WI-026](../work-items/WI-026-teams-and-people.md)               | Teams and membership, people directory: schema, service, API                                                 | Done     | WI-025                         |
-| [WI-027](../work-items/WI-027-positions-and-version-conflict.md) | Fractional positions (pure logic) and the `version_conflict` response                                        | Done     | none                           |
-| [WI-028](../work-items/WI-028-projects-and-default-columns.md)   | Projects with default columns: schema, service, API (create, edit, archive, list)                            | Done     | WI-025, WI-027                 |
-| [WI-029](../work-items/WI-029-columns-api.md)                    | Columns API: create, rename, recategorise, reorder, delete                                                   | Done     | WI-028                         |
-| [WI-030](../work-items/WI-030-tasks-core.md)                     | Tasks core: schema, keys, history events; create, get, list, edit, assign; `team_in_use`, `column_not_empty` | Done     | WI-026, WI-029                 |
-| [WI-031](../work-items/WI-031-move-task.md)                      | Move a task between and within columns                                                                       | Done     | WI-030                         |
-| [WI-032](../work-items/WI-032-delete-and-restore-task.md)        | Delete and restore a task                                                                                    | Done     | WI-030                         |
-| [WI-033](../work-items/WI-033-epics.md)                          | Epics: schema, service, API; a task's epic; progress                                                         | Done     | WI-030                         |
-| [WI-034](../work-items/WI-034-comments.md)                       | Comments: schema, service, API                                                                               | Done     | WI-030                         |
-| [WI-035](../work-items/WI-035-teams-page.md)                     | Teams page                                                                                                   | Done     | WI-026                         |
-| [WI-036](../work-items/WI-036-projects-pages.md)                 | Projects list, navigation and project settings (details, columns, deleted tasks)                             | Done     | WI-029, WI-032                 |
-| [WI-037](../work-items/WI-037-board-page.md)                     | Board page: columns, cards, create a task, drag and drop                                                     | Done     | WI-031, WI-036                 |
-| [WI-038](../work-items/WI-038-task-detail.md)                    | Task detail: fields, Markdown description, assignment, epic, comments, delete                                | Done     | WI-033, WI-034, WI-037, WI-041 |
-| [WI-039](../work-items/WI-039-epics-page.md)                     | Epics page: list, create, edit, close, progress                                                              | Approved | WI-033, WI-036, WI-038         |
-| [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Done     | none                           |
-| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Done     | none; before WI-038            |
+| Item                                                             | Title                                                                                                        | Status | Depends on                     |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------ |
+| [WI-025](../work-items/WI-025-route-declares-access.md)          | `route()` declares authentication and permission; existing endpoints converted                               | Done   | none                           |
+| [WI-026](../work-items/WI-026-teams-and-people.md)               | Teams and membership, people directory: schema, service, API                                                 | Done   | WI-025                         |
+| [WI-027](../work-items/WI-027-positions-and-version-conflict.md) | Fractional positions (pure logic) and the `version_conflict` response                                        | Done   | none                           |
+| [WI-028](../work-items/WI-028-projects-and-default-columns.md)   | Projects with default columns: schema, service, API (create, edit, archive, list)                            | Done   | WI-025, WI-027                 |
+| [WI-029](../work-items/WI-029-columns-api.md)                    | Columns API: create, rename, recategorise, reorder, delete                                                   | Done   | WI-028                         |
+| [WI-030](../work-items/WI-030-tasks-core.md)                     | Tasks core: schema, keys, history events; create, get, list, edit, assign; `team_in_use`, `column_not_empty` | Done   | WI-026, WI-029                 |
+| [WI-031](../work-items/WI-031-move-task.md)                      | Move a task between and within columns                                                                       | Done   | WI-030                         |
+| [WI-032](../work-items/WI-032-delete-and-restore-task.md)        | Delete and restore a task                                                                                    | Done   | WI-030                         |
+| [WI-033](../work-items/WI-033-epics.md)                          | Epics: schema, service, API; a task's epic; progress                                                         | Done   | WI-030                         |
+| [WI-034](../work-items/WI-034-comments.md)                       | Comments: schema, service, API                                                                               | Done   | WI-030                         |
+| [WI-035](../work-items/WI-035-teams-page.md)                     | Teams page                                                                                                   | Done   | WI-026                         |
+| [WI-036](../work-items/WI-036-projects-pages.md)                 | Projects list, navigation and project settings (details, columns, deleted tasks)                             | Done   | WI-029, WI-032                 |
+| [WI-037](../work-items/WI-037-board-page.md)                     | Board page: columns, cards, create a task, drag and drop                                                     | Done   | WI-031, WI-036                 |
+| [WI-038](../work-items/WI-038-task-detail.md)                    | Task detail: fields, Markdown description, assignment, epic, comments, delete                                | Done   | WI-033, WI-034, WI-037, WI-041 |
+| [WI-039](../work-items/WI-039-epics-page.md)                     | Epics page: list, create, edit, close, progress                                                              | Done   | WI-033, WI-036, WI-038         |
+| [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Done   | none                           |
+| [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Done   | none; before WI-038            |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 
 ## Exit criteria
 
-- [ ] A Manager creates a project, finds it with "To do", "In progress" and "Done", renames,
+- [x] A Manager creates a project, finds it with "To do", "In progress" and "Done", renames,
       reorders and adds columns, and cannot delete a non-empty column or the last `done`
       column.
-- [ ] A Member creates tasks on the board; they get keys `KEY-1`, `KEY-2`, ... with no gap or
+- [x] A Member creates tasks on the board; they get keys `KEY-1`, `KEY-2`, ... with no gap or
       duplicate under concurrent creation; they can be fetched by id or by key.
 - [x] A Member moves a card by drag and drop and by keyboard; the order survives a reload.
 - [x] A Member assigns a task to a team, a person or both, sets its epic, edits its Markdown
       description (rendered with no raw HTML), comments, and deletes a task they reported
       but not another person's; a Manager restores it.
-- [ ] A Viewer sees projects, boards, tasks, epics and comments and gets `403` from every
+- [x] A Viewer sees projects, boards, tasks, epics and comments and gets `403` from every
       write endpoint of this track; this is tested for every endpoint.
-- [ ] An update or move with a stale `version` returns `409 version_conflict` with the
+- [x] An update or move with a stale `version` returns `409 version_conflict` with the
       current entity.
-- [ ] Every task change produces exactly one history event per changed field in the same
+- [x] Every task change produces exactly one history event per changed field in the same
       transaction, and none after a rollback; every configuration change is in the audit
       log with its actor.
-- [ ] Writes to an archived project return `409 project_archived`.
-- [ ] Every endpoint declares its authentication and permission through `route()`, checked
+- [x] Writes to an archived project return `409 project_archived`.
+- [x] Every endpoint declares its authentication and permission through `route()`, checked
       by the guard-rail test.
-- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
+- [x] The full quality gate passes on `main`, with `pnpm db:generate` and
       `pnpm openapi:generate` leaving no diff.
+
+### Exit check (WS-039 section 6, 2026-11-16)
+
+Each criterion, with the tests that cover it. Only criterion 5 lacked a test, and got one.
+
+1. Projects and columns: `tests/e2e/projects.spec.ts` (create, the three default columns in
+   settings, add, rename, move, delete, last Done column refused);
+   `src/server/services/columns.integration.test.ts` and the column route tests
+   (`column_not_empty`, `last_done_column`).
+2. Task keys: `src/server/services/tasks.integration.test.ts` ("twenty concurrent creations
+   the keys OPA-1 to OPA-20", "finds a task by id and by key"); creating on the board in
+   `tests/e2e/board.spec.ts`.
+3. Moving: `tests/e2e/board.spec.ts` (mouse and keyboard, order after a reload).
+4. Assignment, epic, Markdown, comments, delete and restore: `tests/e2e/task-detail.spec.ts`
+   and `tests/e2e/projects.spec.ts` (restore).
+5. Viewer: **new** `src/app/api/v1/viewer-writes.integration.test.ts` calls every write
+   endpoint of the track with a Viewer's session and expects `403 forbidden` from each; run
+   once with a Member's session it fails, as it should. Reading is covered by the Viewer
+   end-to-end tests of the projects, board, task and epics specs.
+6. Stale `version`: the `version_conflict` tests of the project, column, task, move and
+   epic services and routes.
+7. History and audit: "one field_changed event per changed field", "one moved event",
+   "one commented event", the "rolls back … when its event cannot be written" tests, and
+   the audit tests of projects, columns, epics and teams, each with a failing audit write
+   that leaves nothing behind.
+8. Archived projects: the `project_archived` tests of the project, column, task, move,
+   delete, comment and epic services.
+9. Declared access: `src/lib/openapi/routes.test.ts` (every handler built with `route()`
+   from its own contract) and `src/server/http/route-access.integration.test.ts`.
+10. Quality gate: passes on the WI-039 branch, which holds every item of the track; CI
+    confirms it on `main` once merged.
 
 ## Risks and open questions
 

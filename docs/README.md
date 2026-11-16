@@ -9,10 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-038 (task detail: fields, Markdown, assignment, comments, delete), on
-  2026-11-16.
-- **In progress:** WI-039 / WS-039, epics page (approved 2026-11-16); its branch is stacked
-  on WI-038 (PR #35).
+- **Last finished:** WI-039 (epics page), on 2026-11-16, which closes WT-03 (board core).
+- **Next:** draft WT-04 (real-time board sync, canonical doc 0002) as `Proposed`, and stop
+  for the owner's approval. Also awaiting a decision: bringing the security items of the
+  audit of 2026-11-14 (WI-042 to WI-044, on unmerged branches) to `main` (see Follow-ups).
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -34,7 +34,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | ------------------------------------------------------ | ------------------------------------------------------- | -------- |
 | [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
 | [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
-| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Approved |
+| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
 | [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
 
 Planned next, not yet drafted:
@@ -92,7 +92,7 @@ above and comes after WT-06.
 | [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings              | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
 | [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop    | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
 | [WI-038](work-items/WI-038-task-detail.md)                      | Task detail: fields, Markdown, assignment, comments, delete | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
-| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Approved    | [WS-039](work-specs/WS-039-epics-page.md)                       | Approved    |
+| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 
@@ -140,6 +140,11 @@ Other follow-ups:
   close Radix moves the focus to the page body instead of the button that opened them
   (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
   explicitly, see WS-037 "Deviations"). Needs its own work-item.
+- The audit of 2026-11-14 proposed three security items that exist only on unmerged
+  branches: WI-042 (log errors without their message), WI-043 (refuse the first-run setup
+  before hashing once the install has accounts) and WI-044 (bound the JSON request body,
+  `413 payload_too_large`). They are not in these docs. Owner to decide whether to redo
+  them on `main` as new work-items.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
   in WS-038, question 6).
