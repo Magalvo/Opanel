@@ -19,7 +19,7 @@ import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
 import type { Project } from "@/lib/schemas/projects";
 import type { Task } from "@/lib/schemas/tasks";
-import type { Team } from "@/lib/schemas/teams";
+import type { TeamSummary } from "@/lib/schemas/teams";
 
 const router = { back: vi.fn(), push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 
@@ -37,14 +37,8 @@ const bob = { id: "77777777-7777-4777-8777-777777777777", name: "Bob Ross", acti
 const grace = { id: "12121212-1212-4212-8212-121212121212", name: "Grace Hopper", active: true };
 const gone = { id: "13131313-1313-4313-8313-131313131313", name: "Gregor Gone", active: false };
 
-function team(id: string, name: string): Team {
-  return {
-    id,
-    name,
-    members: [],
-    createdAt: "2026-11-12T10:00:00.000Z",
-    updatedAt: "2026-11-12T10:00:00.000Z",
-  };
+function team(id: string, name: string): TeamSummary {
+  return { id, name, memberCount: 0, createdAt: "2026-11-12T10:00:00.000Z" };
 }
 
 const web = team("88888888-8888-4888-8888-888888888888", "Frontend");
@@ -179,8 +173,8 @@ describe("TaskDetail: what it shows", () => {
       ["Person", "Ada Lovelace"],
       ["Epic", "Launch"],
       ["Reporter", "Me Myself"],
-    ]) {
-      expect(within(info).getByText(term).nextElementSibling).toHaveTextContent(value ?? "");
+    ] as const) {
+      expect(within(info).getByText(term).nextElementSibling).toHaveTextContent(value);
     }
     expect(within(info).getByText("Created")).toBeInTheDocument();
     expect(within(info).getByText("Updated")).toBeInTheDocument();
@@ -415,6 +409,24 @@ describe("TaskDetail: column, delete and the board", () => {
     expect(within(details()).getByLabelText("Column")).toHaveValue(done.id);
     expect((changed.mock.calls[0]?.[0] as CustomEvent).detail).toEqual(moved);
     window.removeEventListener("opanel:task-changed", changed);
+  });
+
+  it("keeps unsaved edits when the task is moved, and saves them with the new version", async () => {
+    on("POST /api/v1/tasks/OPA-1/move", json({ ...base, columnId: done.id, version: 4 }));
+    on(
+      "PATCH /api/v1/tasks/OPA-1",
+      json({ ...base, columnId: done.id, title: "Edited", version: 5 }),
+    );
+    const user = await renderTask();
+
+    await user.clear(within(details()).getByLabelText("Title"));
+    await user.type(within(details()).getByLabelText("Title"), "Edited");
+    await user.selectOptions(within(details()).getByLabelText("Column"), "Done");
+    await screen.findByText("Moved to Done.");
+
+    expect(within(details()).getByLabelText("Title")).toHaveValue("Edited");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Edited", version: 4 });
   });
 
   it("tells the board about a saved task", async () => {

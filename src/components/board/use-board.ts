@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { onTaskEvents } from "@/components/task/events";
 import { ApiFailure } from "@/lib/api-client";
 import type { Column } from "@/lib/schemas/columns";
 import type { Task, TaskSummary } from "@/lib/schemas/tasks";
@@ -77,6 +78,42 @@ export function useBoard({
       cancelled = true;
     };
   }, [fetchBoard, setBoard]);
+
+  // Changes made in the task detail, over the board (WS-038 section 4).
+  useEffect(
+    () =>
+      onTaskEvents({
+        changed: (task) => {
+          const latest = current.current;
+          const place = placeOf(latest, task.id);
+          if (place === null) return;
+          const summary = summaryOf(task);
+          const from = latest[place.columnId] ?? [];
+          if (place.columnId === task.columnId) {
+            setBoard({
+              ...latest,
+              [place.columnId]: from.map((item) => (item.id === task.id ? summary : item)),
+            });
+            return;
+          }
+          setBoard({
+            ...latest,
+            [place.columnId]: from.filter((item) => item.id !== task.id),
+            [task.columnId]: [...(latest[task.columnId] ?? []), summary],
+          });
+        },
+        deleted: (id) => {
+          const latest = current.current;
+          const place = placeOf(latest, id);
+          if (place === null) return;
+          setBoard({
+            ...latest,
+            [place.columnId]: (latest[place.columnId] ?? []).filter((item) => item.id !== id),
+          });
+        },
+      }),
+    [setBoard],
+  );
 
   /** Loads the whole board again. The current board stays shown while it loads. */
   const reload = useCallback(async () => {

@@ -39,7 +39,14 @@ export function ProjectFrame({
   projectKey,
   canManageProjects,
   children,
-}: Readonly<{ projectKey: string; canManageProjects: boolean; children: ReactNode }>) {
+  modal = null,
+}: Readonly<{
+  projectKey: string;
+  canManageProjects: boolean;
+  children: ReactNode;
+  /** The `@modal` slot: a task opened over the board (WS-038). */
+  modal?: ReactNode;
+}>) {
   const pathname = usePathname();
   const [project, setProject] = useState<Project | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
@@ -75,6 +82,8 @@ export function ProjectFrame({
 
   const boardHref = `/projects/${projectKey}` as const;
   const settingsHref = `/projects/${projectKey}/settings` as const;
+  // A task, as a dialog over the board or as its own page, belongs to the board (WS-038).
+  const onBoard = pathname === boardHref || pathname.startsWith(`${boardHref}/tasks/`);
 
   function tabClass(current: boolean) {
     return cn(
@@ -129,8 +138,8 @@ export function ProjectFrame({
             <nav aria-label="Project" className="flex gap-1 border-b">
               <Link
                 href={boardHref}
-                aria-current={pathname === boardHref ? "page" : undefined}
-                className={tabClass(pathname === boardHref)}
+                aria-current={onBoard ? "page" : undefined}
+                className={tabClass(onBoard)}
               >
                 Board
               </Link>
@@ -146,6 +155,7 @@ export function ProjectFrame({
             </nav>
           </header>
           {children}
+          {modal}
         </ProjectContext>
       )}
     </div>

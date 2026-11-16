@@ -13,9 +13,12 @@ import { requireAccount } from "@/server/auth/session";
  */
 export default async function ProjectLayout({
   children,
+  modal,
   params,
 }: {
   children: ReactNode;
+  /** A task opened from the board, as a dialog over it (WS-038). */
+  modal: ReactNode;
   params: Promise<{ projectKey: string }>;
 }) {
   const { actor } = await requireAccount();
@@ -25,7 +28,11 @@ export default async function ProjectLayout({
   }
 
   return (
-    <ProjectFrame projectKey={parsed.data} canManageProjects={can(actor, "projects:manage")}>
+    <ProjectFrame
+      projectKey={parsed.data}
+      canManageProjects={can(actor, "projects:manage")}
+      modal={modal}
+    >
       {children}
     </ProjectFrame>
   );
