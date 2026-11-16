@@ -1,6 +1,6 @@
 # WI-038 — Task detail: fields, Markdown description, assignment, epic, comments, delete
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 8, 12, 14, 15, 17, 18;
   question 3)
 - Depends on: WI-033, WI-034, WI-037, WI-041

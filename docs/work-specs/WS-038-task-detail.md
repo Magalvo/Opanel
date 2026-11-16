@@ -1,6 +1,6 @@
 # WS-038 — Task detail: fields, Markdown description, assignment, epic, comments, delete
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 6 as proposed)
 - Work-item: [WI-038](../work-items/WI-038-task-detail.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2 to 5;
   [0002](../canonical/0002-realtime-sync.md) section 4;
