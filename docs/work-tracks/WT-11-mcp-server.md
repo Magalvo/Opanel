@@ -1,6 +1,7 @@
 # WT-11 — MCP server
 
-- Status: Proposed (outline; awaiting owner approval together with doc 0005)
+- Status: Approved (outline, approved by the owner on 2026-11-16 with doc 0005). Starts after
+  WT-06; its work-items get files and numbers then.
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (the design),
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) (agent accounts, tokens, scopes,
   bug reports), [0004](../canonical/0004-api-conventions.md) (the API it wraps)
@@ -60,7 +61,8 @@ and any LLM call.
 
 ## Risks and open questions
 
-1. **SDK line and version**: doc 0005 question 1.
+1. **SDK version**: `@modelcontextprotocol/server` 2.x (doc 0005, resolved question 1); the
+   exact version is pinned by item A's work-spec, after reading its installed docs.
 2. **Prompt injection through task content**: limited by the agent's permissions, not by
    the server (doc 0005 section 6). Operators should give assistants the narrowest role.
 3. **Changes to `/api/v1`**: a tool built from a request schema changes with it. A

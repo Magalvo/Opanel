@@ -1,6 +1,6 @@
 # 0005 — MCP server: Opanel as tools for AI assistants
 
-- Status: **Proposed** (awaiting owner approval)
+- Status: **Approved** (2026-11-16, questions 1 to 4 as proposed)
 - Date: 2026-11-16
 - Supersedes: none
 - Relates to: [0001](0001-ai-qa-agents-and-triage.md) (agent accounts, tokens, scopes, bug
@@ -156,16 +156,18 @@ set follows the scopes of doc 0001 section 3:
 - Running or scheduling the assistant, and a reference QA agent (doc 0001 section 9).
 - Any LLM call inside Opanel or inside the MCP server.
 
-## 10. Changes to `AGENTS.md` on approval
+## 10. Changes to `AGENTS.md`
 
-Applied in the same change that marks this doc `Approved`:
+Applied when this doc was approved:
 
-- **Section 2, tech stack:** a row "Agent tools | MCP server over stdio, wrapping
-  `/api/v1` (canonical doc 0005)".
-- **Section 3, directory conventions:** `mcp/` — "the MCP server package (doc 0005): a
-  client of `/api/v1`, no database access".
+- **Section 2, tech stack:** a row "Agent tools | MCP server over stdio, a client of
+  `/api/v1` (canonical doc 0005)". The SDK package is named in section 2 of this doc.
+- **Section 3, directory conventions:** "`mcp/` MCP server package (doc 0005, WT-11): a
+  client of /api/v1, no DB access".
 
-## 11. Open questions for the owner
+## 11. Resolved questions
+
+The owner approved all four as recommended on 2026-11-16.
 
 1. **Which SDK package.** The official TypeScript SDK now comes in two lines:
    `@modelcontextprotocol/sdk` 1.32.2 (the npm `latest` tag; one package with server,
