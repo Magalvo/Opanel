@@ -1,6 +1,6 @@
 # WS-038 — Task detail: fields, Markdown description, assignment, epic, comments, delete
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 6 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 6 as proposed)
 - Work-item: [WI-038](../work-items/WI-038-task-detail.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2 to 5;
   [0002](../canonical/0002-realtime-sync.md) section 4;
@@ -235,3 +235,45 @@ Technical, settled by the tests:
    so a drag after an edit does not conflict.
 8. **The catch-all of the slot** keeps the dialog from staying open when someone navigates
    from it to another page of the project (the guides' advice for modals).
+
+## Deviations from the approved spec
+
+- **`@modal/page.tsx` as well**, returning nothing. Besides the slot's `default.tsx` and
+  catch-all, the guide needs it so that a client navigation back to the board itself (the
+  Board tab, for example) closes an open dialog.
+- **The pages share `task-access.ts`** in the project's route folder: the session, the task
+  key check and the rights, for the full page and the dialog alike.
+- **The form keeps edits not saved yet** when a save or a move returns a new version, and
+  takes the new values for every other field; only a version conflict starts it again from
+  the current task. The spec said "the answer becomes the state"; read literally, a move
+  would have thrown away a title being typed. The form also stays mounted, so the keyboard
+  focus is not lost after a save. Covered by a unit test written first.
+- **Headings inside Markdown are rendered one or two levels lower** (`#` as `h3`), so text
+  written in a description never outranks the page's own headings.
+- **The team select reads team summaries** (`GET /api/v1/teams` returns `TeamSummary`, not
+  `Team`); the spec did not name the type.
+- **`AlertDialogTrigger` was added to `src/components/ui/alert-dialog.tsx`**, the standard
+  shadcn piece, so Radix returns the focus to "Delete task" when the confirmation closes.
+- **The dialog's accessible title is "Task OPA-12", visually hidden**; the visible heading
+  is the task's title, the same on the full page.
+- **The end-to-end tests were not run red**: `next build` type-checks the new tests, which
+  import modules that did not exist yet (as in WS-041). The unit and integration tests were.
+
+## Implementation record
+
+- Red: the unit and integration tests failed on the missing modules, the missing handle,
+  link and events, and the layout's missing `modal` slot (committed before any code).
+- Fixed after Red, in tests of mine: the team list's items are summaries with
+  `memberCount` (my code assumed the same wrong type and was fixed with it), and one
+  `as const` for a typed loop.
+- Read for the installed versions (hard rule 13): the Next.js guides on parallel routes,
+  intercepting routes and `default.js`; the `react-markdown` 10.1.0 readme and types
+  (`skipHtml`, `urlTransform`, `components`); and `@dnd-kit/core`'s keyboard sensor, which
+  starts a drag only from the activator node, which is what lets the handle carry the
+  keyboard drag while the card keeps the pointer drag.
+- Green: 921 Vitest tests (up from 866) and 56 Playwright tests (up from 49) pass, all
+  under the CSP guard of WS-041, with no policy violation; the task and board specs passed
+  three repeated runs. Typecheck, lint and format pass; `pnpm db:generate` and
+  `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
