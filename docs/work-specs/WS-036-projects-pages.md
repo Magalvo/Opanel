@@ -1,6 +1,6 @@
 # WS-036 — Projects list, navigation and project settings
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-036](../work-items/WI-036-projects-pages.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3 and 5;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5 and 6;

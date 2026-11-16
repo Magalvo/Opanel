@@ -12,8 +12,7 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Last finished:** WI-035 (teams page), on 2026-11-16.
 - **Awaiting the owner's approval:** WI-041 / WS-041, security headers and Content Security
   Policy. Needed before WI-038.
-- **Next:** the owner reviews WI-036 and WS-036 (projects list, navigation and project
-  settings), drafted on 2026-11-16 as `Proposed`, questions 1 to 5.
+- **In progress:** WI-036 / WS-036, projects pages (approved 2026-11-16).
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -85,7 +84,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
 | [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
-| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Proposed    | [WS-036](work-specs/WS-036-projects-pages.md)                   | Proposed    |
+| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Approved    | [WS-036](work-specs/WS-036-projects-pages.md)                   | Approved    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
