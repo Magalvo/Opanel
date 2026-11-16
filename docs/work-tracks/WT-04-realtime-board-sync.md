@@ -1,6 +1,6 @@
 # WT-04 — Real-time board sync
 
-- Status: Proposed (drafted on 2026-11-16; awaiting the owner's approval)
+- Status: Approved (approved by the owner on 2026-11-16, with every proposal as drafted)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (the design; amended by this
   track, see decision 1), [0004](../canonical/0004-api-conventions.md) (errors, ids,
   OpenAPI), [0003](../canonical/0003-task-management.md) (section 10: the end of this
@@ -67,8 +67,8 @@ WT-03 left the ground ready (WT-03 decisions 6 and 7):
 
 ## Design decisions
 
-Choices the canonical doc leaves open, proposed for the owner's approval. Each is detailed
-in the work-spec of the item that implements it.
+Choices the canonical doc leaves open. Each is detailed in the work-spec of the item that
+implements it. The owner approved all of them as proposed on 2026-11-16.
 
 1. **Amendment to doc 0002 section 3 (event types and payload).** The seven event types of
    doc 0002 do not cover two things WT-03 built, and one event lacks what a client needs:
@@ -227,14 +227,13 @@ Test plan by item, from doc 0002 section 7:
 
 ## Risks and open questions
 
-Questions for the owner. Each has a proposal; approving the track approves the proposals
-unless the owner says otherwise.
+Questions 1 to 3 were resolved by the owner on 2026-11-16, by approving the proposals.
 
-1. **The amendment to doc 0002** (decision 1): `task.restored`, `project.changed`,
+1. **Resolved: The amendment to doc 0002** (decision 1): `task.restored`, `project.changed`,
    `projectId` on every event, `taskId` on `comment.created`, `version: null` for
    comments. Doc 0002 is Approved, so this needs the owner's explicit yes.
-2. **The cap** (decision 7): 10 streams per account per process, `429 too_many_streams`.
-3. **Session re-check on every heartbeat** (decision 6), one authentication query per open
+2. **Resolved: The cap** (decision 7): 10 streams per account per process, `429 too_many_streams`.
+3. **Resolved: Session re-check on every heartbeat** (decision 6), one authentication query per open
    stream every 25 seconds. At the scale of a self-hosted install this is negligible;
    the alternative is a fixed stream lifetime.
 4. **Risk, buffering on the way to the browser.** Next.js compression or a reverse proxy

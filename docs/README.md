@@ -13,9 +13,9 @@ Updated at the end of every work-item, so that a new session can start from here
   audit's security items.
 - **Next:** draft WI-042 (log errors without their message) and WS-042 as `Proposed`, and
   stop for the owner's approval; then WI-043 (setup refuses before hashing); then WT-04.
-- **Proposed on 2026-11-16:** WT-04 (real-time board sync), with an amendment to canonical
-  doc 0002 (two new event types, `projectId` and `taskId` in events). Awaits the owner's
-  approval; its work-items start at WI-045.
+- **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
+  canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
+  WI-045 writes into the doc. Its work-items start at WI-045, after WI-042 and WI-043.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -38,7 +38,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
 | [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
 | [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Proposed |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Approved |
 | [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
 
 Planned next, not yet drafted:
