@@ -1,6 +1,6 @@
 # WS-035 — Teams page
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-035](../work-items/WI-035-teams-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 3 ("Manage teams and
   team membership": Manager and Admin; reading: every role);
@@ -160,3 +160,39 @@ Technical, settled by the tests:
    teams of up to a few hundred people.
 7. **Search as you type** sends at most one request per 250 ms pause; an answer that arrives
    after a newer one is ignored, so the list never shows stale results.
+
+## Deviations from the approved spec
+
+- **The "Delete team" button uses the `outline` style**, not `destructive`. axe found the
+  shared `destructive` style below WCAG AA contrast in light mode (4:1). The red style stays
+  on the confirmation's own "Delete" button, which axe does not see while it is closed.
+  Fixing the shared style is recorded as a follow-up in `docs/README.md`, because it
+  changes other screens.
+- **`callNoContent`** joined the moved helpers in `src/lib/api-client.ts`, for the `204`
+  answers; `revokeInvitation` on the People page uses it too. Its behaviour is the same.
+- **The dialog that asks for a team's name is one component** (`team-name-dialog.tsx`),
+  used for both creating and renaming.
+- **Test helpers:** `src/components/teams/testing.ts` holds the fake `fetch` the two page
+  tests share; `tests/e2e/seed.ts` gained an optional `name`, so the people search can find
+  seeded people.
+- **Sidebar test:** "a main navigation area that contains no links yet" no longer held, as
+  Teams is now there for everyone. It became "whose only link, for someone who is not an
+  Admin, is Teams", next to the new test for the Teams link.
+- **The axe checks for the teams pages** are in `accessibility.spec.ts`; the phone-width
+  check is in `teams.spec.ts`.
+
+## Implementation record
+
+- Red: the contract, sidebar, page and component tests failed on the missing `409`, the
+  missing link and the missing modules (committed before any code).
+- One test of mine was wrong after Red: it built the new team from a `TeamSummary`, whose
+  `memberCount` the strict `Team` schema rejects. The fixture now builds a real `Team`.
+- Lint refused a `setState` inside the search effect; an empty search field now simply
+  hides earlier results, with no state change.
+- Green: 752 Vitest tests (up from 724) and 34 Playwright tests (up from 28) pass.
+  Typecheck, lint and format pass; `pnpm db:generate` leaves no diff and
+  `pnpm openapi:generate` adds only the `409` of section 4.
+- A stale `.next` from an earlier end-to-end run made `typecheck` fail on the new routes;
+  deleting it, as `CONTRIBUTING.md` says, fixed it.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

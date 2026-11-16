@@ -9,11 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-034 (comments), on 2026-11-15.
+- **Last finished:** WI-035 (teams page), on 2026-11-16.
 - **Awaiting the owner's approval:**
   - WI-040 / WS-040, account link hardening (from the audit of 2026-11-13).
   - WI-041 / WS-041, security headers and Content Security Policy. Needed before WI-038.
-- **In progress:** WI-035 / WS-035, teams page (approved 2026-11-16).
+- **Next:** draft WI-036 (projects list, navigation and project settings) and WS-036 as
+  `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -84,7 +85,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                 | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
-| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Approved    | [WS-035](work-specs/WS-035-teams-page.md)                       | Approved    |
+| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Proposed    | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Proposed    |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
@@ -124,6 +125,9 @@ Other follow-ups:
   generating route types first). Until then see the note in `CONTRIBUTING.md`.
 - Declare the bearer-token security scheme in the OpenAPI document with WT-05.
 - Add a browsable API documentation page once there are real endpoints (see WS-006).
+- Give the shared `destructive` button style enough contrast in light mode: red text on its
+  pale red background is 4:1, below the 4.5:1 of WCAG AA (found by axe in WI-035). It
+  affects the confirmation buttons of the People and Teams pages.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
