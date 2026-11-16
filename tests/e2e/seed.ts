@@ -12,13 +12,20 @@ export async function seedAccount(input: {
   email: string;
   password: string;
   role: "admin" | "manager" | "member" | "viewer";
+  /** Defaults to "E2E User". */
+  name?: string;
 }): Promise<void> {
   const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
   try {
     const db = drizzle({ client, schema });
     const [account] = await db
       .insert(schema.accounts)
-      .values({ kind: "human", name: "E2E User", email: input.email, role: input.role })
+      .values({
+        kind: "human",
+        name: input.name ?? "E2E User",
+        email: input.email,
+        role: input.role,
+      })
       .returning();
     if (!account) throw new Error("account not created");
     await db.insert(schema.credentials).values({

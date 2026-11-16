@@ -70,3 +70,14 @@ describe("team and people contracts", () => {
     expect(access.get("DELETE /api/v1/teams/{teamId}/members/{accountId}")).toEqual(manage);
   });
 });
+
+describe("the delete-team contract", () => {
+  it("documents 409 team_in_use, which the endpoint answers when tasks use the team (WS-035)", () => {
+    const remove = contracts.find(
+      (contract) => contract.method === "delete" && contract.path === "/api/v1/teams/{teamId}",
+    );
+
+    expect(remove?.responses[409]).toMatchObject({ problem: true });
+    expect(remove?.responses[409]?.description).toContain("team_in_use");
+  });
+});

@@ -52,11 +52,28 @@ describe("AppShell", () => {
     expect(within(topBar).getByRole("button", { name: "Account menu" })).toHaveTextContent("A");
   });
 
-  it("has a main navigation area that contains no links yet", () => {
+  it("has a main navigation area whose only link, for someone who is not an Admin, is Teams", () => {
     renderShell();
 
     const navigation = screen.getByRole("navigation", { name: "Main" });
-    expect(within(navigation).queryAllByRole("link")).toHaveLength(0);
+    expect(
+      within(navigation)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Teams"]);
+  });
+
+  it("shows a Teams link to /teams to everyone (WS-035)", () => {
+    for (const canManageAccounts of [false, true]) {
+      const { unmount } = renderShell(canManageAccounts);
+
+      const navigation = screen.getByRole("navigation", { name: "Main" });
+      expect(within(navigation).getByRole("link", { name: "Teams" })).toHaveAttribute(
+        "href",
+        "/teams",
+      );
+      unmount();
+    }
   });
 
   it("shows a People link to /people only to someone who can manage accounts", () => {
