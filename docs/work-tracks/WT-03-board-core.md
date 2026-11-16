@@ -151,7 +151,8 @@ integration tests and OpenAPI contracts; UI items include their end-to-end tests
 Two hardening items from the audit of 2026-11-13 joined the track (amendment A4): WI-040
 (account links) and WI-041 (security headers and Content Security Policy). WI-041 is done
 before WI-038, the first item that shows text written by users. Their work-specs are
-written; each still needs the owner's approval like any other.
+written; each still needs the owner's approval like any other. WI-045 (focus after the
+project settings dialogs close) is a follow-up of WI-036, proposed on 2026-11-16.
 
 | Item                                                             | Title                                                                                                        | Status   | Depends on             |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ---------------------- |
@@ -172,6 +173,7 @@ written; each still needs the owner's approval like any other.
 | WI-039                                                           | Epics page: list, create, edit, close, progress                                                              | Draft    | WI-033, WI-036         |
 | [WI-040](../work-items/WI-040-account-link-hardening.md)         | Account link hardening (from the audit of 2026-11-13)                                                        | Done     | none                   |
 | [WI-041](../work-items/WI-041-security-headers.md)               | Security headers and Content Security Policy (from the audit of 2026-11-13)                                  | Approved | none; before WI-038    |
+| [WI-045](../work-items/WI-045-settings-dialog-focus.md)          | Project settings dialogs give the focus back on close (follow-up of WI-036)                                  | Proposed | WI-036, WI-037         |
 
 As before, each item gets its work-item and work-spec files just before it is started.
 

@@ -11,6 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-037 (board page: columns, cards, create a task, drag and drop), on
   2026-11-16.
+- **Awaiting the owner's approval:** WI-045 / WS-045, the project settings dialogs give the
+  focus back on close (the follow-up below).
 - **Approved, not started:** WI-041 / WS-041, security headers and Content Security Policy
   (approved 2026-11-16). Needed before WI-038.
 - **Next:** implement WI-041 (its own branch); then draft WI-038 (task detail) and WI-039
@@ -90,6 +92,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop  | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Approved    | [WS-041](work-specs/WS-041-security-headers.md)                 | Approved    |
+| [WI-045](work-items/WI-045-settings-dialog-focus.md)            | Project settings dialogs give the focus back on close     | Proposed    | [WS-045](work-specs/WS-045-settings-dialog-focus.md)            | Proposed    |
 
 WI-038 and WI-039 are outlined in WT-03 and get their own files when they are started.
 
@@ -136,7 +139,7 @@ Other follow-ups:
 - The project settings dialogs (Add column, Edit column) have no `DialogTrigger`, so on
   close Radix moves the focus to the page body instead of the button that opened them
   (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
-  explicitly, see WS-037 "Deviations"). Needs its own work-item.
+  explicitly, see WS-037 "Deviations"). Proposed as WI-045.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
