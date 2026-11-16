@@ -1,3 +1,4 @@
+import { DrizzleQueryError } from "drizzle-orm/errors";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
@@ -128,8 +129,29 @@ describe("route", () => {
     const requestId = response.headers.get("X-Request-Id") ?? "missing";
 
     expect(logError).toHaveBeenCalledTimes(1);
-    expect(logError.mock.calls[0]?.[0]).toContain(requestId);
-    expect(logError.mock.calls[0]?.[0]).toContain("TypeError: boom");
+    expect(logError.mock.calls[0]?.[0]).toBe(`Request ${requestId} failed: TypeError`);
+  });
+
+  it("logs a failed query by its class name only, never its query or parameters (WS-042)", async () => {
+    const marker = "MARKER-hunter2-MARKER";
+    const logError = vi.fn<(message: string) => void>();
+    const handler = route(
+      publicThing,
+      () => {
+        throw new DrizzleQueryError(`select * from accounts where email = '${marker}'`, [marker]);
+      },
+      { logError },
+    );
+
+    const response = await handler(get(), undefined);
+    const requestId = response.headers.get("X-Request-Id") ?? "missing";
+
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError.mock.calls[0]?.[0]).toBe(`Request ${requestId} failed: DrizzleQueryError`);
+    expect(response.status).toBe(500);
+    const text = await response.text();
+    expect(text).not.toContain(marker);
+    expect(problemSchema.parse(JSON.parse(text)).requestId).toBe(requestId);
   });
 
   it("does not log expected API errors", async () => {
