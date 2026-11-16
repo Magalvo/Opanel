@@ -31,11 +31,18 @@ export async function isSetupNeeded(db: Pick<Database, "select"> = getDb()): Pro
  * many requests arrive at once: a transaction-scoped advisory lock makes them queue, so
  * exactly one sees an empty table. The account, its credential and the audit entry commit
  * together; the sign-in that follows creates a session outside that transaction.
+ *
+ * An installed server answers `404` before hashing anything (WS-043): the endpoint is
+ * public, and a hash is expensive. That first look is only a shortcut; the check under the
+ * lock is the one that decides.
  */
 export async function createFirstAdmin(
   input: CreateFirstAdminInput,
   db: Database = getDb(),
 ): Promise<SignInResult> {
+  if (!(await isSetupNeeded(db))) {
+    throw notFound();
+  }
   // Slow, so done before the transaction takes the lock.
   const passwordHash = await hashPassword(input.password);
   const email = input.email.trim().toLowerCase();

@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type * as Password from "@/server/auth/password";
 import { hashPassword } from "@/server/auth/password";
 import { createTestAccount, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
@@ -12,12 +13,11 @@ import { signIn } from "./sign-in";
 
 // The real hash, observed (WS-043): the spy calls through, so every test hashes for real.
 vi.mock("@/server/auth/password", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/server/auth/password")>();
+  const actual = await importOriginal<typeof Password>();
   return { ...actual, hashPassword: vi.fn(actual.hashPassword) };
 });
 
-const realPassword =
-  await vi.importActual<typeof import("@/server/auth/password")>("@/server/auth/password");
+const realPassword = await vi.importActual<typeof Password>("@/server/auth/password");
 const hashSpy = vi.mocked(hashPassword);
 
 const input = {
