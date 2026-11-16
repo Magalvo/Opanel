@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
+import { expect, test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { seedAccount } from "./seed";
 

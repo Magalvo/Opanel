@@ -1,6 +1,5 @@
-// Specs that need a signed-in person import `test` from here instead of Playwright.
-import { expect, test as base } from "@playwright/test";
-
+// Specs that need a signed-in person import `test` from here instead of ./base.
+import { expect, test as base } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { seedAccount } from "./seed";
 

@@ -1,5 +1,6 @@
-import { expect, request as playwrightRequest } from "@playwright/test";
+import { request as playwrightRequest } from "@playwright/test";
 
+import { expect } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { test } from "./fixtures";
 

@@ -1,4 +1,3 @@
-import { expect, test } from "@playwright/test";
 import { z } from "zod";
 
 import { healthResponseSchema } from "@/lib/schemas/health";
@@ -41,3 +40,4 @@ test.describe("public API", () => {
     }
   });
 });
+import { expect, test } from "./base";

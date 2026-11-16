@@ -1,8 +1,7 @@
-import { expect, test } from "@playwright/test";
-
 import { meResponseSchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
 
+import { expect, test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { seedAccount } from "./seed";
 

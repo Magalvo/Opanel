@@ -43,6 +43,61 @@ describe("proxy", () => {
   );
 });
 
+/** The nonce in a `script-src 'nonce-...'` source of a policy. */
+function nonceOf(policy: string | null): string | null {
+  return /'nonce-([^']+)'/.exec(policy ?? "")?.[1] ?? null;
+}
+
+/** A request header the proxy forwards to the page, as `NextResponse.next` encodes it. */
+function forwarded(response: Response, name: string): string | null {
+  return response.headers.get(`x-middleware-request-${name}`);
+}
+
+describe("proxy: Content Security Policy (WS-041)", () => {
+  it("gives a page its policy with a nonce, and X-Frame-Options: DENY", () => {
+    const response = proxy(page("/projects", "opanel.session_token=abc"));
+    const policy = response.headers.get("content-security-policy");
+
+    expect(policy).toContain("frame-ancestors 'none'");
+    expect(nonceOf(policy)).not.toBeNull();
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+  });
+
+  it("forwards the policy and the nonce on the request, so Next.js stamps its scripts", () => {
+    const response = proxy(page("/sign-in"));
+    const nonce = nonceOf(response.headers.get("content-security-policy"));
+
+    expect(nonce).not.toBeNull();
+    expect(forwarded(response, "x-nonce")).toBe(nonce);
+    expect(forwarded(response, "content-security-policy")).toBe(
+      response.headers.get("content-security-policy"),
+    );
+  });
+
+  it("puts the same headers on the redirect to /sign-in", () => {
+    const response = proxy(page("/projects"));
+
+    expect(redirectTarget(response)).not.toBeNull();
+    expect(nonceOf(response.headers.get("content-security-policy"))).not.toBeNull();
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+  });
+
+  it("gives every request a different nonce", () => {
+    const first = nonceOf(proxy(page("/sign-in")).headers.get("content-security-policy"));
+    const second = nonceOf(proxy(page("/sign-in")).headers.get("content-security-policy"));
+
+    expect(first).not.toBe(second);
+  });
+
+  it("passes API requests through untouched", () => {
+    const response = proxy(page("/api/v1/health"));
+
+    expect(response.headers.get("content-security-policy")).toBeNull();
+    expect(response.headers.get("x-frame-options")).toBeNull();
+    expect(response.headers.get("x-middleware-override-headers")).toBeNull();
+  });
+});
+
 describe("proxy matcher", () => {
   const matcher = new RegExp(`^${config.matcher}$`);
 
