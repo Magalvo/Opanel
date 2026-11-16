@@ -1,6 +1,6 @@
 # WS-036 — Projects list, navigation and project settings
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-036](../work-items/WI-036-projects-pages.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 2, 3 and 5;
   [0004](../canonical/0004-api-conventions.md) sections 4, 5 and 6;
@@ -207,3 +207,43 @@ Technical, settled by the tests:
    conflict the list is read again, so a stale order is never kept.
 7. **Deleted tasks of an archived project** can still be listed but not restored
    (`project_archived`); the Restore buttons are disabled there, as every other write.
+
+## Deviations from the approved spec
+
+- **The settings page's not-found answer has status 200, not 404.** For a Member or Viewer,
+  `/projects/KEY/settings` shows Next.js's not-found page, as specified, but the HTTP
+  status stays 200 with a `noindex` tag. The page is rendered as a child of the project's
+  client frame, so the response has already started streaming when it calls `notFound()`;
+  the installed Next.js docs describe this case (`not-found.md`, "Status codes"). The
+  end-to-end test, written first, asked for a 404 status; it now checks the not-found page
+  and the `noindex` tag, which is what the criterion asks. The People page, which has no
+  layout in between, still answers 404.
+- **The project is loaded once by the frame and shared through a context**
+  (`useProject`), so the header (name, Archived badge) follows changes made in settings.
+- **The category field is a native `<select>`**, styled like the other fields, rather than
+  the Radix `select`: simpler to operate by keyboard and in tests. Still no new component
+  beyond `textarea`.
+- **`ApiFailure` keeps the whole problem body** (`body`), so a `409 version_conflict` can
+  refill the form from `current`. The People and Teams pages are unchanged.
+- **The fake `fetch` of the Teams tests moved** to `src/components/fake-api.ts`, shared by
+  the Teams and Projects tests.
+- **The two project tabs are written as two `Link`s**, not a list, so typed routes check
+  both `href`s without a cast.
+- **Section regions:** each settings section is a `<section>` labelled by its heading, so
+  tests and assistive technology find them as regions.
+
+## Implementation record
+
+- Red: the contract, sidebar, page, component and end-to-end tests failed on the missing
+  description, link and modules (committed before any code).
+- Two test fixtures of mine were wrong after Red and were fixed, not the code: a restored
+  task was a `TaskSummary` where the API returns a `Task`, and one assertion was never
+  called (`.toBeVisible` without `()`).
+- `next build`, which the end-to-end tests run, rejected a list of `href`s typed as
+  `string` (typed routes); see the tabs deviation above.
+- Green: 813 Vitest tests (up from 762) and 40 Playwright tests (up from 34) pass.
+  Typecheck, lint and format pass; `pnpm db:generate` leaves no diff and
+  `pnpm openapi:generate` adds only the description of section 7.
+- Question 4's contract gap is recorded as a follow-up in `docs/README.md`.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

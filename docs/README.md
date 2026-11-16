@@ -9,10 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-035 (teams page), on 2026-11-16.
+- **Last finished:** WI-036 (projects list, navigation and project settings), on 2026-11-16.
 - **Awaiting the owner's approval:** WI-041 / WS-041, security headers and Content Security
   Policy. Needed before WI-038.
-- **In progress:** WI-036 / WS-036, projects pages (approved 2026-11-16).
+- **Next:** draft WI-037 (board page: columns, cards, create a task, drag and drop) and
+  WS-037 as `Proposed`, and stop for the owner's approval.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -84,7 +85,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-033](work-items/WI-033-epics.md)                            | Epics                                                     | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
 | [WI-034](work-items/WI-034-comments.md)                         | Comments                                                  | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
 | [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
-| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Approved    | [WS-036](work-specs/WS-036-projects-pages.md)                   | Approved    |
+| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Proposed    | [WS-041](work-specs/WS-041-security-headers.md)                 | Proposed    |
 
@@ -124,6 +125,12 @@ Other follow-ups:
 - Give the shared `destructive` button style enough contrast in light mode: red text on its
   pale red background is 4:1, below the 4.5:1 of WCAG AA (found by axe in WI-035). It
   affects the confirmation buttons of the People and Teams pages.
+- Document every `409` of the operations that check `version` (WS-036, question 4). Their
+  documented `409` schema requires `code: "version_conflict"` and `current`, but they also
+  answer `project_archived`, and a column `PATCH` answers `last_done_column`; those bodies
+  do not match the documented schema. Needs its own work-item: `versionConflictResponse`
+  should document "a version conflict, or another problem" for projects, columns, tasks
+  and epics.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
