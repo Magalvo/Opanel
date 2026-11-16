@@ -4,7 +4,7 @@ import { accountSummarySchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
 import { APP_ORIGIN, createTestAccount, postRequest, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
-import { auditLog, sessions } from "@/server/db/schema";
+import { auditLog, rateLimits, sessions } from "@/server/db/schema";
 
 import { POST } from "./route";
 
@@ -150,5 +150,29 @@ describe("POST /api/v1/auth/sign-in", () => {
       expect(text).not.toContain("$argon2");
       expect(text).not.toContain(session?.token ?? "no-token");
     }
+  });
+
+  it("refuses an oversized body with 413 before signing in: no audit entry, no limiter row (WS-044)", async () => {
+    await createTestAccount();
+    const body = JSON.stringify({
+      email: "ada@example.com",
+      password: TEST_PASSWORD,
+      padding: "a".repeat(600 * 1024),
+    });
+
+    const response = await POST(
+      new Request(`${APP_ORIGIN}${path}`, {
+        method: "POST",
+        headers: { Origin: APP_ORIGIN, "Content-Type": "application/json" },
+        body,
+      }),
+      undefined,
+    );
+
+    expect(response.status).toBe(413);
+    expect(problemSchema.parse(await response.json()).code).toBe("payload_too_large");
+    expect(await getDb().select().from(auditLog)).toEqual([]);
+    expect(await getDb().select().from(rateLimits)).toEqual([]);
+    expect(await getDb().select().from(sessions)).toEqual([]);
   });
 });

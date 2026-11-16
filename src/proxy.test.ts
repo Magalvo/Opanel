@@ -108,8 +108,14 @@ describe("proxy matcher", () => {
   });
 
   it("runs on app pages", () => {
-    for (const path of ["/", "/projects", "/projects/1"]) {
-      expect(matcher.test(path)).toBe(true);
+    for (const path of ["/", "/projects", "/projects/1", "/apiary", "/api-docs"]) {
+      expect(matcher.test(path), path).toBe(true);
+    }
+  });
+
+  it("never runs for the API, so Next.js does not buffer API request bodies (WS-044)", () => {
+    for (const path of ["/api/v1/health", "/api/v1/tasks/OPA-1", "/api/v1/auth/sign-in"]) {
+      expect(matcher.test(path), path).toBe(false);
     }
   });
 });

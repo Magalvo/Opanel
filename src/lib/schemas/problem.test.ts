@@ -40,6 +40,7 @@ describe("problemSchema", () => {
       "last_admin",
       "last_done_column",
       "not_found",
+      "payload_too_large",
       "project_archived",
       "project_key_taken",
       "rate_limited",

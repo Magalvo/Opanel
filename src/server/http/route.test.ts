@@ -5,7 +5,16 @@ import type { EndpointContract } from "@/lib/openapi/contract";
 import { problemSchema } from "@/lib/schemas/problem";
 
 import { ApiError, notFound, rateLimited, versionConflict } from "./errors";
-import { json, noContent, readJson, readParams, readQuery, route, unknownPathRoute } from "./route";
+import {
+  json,
+  MAX_JSON_BODY_BYTES,
+  noContent,
+  readJson,
+  readParams,
+  readQuery,
+  route,
+  unknownPathRoute,
+} from "./route";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const URL_BASE = "http://localhost/api/v1/things";
@@ -391,6 +400,166 @@ describe("readJson", () => {
       expect((await problemOf(response)).code).toBe("unsupported_media_type");
     },
   );
+});
+
+describe("readJson: the body budget (WS-044)", () => {
+  const anything = z.unknown();
+  const encoder = new TextEncoder();
+
+  /** A JSON string literal whose encoded size is exactly `bytes` (ASCII only). */
+  function jsonOfSize(bytes: number): string {
+    return `"${"a".repeat(bytes - 2)}"`;
+  }
+
+  /** A body sent as a stream of chunks, counting how many were pulled. */
+  function streamed(
+    chunks: Uint8Array[],
+    headers: Record<string, string> = {},
+  ): { request: Request; pulled: () => number; cancelled: () => boolean } {
+    let index = 0;
+    let wasCancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const chunk = chunks[index];
+        index += 1;
+        if (chunk === undefined) controller.close();
+        else controller.enqueue(chunk);
+      },
+      cancel() {
+        wasCancelled = true;
+      },
+    });
+    const request = new Request(URL_BASE, {
+      method: "POST",
+      body,
+      headers: { Origin: APP_URL, "Content-Type": "application/json", ...headers },
+      duplex: "half",
+    } as RequestInit);
+    return { request, pulled: () => index, cancelled: () => wasCancelled };
+  }
+
+  async function codeOf(response: Response): Promise<string> {
+    return (await problemOf(response)).code;
+  }
+
+  it("is 512 KiB", () => {
+    expect(MAX_JSON_BODY_BYTES).toBe(524_288);
+  });
+
+  it("reads a body exactly at the budget, and one byte under, as before", async () => {
+    for (const size of [MAX_JSON_BODY_BYTES, MAX_JSON_BODY_BYTES - 1]) {
+      const body = jsonOfSize(size);
+      expect(encoder.encode(body).byteLength).toBe(size);
+      const response = await throughRoute(post(body), (request) => readJson(request, anything));
+      expect(response.status, String(size)).toBe(200);
+      expect(await response.json()).toBe(JSON.parse(body));
+    }
+  });
+
+  it("refuses one byte over with 413 from Content-Length, without reading the body", async () => {
+    const chunk = encoder.encode(jsonOfSize(MAX_JSON_BODY_BYTES + 1));
+    const sent = streamed([chunk], { "Content-Length": String(chunk.byteLength) });
+
+    const response = await throughRoute(sent.request, (request) => readJson(request, anything));
+
+    expect(response.status).toBe(413);
+    expect(await codeOf(response)).toBe("payload_too_large");
+    // A ReadableStream may queue one chunk as soon as it is made; nothing is read after.
+    expect(sent.pulled()).toBeLessThanOrEqual(1);
+  });
+
+  it("counts a body without Content-Length, and stops after the budget plus one chunk", async () => {
+    const chunkSize = 64 * 1024;
+    const chunks = Array.from({ length: 40 }, () => encoder.encode("a".repeat(chunkSize)));
+    const sent = streamed(chunks);
+
+    const response = await throughRoute(sent.request, (request) => readJson(request, anything));
+
+    expect(response.status).toBe(413);
+    expect(await codeOf(response)).toBe("payload_too_large");
+    expect(sent.pulled() * chunkSize).toBeLessThanOrEqual(MAX_JSON_BODY_BYTES + 2 * chunkSize);
+    expect(sent.cancelled()).toBe(true);
+  });
+
+  it("refuses a body larger than its Content-Length claims", async () => {
+    const chunks = Array.from({ length: 12 }, () => encoder.encode("a".repeat(64 * 1024)));
+    const sent = streamed(chunks, { "Content-Length": "10" });
+
+    const response = await throughRoute(sent.request, (request) => readJson(request, anything));
+
+    expect(response.status).toBe(413);
+  });
+
+  it.each(["abc", "-1", "1e9", ""])("ignores a Content-Length of %j", async (length) => {
+    const small = streamed([encoder.encode('{"title":"A"}')], { "Content-Length": length });
+    expect(
+      (await throughRoute(small.request, (request) => readJson(request, anything))).status,
+    ).toBe(200);
+
+    const large = streamed(
+      Array.from({ length: 12 }, () => encoder.encode("a".repeat(64 * 1024))),
+      { "Content-Length": length },
+    );
+    expect(
+      (await throughRoute(large.request, (request) => readJson(request, anything))).status,
+    ).toBe(413);
+  });
+
+  it("counts bytes, not characters: 200 000 three-byte characters are 600 000 bytes", async () => {
+    const body = JSON.stringify("€".repeat(200_000));
+    expect(body.length).toBeLessThan(MAX_JSON_BODY_BYTES);
+    expect(encoder.encode(body).byteLength).toBe(600_002);
+
+    const response = await throughRoute(post(body), (request) => readJson(request, anything));
+
+    expect(response.status).toBe(413);
+  });
+
+  it("keeps 400 for malformed JSON, and makes a body that breaks off 400, not 500", async () => {
+    const malformed = await throughRoute(post('{"title":'), (request) =>
+      readJson(request, anything),
+    );
+    expect(malformed.status).toBe(400);
+    expect((await problemOf(malformed)).detail).toBe("The request body is not valid JSON.");
+
+    let sentOnce = false;
+    const broken = new Request(URL_BASE, {
+      method: "POST",
+      body: new ReadableStream<Uint8Array>({
+        pull(controller) {
+          if (sentOnce) {
+            controller.error(new Error("connection reset"));
+            return;
+          }
+          sentOnce = true;
+          controller.enqueue(encoder.encode('{"title":'));
+        },
+      }),
+      headers: { Origin: APP_URL, "Content-Type": "application/json" },
+      duplex: "half",
+    } as RequestInit);
+    const response = await throughRoute(broken, (request) => readJson(request, anything));
+    expect(response.status).toBe(400);
+    expect((await problemOf(response)).code).toBe("invalid_request");
+  });
+
+  it("checks the content type first: an oversized text/plain body is still 415", async () => {
+    const response = await throughRoute(
+      post(jsonOfSize(MAX_JSON_BODY_BYTES + 10), "text/plain"),
+      (request) => readJson(request, anything),
+    );
+
+    expect(response.status).toBe(415);
+  });
+
+  it("parses a byte order mark and multibyte text as request.json() does", async () => {
+    for (const body of ['\uFEFF{"title":"Ação ✓ 東京"}', '{"title":"emoji 😀"}']) {
+      const expected: unknown = await new Request(URL_BASE, { method: "POST", body }).json();
+      const response = await throughRoute(post(body), (request) => readJson(request, anything));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(expected);
+    }
+  });
 });
 
 describe("readQuery", () => {
