@@ -293,7 +293,10 @@ describe("EpicsPage: editing", () => {
       startDate: null,
       version: 3,
     });
-    expect(await screen.findByRole("button", { name: "Launch v2" })).toBeInTheDocument();
+    // The list is behind the modal dialog, so it is hidden from assistive technology.
+    expect(
+      await screen.findByRole("button", { name: "Launch v2", hidden: true }),
+    ).toBeInTheDocument();
     expect(status()).toHaveTextContent("Saved.");
 
     on(

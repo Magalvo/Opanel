@@ -44,7 +44,7 @@ describe("the /projects/KEY/epics page (WS-039)", () => {
       ["all", "all"],
       ["open", "open"],
       ["nonsense", "open"],
-      [["closed", "all"], "open"],
+      [["closed", "all"] as string[], "open"],
     ] as const) {
       const page = await EpicsRoute(args(given));
       expect(page.props, String(given)).toMatchObject({ show });

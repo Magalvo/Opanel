@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 
 import { TYPE_LABELS } from "@/components/board/task-card";
 import { Markdown } from "@/components/markdown";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,6 @@ import {
 import type { TeamSummary } from "@/lib/schemas/teams";
 
 import { updateTask } from "./api";
-import { MarkdownEditor } from "./markdown-editor";
 import { PersonField, personLabel } from "./person-field";
 
 const SELECT =
