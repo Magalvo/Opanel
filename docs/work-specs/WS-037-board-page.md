@@ -1,6 +1,6 @@
 # WS-037 — Board page: columns, cards, create a task, drag and drop
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-037](../work-items/WI-037-board-page.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4;
   [0003](../canonical/0003-task-management.md) sections 2, 4 and 5;

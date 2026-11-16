@@ -1,6 +1,6 @@
 # WI-037 — Board page: columns, cards, create a task, drag and drop
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 4, 5, 6, 7, 11, 15;
   risk 5)
 - Depends on: WI-031, WI-036
