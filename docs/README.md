@@ -133,6 +133,10 @@ Other follow-ups:
   do not match the documented schema. Needs its own work-item: `versionConflictResponse`
   should document "a version conflict, or another problem" for projects, columns, tasks
   and epics.
+- The project settings dialogs (Add column, Edit column) have no `DialogTrigger`, so on
+  close Radix moves the focus to the page body instead of the button that opened them
+  (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
+  explicitly, see WS-037 "Deviations"). Needs its own work-item.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).

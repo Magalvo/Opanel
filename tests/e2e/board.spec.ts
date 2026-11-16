@@ -115,6 +115,13 @@ test("a Member creates tasks and moves them with the mouse; the order survives a
   await signInAs(page, "member");
   await page.goto(`/projects/${key}`);
 
+  // Escape closes the dialog and gives the keyboard back to the button that opened it.
+  const addToDone = column(page, "Done").getByRole("button", { name: "Add task" });
+  await addToDone.click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(addToDone).toBeFocused();
+
   for (const [name, title] of [
     ["To do", "Alpha"],
     ["To do", "Bravo"],
