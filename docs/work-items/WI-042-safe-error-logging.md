@@ -1,6 +1,6 @@
 # WI-042 — Safe error logging
 
-- Status: Approved
+- Status: Done
 - Work-track: none: a hardening item from the audit of 2026-11-14, done before WT-04
 - Depends on: none (its branch is stacked on WI-044, which touches the same files)
 - Work-spec: [WS-042](../work-specs/WS-042-safe-error-logging.md)
@@ -16,16 +16,16 @@ code and constraint name.
 
 ## Acceptance criteria
 
-- [ ] An unexpected error in a request is logged as `Request <id> failed: <description>`,
+- [x] An unexpected error in a request is logged as `Request <id> failed: <description>`,
       where the description holds only an allowed class name, a database or system error
       code and a constraint name; never the message, query, parameters, detail or stack.
-- [ ] A real database failure caused by a value, such as a duplicate email or a password
+- [x] A real database failure caused by a value, such as a duplicate email or a password
       hash in a failed insert, produces a line without that value or the SQL.
-- [ ] The health check logs `database unreachable (<description>)` under the same rule.
-- [ ] The response to the client is unchanged: the same generic `500` problem with the same
+- [x] The health check logs `database unreachable (<description>)` under the same rule.
+- [x] The response to the client is unchanged: the same generic `500` problem with the same
       request id; expected API errors are still not logged.
-- [ ] Canonical doc 0004 states the logging rule.
-- [ ] The full quality gate passes.
+- [x] Canonical doc 0004 states the logging rule.
+- [x] The full quality gate passes.
 
 ## Notes
 

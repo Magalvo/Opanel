@@ -1,6 +1,6 @@
 # WS-042 — Safe error logging
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 4 as proposed)
 - Work-item: [WI-042](../work-items/WI-042-safe-error-logging.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4; `AGENTS.md` hard
   rules 7 and 13; [WS-011](WS-011-api-foundations.md) (the route wrapper),
@@ -119,3 +119,26 @@ For the owner:
 4. **The older branch** `claude/wi-042-safe-error-logging` (2026-11-15) implemented a first
    version on code that has since changed. This spec reuses its findings, checked again on
    the installed versions, and replaces it. **Recommend: the branch can be deleted.**
+
+## Deviations from the approved spec
+
+- **The existing route test was tightened**, not just kept: it asserted that the log line
+  contained `TypeError: boom` (the message); it now asserts the whole line,
+  `Request <id> failed: TypeError`.
+- **A second health test**, with a real refused connection, checks that the line holds
+  neither the host, the user nor the query. Before this item the line held the driver's
+  message, which named the host and port.
+- `describeError` lives in `src/server/http/` as the spec says, and the health service
+  imports it from there; it is a pure function with no HTTP dependency.
+
+## Implementation record
+
+- Red: the new unit and integration tests failed on the missing module, and the route and
+  health tests on log lines that still held the message (committed before any code).
+- The audit's finding was confirmed on the installed versions by the integration tests
+  themselves: the real `DrizzleQueryError` of a duplicate email holds `insert into` and the
+  email in its message, and that of a failed credentials insert holds the password hash.
+- Green: 987 Vitest tests (up from 971) and 62 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
