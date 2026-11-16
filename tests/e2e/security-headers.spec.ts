@@ -65,37 +65,34 @@ test("the page's scripts carry the nonce of its policy, which changes on every l
   expect(nonces[0]).not.toBe(nonces[1]);
 });
 
-test.describe("an injected script", () => {
+test.describe("injected markup", () => {
   // This test breaks the policy on purpose.
   test.use({ allowCspViolations: true });
 
-  test("does not run without the nonce, and the browser reports the violation", async ({
-    page,
-  }) => {
+  test("cannot run a script without the nonce, and the browser reports it", async ({ page }) => {
     await page.goto("/sign-in");
 
+    // What an HTML injection would add: markup with an inline event handler. A <script>
+    // created by code that already runs is not the case to test: 'strict-dynamic' trusts
+    // scripts added by trusted scripts, and the test's own code counts as trusted.
     const outcome = await page.evaluate(
       () =>
         new Promise<{ ran: boolean; directive: string }>((resolve) => {
+          const ran = () => (window as unknown as { injected?: boolean }).injected === true;
           document.addEventListener("securitypolicyviolation", (event) => {
-            resolve({
-              ran: (window as unknown as { injected?: boolean }).injected === true,
-              directive: event.effectiveDirective,
-            });
+            setTimeout(() => {
+              resolve({ ran: ran(), directive: event.effectiveDirective });
+            }, 100);
           });
-          // Without a policy nothing is reported: answer what happened after a moment.
           setTimeout(() => {
-            resolve({
-              ran: (window as unknown as { injected?: boolean }).injected === true,
-              directive: "",
-            });
+            resolve({ ran: ran(), directive: "" });
           }, 2000);
-          const script = document.createElement("script");
-          script.textContent = "window.injected = true;";
-          document.body.append(script);
+          const holder = document.createElement("div");
+          holder.innerHTML = '<img src="/missing.png" onerror="window.injected = true">';
+          document.body.append(holder);
         }),
     );
 
-    expect(outcome).toEqual({ ran: false, directive: "script-src-elem" });
+    expect(outcome).toEqual({ ran: false, directive: "script-src-attr" });
   });
 });
