@@ -1,6 +1,6 @@
 # WI-043 — First-run setup refuses before hashing
 
-- Status: Approved
+- Status: Done
 - Work-track: none: a hardening item from the audit of 2026-11-14, done before WT-04
 - Depends on: none (its branch is stacked on WI-042, for the status lines of the docs index)
 - Work-spec: [WS-043](../work-specs/WS-043-setup-refuses-before-hashing.md)
@@ -15,13 +15,13 @@ requests racing on an empty install still produce exactly one Admin.
 
 ## Acceptance criteria
 
-- [ ] When any account exists (active, deactivated or agent), the setup request gets `404`
+- [x] When any account exists (active, deactivated or agent), the setup request gets `404`
       and no password is hashed.
-- [ ] On an empty install the first Admin is still created exactly as before, with one hash.
-- [ ] Concurrent requests on an empty install still create exactly one Admin; a request that
+- [x] On an empty install the first Admin is still created exactly as before, with one hash.
+- [x] Concurrent requests on an empty install still create exactly one Admin; a request that
       loses the race after hashing gets `404` and creates nothing.
-- [ ] The endpoint's contract and answers do not change.
-- [ ] The full quality gate passes.
+- [x] The endpoint's contract and answers do not change.
+- [x] The full quality gate passes.
 
 ## Notes
 

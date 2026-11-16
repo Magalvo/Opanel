@@ -1,6 +1,6 @@
 # WS-043 — First-run setup refuses before hashing
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-043](../work-items/WI-043-setup-refuses-before-hashing.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md);
   [WS-016](WS-016-first-run-setup.md) (first-run setup); audit of 2026-11-14, finding A-01
@@ -92,3 +92,21 @@ For the owner:
    **Recommend: as proposed.**
 5. **The older branch** `claude/wi-043-setup-refuses-before-hashing` (2026-11-15) is replaced
    by this one. **Recommend: the branch can be deleted.**
+
+## Deviations from the approved spec
+
+None.
+
+## Implementation record
+
+- Red: the three "404, nothing hashed" tests failed for the right reason: the spy on the
+  real `hashPassword` was called once although an account existed (committed before any
+  code). The race test (an account appears while the hash runs) passed already, as
+  expected: the check under the lock existed; it now guards that check against a
+  regression.
+- Green: all setup service and route tests pass, the existing ones unchanged. 992 Vitest
+  tests (up from 987) and 62 Playwright tests pass. Typecheck, lint and format pass;
+  `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- WS-016's implementation record points here.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
