@@ -99,6 +99,34 @@ for (const colorScheme of ["light", "dark"] as const) {
       ).toEqual([]);
     }
 
+    // The epics page and an epic's dialog (WS-039).
+    expect(
+      (
+        await page.request.post(`/api/v1/projects/${key}/epics`, {
+          headers,
+          data: { title: "An epic", description: "With **Markdown**." },
+        })
+      ).status(),
+    ).toBe(201);
+    await page.goto(`/projects/${key}/epics`);
+    await page.getByRole("button", { name: "An epic" }).click();
+    await expect(page.getByRole("dialog", { name: "An epic" })).toBeVisible();
+    const epicDialog = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(
+      epicDialog.violations.map((violation) => violation.id),
+      "epic dialog",
+    ).toEqual([]);
+    await page.keyboard.press("Escape");
+    const epicsPage = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(
+      epicsPage.violations.map((violation) => violation.id),
+      "epics page",
+    ).toEqual([]);
+
     // The task as a dialog over the board (WS-038).
     await page.goto(`/projects/${key}`);
     await page.getByRole("link", { name: "A card on the board" }).click();
