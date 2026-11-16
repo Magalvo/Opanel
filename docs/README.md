@@ -11,8 +11,10 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-044 (request body size limit), on 2026-11-16, the first of the
   audit's security items.
-- **Next:** draft WI-042 (log errors without their message) and WS-042 as `Proposed`, and
-  stop for the owner's approval; then WI-043 (setup refuses before hashing); then WT-04.
+- **Awaiting the owner's approval:** WI-042 / WS-042, safe error logging (four questions
+  in WS-042). Its branch is stacked on WI-044 (PR #37).
+- **Next:** once WS-042 is approved, implement it; then WI-043 (setup refuses before
+  hashing); then WT-04.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -95,6 +97,7 @@ above and comes after WT-06.
 | [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
+| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Proposed    | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Proposed    |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
 
 ## Follow-ups
