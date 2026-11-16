@@ -157,8 +157,8 @@ export const deleteColumnContract = {
     404: NO_COLUMN,
     409: {
       description:
-        "It is the last `done` column (code `last_done_column`), or the project is archived " +
-        "(code `project_archived`).",
+        "It is the last `done` column (code `last_done_column`), a task is still in it " +
+        "(code `column_not_empty`), or the project is archived (code `project_archived`).",
       problem: true,
     },
   },

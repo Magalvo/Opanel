@@ -74,3 +74,15 @@ describe("column contracts", () => {
     }
   });
 });
+
+describe("the delete-column contract", () => {
+  it("names column_not_empty, which the endpoint answers when a task is in the column (WS-036)", () => {
+    const remove = contracts.find(
+      (contract) => contract.method === "delete" && contract.path === "/api/v1/columns/{columnId}",
+    );
+    const conflict = remove?.responses[409];
+
+    expect(conflict?.description).toContain("column_not_empty");
+    expect(conflict?.description).toContain("last_done_column");
+  });
+});

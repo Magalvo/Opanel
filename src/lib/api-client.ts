@@ -8,6 +8,8 @@ export class ApiFailure extends Error {
     readonly status: number,
     readonly code: string | null,
     readonly errors: readonly FieldError[],
+    /** The whole problem body, for answers that carry more, such as a conflict's `current`. */
+    readonly body: unknown = null,
   ) {
     super(`The API answered ${String(status)}.`);
     this.name = "ApiFailure";
@@ -15,11 +17,13 @@ export class ApiFailure extends Error {
 }
 
 export async function failureOf(response: Response): Promise<ApiFailure> {
-  const problem = problemSchema.safeParse(await response.json().catch(() => null));
+  const body: unknown = await response.json().catch(() => null);
+  const problem = problemSchema.safeParse(body);
   return new ApiFailure(
     response.status,
     problem.success ? problem.data.code : null,
     problem.success ? (problem.data.errors ?? []) : [],
+    body,
   );
 }
 

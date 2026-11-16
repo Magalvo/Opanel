@@ -1,4 +1,4 @@
-// Test helpers for the teams pages: a fake `fetch` that answers by "METHOD url".
+// Test helpers for the pages that call the API: a fake `fetch` that answers by "METHOD url".
 import { vi } from "vitest";
 
 export const fetchMock = vi.fn<typeof fetch>();

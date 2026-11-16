@@ -2542,7 +2542,7 @@
             }
           },
           "409": {
-            "description": "It is the last `done` column (code `last_done_column`), or the project is archived (code `project_archived`).",
+            "description": "It is the last `done` column (code `last_done_column`), a task is still in it (code `column_not_empty`), or the project is archived (code `project_archived`).",
             "content": {
               "application/problem+json": {
                 "schema": {

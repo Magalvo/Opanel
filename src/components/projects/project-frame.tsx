@@ -1,0 +1,153 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ApiFailure } from "@/lib/api-client";
+import type { Project } from "@/lib/schemas/projects";
+import { cn } from "@/lib/utils";
+
+import { getProject } from "./api";
+
+type Phase = "loading" | "missing" | "error" | "ready";
+
+interface ProjectContextValue {
+  project: Project;
+  /** Shows a project the API returned after a change, in the header and the pages. */
+  setProject: (project: Project) => void;
+}
+
+const ProjectContext = createContext<ProjectContextValue | null>(null);
+
+/** The project of the page, for components inside `ProjectFrame`. */
+export function useProject(): ProjectContextValue {
+  const value = useContext(ProjectContext);
+  if (value === null) throw new Error("useProject is used outside ProjectFrame.");
+  return value;
+}
+
+/**
+ * Every page of a project (WS-036): loads the project once, shows its header and navigation,
+ * and gives the page the project through `useProject`. The page is shown only once the
+ * project is loaded.
+ */
+export function ProjectFrame({
+  projectKey,
+  canManageProjects,
+  children,
+}: Readonly<{ projectKey: string; canManageProjects: boolean; children: ReactNode }>) {
+  const pathname = usePathname();
+  const [project, setProject] = useState<Project | null>(null);
+  const [phase, setPhase] = useState<Phase>("loading");
+
+  function failed(failure: unknown) {
+    setPhase(failure instanceof ApiFailure && failure.status === 404 ? "missing" : "error");
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    getProject(projectKey).then(
+      (loaded) => {
+        if (cancelled) return;
+        setProject(loaded);
+        setPhase("ready");
+      },
+      (failure: unknown) => {
+        if (!cancelled) failed(failure);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [projectKey]);
+
+  function retry() {
+    setPhase("loading");
+    getProject(projectKey).then((loaded) => {
+      setProject(loaded);
+      setPhase("ready");
+    }, failed);
+  }
+
+  const boardHref = `/projects/${projectKey}` as const;
+  const settingsHref = `/projects/${projectKey}/settings` as const;
+
+  function tabClass(current: boolean) {
+    return cn(
+      "-mb-px border-b-2 px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      current
+        ? "border-foreground font-medium text-foreground"
+        : "border-transparent text-muted-foreground hover:text-foreground",
+    );
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div>
+        <Link
+          href="/projects"
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline focus-visible:underline"
+        >
+          All projects
+        </Link>
+      </div>
+
+      {phase === "loading" && (
+        <div className="grid gap-2">
+          <p className="text-sm text-muted-foreground">Loading the project…</p>
+          <Skeleton className="h-8 w-48" />
+        </div>
+      )}
+
+      {phase === "missing" && <p className="text-sm">This project does not exist.</p>}
+
+      {phase === "error" && (
+        <div className="flex items-center gap-2">
+          <p role="alert" className="text-sm text-destructive">
+            Could not load the project.
+          </p>
+          <Button variant="outline" size="sm" onClick={retry}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {phase === "ready" && project !== null && (
+        <ProjectContext value={{ project, setProject }}>
+          <header className="grid gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h1 className="min-w-0 text-2xl font-semibold tracking-tight break-words">
+                {project.name}
+              </h1>
+              <span className="font-mono text-xs text-muted-foreground">{project.key}</span>
+              {project.archivedAt !== null && <Badge variant="secondary">Archived</Badge>}
+            </div>
+            <nav aria-label="Project" className="flex gap-1 border-b">
+              <Link
+                href={boardHref}
+                aria-current={pathname === boardHref ? "page" : undefined}
+                className={tabClass(pathname === boardHref)}
+              >
+                Board
+              </Link>
+              {canManageProjects && (
+                <Link
+                  href={settingsHref}
+                  aria-current={pathname === settingsHref ? "page" : undefined}
+                  className={tabClass(pathname === settingsHref)}
+                >
+                  Settings
+                </Link>
+              )}
+            </nav>
+          </header>
+          {children}
+        </ProjectContext>
+      )}
+    </div>
+  );
+}

@@ -54,3 +54,39 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 }
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`the projects pages have no accessibility violations in ${colorScheme} mode`, async ({
+    page,
+  }) => {
+    const email = `a11y-${crypto.randomUUID()}@example.com`;
+    const password = "an e2e accessibility password";
+    await seedAccount({ email, password, role: "manager", name: "Axe Manager" });
+    const headers = { Origin: E2E_BASE_URL };
+    expect(
+      (
+        await page.request.post("/api/v1/auth/sign-in", { headers, data: { email, password } })
+      ).status(),
+    ).toBe(200);
+    const key = `A${crypto.randomUUID().replace(/-/g, "").slice(0, 7).toUpperCase()}`;
+    expect(
+      (await page.request.post("/api/v1/projects", { headers, data: { key, name: key } })).status(),
+    ).toBe(201);
+    await page.emulateMedia({ colorScheme });
+
+    for (const [path, loaded] of [
+      ["/projects", page.getByRole("table")],
+      [`/projects/${key}/settings`, page.getByRole("row", { name: /In progress/ })],
+    ] as const) {
+      await page.goto(path);
+      await expect(loaded).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .analyze();
+      expect(
+        results.violations.map((violation) => violation.id),
+        path,
+      ).toEqual([]);
+    }
+  });
+}
