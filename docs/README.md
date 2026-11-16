@@ -9,12 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-037 (board page: columns, cards, create a task, drag and drop), on
-  2026-11-16.
-- **Approved, not started:** WI-041 / WS-041, security headers and Content Security Policy
-  (approved 2026-11-16). Needed before WI-038.
-- **Next:** implement WI-041 (its own branch); then draft WI-038 (task detail) and WI-039
-  (epics page) as `Proposed`, and stop for the owner's approval.
+- **Last finished:** WI-041 (security headers and Content Security Policy), on 2026-11-16.
+- **Next:** draft WI-038 (task detail: fields, Markdown description, assignment, epic,
+  comments, delete) and WS-038 as `Proposed`, and stop for the owner's approval. WI-039
+  (epics page) can follow.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -89,7 +87,7 @@ WT-07 to WT-10 come from canonical doc 0003.
 | [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings            | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
 | [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop  | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                    | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
-| [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Approved    | [WS-041](work-specs/WS-041-security-headers.md)                 | Approved    |
+| [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy              | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 
 WI-038 and WI-039 are outlined in WT-03 and get their own files when they are started.
 

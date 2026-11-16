@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
 
+import { expect, test } from "./base";
 import { E2E_BASE_URL } from "./environment";
 import { seedAccount } from "./seed";
 

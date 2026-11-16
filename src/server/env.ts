@@ -110,5 +110,22 @@ export function createEnvAccessor(readSource: () => EnvSource): () => Env {
   };
 }
 
-/** The validated server configuration. The only place `process.env` is read. */
+/** The validated server configuration. With `getNodeEnv`, the only readers of `process.env`. */
 export const getEnv = createEnvAccessor(() => process.env);
+
+/**
+ * `NODE_ENV` alone, validated like the full configuration, for code that runs on every
+ * request and must not need the rest: the proxy (WS-041).
+ */
+export function parseNodeEnv(source: EnvSource): Env["NODE_ENV"] {
+  const result = envSchema.shape.NODE_ENV.safeParse(source.NODE_ENV);
+  if (result.success) {
+    return result.data;
+  }
+  throw new EnvValidationError(new Map([["NODE_ENV", result.error.issues[0]?.message ?? ""]]));
+}
+
+/** The validated `NODE_ENV`. */
+export function getNodeEnv(): Env["NODE_ENV"] {
+  return parseNodeEnv(process.env);
+}

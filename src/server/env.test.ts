@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { createEnvAccessor, EnvValidationError, parseEnv, productionWarnings } from "./env";
+import {
+  createEnvAccessor,
+  EnvValidationError,
+  parseEnv,
+  parseNodeEnv,
+  productionWarnings,
+} from "./env";
 
 const validUrl = "postgres://opanel:opanel@localhost:5432/opanel";
 const validSecret = "test-secret-test-secret-test-secret-0123";
@@ -189,5 +195,21 @@ describe("createEnvAccessor", () => {
     });
 
     expect(reads).toBe(0);
+  });
+});
+
+describe("parseNodeEnv", () => {
+  it("reads NODE_ENV alone, without needing the rest of the configuration", () => {
+    expect(parseNodeEnv({ NODE_ENV: "production" })).toBe("production");
+    expect(parseNodeEnv({ NODE_ENV: "test" })).toBe("test");
+  });
+
+  it("defaults to development, as parseEnv does", () => {
+    expect(parseNodeEnv({})).toBe("development");
+  });
+
+  it("rejects an unknown value without echoing it", () => {
+    expect(() => parseNodeEnv({ NODE_ENV: "staging-secret" })).toThrow(EnvValidationError);
+    expect(() => parseNodeEnv({ NODE_ENV: "staging-secret" })).not.toThrow(/staging-secret/);
   });
 });

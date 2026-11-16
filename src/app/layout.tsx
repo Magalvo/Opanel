@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -10,13 +11,19 @@ export const metadata: Metadata = {
   description: "Open-source project management for human teams and AI agents.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+/**
+ * The nonce the proxy put on the request (WS-041), for the theme script that `next-themes`
+ * writes inline. Reading it makes every page dynamically rendered, which a per-request
+ * nonce requires anyway.
+ */
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     // next-themes sets the theme class on <html> before React hydrates, so the server and
     // client markup differ on this one element by design.
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
       </body>
     </html>
   );

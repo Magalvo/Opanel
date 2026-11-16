@@ -1,6 +1,6 @@
 # WS-041 — Security headers and Content Security Policy
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 4 as proposed)
 - Work-item: [WI-041](../work-items/WI-041-security-headers.md)
 - Canonical docs: `AGENTS.md` section 2 and hard rule 13; WT-03 design decision 14
 
@@ -136,3 +136,45 @@ None. API responses gain two headers; bodies and status codes are unchanged.
 4. **If the nonce cannot reach `next-themes`** in the installed versions, the theme script
    is blocked and the page flashes the wrong theme. I would then stop and report, with the
    option of setting the theme class on the server from a cookie instead.
+
+## Deviations from the approved spec
+
+- **The CSP guard lives in a new `tests/e2e/base.ts`**, not only in `fixtures.ts`: twelve
+  specs imported `test` straight from Playwright, so they now import it from `base.ts`, and
+  `fixtures.ts` builds on it. A test that breaks the policy on purpose sets
+  `test.use({ allowCspViolations: true })`. The guard watches each test's own `page`;
+  pages a spec opens itself with `browser.newPage()` or `newContext()` are not watched.
+- **Test 8 injects markup with an inline event handler** (`<img onerror>`, blocked under
+  `script-src-attr`), not a `<script>` element. A script element added by code that
+  already runs is allowed by `'strict-dynamic'`, which trusts scripts added by trusted
+  scripts, and the test's own code counts as trusted. Injected markup is what an HTML
+  injection, for example through Markdown, would add.
+- **The proxy reads `NODE_ENV` through a new `getNodeEnv()`** in `src/server/env.ts`
+  (tested in `env.test.ts`). `process.env` may only be read there, and `getEnv()`
+  validates the whole configuration, which the proxy does not need; the proxy's unit tests
+  run without it.
+- **The theme provider passes `nonce` only when there is one**, because of
+  `exactOptionalPropertyTypes`.
+- **The proxy returns API requests untouched before making a nonce**, and the public pages
+  (`/sign-in`, `/setup`, `/accept`) get the policy like every other page.
+- **Test 10** is the existing theme tests of `shell.spec.ts` together with the guard: a
+  blocked theme script would report a violation and fail them.
+
+## Implementation record
+
+- Red: the unit tests failed on the missing module and the missing headers; the
+  end-to-end tests failed on the missing headers (committed before any code). `next build`
+  type-checks the tests too, so for that run the new unit test was set aside.
+- The guard was checked once the other way: the injected-markup test, run without
+  `allowCspViolations`, fails with Chrome's message "Executing inline event handler
+  violates the following Content Security Policy directive".
+- `pnpm build` output: `/_not-found` and `/accept` were static (`○`) and are now dynamic
+  (`ƒ`), as section 5 expected; every other page was already dynamic.
+- Manual check of test 11, done with a script driving a browser against `pnpm dev`: the
+  policy has `'unsafe-eval'`; sign-in, Home, People, Profile, Projects and Teams load;
+  choosing the dark theme survives a reload; no policy violation and no page error.
+- Green: 866 Vitest tests (up from 853) and 49 Playwright tests (up from 46) pass, every
+  one under the guard. Typecheck, lint and format pass; `pnpm db:generate` and
+  `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
