@@ -1,6 +1,6 @@
 # WS-044 — Request body size limit
 
-- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-16, questions 1 to 5 as proposed)
 - Work-item: [WI-044](../work-items/WI-044-request-body-limit.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3 and 4; `AGENTS.md`
   hard rules 4, 9 and 13; [WS-011](WS-011-api-foundations.md) (`readJson`),
@@ -151,3 +151,32 @@ For the owner:
 5. **The older branch** `claude/wi-044-request-body-limit` (2026-11-15) implemented a first
    version on code that has since changed; it did not cover the proxy buffering. This spec
    replaces it. **Recommend: the branch can be deleted.**
+
+## Deviations from the approved spec
+
+- **Test 15 shows the refusal, not the absence of the buffer.** A body of 11 MB gets `413`
+  with or without the matcher change, because a body truncated at 10 MB is still over the
+  budget. What the matcher change removes is Next.js holding up to 10 MB per API request in
+  memory, which only shows in the server's log. So the unit test of the matcher (test 12)
+  is what pins the change, and it was checked once by hand: with the old matcher the
+  end-to-end run logs "Request body exceeded 10MB for /api/v1/auth/sign-in", with the new
+  one it does not. The test's title says only what it shows.
+- **An existing contract test was updated**: `src/lib/schemas/comments.test.ts` lists the
+  create-comment operation's exact responses, which now include `413`.
+- **A body that is missing altogether** (no stream) is read as empty and gets the usual
+  `400` for invalid JSON, as before.
+
+## Implementation record
+
+- Red: the unit and integration tests failed on the missing `payloadTooLarge`,
+  `MAX_JSON_BODY_BYTES`, `payload_too_large`, the undocumented `413` and the matcher
+  (committed before any code). The end-to-end tests were not run red: `next build`
+  type-checks the unit tests, which imported names that did not exist yet.
+- Read for the installed Next.js 16.4.6: `proxyClientMaxBodySize.md` (the 10 MB buffer of a
+  proxy, and the silent truncation above it).
+- Green: 971 Vitest tests (up from 953) and 62 Playwright tests (up from 59) pass.
+  `pnpm openapi:generate` adds the `413` to the 21 operations with a JSON body and the
+  generated file is committed; `pnpm db:generate` leaves no diff. Typecheck, lint and
+  format pass.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

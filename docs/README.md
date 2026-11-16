@@ -9,11 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-039 (epics page), on 2026-11-16, which closes WT-03 (board core).
-- **In progress:** WI-044 / WS-044, request body size limit (approved 2026-11-16), the first
-  of the audit's security items, done before WT-04.
-- **Next:** once WS-044 is approved, implement it; then WI-042 (safe error logging) and
-  WI-043 (setup refuses before hashing); then WT-04.
+- **Last finished:** WI-044 (request body size limit), on 2026-11-16, the first of the
+  audit's security items.
+- **Next:** draft WI-042 (log errors without their message) and WS-042 as `Proposed`, and
+  stop for the owner's approval; then WI-043 (setup refuses before hashing); then WT-04.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -96,7 +95,7 @@ above and comes after WT-06.
 | [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
-| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Approved    | [WS-044](work-specs/WS-044-request-body-limit.md)               | Approved    |
+| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
 
 ## Follow-ups
 
@@ -114,6 +113,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
   https are documented for operators. `Strict-Transport-Security` waits for it too (see WI-041).
+  The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
+  ones itself (WI-044).
 - **Optional `SETUP_TOKEN` for the first-run setup:** if set, the form and endpoint require
   it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
   question 1). Needed before any install is reachable from the internet.
@@ -146,10 +147,10 @@ Other follow-ups:
   branches: WI-042 (log errors without their message), WI-043 (refuse the first-run setup
   before hashing once the install has accounts) and WI-044 (bound the JSON request body,
   `413 payload_too_large`). On 2026-11-16 the owner decided to redo them on `main` before
-  WT-04, starting with WI-044.
+  WT-04. WI-044 is done.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
-  in WS-038, question 6).
+  in WS-038, question 6), and `claude/wi-044-request-body-limit` (WS-044, question 5).
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).

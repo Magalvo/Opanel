@@ -1,6 +1,6 @@
 # WI-044 — Request body size limit
 
-- Status: Approved
+- Status: Done
 - Work-track: none: a hardening item from the audit of 2026-11-14, done before WT-04
 - Depends on: none
 - Work-spec: [WS-044](../work-specs/WS-044-request-body-limit.md)
@@ -15,20 +15,20 @@ route sees it. Every operation that takes a JSON body documents the `413`.
 
 ## Acceptance criteria
 
-- [ ] A JSON body up to the budget is read and validated exactly as before.
-- [ ] A larger body gets `413` with a problem body (`application/problem+json`, code
+- [x] A JSON body up to the budget is read and validated exactly as before.
+- [x] A larger body gets `413` with a problem body (`application/problem+json`, code
       `payload_too_large`, a request id), whether it declares its length, declares a wrong
       one, or is sent in chunks without one; at most the budget plus one chunk is read.
-- [ ] The budget counts bytes, not characters.
-- [ ] A refused request writes nothing: no audit entry, no rate-limiter count, also on the
+- [x] The budget counts bytes, not characters.
+- [x] A refused request writes nothing: no audit entry, no rate-limiter count, also on the
       public sign-in and setup endpoints.
-- [ ] Malformed JSON stays `400`, a wrong content type stays `415`, and a body that breaks
+- [x] Malformed JSON stays `400`, a wrong content type stays `415`, and a body that breaks
       off half way is `400`, not `500`.
-- [ ] The page proxy no longer runs for `/api/` requests; pages keep their session redirect
+- [x] The page proxy no longer runs for `/api/` requests; pages keep their session redirect
       and Content Security Policy unchanged.
-- [ ] Every operation that documents `415` also documents `413`, enforced by a test; the
+- [x] Every operation that documents `415` also documents `413`, enforced by a test; the
       OpenAPI document is regenerated; canonical doc 0004 lists the new status and code.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

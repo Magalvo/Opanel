@@ -61,7 +61,7 @@ test("a chunked body with no Content-Length is counted and refused too", async (
   expect(status).toBe(413);
 });
 
-test("a body of 11 MB is refused with 413, not truncated by a proxy buffer", async ({
+test("a body of 11 MB, above the proxy buffer of Next.js, is refused with 413", async ({
   request,
 }) => {
   const response = await request.post("/api/v1/auth/sign-in", {
