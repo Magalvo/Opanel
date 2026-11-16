@@ -68,8 +68,11 @@ export async function createFirstAdmin(
     });
   });
 
+  // Trusted: the password was set just now on an empty install, so the sign-in limiter
+  // neither refuses nor counts this sign-in (WS-040).
   return signIn(
     { email, password: input.password, clientIp: input.clientIp, headers: input.headers },
     db,
+    { trusted: true },
   );
 }

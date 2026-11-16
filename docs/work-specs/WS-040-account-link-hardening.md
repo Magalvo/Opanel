@@ -1,6 +1,6 @@
 # WS-040 — Account link hardening
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done (approved by the owner on 2026-11-15; question 2: `trusted` accepted as proposed)
 - Work-item: [WI-040](../work-items/WI-040-account-link-hardening.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 4; WT-02
   design decisions 5, 6 and 10; WS-019, WS-024
@@ -107,3 +107,34 @@ The hasher is injected as an optional argument of `acceptLink`, defaulting to
 2. **`trusted` is a sharp option.** It is internal to the service layer and documented at
    its definition; test 10 guards the public path. **Owner: acceptable, or would you rather
    the person be told to sign in manually after the limiter window?**
+
+## Deviations from the approved spec
+
+- **Test 4 keeps five concurrent accepts**, as the existing test has, not ten. It was kept
+  unchanged, as the plan says; the number in the plan was a slip.
+- **Test 6 lives in `accept-link.integration.test.ts`**, beside the other acceptance races,
+  not in `account-management.integration.test.ts`. It runs the 20 rounds one after another,
+  each round issuing a link and then accepting it while a new one is issued.
+- **Test 10 is in `src/app/api/v1/auth/sign-in/route.integration.test.ts`**, a file the
+  table did not list: after ten wrong attempts through the route, the eleventh is `429`
+  even with the right password, and a body carrying `trusted: true` is `400` (unknown
+  field), so the option cannot be reached from a request.
+- `sign-in.integration.test.ts` also checks that a trusted sign-in still verifies the
+  password (`401` when wrong) and leaves the counter rows exactly as they were.
+- `signIn`'s limiter checks moved into a private `checkLimits` function, skipped when
+  `trusted` is set. Behaviour without the option is unchanged.
+
+## Implementation record
+
+- Red: the new tests failed for the right reasons, the hasher never being called through
+  the not-yet-existing option, and the limiter answering `429` to the trusted paths
+  (committed before any code). Test 6 already passed before the fix: the deadlock it
+  guards against is rare and was not reproduced in 20 rounds; it stays as a regression
+  check, and the lock order now matches WS-024 by construction.
+- One test of mine first counted every credential and saw the admin's own; it now looks at
+  the revoked account only.
+- Green: 700 Vitest tests and 28 Playwright tests pass. Typecheck, lint and format pass. No
+  migration, no contract change, so `pnpm openapi:generate` has nothing to add.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
+- Closes the follow-up recorded by WS-024 (lock in `issueResetLink`).

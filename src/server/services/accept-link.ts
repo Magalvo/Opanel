@@ -1,7 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 
 import { type Actor, humanActor } from "@/server/auth/actor";
-import { hashPassword } from "@/server/auth/password";
+import { hashPassword as defaultHashPassword } from "@/server/auth/password";
 import { type Database, getDb } from "@/server/db/client";
 import { accounts, accountTokens, credentials, sessions } from "@/server/db/schema";
 import { invalidLink, rateLimited } from "@/server/http/errors";
@@ -10,6 +10,33 @@ import { hashToken, lockAccount } from "./account-tokens";
 import { recordAudit } from "./audit";
 import { ACCEPT_LINK_IP_RULE, consumeRateLimit, purgeExpiredRateLimits } from "./rate-limit";
 import { signIn, type SignInResult } from "./sign-in";
+
+export interface AcceptLinkOptions {
+  /** The password hasher. Tests inject a spy to see whether it ran. */
+  hashPassword?: (password: string) => Promise<string>;
+}
+
+type LinkRow = typeof accountTokens.$inferSelect;
+type AccountRow = typeof accounts.$inferSelect;
+
+/**
+ * Whether a link can still be accepted: unused, unexpired, and issued for an active human
+ * account with an email. Used by both the first look and the locked check, so they agree.
+ */
+function isAcceptable(
+  link: LinkRow,
+  account: AccountRow,
+): account is AccountRow & {
+  email: string;
+} {
+  return (
+    link.usedAt === null &&
+    link.expiresAt.getTime() > Date.now() &&
+    account.kind === "human" &&
+    account.disabledAt === null &&
+    account.email !== null
+  );
+}
 
 export interface AcceptLinkInput {
   token: string;
@@ -25,10 +52,14 @@ export interface AcceptLinkInput {
  * one and the same `404`. A row lock on the link makes it single-use even when many requests
  * arrive together; the password, the link, the sessions and the audit entry commit together.
  * An invalid attempt writes nothing to the audit log, because anyone can make one.
+ *
+ * A first look at the link, without a lock, refuses an invalid one before the slow password
+ * hash runs (WS-040); the check under the lock is the one that decides.
  */
 export async function acceptLink(
   input: AcceptLinkInput,
   db: Database = getDb(),
+  { hashPassword = defaultHashPassword }: AcceptLinkOptions = {},
 ): Promise<SignInResult> {
   if (Math.random() < 0.02) {
     await purgeExpiredRateLimits(db);
@@ -40,10 +71,20 @@ export async function acceptLink(
     }
   }
 
+  const tokenHash = hashToken(input.token);
+  const [first] = await db
+    .select({ link: accountTokens, account: accounts })
+    .from(accountTokens)
+    .innerJoin(accounts, eq(accounts.id, accountTokens.accountId))
+    .where(eq(accountTokens.tokenHash, tokenHash))
+    .limit(1);
+  if (!first || !isAcceptable(first.link, first.account)) {
+    throw invalidLink();
+  }
+
   // Slow, so done before the transaction takes the row lock.
   const passwordHash = await hashPassword(input.password);
 
-  const tokenHash = hashToken(input.token);
   const email = await db.transaction(async (tx) => {
     // Serialise with a revocation of the same invitation before locking any row (WS-024).
     const [owner] = await tx
@@ -67,16 +108,10 @@ export async function acceptLink(
       throw invalidLink();
     }
     const { link, account } = row;
-    const { email } = account;
-    if (
-      link.usedAt !== null ||
-      link.expiresAt.getTime() <= Date.now() ||
-      account.kind !== "human" ||
-      account.disabledAt !== null ||
-      email === null
-    ) {
+    if (!isAcceptable(link, account)) {
       throw invalidLink();
     }
+    const { email } = account;
     const actor: Actor = humanActor({ accountId: account.id, role: account.role as Actor["role"] });
 
     await tx.update(accountTokens).set({ usedAt: new Date() }).where(eq(accountTokens.id, link.id));
@@ -111,9 +146,11 @@ export async function acceptLink(
   });
 
   // Better Auth keeps its session outside this transaction (as in first-run setup): if this
-  // fails the password is already set and the person can sign in normally.
+  // fails the password is already set and the person can sign in normally. Trusted: the
+  // valid link just proved who this is, so the sign-in limiter neither refuses nor counts it.
   return signIn(
     { email, password: input.password, clientIp: input.clientIp, headers: input.headers },
     db,
+    { trusted: true },
   );
 }

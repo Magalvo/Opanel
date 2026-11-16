@@ -1,6 +1,6 @@
 # WI-040 — Account link hardening
 
-- Status: Proposed (awaiting owner approval)
+- Status: Done
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (found in the audit of 2026-11-13;
   the code it touches was built in WT-02)
 - Depends on: none
@@ -20,18 +20,18 @@ to read or change data; each costs either server time or a confusing answer.
 
 ## Acceptance criteria
 
-- [ ] A request to accept a link whose token is unknown, used, expired, replaced or belongs
+- [x] A request to accept a link whose token is unknown, used, expired, replaced or belongs
       to a deactivated account is refused without the password being hashed.
-- [ ] The refusal is still the same `404` for all of those cases, and a valid link still
+- [x] The refusal is still the same `404` for all of those cases, and a valid link still
       works exactly once under concurrent requests.
-- [ ] Issuing a link takes the per-account lock first; issuing and accepting for the same
+- [x] Issuing a link takes the per-account lock first; issuing and accepting for the same
       account at the same time both finish, with no deadlock, and at most one link works
       afterwards.
-- [ ] Accepting a valid link signs the person in even when the sign-in limiter is currently
+- [x] Accepting a valid link signs the person in even when the sign-in limiter is currently
       refusing that email. The same holds for the sign-in at the end of first-run setup.
-- [ ] That sign-in does not reset or bypass the limiter for ordinary sign-in attempts.
-- [ ] No endpoint, response body or status code changes otherwise.
-- [ ] The full quality gate passes.
+- [x] That sign-in does not reset or bypass the limiter for ordinary sign-in attempts.
+- [x] No endpoint, response body or status code changes otherwise.
+- [x] The full quality gate passes.
 
 ## Notes
 
