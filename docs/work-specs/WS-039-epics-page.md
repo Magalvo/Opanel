@@ -1,6 +1,6 @@
 # WS-039 — Epics page: list, create, edit, close, progress
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved (approved by the owner on 2026-11-16, questions 1 to 7 as proposed)
 - Work-item: [WI-039](../work-items/WI-039-epics-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0004](../canonical/0004-api-conventions.md) sections 4 to 7;

@@ -11,8 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-038 (task detail: fields, Markdown, assignment, comments, delete), on
   2026-11-16.
-- **Awaiting the owner's approval:** WI-039 / WS-039, epics page (seven questions in
-  WS-039). Its branch is stacked on WI-038 (PR #35).
+- **In progress:** WI-039 / WS-039, epics page (approved 2026-11-16); its branch is stacked
+  on WI-038 (PR #35).
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -92,7 +92,7 @@ above and comes after WT-06.
 | [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings              | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
 | [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop    | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
 | [WI-038](work-items/WI-038-task-detail.md)                      | Task detail: fields, Markdown, assignment, comments, delete | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
-| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Proposed    | [WS-039](work-specs/WS-039-epics-page.md)                       | Proposed    |
+| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Approved    | [WS-039](work-specs/WS-039-epics-page.md)                       | Approved    |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 

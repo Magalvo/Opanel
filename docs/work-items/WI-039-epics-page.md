@@ -1,6 +1,6 @@
 # WI-039 — Epics page: list, create, edit, close, progress
 
-- Status: Proposed (awaiting owner approval)
+- Status: Approved
 - Work-track: [WT-03](../work-tracks/WT-03-board-core.md) (decisions 14 and 18)
 - Depends on: WI-033, WI-036, WI-038 (the Markdown renderer and editor)
 - Work-spec: [WS-039](../work-specs/WS-039-epics-page.md)
