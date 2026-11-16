@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { hashPassword } from "@/server/auth/password";
 import { createTestAccount, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, credentials } from "@/server/db/schema";
@@ -8,6 +9,16 @@ import { ApiError } from "@/server/http/errors";
 
 import { createFirstAdmin, isSetupNeeded } from "./setup";
 import { signIn } from "./sign-in";
+
+// The real hash, observed (WS-043): the spy calls through, so every test hashes for real.
+vi.mock("@/server/auth/password", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/auth/password")>();
+  return { ...actual, hashPassword: vi.fn(actual.hashPassword) };
+});
+
+const realPassword =
+  await vi.importActual<typeof import("@/server/auth/password")>("@/server/auth/password");
+const hashSpy = vi.mocked(hashPassword);
 
 const input = {
   name: "  Ada Admin ",
@@ -84,6 +95,57 @@ describe("createFirstAdmin", () => {
       .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" });
 
     await expect(createFirstAdmin(input)).rejects.toMatchObject({ status: 404 });
+  });
+
+  describe("refuses before hashing once the install has accounts (WS-043)", () => {
+    beforeEach(() => {
+      hashSpy.mockClear();
+    });
+
+    it.each([
+      ["an active account", () => createTestAccount({ email: "on@example.com" })],
+      [
+        "only a deactivated account",
+        () => createTestAccount({ email: "off@example.com", disabled: true }),
+      ],
+      [
+        "only an agent",
+        () =>
+          getDb()
+            .insert(accounts)
+            .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" }),
+      ],
+    ])("with %s: 404, nothing hashed, nothing created", async (_case, existing) => {
+      await existing();
+      const before = await getDb().select().from(accounts);
+      hashSpy.mockClear();
+
+      await expect(createFirstAdmin(input)).rejects.toMatchObject({ status: 404 });
+
+      expect(hashSpy).not.toHaveBeenCalled();
+      expect(await getDb().select().from(accounts)).toHaveLength(before.length);
+    });
+
+    it("hashes exactly once on an empty install", async () => {
+      await createFirstAdmin(input);
+
+      expect(hashSpy).toHaveBeenCalledOnce();
+    });
+
+    it("lets the check under the lock decide when an account appears while hashing", async () => {
+      hashSpy.mockImplementationOnce(async (password) => {
+        await getDb()
+          .insert(accounts)
+          .values({ kind: "human", name: "Other", email: "other@example.com", role: "admin" });
+        return realPassword.hashPassword(password);
+      });
+
+      await expect(createFirstAdmin(input)).rejects.toMatchObject({ status: 404 });
+
+      expect(await getDb().select().from(accounts)).toHaveLength(1);
+      expect(await getDb().select().from(credentials)).toHaveLength(0);
+      expect(await getDb().select().from(auditLog)).toHaveLength(0);
+    });
   });
 
   it("lets exactly one of five simultaneous requests win", async () => {
