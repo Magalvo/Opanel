@@ -12,3 +12,9 @@ export const E2E_DATABASE_SUFFIX = "_e2e_test";
 
 /** Placeholder session secret for the app under test. Not a secret: the database is a throwaway. */
 export const E2E_AUTH_SECRET = "e2e-secret-only-for-playwright-0123456789abcdef";
+
+/**
+ * Placeholder setup token for the app under test, which runs in production mode and so
+ * refuses the first-run setup without one (WS-055). Not a secret: the database is a throwaway.
+ */
+export const E2E_SETUP_TOKEN = "e2e-setup-token-only-for-playwright-0123456789";

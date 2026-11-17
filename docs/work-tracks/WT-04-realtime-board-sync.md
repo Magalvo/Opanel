@@ -198,6 +198,10 @@ implements it. The owner approved all of them as proposed on 2026-11-16.
     - No rate limiter: a 32-character random token cannot be guessed, and each refusal
       costs a hash of a short string, not an Argon2id hash.
     - After setup the token has no further use; the operator may remove it.
+    - Amended by [WS-055](../work-specs/WS-055-setup-fail-closed.md) (2026-11-17): in
+      production an unset token no longer leaves setup open; setup is refused with `403
+setup_token_not_configured` until one is configured. Development and test are
+      unchanged.
 
 ## Work-items
 

@@ -10,6 +10,7 @@ import {
   notFound,
   payloadTooLarge,
   rateLimited,
+  setupTokenNotConfigured,
   tooManyStreams,
   unauthenticated,
   unsupportedMediaType,
@@ -51,6 +52,13 @@ describe("ApiError constructors", () => {
     ["unauthenticated", unauthenticated(), 401, "Unauthorized", "unauthenticated"],
     ["forbidden", forbidden(), 403, "Forbidden", "forbidden"],
     ["invalidSetupToken", invalidSetupToken(), 403, "Forbidden", "invalid_setup_token"],
+    [
+      "setupTokenNotConfigured",
+      setupTokenNotConfigured(),
+      403,
+      "Forbidden",
+      "setup_token_not_configured",
+    ],
     ["notFound", notFound(), 404, "Not Found", "not_found"],
     ["conflict", conflict("Already exists."), 409, "Conflict", "conflict"],
     [

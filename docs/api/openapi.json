@@ -435,7 +435,7 @@
             }
           },
           "403": {
-            "description": "The request does not come from the app's own origin (code `forbidden`), or the server has a setup token configured and the body's is missing or wrong (code `invalid_setup_token`).",
+            "description": "The request does not come from the app's own origin (code `forbidden`), or the server has a setup token configured and the body's is missing or wrong (code `invalid_setup_token`), or the server runs in production with no setup token configured, so setup is locked until one is (code `setup_token_not_configured`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5034,6 +5034,7 @@
               "internal_error",
               "invalid_link",
               "invalid_setup_token",
+              "setup_token_not_configured",
               "too_many_streams",
               "team_name_taken",
               "account_inactive",

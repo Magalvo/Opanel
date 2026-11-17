@@ -16,11 +16,25 @@ import type * as Env from "@/server/env";
 import { GET as me } from "../me/route";
 import { POST } from "./route";
 
-// The configured setup token (WS-050), changed per test; unset unless a test sets it.
-const configured = vi.hoisted(() => ({ token: undefined as string | undefined }));
+// The configured setup token (WS-050) and mode (WS-055), changed per test; unset and the
+// test runner's own mode unless a test sets them.
+const configured = vi.hoisted(() => ({
+  token: undefined as string | undefined,
+  nodeEnv: undefined as "development" | "test" | "production" | undefined,
+}));
 vi.mock("@/server/env", async (importOriginal) => {
   const actual = await importOriginal<typeof Env>();
-  return { ...actual, getEnv: () => ({ ...actual.getEnv(), SETUP_TOKEN: configured.token }) };
+  return {
+    ...actual,
+    getEnv: () => {
+      const env = actual.getEnv();
+      return {
+        ...env,
+        SETUP_TOKEN: configured.token,
+        NODE_ENV: configured.nodeEnv ?? env.NODE_ENV,
+      };
+    },
+  };
 });
 
 const path = "/api/v1/setup";
@@ -154,6 +168,33 @@ describe("POST /api/v1/setup", () => {
 
       expect(response.status).toBe(201);
       expect(accountSummarySchema.parse(await response.json()).role).toBe("admin");
+    });
+  });
+
+  describe("in production with no setup token configured (WS-055)", () => {
+    beforeEach(() => {
+      configured.nodeEnv = "production";
+    });
+
+    afterEach(() => {
+      configured.nodeEnv = undefined;
+    });
+
+    it("refuses with 403 setup_token_not_configured, logging nothing and creating nothing", async () => {
+      const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+      try {
+        const response = await POST(postRequest(path, body), undefined);
+
+        expect(response.status).toBe(403);
+        const problem = problemSchema.parse(await response.json());
+        expect(problem.code).toBe("setup_token_not_configured");
+        expect(problem.requestId).toBe(response.headers.get("x-request-id"));
+        expect(logged).not.toHaveBeenCalled();
+      } finally {
+        logged.mockRestore();
+      }
+      expect(await getDb().select().from(accounts)).toHaveLength(0);
     });
   });
 });

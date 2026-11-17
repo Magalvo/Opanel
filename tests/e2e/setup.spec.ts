@@ -1,7 +1,7 @@
 import { meResponseSchema } from "@/lib/schemas/auth";
 
 import { expect, test } from "./base";
-import { E2E_BASE_URL } from "./environment";
+import { E2E_BASE_URL, E2E_SETUP_TOKEN } from "./environment";
 
 const password = "an e2e password, long enough";
 
@@ -13,6 +13,8 @@ test("the first visitor creates the Admin, ends up signed in, and /setup disappe
   await page.goto("/");
   await expect(page).toHaveURL("/setup");
 
+  // The production build refuses setup without a configured token (WS-055).
+  await page.getByLabel("Setup token").fill(E2E_SETUP_TOKEN);
   await page.getByLabel("Name").fill("First Admin");
   await page.getByLabel("Email").fill("first-admin@example.com");
   await page.getByLabel("Password", { exact: true }).fill(password);

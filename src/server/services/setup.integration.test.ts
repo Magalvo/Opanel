@@ -8,7 +8,7 @@ import { getDb } from "@/server/db/client";
 import { accounts, auditLog, credentials } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { createFirstAdmin, isSetupNeeded, isSetupTokenRequired } from "./setup";
+import { createFirstAdmin, isSetupNeeded, setupGuard } from "./setup";
 import { signIn } from "./sign-in";
 
 // The real hash, observed (WS-043): the spy calls through, so every test hashes for real.
@@ -235,8 +235,73 @@ describe("the optional setup token (WS-050)", () => {
     expect(result.account.role).toBe("admin");
   });
 
-  it("isSetupTokenRequired says whether a token is configured", () => {
-    expect(isSetupTokenRequired({ SETUP_TOKEN: token })).toBe(true);
-    expect(isSetupTokenRequired({ SETUP_TOKEN: undefined })).toBe(false);
+  it("a configured token is required in production too", async () => {
+    const production = { ...withToken, nodeEnv: "production" as const };
+
+    await expect(
+      createFirstAdmin({ ...input, setupToken: "wrong" }, getDb(), production),
+    ).rejects.toMatchObject({ status: 403, code: "invalid_setup_token" });
+    const result = await createFirstAdmin({ ...input, setupToken: token }, getDb(), production);
+    expect(result.account.role).toBe("admin");
   });
+});
+
+describe("setupGuard (WS-055)", () => {
+  const token = "the-setup-token-0123456789abcdef";
+
+  it.each([
+    ["production", token, "token"],
+    ["development", token, "token"],
+    ["test", token, "token"],
+    ["production", undefined, "locked"],
+    ["development", undefined, "open"],
+    ["test", undefined, "open"],
+  ] as const)("%s with token %s is %s", (nodeEnv, configured, guard) => {
+    expect(setupGuard({ NODE_ENV: nodeEnv, SETUP_TOKEN: configured })).toBe(guard);
+  });
+});
+
+describe("production without a setup token (WS-055)", () => {
+  const locked = { expectedSetupToken: undefined, nodeEnv: "production" as const };
+
+  beforeEach(() => {
+    hashSpy.mockClear();
+  });
+
+  it.each([
+    ["without a token sent", undefined],
+    ["with any token sent", "anything at all, 0123456789abcdef"],
+  ])(
+    "an empty install refuses with 403 setup_token_not_configured %s, hashing and writing nothing",
+    async (_case, given) => {
+      await expect(
+        createFirstAdmin({ ...input, setupToken: given }, getDb(), locked),
+      ).rejects.toMatchObject({ status: 403, code: "setup_token_not_configured" });
+
+      expect(hashSpy).not.toHaveBeenCalled();
+      expect(await getDb().select().from(accounts)).toHaveLength(0);
+      expect(await getDb().select().from(credentials)).toHaveLength(0);
+      expect(await getDb().select().from(auditLog)).toHaveLength(0);
+    },
+  );
+
+  it("an installed server still answers 404, not 403", async () => {
+    await createTestAccount();
+
+    await expect(createFirstAdmin(input, getDb(), locked)).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it.each(["development", "test"] as const)(
+    "%s without a token is open as before",
+    async (nodeEnv) => {
+      const result = await createFirstAdmin(input, getDb(), {
+        expectedSetupToken: undefined,
+        nodeEnv,
+      });
+
+      expect(result.account.role).toBe("admin");
+    },
+  );
 });

@@ -147,6 +147,12 @@ describe("setupRequestSchema", () => {
     expect(setup?.responses[403]?.description).toContain("invalid_setup_token");
   });
 
+  it("documents the 403 of a production server with no setup token (WS-055)", () => {
+    const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
+
+    expect(setup?.responses[403]?.description).toContain("setup_token_not_configured");
+  });
+
   it("is documented as a public operation", () => {
     const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
 

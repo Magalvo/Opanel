@@ -71,6 +71,19 @@ export function invalidSetupToken(): ApiError {
   });
 }
 
+/**
+ * A production server with no `SETUP_TOKEN` refuses the first-run setup (WS-055). Says only
+ * what the setup page says too; never a value.
+ */
+export function setupTokenNotConfigured(): ApiError {
+  return new ApiError({
+    status: 403,
+    title: "Forbidden",
+    code: "setup_token_not_configured",
+    detail: "First-run setup needs SETUP_TOKEN in the server's configuration.",
+  });
+}
+
 export function notFound(detail = "The resource does not exist."): ApiError {
   return new ApiError({ status: 404, title: "Not Found", code: "not_found", detail });
 }
