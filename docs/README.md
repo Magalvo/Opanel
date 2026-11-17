@@ -9,12 +9,16 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-043 (the first-run setup refuses before hashing), on 2026-11-16, the
-  last of the audit's security items. Its branch is stacked on WI-042, itself on WI-044
-  (PR #37); their pull requests follow #37 in that order.
-- **Next:** draft WT-04 (real-time board sync, canonical doc 0002) as `Proposed`, and stop
-  for the owner's approval. The optional `SETUP_TOKEN` is to be scheduled as its own item
-  before the end of WT-04 (owner's decision, WS-043 question 2).
+- **Last finished:** WI-043 (the first-run setup refuses before hashing), merged on
+  2026-11-17 (PR #39), the last of the audit's security items.
+- **Next:** implement WI-050 (optional `SETUP_TOKEN`, the first item of WT-04; WS-050
+  approved on 2026-11-17); then WI-045.
+- **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
+  canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
+  WI-045 writes into the doc.
+- **Approved on 2026-11-17:** amendment A1 to WT-04, the optional `SETUP_TOKEN` for the
+  first-run setup as WI-050 (owner's decision in WS-043, question 2), done first in the
+  track.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -37,11 +41,11 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
 | [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
 | [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Approved |
 | [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
 
 Planned next, not yet drafted:
 
-- WT-04 Real-time board sync
 - WT-05 Agent accounts and API tokens
 - WT-06 Bug reports and automated triage
 - WT-07 Backlog, priority, due dates, labels
@@ -100,6 +104,7 @@ above and comes after WT-06.
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
 | [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
+| [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Approved    | [WS-050](work-specs/WS-050-setup-token.md)                      | Approved    |
 
 ## Follow-ups
 
@@ -120,7 +125,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
   ones itself (WI-044). It also decides log access and retention, and whether the logs
   of Better Auth and Next.js can hold request data (WS-042, question 2: not examined).
-- **Optional `SETUP_TOKEN` for the first-run setup:** if set, the form and endpoint require
+- **Optional `SETUP_TOKEN` for the first-run setup** (scheduled as WI-050 in WT-04,
+  amendment A1, approved on 2026-11-17): if set, the form and endpoint require
   it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
   question 1). Needed before any install is reachable from the internet. On 2026-11-16 the
   owner decided to schedule it as its own item before the end of WT-04 (WS-043, question 2).
