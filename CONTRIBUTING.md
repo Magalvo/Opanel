@@ -97,6 +97,10 @@ state that other tests rely on, such as deactivating Admins it did not create. A
 has to (today only `tests/e2e/last-admin.spec.ts`) goes in the `exclusive` project of
 `playwright.config.ts`, which runs alone before the others (WS-052).
 
+Locally the end-to-end suite uses at most 4 workers (CI uses Playwright's default). More
+can be asked for with `pnpm test:e2e --workers=8`, at the cost of timeouts on a busy
+machine (WS-054).
+
 Do not weaken a check to make it pass: no `any`, no skipped or deleted tests, no
 `eslint-disable` without a reason. The complete list is in `AGENTS.md`, section 6.
 

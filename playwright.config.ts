@@ -10,6 +10,9 @@ export default defineConfig({
   outputDir: "./test-results",
 
   fullyParallel: true,
+  // Locally at most 4 workers: with more, a busy machine serves the app's JavaScript too
+  // slowly and tests time out (WS-054). CI keeps Playwright's default.
+  ...(isCI ? {} : { workers: 4 }),
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   reporter: isCI ? [["list"], ["html", { open: "never" }]] : "list",

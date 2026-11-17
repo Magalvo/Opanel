@@ -231,8 +231,9 @@ Technical, settled by the tests:
   not hold.
 - **Collision detection is the board's own:** the cards under the pointer first; with the
   pointer over a column but no card, the column's closest card, or the column itself when
-  empty; without a pointer (keyboard), `closestCorners`. Droppables are measured always
-  (`MeasuringStrategy.Always`), as cards change columns while dragged.
+  empty; without a pointer (keyboard), `closestCorners` (replaced in WS-054: the keyboard
+  uses the centre of the dragged card as its pointer, and the same rule). Droppables are
+  measured always (`MeasuringStrategy.Always`), as cards change columns while dragged.
 - **The status region is named "Board messages".** `@dnd-kit` adds its own live region,
   also `role="status"`, for the drag announcements; the name tells the two apart.
 - **A card's accessible name is its own text.** A shorter `aria-label` was tried first and
