@@ -93,6 +93,33 @@ describe("SetupForm", () => {
     expect(await screen.findByText("This installation is already set up.")).toBeInTheDocument();
   });
 
+  it("asks to try again in a moment on a 429 and keeps the values (WS-056)", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          type: "about:blank",
+          title: "Too Many Requests",
+          status: 429,
+          code: "server_busy",
+          detail: "The server is busy. Try again in a moment.",
+          requestId: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/problem+json", "Retry-After": "1" },
+        },
+      ),
+    );
+
+    await fillAndSubmit();
+
+    expect(
+      await screen.findByText("The server is busy. Try again in a moment."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveValue("ada@example.com");
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("disables the button while the request is in flight", async () => {
     fetchMock.mockReturnValue(new Promise<Response>(() => undefined));
 

@@ -122,7 +122,8 @@ Rules:
   configured token is missing or wrong, WS-050, or `setup_token_not_configured` for the
   `403` of a first-run setup on a production server with no token configured, WS-055, or
   `too_many_streams` for the `429` of an
-  account that holds too many event streams, WS-047) and extra fields that belong to it (doc 0002 returns the
+  account that holds too many event streams, WS-047, or `server_busy` for the `429` of a
+  request that needs a password hash while the hashing queue is full, WS-056) and extra fields that belong to it (doc 0002 returns the
   current entity with a version conflict, as `current`). Codes are never renamed or reused.
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged

@@ -140,7 +140,7 @@
             }
           },
           "429": {
-            "description": "Too many attempts. See Retry-After.",
+            "description": "Too many attempts (code `rate_limited`), or the server is busy hashing passwords (code `server_busy`). See Retry-After.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -386,7 +386,7 @@
             }
           },
           "429": {
-            "description": "Too many attempts for this account. See Retry-After.",
+            "description": "Too many attempts for this account (code `rate_limited`), or the server is busy hashing passwords (code `server_busy`). See Retry-After.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -466,6 +466,16 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The server is busy hashing passwords (code `server_busy`). See Retry-After.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -554,7 +564,7 @@
             }
           },
           "429": {
-            "description": "Too many attempts from this address. See Retry-After.",
+            "description": "Too many attempts from this address (code `rate_limited`), or the server is busy hashing passwords (code `server_busy`). See Retry-After.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5031,6 +5041,7 @@
               "last_admin",
               "unsupported_media_type",
               "rate_limited",
+              "server_busy",
               "internal_error",
               "invalid_link",
               "invalid_setup_token",

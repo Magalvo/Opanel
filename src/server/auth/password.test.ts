@@ -1,6 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { serverBusy } from "@/server/http/errors";
+
+import type * as HashGate from "./hash-gate";
 import { hashPassword, verifyPassword } from "./password";
+
+// The process gate, real unless a test fills it (WS-056).
+const gateState = vi.hoisted(() => ({ full: false }));
+vi.mock("./hash-gate", async (importOriginal) => {
+  const actual = await importOriginal<typeof HashGate>();
+  return {
+    ...actual,
+    hashGate: {
+      run: <T>(task: () => Promise<T>): Promise<T> =>
+        gateState.full ? Promise.reject(serverBusy()) : actual.hashGate.run(task),
+    },
+  };
+});
 
 const password = "correct horse battery staple";
 
@@ -35,5 +51,26 @@ describe("verifyPassword", () => {
     expect(await verifyPassword({ hash: "", password })).toBe(false);
     expect(await verifyPassword({ hash: "garbage", password })).toBe(false);
     expect(await verifyPassword({ hash: hash.slice(0, 40), password })).toBe(false);
+  });
+});
+
+describe("through the hash gate (WS-056)", () => {
+  it("hashing and verifying reject with 429 server_busy while the gate is full", async () => {
+    const hash = await hashPassword(password);
+    gateState.full = true;
+    try {
+      await expect(hashPassword(password)).rejects.toMatchObject({
+        status: 429,
+        code: "server_busy",
+      });
+      // A busy server must not look like a wrong password.
+      await expect(verifyPassword({ hash, password })).rejects.toMatchObject({
+        status: 429,
+        code: "server_busy",
+      });
+    } finally {
+      gateState.full = false;
+    }
+    expect(await verifyPassword({ hash, password })).toBe(true);
   });
 });

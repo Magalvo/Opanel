@@ -45,6 +45,7 @@ describe("problemSchema", () => {
       "project_archived",
       "project_key_taken",
       "rate_limited",
+      "server_busy",
       "setup_token_not_configured",
       "team_in_use",
       "team_name_taken",

@@ -85,7 +85,12 @@ export const signInContract = {
     403: { description: "The request does not come from the app's own origin.", problem: true },
     413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
-    429: { description: "Too many attempts. See Retry-After.", problem: true },
+    429: {
+      description:
+        "Too many attempts (code `rate_limited`), or the server is busy hashing passwords " +
+        "(code `server_busy`). See Retry-After.",
+      problem: true,
+    },
   },
 } satisfies EndpointContract;
 
@@ -154,6 +159,10 @@ export const setupContract = {
     },
     404: { description: "The installation is already set up.", problem: true },
     413: PAYLOAD_TOO_LARGE,
+    429: {
+      description: "The server is busy hashing passwords (code `server_busy`). See Retry-After.",
+      problem: true,
+    },
     415: { description: "The body is not JSON.", problem: true },
   },
 } satisfies EndpointContract;
@@ -179,7 +188,12 @@ export const acceptLinkContract = {
     404: { description: "The link is not valid (code `invalid_link`).", problem: true },
     413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
-    429: { description: "Too many attempts from this address. See Retry-After.", problem: true },
+    429: {
+      description:
+        "Too many attempts from this address (code `rate_limited`), or the server is busy " +
+        "hashing passwords (code `server_busy`). See Retry-After.",
+      problem: true,
+    },
   },
 } satisfies EndpointContract;
 
@@ -221,6 +235,11 @@ export const changePasswordContract = {
     403: { description: "The request does not come from the app's own origin.", problem: true },
     413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
-    429: { description: "Too many attempts for this account. See Retry-After.", problem: true },
+    429: {
+      description:
+        "Too many attempts for this account (code `rate_limited`), or the server is busy " +
+        "hashing passwords (code `server_busy`). See Retry-After.",
+      problem: true,
+    },
   },
 } satisfies EndpointContract;

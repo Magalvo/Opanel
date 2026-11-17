@@ -10,6 +10,7 @@ import {
   notFound,
   payloadTooLarge,
   rateLimited,
+  serverBusy,
   setupTokenNotConfigured,
   tooManyStreams,
   unauthenticated,
@@ -60,6 +61,7 @@ describe("ApiError constructors", () => {
       "setup_token_not_configured",
     ],
     ["notFound", notFound(), 404, "Not Found", "not_found"],
+    ["serverBusy", serverBusy(), 429, "Too Many Requests", "server_busy"],
     ["conflict", conflict("Already exists."), 409, "Conflict", "conflict"],
     [
       "unsupportedMediaType",
@@ -95,6 +97,10 @@ describe("ApiError constructors", () => {
 
   it("asks a client with too many streams to wait 30 seconds (WS-047)", () => {
     expect(tooManyStreams().retryAfterSeconds).toBe(30);
+  });
+
+  it("asks a client of a busy server to wait one second (WS-056)", () => {
+    expect(serverBusy().retryAfterSeconds).toBe(1);
   });
 
   it("keeps the wait of a rate limit, in whole seconds", () => {

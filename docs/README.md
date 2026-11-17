@@ -33,6 +33,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-055 (production setup requires a setup token, audit of 2026-11-17,
   finding A02; amends WT-04 decision 13), on 2026-11-17, on the branch
   `claude/wi-055-setup-fail-closed`.
+- **Also finished:** WI-056 (bounded password hashing, audit of 2026-11-17, finding A03),
+  on 2026-11-17, on the branch `claude/wi-056-hashing-concurrency`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -125,6 +127,7 @@ above and comes after WT-06.
 | [WI-053](work-items/WI-053-esbuild-advisory.md)                 | No vulnerable esbuild in the dependency tree                | Done        | [WS-053](work-specs/WS-053-esbuild-advisory.md)                 | Done        |
 | [WI-054](work-items/WI-054-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E  | Done        | [WS-054](work-specs/WS-054-e2e-parallel-stability.md)           | Done        |
 | [WI-055](work-items/WI-055-setup-fail-closed.md)                | Production setup requires a setup token                     | Done        | [WS-055](work-specs/WS-055-setup-fail-closed.md)                | Done        |
+| [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                   | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
 
 ## Follow-ups
 

@@ -211,6 +211,17 @@ export function tooManyStreams(): ApiError {
   });
 }
 
+/** The password hashing queue is full (WS-056): try again in a second. */
+export function serverBusy(): ApiError {
+  return new ApiError({
+    status: 429,
+    title: "Too Many Requests",
+    code: "server_busy",
+    detail: "The server is busy. Try again in a moment.",
+    retryAfterSeconds: 1,
+  });
+}
+
 export function internalError(): ApiError {
   return new ApiError({
     status: 500,
