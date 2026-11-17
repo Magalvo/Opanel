@@ -1,17 +1,25 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 
+import { authenticate } from "@/server/auth/authenticate";
+import { hashPassword } from "@/server/auth/password";
 import {
+  APP_ORIGIN,
   cookieHeaderFrom,
   createTestAccount,
+  failAuditFor,
+  failSessionDeletes,
   setDisabled,
   TEST_PASSWORD,
   testActor,
+  waitForAdvisoryLockWaiter,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
-import { accounts, auditLog, rateLimits, sessions } from "@/server/db/schema";
+import { accounts, auditLog, credentials, rateLimits, sessions } from "@/server/db/schema";
 import { ApiError, serverBusy } from "@/server/http/errors";
 
+import { lockAccount } from "./account-tokens";
+import { changeOwnPassword } from "./profile";
 import { signIn, signInAfterCommit, signOut } from "./sign-in";
 
 const base = { headers: new Headers(), clientIp: null };
@@ -267,8 +275,10 @@ describe("signIn", () => {
         getDb(),
         { failureAuditRule },
       );
+      const [session] = await getDb().select().from(sessions);
       await signOut({
         actor: testActor(account),
+        sessionId: session?.id ?? "",
         headers: new Headers({ Cookie: cookieHeaderFrom(signedIn.headers) }),
       });
 
@@ -354,4 +364,170 @@ describe("signInAfterCommit (WS-057)", () => {
       expect(await getDb().select().from(sessions)).toHaveLength(0);
     },
   );
+});
+
+describe("a session and its audit entry stand or fall together (WS-058)", () => {
+  const input = { ...base, email: "ada@example.com", password: TEST_PASSWORD };
+  const NEW_PASSWORD = "a brand new password 123";
+
+  function causeOf(error: unknown): string {
+    const cause = (error as { cause?: unknown }).cause;
+    return cause instanceof Error ? cause.message : String(error);
+  }
+
+  async function sessionsOf(accountId: string) {
+    return getDb().select().from(sessions).where(eq(sessions.accountId, accountId));
+  }
+
+  it("signIn: when the auth.sign_in write fails, it throws and leaves no session and no last_seen_at", async () => {
+    const account = await createTestAccount();
+    const restore = await failAuditFor("auth.sign_in");
+
+    let thrown: unknown;
+    try {
+      await signIn(input);
+    } catch (error) {
+      thrown = error;
+    } finally {
+      await restore();
+    }
+
+    expect(causeOf(thrown)).toContain("audit write failed");
+    expect(await sessionsOf(account.id)).toEqual([]);
+    const [row] = await getDb().select().from(accounts).where(eq(accounts.id, account.id));
+    expect(row?.lastSeenAt).toBeNull();
+  });
+
+  it("signIn: when removing that session fails too, it throws the first error and logs once, without messages", async () => {
+    const account = await createTestAccount();
+    const restoreAudit = await failAuditFor("auth.sign_in");
+    const restoreDelete = await failSessionDeletes();
+    const logError = vi.fn<(message: string) => void>();
+
+    let thrown: unknown;
+    try {
+      await signIn(input, getDb(), { logError });
+    } catch (error) {
+      thrown = error;
+    } finally {
+      await restoreDelete();
+      await restoreAudit();
+    }
+
+    expect(causeOf(thrown)).toContain("audit write failed");
+    expect(logError).toHaveBeenCalledTimes(1);
+    const [line] = logError.mock.calls[0] ?? [""];
+    expect(line).toContain("A session may remain");
+    expect(line).not.toContain("audit write failed");
+    expect(line).not.toContain("session delete failed");
+    expect(await sessionsOf(account.id)).toHaveLength(1);
+  });
+
+  it("signIn: refused with 401 when a password change commits while it is in flight; no session survives", async () => {
+    const account = await createTestAccount();
+    const newHash = await hashPassword(NEW_PASSWORD);
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let locked = (): void => undefined;
+    const isLocked = new Promise<void>((resolve) => {
+      locked = resolve;
+    });
+
+    // What accepting a reset link does, held open under the account lock.
+    const change = getDb().transaction(async (tx) => {
+      await lockAccount(tx, account.id);
+      await tx
+        .update(credentials)
+        .set({ passwordHash: newHash, updatedAt: new Date() })
+        .where(eq(credentials.accountId, account.id));
+      await tx.delete(sessions).where(eq(sessions.accountId, account.id));
+      locked();
+      await held;
+    });
+    await isLocked;
+
+    const attempt = failure(signIn(input));
+    try {
+      await waitForAdvisoryLockWaiter();
+    } finally {
+      release();
+      await change;
+    }
+    const error = await attempt;
+
+    expect(error.status).toBe(401);
+    expect(await sessionsOf(account.id)).toEqual([]);
+    const actions = (await getDb().select().from(auditLog)).map((row) => row.action);
+    expect(actions).toContain("auth.sign_in_failed");
+    expect(actions).not.toContain("auth.sign_in");
+  });
+
+  it("signIn: a session made before a password change is ended by that change", async () => {
+    const account = await createTestAccount();
+    const first = await signIn(input);
+    const current = await authenticate(
+      new Request(`${APP_ORIGIN}/api/v1/me`, {
+        headers: { Cookie: cookieHeaderFrom(first.headers) },
+      }),
+    );
+    const other = await signIn(input);
+
+    await changeOwnPassword(testActor(account), {
+      sessionId: current.sessionId,
+      currentPassword: TEST_PASSWORD,
+      newPassword: NEW_PASSWORD,
+    });
+
+    const left = await sessionsOf(account.id);
+    expect(left.map((row) => row.id)).toEqual([current.sessionId]);
+    await expect(
+      authenticate(
+        new Request(`${APP_ORIGIN}/api/v1/me`, {
+          headers: { Cookie: cookieHeaderFrom(other.headers) },
+        }),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("signOut: when the auth.sign_out write fails, it throws and the session still works", async () => {
+    const account = await createTestAccount();
+    const signedIn = await signIn(input);
+    const cookie = cookieHeaderFrom(signedIn.headers);
+    const request = () => new Request(`${APP_ORIGIN}/api/v1/me`, { headers: { Cookie: cookie } });
+    const { sessionId } = await authenticate(request());
+    const restore = await failAuditFor("auth.sign_out");
+
+    try {
+      await expect(
+        signOut({ actor: testActor(account), sessionId, headers: new Headers({ Cookie: cookie }) }),
+      ).rejects.toThrow();
+    } finally {
+      await restore();
+    }
+
+    expect(await sessionsOf(account.id)).toHaveLength(1);
+    expect((await authenticate(request())).sessionId).toBe(sessionId);
+  });
+
+  it("signOut: deletes the session row, audits it, and clears the cookie", async () => {
+    const account = await createTestAccount();
+    const signedIn = await signIn(input);
+    const cookie = cookieHeaderFrom(signedIn.headers);
+    const { sessionId } = await authenticate(
+      new Request(`${APP_ORIGIN}/api/v1/me`, { headers: { Cookie: cookie } }),
+    );
+
+    const headers = await signOut({
+      actor: testActor(account),
+      sessionId,
+      headers: new Headers({ Cookie: cookie }),
+    });
+
+    expect(await sessionsOf(account.id)).toEqual([]);
+    expect(headers.getSetCookie().join(";")).toMatch(/Max-Age=0|Expires=/i);
+    const actions = (await getDb().select().from(auditLog)).map((row) => row.action);
+    expect(actions.at(-1)).toBe("auth.sign_out");
+  });
 });

@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { APP_ORIGIN, createTestAccount, postRequest, signInCookie } from "@/server/auth/testing";
+import {
+  APP_ORIGIN,
+  createTestAccount,
+  failAuditFor,
+  postRequest,
+  signInCookie,
+} from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { auditLog, sessions } from "@/server/db/schema";
 
@@ -40,5 +46,24 @@ describe("POST /api/v1/auth/sign-out", () => {
     );
     expect(foreign.status).toBe(403);
     expect(await getDb().select().from(sessions)).toHaveLength(1);
+  });
+
+  it("answers 500 and keeps the session working when the sign-out audit fails (WS-058)", async () => {
+    await createTestAccount();
+    const cookie = await signInCookie();
+    const restore = await failAuditFor("auth.sign_out");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    let response: Response;
+    try {
+      response = await POST(postRequest(path, undefined, { Cookie: cookie }), undefined);
+    } finally {
+      await restore();
+      logged.mockRestore();
+    }
+
+    expect(response.status).toBe(500);
+    expect(await getDb().select().from(sessions)).toHaveLength(1);
+    expect((await me(meRequest(cookie), undefined)).status).toBe(200);
   });
 });

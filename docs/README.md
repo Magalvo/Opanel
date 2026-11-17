@@ -132,6 +132,7 @@ above and comes after WT-06.
 | [WI-055](work-items/WI-055-setup-fail-closed.md)                | Production setup requires a setup token                     | Done        | [WS-055](work-specs/WS-055-setup-fail-closed.md)                | Done        |
 | [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                   | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
 | [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure               | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
+| [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together | Proposed    | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Proposed    |
 
 ## Follow-ups
 

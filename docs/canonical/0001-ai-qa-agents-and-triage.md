@@ -204,6 +204,13 @@ bug_reports(id, project_id, agent_account_id, task_id, payload, created_at)
 audit_log(id, actor_account_id?, action, entity, entity_id?, data?, created_at)   append-only
 ```
 
+Sign-in and sign-out are audited atomically with what the API answers: a `2xx` sign-in has
+its `auth.sign_in` entry, and a sign-out's session delete and `auth.sign_out` entry are one
+transaction. Better Auth inserts a session in its own statement, so a process that stops
+between that insert and the audit transaction can leave an unaudited session whose cookie
+was never sent; it expires with the session lifetime (7 days). A sign-in made while the
+account's password changes does not survive the change (WS-058).
+
 A **project** is the unit under test. Dogfooding means creating a project named "Opanel"
 with its own routing rules. No separate "test target" entity is introduced.
 

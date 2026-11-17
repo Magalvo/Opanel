@@ -6,6 +6,7 @@ import { type Database, getDb } from "@/server/db/client";
 import { accounts, accountTokens, credentials, sessions } from "@/server/db/schema";
 import { invalidRequest, notFound, rateLimited } from "@/server/http/errors";
 
+import { lockAccount } from "./account-tokens";
 import type { AccountRow } from "./accounts";
 import { recordAudit } from "./audit";
 import { CHANGE_PASSWORD_RULE, consumeRateLimit, purgeExpiredRateLimits } from "./rate-limit";
@@ -104,6 +105,9 @@ export async function changeOwnPassword(
   const passwordHash = await hashPassword(input.newPassword);
 
   await db.transaction(async (tx) => {
+    // The lock sign-in takes to confirm a new session (WS-058): a sign-in with the old
+    // password either sees the new hash or has its session deleted below.
+    await lockAccount(tx, actor.accountId);
     await tx
       .update(credentials)
       .set({ passwordHash, updatedAt: new Date() })

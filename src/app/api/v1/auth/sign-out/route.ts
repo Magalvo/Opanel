@@ -6,6 +6,6 @@ import { signOut } from "@/server/services/sign-in";
 // the session cookie, so route() adds no refreshed one.
 export const dynamic = "force-dynamic";
 
-export const POST = route(signOutContract, async (request, _context, { actor }) => {
-  return noContent(await signOut({ actor, headers: request.headers }));
+export const POST = route(signOutContract, async (request, _context, { actor, sessionId }) => {
+  return noContent(await signOut({ actor, sessionId, headers: request.headers }));
 });
