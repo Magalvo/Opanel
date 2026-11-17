@@ -10,7 +10,7 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 Updated at the end of every work-item, so that a new session can start from here.
 
 - **Last finished:** WI-046 (event hub), on 2026-11-17, on the branch
-  `claude/wi-046-event-hub`, stacked on WI-045 (PR #42); its pull request follows #42.
+  `claude/wi-046-event-hub` (WI-045 was merged in PR #42).
 - **Next:** draft WI-047 (events endpoint) and WS-047 as `Proposed`, and stop for the
   owner's approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
