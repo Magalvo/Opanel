@@ -1,6 +1,6 @@
 # WI-054 — A keyboard move lands where it was announced, and the suite is stable in parallel
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: the follow-up of WI-052 (audit of 2026-11-17, finding A09)
 - Depends on: WI-052 (its branch is stacked on `claude/wi-052-e2e-isolation`, for the
   docs index and `playwright.config.ts`)

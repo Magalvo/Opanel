@@ -1,6 +1,6 @@
 # WS-054 — A keyboard move lands where it was announced, and the suite is stable in parallel
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 6 as recommended)
 - Work-item: [WI-054](../work-items/WI-054-e2e-parallel-stability.md)
 - Canonical docs: [WS-037](WS-037-board-page.md) (board, drag and drop, the collision
   rule), [WS-007](WS-007-e2e.md) (Playwright), [WS-052](WS-052-e2e-admin-isolation.md)
