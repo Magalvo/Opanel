@@ -224,7 +224,7 @@ For the owner:
 - **The end-to-end test could not be run red.** `next build`, which starts the end-to-end
   server, type-checks the whole project, and the red unit tests import modules that did
   not exist yet. It was run, and passed, once the code was written.
-- **The backpressure test was wrong at first** and was corrected after the Green commit.
+- **The backpressure test was wrong at first**, and was corrected before the Green commit.
   The notifications reach the hub after the commit returns, so reading the stream right
   away sometimes drained the queue before it could fill, and the stream stayed open. The
   test now waits, without reading, until the stream's place in the cap comes back, and
