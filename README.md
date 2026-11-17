@@ -40,7 +40,9 @@ pnpm dev
 
 Then open <http://localhost:3000>. A fresh install leads you to `/setup`, where you create the
 first administrator; the page disappears once an account exists, and from then on visitors
-are asked to sign in. The health endpoint is at
+are asked to sign in. On an install that other people can reach before you finish setup,
+set `SETUP_TOKEN` first (see [.env.example](.env.example)): the setup page then asks for
+it. The health endpoint is at
 <http://localhost:3000/api/v1/health> and the OpenAPI document at
 <http://localhost:3000/api/v1/openapi.json>.
 
