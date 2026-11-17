@@ -9,13 +9,13 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-044 (request body size limit), on 2026-11-16, the first of the
-  audit's security items.
-- **Next:** draft WI-042 (log errors without their message) and WS-042 as `Proposed`, and
-  stop for the owner's approval; then WI-043 (setup refuses before hashing); then WT-04.
+- **Last finished:** WI-042 (safe error logging), merged on 2026-11-17 (PR #38).
+- **Next:** WI-043 (the first-run setup refuses before hashing) is already implemented and
+  marked done on the unmerged branch `claude/wi-043-setup-refuses-before-hashing-v2`,
+  stacked on WI-042: check it against `main` and open its pull request; then WT-04.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
-  WI-045 writes into the doc. Its work-items start at WI-045, after WI-042 and WI-043.
+  WI-045 writes into the doc. Its work-items start at WI-045, after WI-043.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -98,6 +98,7 @@ above and comes after WT-06.
 | [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress             | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
+| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
 
 ## Follow-ups
@@ -117,7 +118,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
   https are documented for operators. `Strict-Transport-Security` waits for it too (see WI-041).
   The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
-  ones itself (WI-044).
+  ones itself (WI-044). It also decides log access and retention, and whether the logs
+  of Better Auth and Next.js can hold request data (WS-042, question 2: not examined).
 - **Optional `SETUP_TOKEN` for the first-run setup:** if set, the form and endpoint require
   it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
   question 1). Needed before any install is reachable from the internet.
@@ -150,10 +152,11 @@ Other follow-ups:
   branches: WI-042 (log errors without their message), WI-043 (refuse the first-run setup
   before hashing once the install has accounts) and WI-044 (bound the JSON request body,
   `413 payload_too_large`). On 2026-11-16 the owner decided to redo them on `main` before
-  WT-04. WI-044 is done.
+  WT-04. WI-044 and WI-042 are done.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
-  in WS-038, question 6), and `claude/wi-044-request-body-limit` (WS-044, question 5).
+  in WS-038, question 6), `claude/wi-044-request-body-limit` (WS-044, question 5) and
+  `claude/wi-042-safe-error-logging` (WS-042, question 4).
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
