@@ -2,8 +2,6 @@
 
 import {
   type Announcements,
-  closestCenter,
-  closestCorners,
   type CollisionDetection,
   DndContext,
   type DragCancelEvent,
@@ -14,7 +12,6 @@ import {
   KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
-  pointerWithin,
   TouchSensor,
   type UniqueIdentifier,
   useSensor,
@@ -30,7 +27,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Column } from "@/lib/schemas/columns";
 
 import { SortableColumn, StaticColumn } from "./board-column";
-import { applyDrop, type Board as BoardState, columnDroppableId, placeOf, targetOf } from "./moves";
+import { boardCollision } from "./collision";
+import { applyDrop, type Board as BoardState, placeOf, targetOf } from "./moves";
 import { NewTaskDialog } from "./new-task-dialog";
 import { OverlayCard } from "./task-card";
 import { useBoard } from "./use-board";
@@ -38,12 +36,6 @@ import { useBoard } from "./use-board";
 const INSTRUCTIONS =
   "To pick up a card, press Space or Enter. Use the arrow keys to move it within and " +
   "across columns. Press Space or Enter again to drop it, or Escape to cancel.";
-
-const COLUMN_PREFIX = columnDroppableId("");
-
-function isColumnTarget(id: UniqueIdentifier): boolean {
-  return String(id).startsWith(COLUMN_PREFIX);
-}
 
 /** Where a drop leaves a card, from the board as shown while dragging. */
 function dropResult(shown: BoardState, activeId: string, overId: string): BoardState | null {
@@ -118,24 +110,11 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     return `${columnName(place.columnId)}, position ${String(place.index + 1)} of ${String(total)}`;
   }
 
-  const collisionDetection: CollisionDetection = (args) => {
-    const hits = pointerWithin(args);
-    const cards = hits.filter((hit) => !isColumnTarget(hit.id));
-    if (cards.length > 0) return cards;
-    const column = hits.find((hit) => isColumnTarget(hit.id));
-    if (column !== undefined) {
-      const columnId = String(column.id).slice(COLUMN_PREFIX.length);
-      const inColumn = args.droppableContainers.filter(
-        (container) =>
-          !isColumnTarget(container.id) &&
-          placeOf(previewRef.current ?? board, String(container.id))?.columnId === columnId,
-      );
-      return inColumn.length === 0
-        ? [column]
-        : closestCenter({ ...args, droppableContainers: inColumn });
-    }
-    return closestCorners(args);
-  };
+  const collisionDetection: CollisionDetection = (args) =>
+    boardCollision(
+      args,
+      (taskId) => placeOf(previewRef.current ?? board, taskId)?.columnId ?? null,
+    );
 
   function onDragStart(event: DragStartEvent) {
     setActiveId(String(event.active.id));

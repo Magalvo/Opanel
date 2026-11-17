@@ -103,6 +103,42 @@ async function pickUp(page: Page): Promise<void> {
   await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
 }
 
+declare global {
+  interface Window {
+    announced?: string[];
+  }
+}
+
+/** From now on, every text `@dnd-kit`'s live region shows is kept in `window.announced`. */
+async function recordAnnouncements(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const region = document.querySelector('[id^="DndLiveRegion"]');
+    if (!region) throw new Error("no live region");
+    const announced: string[] = [];
+    window.announced = announced;
+    new MutationObserver(() => {
+      const text = region.textContent;
+      if (text !== "" && text !== announced.at(-1)) announced.push(text);
+    }).observe(region, { childList: true, characterData: true, subtree: true });
+  });
+}
+
+async function announcements(page: Page): Promise<string[]> {
+  return page.evaluate(() => window.announced ?? []);
+}
+
+/** Lets the board re-measure and re-render: two animation frames, then 200 ms. */
+async function settle(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setTimeout(resolve, 200));
+        });
+      }),
+  );
+}
+
 function moved(page: Page) {
   return page.waitForResponse(
     (response) => response.url().endsWith("/move") && response.request().method() === "POST",
@@ -192,14 +228,27 @@ test("a Member moves a card by keyboard only, and the drop is announced", async 
   await expect(echoMoved).toBeFocused();
   await expect(echoMoved).toHaveAttribute("aria-disabled", "false");
 
-  // Back to To do, below Foxtrot.
+  // Back to To do: the card lands on top of Foxtrot, and the place announced does not
+  // change by itself once the board has settled (WS-054).
   await pickUp(page);
   await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(`Picked up ${key}-1.`);
+  await recordAnnouncements(page);
   await page.keyboard.press("ArrowLeft");
   await expect(page.locator('[id^="DndLiveRegion"]')).toContainText("is in To do");
+  await settle(page);
+  expect(await announcements(page)).toEqual([`${key}-1 is in To do, position 1 of 2.`]);
+
+  // One more arrow key puts it below Foxtrot.
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
+    `${key}-1 is in To do, position 2 of 2.`,
+  );
   const again = moved(page);
   await page.keyboard.press("Space");
   expect((await again).status()).toBe(200);
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
+    `${key}-1 was moved to To do, position 2 of 2.`,
+  );
 
   await page.reload();
   await expect.poll(() => titlesIn(page, "To do")).toEqual(["Foxtrot", "Echo"]);

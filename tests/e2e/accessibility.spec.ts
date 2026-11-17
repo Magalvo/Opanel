@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { type Page } from "@playwright/test";
 
 import { expect, test } from "./base";
 import { E2E_BASE_URL } from "./environment";
@@ -55,31 +56,48 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
+const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
+async function violations(page: Page): Promise<string[]> {
+  const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  return results.violations.map((violation) => violation.id);
+}
+
+/**
+ * Signs `page` in as a new Manager and creates a project with one task; returns the
+ * project's key. Each projects check below starts from its own, so that each stays short
+ * (WS-054).
+ */
+async function projectWithATask(page: Page): Promise<string> {
+  const email = `a11y-${crypto.randomUUID()}@example.com`;
+  const password = "an e2e accessibility password";
+  await seedAccount({ email, password, role: "manager", name: "Axe Manager" });
+  const headers = { Origin: E2E_BASE_URL };
+  expect(
+    (
+      await page.request.post("/api/v1/auth/sign-in", { headers, data: { email, password } })
+    ).status(),
+  ).toBe(200);
+  const key = `A${crypto.randomUUID().replace(/-/g, "").slice(0, 7).toUpperCase()}`;
+  expect(
+    (await page.request.post("/api/v1/projects", { headers, data: { key, name: key } })).status(),
+  ).toBe(201);
+  expect(
+    (
+      await page.request.post(`/api/v1/projects/${key}/tasks`, {
+        headers,
+        data: { title: "A card on the board" },
+      })
+    ).status(),
+  ).toBe(201);
+  return key;
+}
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`the projects pages have no accessibility violations in ${colorScheme} mode`, async ({
     page,
   }) => {
-    const email = `a11y-${crypto.randomUUID()}@example.com`;
-    const password = "an e2e accessibility password";
-    await seedAccount({ email, password, role: "manager", name: "Axe Manager" });
-    const headers = { Origin: E2E_BASE_URL };
-    expect(
-      (
-        await page.request.post("/api/v1/auth/sign-in", { headers, data: { email, password } })
-      ).status(),
-    ).toBe(200);
-    const key = `A${crypto.randomUUID().replace(/-/g, "").slice(0, 7).toUpperCase()}`;
-    expect(
-      (await page.request.post("/api/v1/projects", { headers, data: { key, name: key } })).status(),
-    ).toBe(201);
-    expect(
-      (
-        await page.request.post(`/api/v1/projects/${key}/tasks`, {
-          headers,
-          data: { title: "A card on the board" },
-        })
-      ).status(),
-    ).toBe(201);
+    const key = await projectWithATask(page);
     await page.emulateMedia({ colorScheme });
 
     for (const [path, loaded] of [
@@ -90,20 +108,21 @@ for (const colorScheme of ["light", "dark"] as const) {
     ] as const) {
       await page.goto(path);
       await expect(loaded).toBeVisible();
-      const results = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
-      expect(
-        results.violations.map((violation) => violation.id),
-        path,
-      ).toEqual([]);
+      expect(await violations(page), path).toEqual([]);
     }
+  });
+
+  test(`the epics page and an epic's dialog have no accessibility violations in ${colorScheme} mode`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    await page.emulateMedia({ colorScheme });
 
     // The epics page and an epic's dialog (WS-039).
     expect(
       (
         await page.request.post(`/api/v1/projects/${key}/epics`, {
-          headers,
+          headers: { Origin: E2E_BASE_URL },
           data: { title: "An epic", description: "With **Markdown**." },
         })
       ).status(),
@@ -111,32 +130,21 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.goto(`/projects/${key}/epics`);
     await page.getByRole("button", { name: "An epic" }).click();
     await expect(page.getByRole("dialog", { name: "An epic" })).toBeVisible();
-    const epicDialog = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(
-      epicDialog.violations.map((violation) => violation.id),
-      "epic dialog",
-    ).toEqual([]);
+    expect(await violations(page), "epic dialog").toEqual([]);
     await page.keyboard.press("Escape");
-    const epicsPage = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(
-      epicsPage.violations.map((violation) => violation.id),
-      "epics page",
-    ).toEqual([]);
+    expect(await violations(page), "epics page").toEqual([]);
+  });
+
+  test(`the task dialog over the board has no accessibility violations in ${colorScheme} mode`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    await page.emulateMedia({ colorScheme });
 
     // The task as a dialog over the board (WS-038).
     await page.goto(`/projects/${key}`);
     await page.getByRole("link", { name: "A card on the board" }).click();
     await expect(page.getByRole("dialog").getByRole("region", { name: "Comments" })).toBeVisible();
-    const dialog = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(
-      dialog.violations.map((violation) => violation.id),
-      "task dialog",
-    ).toEqual([]);
+    expect(await violations(page), "task dialog").toEqual([]);
   });
 }

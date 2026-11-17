@@ -3,7 +3,7 @@
 import { globSync } from "node:fs";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import type { EndpointContract } from "./contract";
@@ -105,14 +105,21 @@ function documentedOperations(): string[] {
 }
 
 describe("API routes and OpenAPI contracts", () => {
-  it("finds the route files", async () => {
-    const operations = (await exportedHandlers()).map((handler) => handler.operation);
+  // Importing every route module (and through them most of src/server) for the first time
+  // is the slow part; it is done once, with its own time limit (WS-054).
+  let loaded: ExportedHandler[] = [];
+  beforeAll(async () => {
+    loaded = await exportedHandlers();
+  }, 30_000);
+
+  it("finds the route files", () => {
+    const operations = loaded.map((handler) => handler.operation);
 
     expect(operations).toContain("GET /api/v1/health");
   });
 
-  it("documents every implemented route, and implements every documented route", async () => {
-    const implemented = (await exportedHandlers())
+  it("documents every implemented route, and implements every documented route", () => {
+    const implemented = loaded
       .filter((handler) => !UNDOCUMENTED_ROUTE_FILES.includes(handler.file))
       .map((handler) => handler.operation)
       .sort();
@@ -131,9 +138,9 @@ describe("API routes and OpenAPI contracts", () => {
   });
 
   describe("access is declared, and route() enforces it (AGENTS.md rule 6, WS-025)", () => {
-    it("builds every documented handler with route() from the contract of its own method and path", async () => {
+    it("builds every documented handler with route() from the contract of its own method and path", () => {
       const problems: string[] = [];
-      for (const handler of await exportedHandlers()) {
+      for (const handler of loaded) {
         if (UNDOCUMENTED_ROUTE_FILES.includes(handler.file)) {
           continue;
         }
@@ -156,10 +163,9 @@ describe("API routes and OpenAPI contracts", () => {
       expect(problems).toEqual([]);
     });
 
-    it("exempts only the catch-all for unknown paths, which carries no contract", async () => {
+    it("exempts only the catch-all for unknown paths, which carries no contract", () => {
       expect(UNDOCUMENTED_ROUTE_FILES).toEqual(["[...path]/route.ts"]);
-      const handlers = await exportedHandlers();
-      const catchAll = handlers.filter((handler) => handler.file === "[...path]/route.ts");
+      const catchAll = loaded.filter((handler) => handler.file === "[...path]/route.ts");
 
       expect(catchAll.length).toBeGreaterThan(0);
       for (const handler of catchAll) {
