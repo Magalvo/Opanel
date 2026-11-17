@@ -6,7 +6,7 @@ import { setupTokenMatches } from "@/server/auth/setup-token";
 import { type Database, getDb } from "@/server/db/client";
 import { accounts, credentials } from "@/server/db/schema";
 import { type Env, getEnv } from "@/server/env";
-import { invalidSetupToken, notFound } from "@/server/http/errors";
+import { invalidSetupToken, notFound, setupTokenNotConfigured } from "@/server/http/errors";
 
 import { recordAudit } from "./audit";
 import { signIn, type SignInResult } from "./sign-in";
@@ -27,6 +27,8 @@ export interface CreateFirstAdminInput {
 export interface CreateFirstAdminOptions {
   /** The configured setup token; read from the environment unless a test passes one. */
   expectedSetupToken?: string | undefined;
+  /** The server's mode (WS-055); read from the environment unless a test passes one. */
+  nodeEnv?: Env["NODE_ENV"];
 }
 
 /** True while the install has no accounts at all. */
@@ -36,11 +38,16 @@ export async function isSetupNeeded(db: Pick<Database, "select"> = getDb()): Pro
 }
 
 /**
- * True when the server has a setup token configured, so the setup form must ask for it
- * (WS-050). Says only that one exists, never what it is.
+ * How the first-run setup is protected (WS-055): `"token"` when a setup token is configured
+ * (WS-050), `"locked"` in production without one, so a public install cannot be claimed by
+ * whoever reaches it first, and `"open"` in development and test without one. Says only
+ * whether a token exists, never what it is.
  */
-export function isSetupTokenRequired(env: Pick<Env, "SETUP_TOKEN"> = getEnv()): boolean {
-  return env.SETUP_TOKEN !== undefined;
+export type SetupGuard = "open" | "token" | "locked";
+
+export function setupGuard(env: Pick<Env, "NODE_ENV" | "SETUP_TOKEN"> = getEnv()): SetupGuard {
+  if (env.SETUP_TOKEN !== undefined) return "token";
+  return env.NODE_ENV === "production" ? "locked" : "open";
 }
 
 /**
@@ -53,17 +60,24 @@ export function isSetupTokenRequired(env: Pick<Env, "SETUP_TOKEN"> = getEnv()): 
  * public, and a hash is expensive. That first look is only a shortcut; the check under the
  * lock is the one that decides.
  *
- * When a setup token is configured, a missing or wrong one is refused next, still before
- * hashing and with nothing written (WS-050). A refusal is not audited: the caller is
- * anonymous and changed nothing.
+ * A production server with no setup token refuses next (WS-055), and when a setup token is
+ * configured, a missing or wrong one is refused (WS-050); both before hashing and with
+ * nothing written. A refusal is not audited: the caller is anonymous and changed nothing.
  */
 export async function createFirstAdmin(
   input: CreateFirstAdminInput,
   db: Database = getDb(),
-  { expectedSetupToken = getEnv().SETUP_TOKEN }: CreateFirstAdminOptions = {},
+  {
+    expectedSetupToken = getEnv().SETUP_TOKEN,
+    nodeEnv = getEnv().NODE_ENV,
+  }: CreateFirstAdminOptions = {},
 ): Promise<SignInResult> {
   if (!(await isSetupNeeded(db))) {
     throw notFound();
+  }
+  const guard = setupGuard({ NODE_ENV: nodeEnv, SETUP_TOKEN: expectedSetupToken });
+  if (guard === "locked") {
+    throw setupTokenNotConfigured();
   }
   if (
     expectedSetupToken !== undefined &&

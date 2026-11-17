@@ -2,6 +2,8 @@
 
 - Status: Done (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-050](../work-items/WI-050-setup-token.md)
+- Amended by: [WS-055](WS-055-setup-fail-closed.md), which makes setup refuse in production
+  while no token is configured
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4 (error codes);
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decision 13 (amendment A1, the
   approved behaviour); [WS-016](WS-016-first-run-setup.md) (first-run setup, question 1);

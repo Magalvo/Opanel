@@ -148,7 +148,8 @@ export const setupContract = {
       description:
         "The request does not come from the app's own origin (code `forbidden`), or the " +
         "server has a setup token configured and the body's is missing or wrong (code " +
-        "`invalid_setup_token`).",
+        "`invalid_setup_token`), or the server runs in production with no setup token " +
+        "configured, so setup is locked until one is (code `setup_token_not_configured`).",
       problem: true,
     },
     404: { description: "The installation is already set up.", problem: true },

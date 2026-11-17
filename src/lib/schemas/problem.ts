@@ -18,6 +18,7 @@ export const PROBLEM_CODES = [
   "internal_error",
   "invalid_link",
   "invalid_setup_token",
+  "setup_token_not_configured",
   "too_many_streams",
   "team_name_taken",
   "account_inactive",

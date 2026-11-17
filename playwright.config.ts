@@ -1,6 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
-import { E2E_AUTH_SECRET, E2E_BASE_URL, E2E_DATABASE_URL, E2E_PORT } from "./tests/e2e/environment";
+import {
+  E2E_AUTH_SECRET,
+  E2E_BASE_URL,
+  E2E_DATABASE_URL,
+  E2E_PORT,
+  E2E_SETUP_TOKEN,
+} from "./tests/e2e/environment";
 
 const isCI = Boolean(process.env.CI);
 
@@ -56,6 +62,7 @@ export default defineConfig({
       DATABASE_URL: E2E_DATABASE_URL,
       BETTER_AUTH_SECRET: E2E_AUTH_SECRET,
       APP_URL: E2E_BASE_URL,
+      SETUP_TOKEN: E2E_SETUP_TOKEN,
     },
     // Never reuse a server that is already listening: it could be serving an older build,
     // and the tests would pass or fail against the wrong code.
