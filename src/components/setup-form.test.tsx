@@ -111,7 +111,9 @@ describe("SetupForm", () => {
 
       expect(screen.queryByLabelText("Setup token")).not.toBeInTheDocument();
       const [, init] = fetchMock.mock.calls[0] ?? [];
-      expect(JSON.parse(String(init?.body))).not.toHaveProperty("setupToken");
+      expect(JSON.parse(typeof init?.body === "string" ? init.body : "{}")).not.toHaveProperty(
+        "setupToken",
+      );
     });
 
     it("shows the field and sends its value as setupToken", async () => {
@@ -120,7 +122,7 @@ describe("SetupForm", () => {
       await fillAndSubmit(password, token);
 
       const [, init] = fetchMock.mock.calls[0] ?? [];
-      expect(JSON.parse(String(init?.body))).toEqual({
+      expect(JSON.parse(typeof init?.body === "string" ? init.body : "{}")).toEqual({
         setupToken: token,
         name: "Ada Admin",
         email: "ada@example.com",

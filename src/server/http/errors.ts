@@ -61,6 +61,16 @@ export function forbidden(detail = "You are not allowed to do this."): ApiError 
   return new ApiError({ status: 403, title: "Forbidden", code: "forbidden", detail });
 }
 
+/** The first-run setup's token is missing or wrong (WS-050). The same for both cases. */
+export function invalidSetupToken(): ApiError {
+  return new ApiError({
+    status: 403,
+    title: "Forbidden",
+    code: "invalid_setup_token",
+    detail: "The setup token is missing or not correct.",
+  });
+}
+
 export function notFound(detail = "The resource does not exist."): ApiError {
   return new ApiError({ status: 404, title: "Not Found", code: "not_found", detail });
 }

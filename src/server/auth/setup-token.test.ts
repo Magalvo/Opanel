@@ -6,7 +6,7 @@ const expected = "0123456789abcdef0123456789abcdef";
 
 describe("setupTokenMatches (WS-050)", () => {
   it("matches the same value", () => {
-    expect(setupTokenMatches(expected, `${expected}`)).toBe(true);
+    expect(setupTokenMatches(expected, "0123456789abcdef".repeat(2))).toBe(true);
   });
 
   it.each([
