@@ -1,6 +1,6 @@
 # WS-050 — Optional setup token for the first-run setup
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-050](../work-items/WI-050-setup-token.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4 (error codes);
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decision 13 (amendment A1, the

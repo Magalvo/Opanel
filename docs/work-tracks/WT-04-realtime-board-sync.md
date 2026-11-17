@@ -211,7 +211,7 @@ WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 | WI-047                                        | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft    | WI-046     |
 | WI-048                                        | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft    | WI-047     |
 | WI-049                                        | Live task detail, epics page and project settings                                                                    | Draft    | WI-048     |
-| [WI-050](../work-items/WI-050-setup-token.md) | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Proposed | none       |
+| [WI-050](../work-items/WI-050-setup-token.md) | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Approved | none       |
 
 As in earlier tracks, each item gets its work-item and work-spec files just before it is
 started, and each work-spec needs the owner's approval. WI-050 is independent of the sync

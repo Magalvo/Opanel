@@ -11,8 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-043 (the first-run setup refuses before hashing), merged on
   2026-11-17 (PR #39), the last of the audit's security items.
-- **Next:** WI-050 and WS-050 (optional `SETUP_TOKEN`, the first item of WT-04) are
-  `Proposed` and await the owner's approval; then implement WI-050, then WI-045.
+- **Next:** implement WI-050 (optional `SETUP_TOKEN`, the first item of WT-04; WS-050
+  approved on 2026-11-17); then WI-045.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -104,7 +104,7 @@ above and comes after WT-06.
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
 | [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
-| [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Proposed    | [WS-050](work-specs/WS-050-setup-token.md)                      | Proposed    |
+| [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Approved    | [WS-050](work-specs/WS-050-setup-token.md)                      | Approved    |
 
 ## Follow-ups
 

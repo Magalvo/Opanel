@@ -1,6 +1,6 @@
 # WI-050 — Optional setup token for the first-run setup
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (amendment A1, decision 13)
 - Depends on: none
 - Work-spec: [WS-050](../work-specs/WS-050-setup-token.md)
