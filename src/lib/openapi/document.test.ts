@@ -174,6 +174,25 @@ describe("buildOpenApiDocument", () => {
     );
   });
 
+  it("describes the events of a project as a text/event-stream of ProjectEvent (WS-047)", () => {
+    const operation = parsedDocument().paths["/api/v1/projects/{projectId}/events"]?.get;
+
+    expect(operation?.responses["200"]?.content?.["text/event-stream"]?.schema.$ref).toBe(
+      "#/components/schemas/ProjectEvent",
+    );
+    expect(operation?.responses["200"]?.description).toContain("event:");
+    expect(Object.keys(operation?.responses["429"]?.content ?? {})).toEqual([
+      "application/problem+json",
+    ]);
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual([
+      "200",
+      "401",
+      "403",
+      "404",
+      "429",
+    ]);
+  });
+
   it("derives the health schema from the Zod schema", () => {
     const component = parsedDocument().components.schemas.HealthResponse;
     const { shape } = healthResponseSchema;

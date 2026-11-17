@@ -47,6 +47,7 @@ describe("problemSchema", () => {
       "rate_limited",
       "team_in_use",
       "team_name_taken",
+      "too_many_streams",
       "unauthenticated",
       "unsupported_media_type",
       "version_conflict",

@@ -181,6 +181,22 @@ describe("route", () => {
     expect(await response.json()).toEqual({ ok: true });
   });
 
+  it("keeps a handler's Cache-Control that already holds no-store, and only then (WS-047)", async () => {
+    const stricter = route(
+      publicThing,
+      () => new Response("x", { headers: { "Cache-Control": "no-store, no-transform" } }),
+    );
+    const weaker = route(
+      publicThing,
+      () => new Response("x", { headers: { "Cache-Control": "public, max-age=60" } }),
+    );
+
+    expect((await stricter(get(), undefined)).headers.get("Cache-Control")).toBe(
+      "no-store, no-transform",
+    );
+    expect((await weaker(get(), undefined)).headers.get("Cache-Control")).toBe("no-store");
+  });
+
   it("handles a response with no body", async () => {
     const handler = route(publicThing, () => noContent());
 
