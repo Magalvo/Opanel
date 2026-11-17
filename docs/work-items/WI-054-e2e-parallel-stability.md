@@ -1,6 +1,6 @@
 # WI-054 — A keyboard move lands where it was announced, and the suite is stable in parallel
 
-- Status: In progress
+- Status: Done
 - Work-track: none: the follow-up of WI-052 (audit of 2026-11-17, finding A09)
 - Depends on: WI-052 (its branch is stacked on `claude/wi-052-e2e-isolation`, for the
   docs index and `playwright.config.ts`)
@@ -30,21 +30,21 @@ machine is.
 
 ## Acceptance criteria
 
-- [ ] During a keyboard drag, the board's drop target does not change unless a key is
+- [x] During a keyboard drag, the board's drop target does not change unless a key is
       pressed: no announcement of a new place follows a move by itself.
-- [ ] A card carried by keyboard into a column that has cards lands at the top of that
+- [x] A card carried by keyboard into a column that has cards lands at the top of that
       column (position 1), as announced; one more arrow key down moves it below the
       first card.
-- [ ] Pointer drags (mouse and touch) behave as before (the existing board tests pass
+- [x] Pointer drags (mouse and touch) behave as before (the existing board tests pass
       unchanged).
-- [ ] The keyboard end-to-end test fails on today's board (the announcement changes by
+- [x] The keyboard end-to-end test fails on today's board (the announcement changes by
       itself) and passes after the fix, also in 20 repeats with 6 workers.
-- [ ] The projects-pages accessibility check is split so that no single test does a whole
+- [x] The projects-pages accessibility check is split so that no single test does a whole
       tour of pages; every page and dialog it checks today is still checked.
-- [ ] Local end-to-end runs use at most 4 workers; CI keeps its default.
-- [ ] `routes.test.ts` loads the route modules once, with a time limit for that loading,
+- [x] Local end-to-end runs use at most 4 workers; CI keeps its default.
+- [x] `routes.test.ts` loads the route modules once, with a time limit for that loading,
       not for each assertion.
-- [ ] Three full end-to-end runs with `--retries=0` pass on the same 12-core machine, and
+- [x] Three full end-to-end runs with `--retries=0` pass on the same 12-core machine, and
       the quality gate passes.
 
 ## Notes

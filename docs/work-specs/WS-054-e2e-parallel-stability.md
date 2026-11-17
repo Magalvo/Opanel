@@ -1,6 +1,6 @@
 # WS-054 — A keyboard move lands where it was announced, and the suite is stable in parallel
 
-- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 6 as recommended)
+- Status: Done (approved by the owner on 2026-11-17, questions 1 to 6 as recommended)
 - Work-item: [WI-054](../work-items/WI-054-e2e-parallel-stability.md)
 - Canonical docs: [WS-037](WS-037-board-page.md) (board, drag and drop, the collision
   rule), [WS-007](WS-007-e2e.md) (Playwright), [WS-052](WS-052-e2e-admin-isolation.md)
@@ -214,3 +214,33 @@ For the owner:
 6. **The branch is stacked on WI-052** (`claude/wi-052-e2e-isolation`), for
    `playwright.config.ts` and the docs index. Its pull request follows WI-052's.
    **Recommend: as proposed.**
+
+## Deviations from the approved spec
+
+- **`boardCollision(args, columnOf)` is a plain function**, not one that returns the
+  collision detection: building it during render with a callback that reads a ref fails
+  the `react-hooks/refs` lint rule. The component wraps it in an arrow, as before.
+- **`workers` is spread into the config** (`...(isCI ? {} : { workers: 4 })`): with
+  `exactOptionalPropertyTypes`, `workers: undefined` does not typecheck.
+
+## Implementation record
+
+- Red: the new keyboard test failed 3 of 3 on today's board (1 worker), recording
+  `position 2 of 2.` then `position 1 of 2.` after ArrowLeft; `collision.test.ts` failed
+  on the missing module. Committed before the fix.
+- Green: `src/components/board/collision.ts` holds the rule; without a pointer the centre
+  of the dragged card is the point. `collision.test.ts`: 7 tests (no pointer: one-card
+  column, grown column, empty column, next card; with a pointer: card, column's closest
+  card, empty column). All 8 `board.spec.ts` tests pass; the keyboard test passed 20 of 20
+  with `--workers=6 --retries=0`.
+- `accessibility.spec.ts`: the projects check is three tests per scheme (pages; epics page
+  and dialog; task dialog), with the same pages, tags and assertions. 68 tests in 20 files.
+- `routes.test.ts` loads the route modules once in `beforeAll` (30 s); its 8 tests pass.
+- Test 12: three full runs with `--retries=0`, 4 workers (the new local default), host CPU
+  at 21 % before the first: 68 of 68 passed each time (2.3, 2.0 and 2.2 min).
+- Gate: `typecheck`, `lint` pass; `test` 1104 of 1104 (128 files); `test:e2e` 68 of 68.
+  `format:check` reports every file on this Windows checkout because Git writes CRLF into
+  the working copy; with `--end-of-line auto` the whole repo passes, and every file is
+  LF in Git (`git ls-files --eol`), which is what CI checks.
+- Run on Windows with Node 24 and the pinned pnpm 10.28.0, against the Compose PostgreSQL
+  on port 5433, database `opanel_wi054_e2e_test`.
