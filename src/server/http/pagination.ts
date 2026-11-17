@@ -13,7 +13,9 @@ export interface Cursor {
 }
 
 const cursorSchema = z.strictObject({
-  t: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/),
+  // A real instant (WS-051): the query casts it to timestamptz, so an impossible date would
+  // fail there. Zod checks the calendar; PostgreSQL also refuses year 0000, which Zod allows.
+  t: z.iso.datetime({ precision: 6 }).refine((value) => !value.startsWith("0000-")),
   i: z.uuid(),
 });
 

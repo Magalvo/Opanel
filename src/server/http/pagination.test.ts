@@ -50,6 +50,51 @@ describe("cursors", () => {
       expect(error.errors).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
     }
   });
+
+  function raw(t: string, i: string = cursor.id): string {
+    return Buffer.from(JSON.stringify({ t, i })).toString("base64url");
+  }
+
+  it("whose time is no real instant PostgreSQL accepts are a 400 (WS-051)", () => {
+    for (const t of [
+      "2026-99-99T25:61:61.000000Z",
+      "2026-13-01T10:00:00.000000Z",
+      "2026-11-32T10:00:00.000000Z",
+      "2026-02-29T10:00:00.000000Z",
+      "2026-02-30T10:00:00.000000Z",
+      "2026-11-12T24:00:00.000000Z",
+      "2026-11-12T10:60:00.000000Z",
+      "2026-11-12T10:00:60.000000Z",
+      "0000-01-01T00:00:00.000000Z",
+    ]) {
+      const error = failure(raw(t));
+      expect(error.status, t).toBe(400);
+      expect(error.errors, t).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
+    }
+    expect(failure(raw(cursor.createdAt, "0f8b6c1e-3a52-4d7b-9a51")).status).toBe(400);
+  });
+
+  it("whose time is not six fractional digits and Z are still a 400 (WS-051)", () => {
+    for (const t of [
+      "2026-11-12T10:00:00.123Z",
+      "2026-11-12T10:00:00.123456789Z",
+      "2026-11-12T10:00:00Z",
+      "2026-11-12T10:00:00.123456+00:00",
+      "2026-11-12T10:00:00.123456z",
+    ]) {
+      expect(failure(raw(t)).status, t).toBe(400);
+    }
+  });
+
+  it("keep the text of every valid time, leap days and bounds included (WS-051)", () => {
+    for (const t of [
+      "2024-02-29T23:59:59.999999Z",
+      "0001-01-01T00:00:00.000000Z",
+      "9999-12-31T23:59:59.999999Z",
+    ]) {
+      expect(decodeCursor(raw(t))).toEqual({ createdAt: t, id: cursor.id });
+    }
+  });
 });
 
 describe("name cursors (WS-026)", () => {
