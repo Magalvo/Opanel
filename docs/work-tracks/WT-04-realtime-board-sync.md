@@ -204,14 +204,14 @@ implements it. The owner approved all of them as proposed on 2026-11-16.
 Each item leaves the repository green and is one branch/PR. Numbers start at WI-045:
 WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 
-| Item                                                            | Title                                                                                                                | Status   | Depends on |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
-| [WI-045](../work-items/WI-045-event-contract-and-publishing.md) | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Approved | none       |
-| WI-046                                                          | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Draft    | WI-045     |
-| WI-047                                                          | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft    | WI-046     |
-| WI-048                                                          | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft    | WI-047     |
-| WI-049                                                          | Live task detail, epics page and project settings                                                                    | Draft    | WI-048     |
-| [WI-050](../work-items/WI-050-setup-token.md)                   | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Done     | none       |
+| Item                                                            | Title                                                                                                                | Status | Depends on |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------ | ---------- |
+| [WI-045](../work-items/WI-045-event-contract-and-publishing.md) | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Done   | none       |
+| WI-046                                                          | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Draft  | WI-045     |
+| WI-047                                                          | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft  | WI-046     |
+| WI-048                                                          | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft  | WI-047     |
+| WI-049                                                          | Live task detail, epics page and project settings                                                                    | Draft  | WI-048     |
+| [WI-050](../work-items/WI-050-setup-token.md)                   | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Done   | none       |
 
 As in earlier tracks, each item gets its work-item and work-spec files just before it is
 started, and each work-spec needs the owner's approval. WI-050 is independent of the sync
@@ -257,14 +257,14 @@ Test plan by item, from doc 0002 section 7:
 - [ ] A task created through the API appears on an open board.
 - [ ] An open task detail shows new comments and other people's field changes, and never
       discards what its viewer is typing.
-- [ ] Every write of decision 2 sends exactly one event after commit and none after a
+- [x] Every write of decision 2 sends exactly one event after commit and none after a
       rollback, tested on the real database.
 - [ ] After the stream or the `LISTEN` connection drops, an open board reconnects and
       shows the current state.
 - [ ] The events endpoint refuses without a session (`401`), without `tasks:read`
       (`403`) and beyond the cap (`429 too_many_streams`); a revoked session's stream
       closes within one heartbeat.
-- [ ] Doc 0002 lists the event types and payload of decision 1 and the echo rule of
+- [x] Doc 0002 lists the event types and payload of decision 1 and the echo rule of
       decision 4.
 - [x] With `SETUP_TOKEN` set, a fresh install cannot be claimed without it
       (`403 invalid_setup_token`, nothing hashed or written); without it, setup is

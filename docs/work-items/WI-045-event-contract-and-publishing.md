@@ -1,6 +1,6 @@
 # WI-045 — Event contract and publishing
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (decisions 1 to 3)
 - Depends on: none
 - Work-spec: [WS-045](../work-specs/WS-045-event-contract-and-publishing.md)
@@ -16,22 +16,22 @@ and the endpoint WI-047.
 
 ## Acceptance criteria
 
-- [ ] `src/lib/schemas/events.ts` defines the nine event types of WT-04 decision 1, each
+- [x] `src/lib/schemas/events.ts` defines the nine event types of WT-04 decision 1, each
       with its `entity`, `projectId`, `entityId`, `version`, `actorAccountId`, `at` and
       `id`, and `taskId` on `comment.created`; anything else is refused.
-- [ ] Each service operation of WT-04 decision 2 sends exactly one event of its type on
+- [x] Each service operation of WT-04 decision 2 sends exactly one event of its type on
       the `opanel_events` channel after commit, carrying the entity's version after the
       write and the acting account.
-- [ ] A write that is refused or rolled back sends nothing, including when its history or
+- [x] A write that is refused or rolled back sends nothing, including when its history or
       audit write fails and when the caller's own transaction rolls back.
-- [ ] A call that writes nothing sends nothing: restoring a task that is not deleted,
+- [x] A call that writes nothing sends nothing: restoring a task that is not deleted,
       archiving an archived project, unarchiving an active one.
-- [ ] An update that changes no field and a move within one column, which both bump
+- [x] An update that changes no field and a move within one column, which both bump
       `version`, send their event.
-- [ ] Creating a project sends nothing.
-- [ ] Canonical doc 0002 lists the event types and payload of WT-04 decision 1 and the
+- [x] Creating a project sends nothing.
+- [x] Canonical doc 0002 lists the event types and payload of WT-04 decision 1 and the
       echo rule of decision 4.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

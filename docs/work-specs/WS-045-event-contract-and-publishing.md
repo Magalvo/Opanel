@@ -1,6 +1,6 @@
 # WS-045 — Event contract and publishing
 
-- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-045](../work-items/WI-045-event-contract-and-publishing.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) sections 3 and 4 (amended
   here); [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decisions 1 to 4;
@@ -194,3 +194,35 @@ For the owner:
 5. **Timing of the integration tests.** The helper of section 6 relies on PostgreSQL
    delivering notifications in commit order, as documented, instead of waiting a fixed
    time. **Recommend: as proposed.**
+
+## Deviations from the approved spec
+
+- **`deleteTask` now reads the version its update wrote** (`returning version`), to put it
+  in `task.deleted`. Nothing else in the call changed.
+- **Each event is published after the call's final read**, still inside its transaction,
+  so it carries the version that read returned. Section 4 said "after the write and its
+  history event or audit entry", which this still is.
+- **`project.changed` is checked to be about its own project** by a refinement on the
+  union (`entityId` equals `projectId`), as test 2 asked; a discriminated union cannot
+  hold refined members.
+- **The test of a service call inside an outer transaction casts the transaction** to
+  `Database`, with a comment: services take the client, a drizzle transaction has the same
+  `transaction` method (a savepoint) and lacks only the pool handle they never use.
+- **The integration tests use two helpers** of their own: `eventsOf`, which returns the
+  events a successful write sent, and `eventsOfRefused`, which also asserts that the write
+  was refused, so a refusal test cannot pass on a write that succeeded.
+- **A formatting-only commit** follows the Green commit: `eslint --fix` (import order)
+  left one line longer than Prettier allows.
+
+## Implementation record
+
+- Red: the unit and integration test files failed on the missing `events` modules
+  (committed before any code).
+- The contract was made green first (26 unit tests), then `publishEvent` (its 3 tests),
+  then the calls in the five services (the remaining 14).
+- Green: 1066 Vitest tests (up from 1023) and 62 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Doc 0002 carries the amendment: the example with `type` and `projectId`, the table of
+  the nine types, the publishing rule, and the echo rule in section 4.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

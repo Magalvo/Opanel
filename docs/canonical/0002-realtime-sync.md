@@ -3,6 +3,9 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
+- Amended: 2026-11-16 by WT-04 (decisions 1 and 4), written in by WS-045 on 2026-11-17:
+  two more event types, `type` and `projectId` on every event, `taskId` on
+  `comment.created`, a `null` version where there is none, and the echo rule of section 4.
 
 ## 1. Context
 
@@ -57,16 +60,34 @@ Events are small and carry identifiers, not full entities:
 // event: task.updated
 {
   "id": "0193a1c2-...", // ids are UUIDs (doc 0004)
+  "type": "task.updated",
+  "projectId": "0193a1a0-...",
   "entity": "task",
   "entityId": "0193a1b7-...",
   "version": 7,
   "actorAccountId": "01939f04-...",
-  "at": "2026-11-12T10:00:00Z",
+  "at": "2026-11-12T10:00:00.000Z",
 }
 ```
 
-Event types in v1: `task.created`, `task.updated`, `task.moved`, `task.deleted`,
-`comment.created`, `column.changed`, `epic.changed`.
+Event types in v1 (amended by WT-04 decision 1):
+
+| `type`            | `entity`  | `version`                                           | Sent by                                       |
+| ----------------- | --------- | --------------------------------------------------- | --------------------------------------------- |
+| `task.created`    | `task`    | the task's after the write                          | creating a task                               |
+| `task.updated`    | `task`    | the task's after the write                          | editing, assigning, its epic                  |
+| `task.moved`      | `task`    | the task's after the write                          | moving, also within one column                |
+| `task.deleted`    | `task`    | the task's after the write                          | deleting                                      |
+| `task.restored`   | `task`    | the task's after the write                          | restoring a deleted task                      |
+| `comment.created` | `comment` | `null` (comments have none); also carries `taskId`  | commenting                                    |
+| `column.changed`  | `column`  | the column's after the write; `null` when deleted   | creating, editing, moving, deleting a column  |
+| `epic.changed`    | `epic`    | the epic's after the write                          | creating, editing, closing, reopening an epic |
+| `project.changed` | `project` | the project's after the write; `entityId` is itself | renaming, archiving, unarchiving              |
+
+Every write that bumps a version, or creates a comment, sends exactly one event, from its
+service, inside its own transaction, on the PostgreSQL channel `opanel_events`. A call
+that writes nothing sends nothing. The hub routes events by `projectId`. The schema is
+`src/lib/schemas/events.ts`.
 
 On receiving an event the client refetches the affected entity (or patches its cache when
 the payload is enough, such as a delete). Keeping payloads thin means:
@@ -89,6 +110,10 @@ The stream sends a heartbeat comment every 25 seconds so proxies keep it open.
   writes one row and concurrent moves of different cards do not conflict.
 - **Events are emitted in the same transaction as the write** (`NOTIFY` is delivered on
   commit), so a client never hears about a change that was rolled back.
+- **Own echo (amended by WT-04 decision 4).** A client ignores an event whose `version`
+  is not newer than the one it holds for that entity, and refetches otherwise. It does not
+  compare `actorAccountId`, so a change the same person makes in another tab still
+  arrives. Events with a `null` version always cause a refetch.
 - **Reconnects.** Delivery is at-most-once. After any reconnect the client refetches the
   board rather than replaying missed events. No event log is stored in v1.
 
