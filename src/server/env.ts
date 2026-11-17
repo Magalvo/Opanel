@@ -49,6 +49,15 @@ const envSchema = z.object({
     .refine((value) => value === undefined || HEADER_NAME.test(value), {
       error: "must be an HTTP header name, for example x-forwarded-for",
     }),
+  // Optional secret that the first-run setup asks for (WS-050), so a fresh install cannot be
+  // claimed by whoever reaches it first. Empty means not set. Never logged.
+  SETUP_TOKEN: z
+    .string()
+    .optional()
+    .transform((value) => (value === "" ? undefined : value))
+    .refine((value) => value === undefined || (value.length >= 32 && value.length <= 256), {
+      error: "must be 32 to 256 characters",
+    }),
 });
 
 export type Env = Readonly<z.infer<typeof envSchema>>;

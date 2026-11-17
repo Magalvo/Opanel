@@ -30,6 +30,10 @@ export const setupRequestSchema = z
     name: accountNameSchema,
     email: z.email(),
     password: passwordSchema,
+    setupToken: z.string().max(256).optional().meta({
+      description:
+        "Required when the server has a setup token configured (WS-050); ignored otherwise.",
+    }),
   })
   .meta({ id: "SetupRequest" });
 
@@ -140,7 +144,13 @@ export const setupContract = {
       schema: accountSummarySchema,
     },
     400: { description: "The body is not valid.", problem: true },
-    403: { description: "The request does not come from the app's own origin.", problem: true },
+    403: {
+      description:
+        "The request does not come from the app's own origin (code `forbidden`), or the " +
+        "server has a setup token configured and the body's is missing or wrong (code " +
+        "`invalid_setup_token`).",
+      problem: true,
+    },
     404: { description: "The installation is already set up.", problem: true },
     413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },

@@ -17,6 +17,7 @@ export const PROBLEM_CODES = [
   "rate_limited",
   "internal_error",
   "invalid_link",
+  "invalid_setup_token",
   "team_name_taken",
   "account_inactive",
   "version_conflict",

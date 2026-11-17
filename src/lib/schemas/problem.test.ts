@@ -37,6 +37,7 @@ describe("problemSchema", () => {
       "internal_error",
       "invalid_link",
       "invalid_request",
+      "invalid_setup_token",
       "last_admin",
       "last_done_column",
       "not_found",

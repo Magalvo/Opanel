@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { problemSchema } from "@/lib/schemas/problem";
 
-type Field = "name" | "email" | "password" | "confirmation";
+type Field = "setupToken" | "name" | "email" | "password" | "confirmation";
 type FieldErrors = Partial<Record<Field, string>>;
 
 const FIELDS: readonly { name: Field; label: string; type: string; autoComplete: string }[] = [
+  { name: "setupToken", label: "Setup token", type: "password", autoComplete: "off" },
   { name: "name", label: "Name", type: "text", autoComplete: "name" },
   { name: "email", label: "Email", type: "email", autoComplete: "email" },
   { name: "password", label: "Password", type: "password", autoComplete: "new-password" },
@@ -22,14 +23,18 @@ const FIELDS: readonly { name: Field; label: string; type: string; autoComplete:
   },
 ];
 
-function isField(path: string): path is "name" | "email" | "password" {
-  return path === "name" || path === "email" || path === "password";
+function isField(path: string): path is "setupToken" | "name" | "email" | "password" {
+  return path === "setupToken" || path === "name" || path === "email" || path === "password";
 }
 
-/** First-run setup form (WS-016). Talks to the same public API as everyone else. */
-export function SetupForm() {
+/**
+ * First-run setup form (WS-016). Talks to the same public API as everyone else. Asks for
+ * the setup token when the server has one configured (`tokenRequired`, WS-050).
+ */
+export function SetupForm({ tokenRequired }: { tokenRequired: boolean }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<Field, string>>({
+    setupToken: "",
     name: "",
     email: "",
     password: "",
@@ -56,6 +61,7 @@ export function SetupForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(tokenRequired ? { setupToken: values.setupToken } : {}),
           name: values.name,
           email: values.email,
           password: values.password,
@@ -67,12 +73,18 @@ export function SetupForm() {
         return;
       }
 
+      const problem =
+        response.status === 400 || response.status === 403
+          ? problemSchema.safeParse(await response.json().catch(() => null))
+          : null;
+
       if (response.status === 404) {
         setFormError("This installation is already set up.");
+      } else if (problem?.success && problem.data.code === "invalid_setup_token") {
+        setErrors({ setupToken: "The setup token is not correct." });
       } else if (response.status === 400) {
-        const problem = problemSchema.safeParse(await response.json().catch(() => null));
         const next: FieldErrors = {};
-        for (const error of problem.success ? (problem.data.errors ?? []) : []) {
+        for (const error of problem?.success ? (problem.data.errors ?? []) : []) {
           if (isField(error.path)) {
             next[error.path] = error.message;
           }
@@ -93,7 +105,7 @@ export function SetupForm() {
 
   return (
     <form onSubmit={(event) => void onSubmit(event)} className="grid gap-4" noValidate>
-      {FIELDS.map((field) => {
+      {FIELDS.filter((field) => tokenRequired || field.name !== "setupToken").map((field) => {
         const error = errors[field.name];
         return (
           <div key={field.name} className="grid gap-1.5">

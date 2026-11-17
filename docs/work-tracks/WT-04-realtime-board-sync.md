@@ -204,14 +204,14 @@ implements it. The owner approved all of them as proposed on 2026-11-16.
 Each item leaves the repository green and is one branch/PR. Numbers start at WI-045:
 WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 
-| Item                                          | Title                                                                                                                | Status   | Depends on |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
-| WI-045                                        | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Draft    | none       |
-| WI-046                                        | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Draft    | WI-045     |
-| WI-047                                        | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft    | WI-046     |
-| WI-048                                        | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft    | WI-047     |
-| WI-049                                        | Live task detail, epics page and project settings                                                                    | Draft    | WI-048     |
-| [WI-050](../work-items/WI-050-setup-token.md) | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Approved | none       |
+| Item                                          | Title                                                                                                                | Status | Depends on |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------ | ---------- |
+| WI-045                                        | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Draft  | none       |
+| WI-046                                        | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Draft  | WI-045     |
+| WI-047                                        | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft  | WI-046     |
+| WI-048                                        | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft  | WI-047     |
+| WI-049                                        | Live task detail, epics page and project settings                                                                    | Draft  | WI-048     |
+| [WI-050](../work-items/WI-050-setup-token.md) | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Done   | none       |
 
 As in earlier tracks, each item gets its work-item and work-spec files just before it is
 started, and each work-spec needs the owner's approval. WI-050 is independent of the sync
@@ -266,7 +266,7 @@ Test plan by item, from doc 0002 section 7:
       closes within one heartbeat.
 - [ ] Doc 0002 lists the event types and payload of decision 1 and the echo rule of
       decision 4.
-- [ ] With `SETUP_TOKEN` set, a fresh install cannot be claimed without it
+- [x] With `SETUP_TOKEN` set, a fresh install cannot be claimed without it
       (`403 invalid_setup_token`, nothing hashed or written); without it, setup is
       unchanged (amendment A1).
 - [ ] The full quality gate passes on `main`, with `pnpm db:generate` and

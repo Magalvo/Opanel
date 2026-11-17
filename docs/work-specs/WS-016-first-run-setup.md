@@ -170,6 +170,9 @@ Technical, settled by the tests:
 
 - Later change (WI-043, 2026-11-16): an installed server now answers `404` before hashing
   the password; the check under the advisory lock still decides. See WS-043.
+- Later change (WI-050, 2026-11-17): the optional `SETUP_TOKEN` of question 1 now exists;
+  when it is set, the form asks for it and the endpoint refuses without it
+  (`403 invalid_setup_token`). See WS-050.
 - Red: schema, form, service, route and page tests failed on missing modules and
   behaviour (committed before any code).
 - Green: 272 Vitest tests (up from 250) and 15 Playwright tests (up from 14) pass.

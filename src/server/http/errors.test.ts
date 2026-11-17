@@ -6,6 +6,7 @@ import {
   forbidden,
   internalError,
   invalidRequest,
+  invalidSetupToken,
   notFound,
   payloadTooLarge,
   rateLimited,
@@ -48,6 +49,7 @@ describe("ApiError constructors", () => {
     ["invalidRequest", invalidRequest(), 400, "Bad Request", "invalid_request"],
     ["unauthenticated", unauthenticated(), 401, "Unauthorized", "unauthenticated"],
     ["forbidden", forbidden(), 403, "Forbidden", "forbidden"],
+    ["invalidSetupToken", invalidSetupToken(), 403, "Forbidden", "invalid_setup_token"],
     ["notFound", notFound(), 404, "Not Found", "not_found"],
     ["conflict", conflict("Already exists."), 409, "Conflict", "conflict"],
     [

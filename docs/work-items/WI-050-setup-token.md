@@ -1,6 +1,6 @@
 # WI-050 — Optional setup token for the first-run setup
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (amendment A1, decision 13)
 - Depends on: none
 - Work-spec: [WS-050](../work-specs/WS-050-setup-token.md)
@@ -15,24 +15,24 @@ before anything is written. If it is not set, setup works exactly as today.
 
 ## Acceptance criteria
 
-- [ ] `SETUP_TOKEN` is optional. When it is set, it must be 32 to 256 characters; a shorter
+- [x] `SETUP_TOKEN` is optional. When it is set, it must be 32 to 256 characters; a shorter
       or longer value stops the server at start-up with a message that never contains the
       value. Unset or empty means "no token".
-- [ ] With a token set, the setup page shows a "Setup token" field. Without one, the page
+- [x] With a token set, the setup page shows a "Setup token" field. Without one, the page
       is unchanged.
-- [ ] With a token set, a request with a missing or wrong `setupToken` answers
+- [x] With a token set, a request with a missing or wrong `setupToken` answers
       `403 invalid_setup_token`, the same for both, and computes no Argon2id hash, creates
       no account and writes no audit entry. The right token creates the first Admin as
       today.
-- [ ] An installed server still answers `404` before the token is looked at (WI-043).
-- [ ] Without a token set, setup is unchanged, including when a client sends a
+- [x] An installed server still answers `404` before the token is looked at (WI-043).
+- [x] Without a token set, setup is unchanged, including when a client sends a
       `setupToken`.
-- [ ] The token is compared in constant time and never appears in a log line, an audit
+- [x] The token is compared in constant time and never appears in a log line, an audit
       entry or a response.
-- [ ] The OpenAPI document shows the optional `setupToken` field and the new `403`; canonical
+- [x] The OpenAPI document shows the optional `setupToken` field and the new `403`; canonical
       doc 0004 lists `invalid_setup_token`.
-- [ ] `.env.example` and `README.md` tell the operator when and how to set `SETUP_TOKEN`.
-- [ ] The full quality gate passes.
+- [x] `.env.example` and `README.md` tell the operator when and how to set `SETUP_TOKEN`.
+- [x] The full quality gate passes.
 
 ## Notes
 

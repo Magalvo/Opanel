@@ -1,6 +1,6 @@
 # WS-050 — Optional setup token for the first-run setup
 
-- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-050](../work-items/WI-050-setup-token.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4 (error codes);
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decision 13 (amendment A1, the
@@ -195,3 +195,29 @@ For the owner:
    the route to the rendered message. **Recommend: no new end-to-end test.**
 5. **Length bounds 32 to 256.** 32 matches `BETTER_AUTH_SECRET`; 256 keeps the field and
    the body bounded. **Recommend: as proposed.**
+
+## Deviations from the approved spec
+
+- **`src/app/api/v1/setup/route.ts` is unchanged.** It already spreads the validated body
+  into the service's input, so `setupToken` reaches the service with no edit. Its
+  integration test was extended as planned (test 9), with `getEnv` mocked to configure a
+  token.
+- **Two test expressions were rewritten after the Red commit** because the linter refused
+  them (`no-base-to-string` on the request body, and a needless template literal). What
+  they check did not change.
+- **A `400` field error on `setupToken`** (a value over 256 characters) is shown under the
+  field, like the errors of the other fields. The spec did not mention it.
+- **The page test finds the form's props in the rendered element tree**, since the page
+  is a server component that is called, not rendered, in the integration project (as in
+  WS-016).
+
+## Implementation record
+
+- Red: 11 unit tests (variable, comparison, code, schema, form) and 7 integration tests
+  (service, route, page) failed on the missing module, code, field and behaviour
+  (committed before any code).
+- Green: 1023 Vitest tests (up from 992) and 62 Playwright tests pass. Typecheck, lint and
+  format pass; `pnpm db:generate` leaves no diff; `pnpm openapi:generate` changed only the
+  setup operation's `403`, the `SetupRequest` schema and the list of codes.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.

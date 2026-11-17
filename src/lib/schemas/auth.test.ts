@@ -129,6 +129,24 @@ describe("setupRequestSchema", () => {
     }
   });
 
+  it("accepts an optional setup token of at most 256 characters (WS-050)", () => {
+    expect(setupRequestSchema.safeParse({ ...valid, setupToken: "t".repeat(32) }).success).toBe(
+      true,
+    );
+    expect(setupRequestSchema.safeParse({ ...valid, setupToken: "t".repeat(256) }).success).toBe(
+      true,
+    );
+    expect(setupRequestSchema.safeParse({ ...valid, setupToken: "t".repeat(257) }).success).toBe(
+      false,
+    );
+  });
+
+  it("documents the 403 of a missing or wrong setup token (WS-050)", () => {
+    const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
+
+    expect(setup?.responses[403]?.description).toContain("invalid_setup_token");
+  });
+
   it("is documented as a public operation", () => {
     const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
 
