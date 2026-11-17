@@ -119,7 +119,8 @@ Rules:
   `version_conflict` for `409`, or `last_admin` for the `409` of a change that would leave no
   active Admin, WS-018, or `invalid_link` for the `404` of a one-time link that cannot be
   used, WS-019, or `invalid_setup_token` for the `403` of a first-run setup whose
-  configured token is missing or wrong, WS-050) and extra fields that belong to it (doc 0002 returns the
+  configured token is missing or wrong, WS-050, or `too_many_streams` for the `429` of an
+  account that holds too many event streams, WS-047) and extra fields that belong to it (doc 0002 returns the
   current entity with a version conflict, as `current`). Codes are never renamed or reused.
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged

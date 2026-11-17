@@ -1,6 +1,6 @@
 # WS-047 — Events endpoint
 
-- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-047](../work-items/WI-047-events-endpoint.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) sections 3 to 5;
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decisions 6, 7, 8, 11 and 12;
@@ -218,3 +218,34 @@ For the owner:
    becomes reachable with agent scopes in WT-05. **Recommend: accept.**
 5. **The cap counts per process and is lost on hot reload** in development (a module-level
    map). The deployment of v1 is one process. **Recommend: accept.**
+
+## Deviations from the approved spec
+
+- **The end-to-end test could not be run red.** `next build`, which starts the end-to-end
+  server, type-checks the whole project, and the red unit tests import modules that did
+  not exist yet. It was run, and passed, once the code was written.
+- **The backpressure test was wrong at first** and was corrected after the Green commit.
+  The notifications reach the hub after the commit returns, so reading the stream right
+  away sometimes drained the queue before it could fill, and the stream stayed open. The
+  test now waits, without reading, until the stream's place in the cap comes back, and
+  only then reads it to its end. The code did not change.
+- **A test helper was added**, `src/server/http/event-stream-testing.ts`, which reads a
+  response frame by frame. The spec's file list did not name it.
+- **`openEventStream` also takes `logError`**, like `route()`, so the failure of an
+  unexpected credential check can be tested.
+- Three lint findings in the new tests and the helper were fixed before the Green commit
+  (an `async` function without `await`, a needless `String()`, `prefer-const`).
+
+## Implementation record
+
+- Red: the new unit tests failed on the missing code, the stricter `Cache-Control`, the
+  missing operation and the missing code; the integration tests on the missing modules
+  (committed before any code).
+- Green: 1092 Vitest tests (up from 1078) and 63 Playwright tests (up from 62) pass. The
+  new end-to-end test opens an `EventSource` against `next start`: the stream is not
+  gzip-encoded and a task created through the API arrives within 5 seconds.
+- The backpressure test, after its correction, passed 12 runs in a row.
+- `pnpm openapi:generate` added the operation, the `ProjectEvent` schema and
+  `too_many_streams`; `pnpm db:generate` leaves no diff. Typecheck, lint and format pass.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
