@@ -1,8 +1,8 @@
 # WT-04 — Real-time board sync
 
 - Status: Approved (approved by the owner on 2026-11-16, with every proposal as drafted).
-  Amendment A1 (the optional `SETUP_TOKEN`, decision 13 and WI-050) is **Proposed** on
-  2026-11-17 and awaits the owner's approval.
+  Amendment A1 (the optional `SETUP_TOKEN`, decision 13 and WI-050) approved by the owner
+  on 2026-11-17 as proposed.
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (the design; amended by this
   track, see decision 1), [0004](../canonical/0004-api-conventions.md) (errors, ids,
   OpenAPI), [0003](../canonical/0003-task-management.md) (section 10: the end of this
@@ -174,7 +174,7 @@ implements it. The owner approved all of them as proposed on 2026-11-16.
     like every other contract (hard rule 9). How `zod-openapi` 6.0.2 describes a stream is
     settled in the work-spec of WI-047.
 
-13. **Amendment A1 (proposed on 2026-11-17): an optional `SETUP_TOKEN` guards the
+13. **Amendment A1 (approved on 2026-11-17): an optional `SETUP_TOKEN` guards the
     first-run setup.** Today whoever first reaches `/setup` on a fresh install becomes its
     Admin (WS-016 decision 4, question 1); WI-043 closed only the hashing on an installed
     server. Proposed behaviour:
@@ -274,7 +274,8 @@ Test plan by item, from doc 0002 section 7:
 
 ## Risks and open questions
 
-Questions 1 to 3 were resolved by the owner on 2026-11-16, by approving the proposals.
+Questions 1 to 3 were resolved by the owner on 2026-11-16, and question 7 on 2026-11-17, by
+approving the proposals.
 
 1. **Resolved: the amendment to doc 0002** (decision 1): `task.restored`, `project.changed`,
    `projectId` on every event, `taskId` on `comment.created`, `version: null` for
@@ -294,9 +295,9 @@ Questions 1 to 3 were resolved by the owner on 2026-11-16, by approving the prop
 6. **Risk, parallel end-to-end tests.** Playwright runs tests in parallel on one
    database. Events are routed by project and every test creates its own project, so tests
    cannot see each other's events; WI-048 keeps it that way.
-7. **Open: amendment A1** (decision 13, WI-050). Approve the `SETUP_TOKEN` behaviour as
+7. **Resolved: amendment A1** (decision 13, WI-050): the `SETUP_TOKEN` behaviour as
    proposed: optional, at least 32 characters, `403 invalid_setup_token` for a missing or
    wrong token, checked after the `404` of an installed server and before hashing, and done
-   first in the track. Alternative: a one-time token printed in the server log at start-up
-   when the install is empty; not proposed, because it puts a secret in the log (hard
+   first in the track. Alternative not taken: a one-time token printed in the server log at start-up
+   when the install is empty, because it puts a secret in the log (hard
    rule 7) and changes at every restart.

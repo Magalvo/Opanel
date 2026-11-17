@@ -16,9 +16,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc. Its work-items start at WI-045, after WI-043.
-- **Proposed on 2026-11-17:** amendment A1 to WT-04, the optional `SETUP_TOKEN` for the
-  first-run setup as WI-050 (owner's decision in WS-043, question 2), proposed to be done
-  first in the track. Awaits the owner's approval.
+- **Approved on 2026-11-17:** amendment A1 to WT-04, the optional `SETUP_TOKEN` for the
+  first-run setup as WI-050 (owner's decision in WS-043, question 2), done first in the
+  track.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -123,7 +123,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
   ones itself (WI-044). It also decides log access and retention, and whether the logs
   of Better Auth and Next.js can hold request data (WS-042, question 2: not examined).
-- **Optional `SETUP_TOKEN` for the first-run setup:** if set, the form and endpoint require
+- **Optional `SETUP_TOKEN` for the first-run setup** (scheduled as WI-050 in WT-04,
+  amendment A1, approved on 2026-11-17): if set, the form and endpoint require
   it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
   question 1). Needed before any install is reachable from the internet.
 
