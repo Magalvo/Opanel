@@ -1,4 +1,4 @@
-import type { Active, ClientRect, Coordinates, DroppableContainer } from "@dnd-kit/core";
+import type { Active, ClientRect, DroppableContainer } from "@dnd-kit/core";
 import { describe, expect, it } from "vitest";
 
 import { boardCollision } from "./collision";
@@ -34,16 +34,18 @@ function overOf(
   rects: Record<string, ClientRect>,
   columns: Record<string, string>,
   collisionRect: ClientRect,
-  pointerCoordinates: Coordinates | null = null,
+  pointerCoordinates: { x: number; y: number } | null = null,
 ) {
-  const detect = boardCollision((taskId) => columns[taskId] ?? null);
-  const collisions = detect({
-    active,
-    collisionRect,
-    droppableRects: new Map(Object.entries(rects)),
-    droppableContainers: Object.keys(rects).map(container),
-    pointerCoordinates,
-  });
+  const collisions = boardCollision(
+    {
+      active,
+      collisionRect,
+      droppableRects: new Map(Object.entries(rects)),
+      droppableContainers: Object.keys(rects).map(container),
+      pointerCoordinates,
+    },
+    (taskId) => columns[taskId] ?? null,
+  );
   return collisions[0]?.id;
 }
 
