@@ -152,6 +152,36 @@ describe("CLIENT_IP_HEADER", () => {
   });
 });
 
+describe("SETUP_TOKEN (WS-050)", () => {
+  const token = "s".repeat(32);
+
+  it("is optional", () => {
+    expect(parseEnv(base).SETUP_TOKEN).toBeUndefined();
+  });
+
+  it("treats an empty value as not set", () => {
+    expect(parseEnv({ ...base, SETUP_TOKEN: "" }).SETUP_TOKEN).toBeUndefined();
+  });
+
+  it.each([32, 256])("accepts %i characters", (length) => {
+    const value = "t".repeat(length);
+    expect(parseEnv({ ...base, SETUP_TOKEN: value }).SETUP_TOKEN).toBe(value);
+  });
+
+  it.each([31, 257])("rejects %i characters, naming the variable but never the value", (length) => {
+    const value = `marker-${"m".repeat(length - 7)}`;
+    const error = captureError({ ...base, SETUP_TOKEN: value });
+
+    expect(error.variables).toEqual(["SETUP_TOKEN"]);
+    expect(error.message).toContain("32 to 256 characters");
+    expect(error.message).not.toContain("marker-");
+  });
+
+  it("keeps the configured token as it is", () => {
+    expect(parseEnv({ ...base, SETUP_TOKEN: token }).SETUP_TOKEN).toBe(token);
+  });
+});
+
 describe("productionWarnings", () => {
   it("warns when production has no CLIENT_IP_HEADER, naming the variable", () => {
     const warnings = productionWarnings({ NODE_ENV: "production", CLIENT_IP_HEADER: undefined });

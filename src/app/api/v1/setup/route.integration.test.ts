@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { accountSummarySchema, meResponseSchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
@@ -11,9 +11,17 @@ import {
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, sessions } from "@/server/db/schema";
+import type * as Env from "@/server/env";
 
 import { GET as me } from "../me/route";
 import { POST } from "./route";
+
+// The configured setup token (WS-050), changed per test; unset unless a test sets it.
+const configured = vi.hoisted(() => ({ token: undefined as string | undefined }));
+vi.mock("@/server/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof Env>();
+  return { ...actual, getEnv: () => ({ ...actual.getEnv(), SETUP_TOKEN: configured.token }) };
+});
 
 const path = "/api/v1/setup";
 const body = { name: "Ada Admin", email: "ada@example.com", password: "a very long password" };
@@ -96,5 +104,56 @@ describe("POST /api/v1/setup", () => {
       expect(haystack).not.toContain("$argon2");
       expect(haystack).not.toContain(session?.token ?? "no-token");
     }
+  });
+
+  describe("with a setup token configured (WS-050)", () => {
+    const token = "Configured-Token-7c41-0123456789";
+
+    beforeEach(() => {
+      configured.token = token;
+    });
+
+    afterEach(() => {
+      configured.token = undefined;
+    });
+
+    it("refuses a missing or wrong token with 403 invalid_setup_token, leaking neither token", async () => {
+      const sent = "Sent-Token-Marker-aa11-0123456789";
+      const logged: string[] = [];
+      const spies = (["log", "info", "warn", "error"] as const).map((level) =>
+        vi.spyOn(console, level).mockImplementation((...args: unknown[]) => {
+          logged.push(args.map(String).join(" "));
+        }),
+      );
+
+      const missing = await POST(postRequest(path, body), undefined);
+      const wrong = await POST(postRequest(path, { ...body, setupToken: sent }), undefined);
+      const texts = [await missing.text(), await wrong.text()];
+      spies.forEach((spy) => {
+        spy.mockRestore();
+      });
+
+      for (const [response, text] of [
+        [missing, texts[0]],
+        [wrong, texts[1]],
+      ] as const) {
+        expect(response.status).toBe(403);
+        const problem = problemSchema.parse(JSON.parse(text ?? ""));
+        expect(problem.code).toBe("invalid_setup_token");
+        expect(problem.requestId).toBe(response.headers.get("x-request-id"));
+      }
+      for (const haystack of [...texts, logged.join("\n")]) {
+        expect(haystack).not.toContain(token);
+        expect(haystack).not.toContain(sent);
+      }
+      expect(await getDb().select().from(accounts)).toHaveLength(0);
+    });
+
+    it("creates the first admin with the right token", async () => {
+      const response = await POST(postRequest(path, { ...body, setupToken: token }), undefined);
+
+      expect(response.status).toBe(201);
+      expect(accountSummarySchema.parse(await response.json()).role).toBe("admin");
+    });
   });
 });

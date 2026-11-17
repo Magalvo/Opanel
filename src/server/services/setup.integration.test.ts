@@ -8,7 +8,7 @@ import { getDb } from "@/server/db/client";
 import { accounts, auditLog, credentials } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { createFirstAdmin, isSetupNeeded } from "./setup";
+import { createFirstAdmin, isSetupNeeded, isSetupTokenRequired } from "./setup";
 import { signIn } from "./sign-in";
 
 // The real hash, observed (WS-043): the spy calls through, so every test hashes for real.
@@ -183,5 +183,60 @@ describe("createFirstAdmin", () => {
 
     expect(await getDb().select().from(accounts)).toHaveLength(0);
     expect(await getDb().select().from(credentials)).toHaveLength(0);
+  });
+});
+
+describe("the optional setup token (WS-050)", () => {
+  const token = "the-setup-token-0123456789abcdef";
+  const withToken = { expectedSetupToken: token };
+
+  beforeEach(() => {
+    hashSpy.mockClear();
+  });
+
+  it.each([
+    ["a missing token", undefined],
+    ["a wrong token", "the-setup-token-0123456789abcdeX"],
+    ["an empty token", ""],
+  ])("%s: 403 invalid_setup_token, nothing hashed, nothing written", async (_case, given) => {
+    await expect(
+      createFirstAdmin({ ...input, setupToken: given }, getDb(), withToken),
+    ).rejects.toMatchObject({ status: 403, code: "invalid_setup_token" });
+
+    expect(hashSpy).not.toHaveBeenCalled();
+    expect(await getDb().select().from(accounts)).toHaveLength(0);
+    expect(await getDb().select().from(credentials)).toHaveLength(0);
+    expect(await getDb().select().from(auditLog)).toHaveLength(0);
+  });
+
+  it("the right token creates the admin and signs them in", async () => {
+    const result = await createFirstAdmin({ ...input, setupToken: token }, getDb(), withToken);
+
+    expect(result.account).toMatchObject({ email: "ada@example.com", role: "admin" });
+    expect(result.headers.getSetCookie().length).toBeGreaterThan(0);
+  });
+
+  it("an installed server answers 404 before the token is looked at", async () => {
+    await createTestAccount();
+
+    await expect(
+      createFirstAdmin({ ...input, setupToken: "wrong" }, getDb(), withToken),
+    ).rejects.toMatchObject({ status: 404 });
+  });
+
+  it.each([
+    ["without a token sent", undefined],
+    ["with any token sent", "anything at all"],
+  ])("with no token configured, setup is unchanged %s", async (_case, given) => {
+    const result = await createFirstAdmin({ ...input, setupToken: given }, getDb(), {
+      expectedSetupToken: undefined,
+    });
+
+    expect(result.account.role).toBe("admin");
+  });
+
+  it("isSetupTokenRequired says whether a token is configured", () => {
+    expect(isSetupTokenRequired({ SETUP_TOKEN: token })).toBe(true);
+    expect(isSetupTokenRequired({ SETUP_TOKEN: undefined })).toBe(false);
   });
 });
