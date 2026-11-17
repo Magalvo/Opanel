@@ -4,6 +4,7 @@ import { contracts } from "@/lib/openapi/contracts";
 
 import {
   acceptLinkRequestSchema,
+  acceptLinkResponseSchema,
   accountSummarySchema,
   changePasswordRequestSchema,
   meResponseSchema,
@@ -11,6 +12,7 @@ import {
   PASSWORD_MIN_LENGTH,
   passwordSchema,
   setupRequestSchema,
+  setupResponseSchema,
   signInRequestSchema,
   updateMeRequestSchema,
 } from "./auth";
@@ -292,5 +294,33 @@ describe("own profile contracts", () => {
     expect(Object.keys(password?.responses ?? {})).toEqual(
       expect.arrayContaining(["204", "400", "403", "415", "429"]),
     );
+  });
+});
+
+describe("responses of a password that was just set (WS-057)", () => {
+  const account = {
+    id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+    kind: "human",
+    name: "Ada",
+    email: "ada@example.com",
+    role: "admin",
+  };
+
+  it.each([
+    ["acceptLinkResponseSchema", acceptLinkResponseSchema],
+    ["setupResponseSchema", setupResponseSchema],
+  ])("%s is the account summary plus a required signedIn", (_name, schema) => {
+    expect(schema.parse({ ...account, signedIn: false })).toEqual({ ...account, signedIn: false });
+    expect(schema.safeParse(account).success).toBe(false);
+    expect(accountSummarySchema.safeParse({ ...account, signedIn: true }).success).toBe(false);
+  });
+
+  it("is what the accept and setup contracts answer on success", () => {
+    const find = (path: string) => contracts.find((c) => c.method === "post" && c.path === path);
+
+    expect(find("/api/v1/account-links/accept")?.responses[200]).toMatchObject({
+      schema: acceptLinkResponseSchema,
+    });
+    expect(find("/api/v1/setup")?.responses[201]).toMatchObject({ schema: setupResponseSchema });
   });
 });

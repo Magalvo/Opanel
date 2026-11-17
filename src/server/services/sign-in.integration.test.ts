@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   cookieHeaderFrom,
@@ -10,9 +10,9 @@ import {
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, rateLimits, sessions } from "@/server/db/schema";
-import { ApiError } from "@/server/http/errors";
+import { ApiError, serverBusy } from "@/server/http/errors";
 
-import { signIn, signOut } from "./sign-in";
+import { signIn, signInAfterCommit, signOut } from "./sign-in";
 
 const base = { headers: new Headers(), clientIp: null };
 
@@ -303,4 +303,55 @@ describe("signIn", () => {
 
     expect(result.account.id).toBe(account.id);
   });
+});
+
+describe("signInAfterCommit (WS-057)", () => {
+  const summary = (id: string) => ({
+    id,
+    kind: "human" as const,
+    name: "Ada",
+    email: "ada@example.com",
+    role: "member",
+  });
+
+  it("signs in and says so when the sign-in works", async () => {
+    const account = await createTestAccount();
+
+    const result = await signInAfterCommit(
+      { ...base, email: "ada@example.com", password: TEST_PASSWORD },
+      summary(account.id),
+      getDb(),
+    );
+
+    expect(result.signedIn).toBe(true);
+    expect(result.account.id).toBe(account.id);
+    expect(result.headers.getSetCookie().length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ["a busy hash gate", () => serverBusy()],
+    ["an unexpected error", () => new Error("SENTINEL-c0ffee secret detail")],
+  ])(
+    "answers signedIn: false with no cookie for %s, logging one line without its message",
+    async (_case, makeError) => {
+      const account = await createTestAccount();
+      const logError = vi.fn<(message: string) => void>();
+
+      const result = await signInAfterCommit(
+        { ...base, email: "ada@example.com", password: TEST_PASSWORD },
+        summary(account.id),
+        getDb(),
+        { logError, signIn: () => Promise.reject(makeError()) },
+      );
+
+      expect(result).toEqual({
+        account: summary(account.id),
+        headers: new Headers(),
+        signedIn: false,
+      });
+      expect(logError).toHaveBeenCalledTimes(1);
+      expect(logError.mock.calls[0]?.[0]).not.toContain("SENTINEL");
+      expect(await getDb().select().from(sessions)).toHaveLength(0);
+    },
+  );
 });

@@ -35,6 +35,9 @@ Updated at the end of every work-item, so that a new session can start from here
   `claude/wi-055-setup-fail-closed`.
 - **Also finished:** WI-056 (bounded password hashing, audit of 2026-11-17, finding A03),
   on 2026-11-17, on the branch `claude/wi-056-hashing-concurrency`.
+- **Also finished:** WI-057 (a committed password change is never reported as a failure,
+  audit of 2026-11-17, finding A06), on 2026-11-17, on the branch
+  `claude/wi-057-committed-reset-recovery`, stacked on WI-056.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -128,6 +131,7 @@ above and comes after WT-06.
 | [WI-054](work-items/WI-054-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E  | Done        | [WS-054](work-specs/WS-054-e2e-parallel-stability.md)           | Done        |
 | [WI-055](work-items/WI-055-setup-fail-closed.md)                | Production setup requires a setup token                     | Done        | [WS-055](work-specs/WS-055-setup-fail-closed.md)                | Done        |
 | [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                   | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
+| [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure               | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
 
 ## Follow-ups
 

@@ -9,7 +9,12 @@ import { type Env, getEnv } from "@/server/env";
 import { invalidSetupToken, notFound, setupTokenNotConfigured } from "@/server/http/errors";
 
 import { recordAudit } from "./audit";
-import { signIn, type SignInResult } from "./sign-in";
+import {
+  type AfterCommitOptions,
+  type AfterCommitSignIn,
+  signInAfterCommit,
+  summarize,
+} from "./sign-in";
 
 // Key of the advisory lock that serialises first-run setup. Any constant will do.
 const SETUP_LOCK_KEY = 7_201_016;
@@ -24,7 +29,7 @@ export interface CreateFirstAdminInput {
   headers: Headers;
 }
 
-export interface CreateFirstAdminOptions {
+export interface CreateFirstAdminOptions extends AfterCommitOptions {
   /** The configured setup token; read from the environment unless a test passes one. */
   expectedSetupToken?: string | undefined;
   /** The server's mode (WS-055); read from the environment unless a test passes one. */
@@ -54,7 +59,8 @@ export function setupGuard(env: Pick<Env, "NODE_ENV" | "SETUP_TOKEN"> = getEnv()
  * Creates the first Admin and signs them in. Answers `404` if any account exists, however
  * many requests arrive at once: a transaction-scoped advisory lock makes them queue, so
  * exactly one sees an empty table. The account, its credential and the audit entry commit
- * together; the sign-in that follows creates a session outside that transaction.
+ * together; the sign-in that follows creates a session outside that transaction, and its
+ * failure is answered as `signedIn: false`, not thrown (WS-057).
  *
  * An installed server answers `404` before hashing anything (WS-043): the endpoint is
  * public, and a hash is expensive. That first look is only a shortcut; the check under the
@@ -70,8 +76,9 @@ export async function createFirstAdmin(
   {
     expectedSetupToken = getEnv().SETUP_TOKEN,
     nodeEnv = getEnv().NODE_ENV,
+    ...afterCommit
   }: CreateFirstAdminOptions = {},
-): Promise<SignInResult> {
+): Promise<AfterCommitSignIn> {
   if (!(await isSetupNeeded(db))) {
     throw notFound();
   }
@@ -89,7 +96,7 @@ export async function createFirstAdmin(
   const passwordHash = await hashPassword(input.password);
   const email = input.email.trim().toLowerCase();
 
-  await db.transaction(async (tx) => {
+  const summary = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${SETUP_LOCK_KEY})`);
     if (!(await isSetupNeeded(tx))) {
       throw notFound();
@@ -115,13 +122,16 @@ export async function createFirstAdmin(
       entity: "account",
       entityId: account.id,
     });
+    return summarize(account);
   });
 
-  // Trusted: the password was set just now on an empty install, so the sign-in limiter
-  // neither refuses nor counts this sign-in (WS-040).
-  return signIn(
+  // If signing in fails now, the Admin already exists: the answer is still a success, with
+  // `signedIn: false` (WS-057). Trusted: the password was set just now on an empty install,
+  // so the sign-in limiter neither refuses nor counts this sign-in (WS-040).
+  return signInAfterCommit(
     { email, password: input.password, clientIp: input.clientIp, headers: input.headers },
+    summary,
     db,
-    { trusted: true },
+    afterCommit,
   );
 }

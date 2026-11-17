@@ -6,6 +6,7 @@ import { getAuth } from "@/server/auth/auth";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { type Database, getDb } from "@/server/db/client";
 import { rateLimited, unauthenticated } from "@/server/http/errors";
+import { describeError } from "@/server/http/safe-error";
 
 import { type AccountRow, findAccountByEmail, touchLastSeen } from "./accounts";
 import { recordAudit } from "./audit";
@@ -46,6 +47,38 @@ export interface SignInResult {
   account: AccountSummary;
   /** Carries the `Set-Cookie` header of the new session. */
   headers: Headers;
+}
+
+export interface AfterCommitSignIn extends SignInResult {
+  /** False when the change was committed but no session could be made (WS-057). */
+  signedIn: boolean;
+}
+
+export interface AfterCommitOptions {
+  logError?: (message: string) => void;
+  /** Tests make the sign-in fail through this; callers leave it unset. */
+  signIn?: (input: SignInInput, db: Database, options: SignInOptions) => Promise<SignInResult>;
+}
+
+/**
+ * Signs in a person whose password was just committed by the caller (WS-057): accepting a
+ * link, and first-run setup. The change stands whatever happens here, so a failure is not
+ * thrown: it is logged without its message (WS-042) and answered as `signedIn: false`, with
+ * no cookie, and the person signs in normally.
+ */
+export async function signInAfterCommit(
+  input: SignInInput,
+  account: AccountSummary,
+  db: Database,
+  { logError = console.error, signIn: signInWith = signIn }: AfterCommitOptions = {},
+): Promise<AfterCommitSignIn> {
+  try {
+    // Trusted: the caller has just set this password from input that passed its own check.
+    return { ...(await signInWith(input, db, { trusted: true })), signedIn: true };
+  } catch (error) {
+    logError(`Signing in after a committed password change failed: ${describeError(error)}`);
+    return { account, headers: new Headers(), signedIn: false };
+  }
 }
 
 const INVALID_CREDENTIALS = "Invalid email or password.";

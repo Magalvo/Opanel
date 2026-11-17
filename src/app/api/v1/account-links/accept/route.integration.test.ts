@@ -1,8 +1,9 @@
 import { isNull } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 
-import { accountSummarySchema, meResponseSchema } from "@/lib/schemas/auth";
+import { acceptLinkResponseSchema, meResponseSchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
+import type * as HashGate from "@/server/auth/hash-gate";
 import {
   APP_ORIGIN,
   cookieHeaderFrom,
@@ -12,10 +13,28 @@ import {
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accountTokens, auditLog, sessions } from "@/server/db/schema";
+import { serverBusy } from "@/server/http/errors";
 import { inviteAccount, issueResetLink } from "@/server/services/account-management";
 
 import { GET as me } from "../../me/route";
 import { POST } from "./route";
+
+// The process hash gate (WS-056): lets `allowed` operations through, then refuses the rest,
+// so a test can make the sign-in after the commit meet a full gate (WS-057).
+const gate = vi.hoisted(() => ({ allowed: Number.POSITIVE_INFINITY }));
+vi.mock("@/server/auth/hash-gate", async (importOriginal) => {
+  const actual = await importOriginal<typeof HashGate>();
+  return {
+    ...actual,
+    hashGate: {
+      run: <T>(task: () => Promise<T>): Promise<T> => {
+        if (gate.allowed <= 0) return Promise.reject(serverBusy());
+        gate.allowed -= 1;
+        return actual.hashGate.run(task);
+      },
+    },
+  };
+});
 
 const path = "/api/v1/account-links/accept";
 const password = "a brand new password 123";
@@ -38,7 +57,8 @@ describe("POST /api/v1/account-links/accept", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(accountSummarySchema.parse(await response.json())).toMatchObject({
+    expect(acceptLinkResponseSchema.parse(await response.json())).toMatchObject({
+      signedIn: true,
       email: "grace@example.com",
       role: "member",
     });
@@ -136,5 +156,26 @@ describe("POST /api/v1/account-links/accept", () => {
       expect(haystack).not.toContain("$argon2");
       expect(haystack).not.toContain(session?.token ?? "no-token");
     }
+  });
+
+  it("answers 200 with signedIn: false and no cookie when the sign-in after the commit meets a full hash gate (WS-057)", async () => {
+    const token = await invitation();
+    gate.allowed = 1; // the service's own hash, before the commit
+    let response: Response;
+    try {
+      response = await POST(postRequest(path, { token, password }), undefined);
+    } finally {
+      gate.allowed = Number.POSITIVE_INFINITY;
+    }
+
+    expect(response.status).toBe(200);
+    expect(response.headers.getSetCookie()).toEqual([]);
+    expect(acceptLinkResponseSchema.parse(await response.json())).toMatchObject({
+      email: "grace@example.com",
+      signedIn: false,
+    });
+    expect(
+      await getDb().select().from(accountTokens).where(isNull(accountTokens.usedAt)),
+    ).toHaveLength(0);
   });
 });

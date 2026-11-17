@@ -106,11 +106,35 @@ describe("AcceptForm", () => {
     });
   });
 
-  it("explains a refused link on a 404", async () => {
+  it("goes to the sign-in page with a notice when the password is set but no session was made (WS-057)", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+          kind: "human",
+          name: "Grace",
+          email: "grace@example.com",
+          role: "member",
+          signedIn: false,
+        },
+        { status: 200 },
+      ),
+    );
+
+    await fillAndSubmit();
+
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith("/sign-in?notice=password-set");
+    });
+  });
+
+  it("explains a refused link on a 404, and that a password just set may already work (WS-057)", async () => {
     fetchMock.mockResolvedValueOnce(problem(404));
     await fillAndSubmit();
     expect(
-      await screen.findByText("This link is no longer valid. Ask an administrator for a new one."),
+      await screen.findByText(
+        "This link is no longer valid. If you just set your password with it, sign in with that password; otherwise ask an administrator for a new one.",
+      ),
     ).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
@@ -138,12 +162,19 @@ describe("AcceptForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("is generic for a server error", async () => {
-    fetchMock.mockResolvedValueOnce(problem(500, { code: "internal_error" }));
+  it.each([
+    ["a server error", () => Promise.resolve(problem(500, { code: "internal_error" }))],
+    ["a network error", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ])("says the password may already be set on %s (WS-057)", async (_case, respond) => {
+    fetchMock.mockImplementationOnce(respond);
 
     await fillAndSubmit();
 
-    expect(await screen.findByText("Something went wrong. Please try again.")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "We could not confirm the change. Your password may already be set: try signing in with it. If that does not work, ask an administrator for a new link.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("disables the button while sending", async () => {

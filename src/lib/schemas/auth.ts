@@ -58,6 +58,22 @@ export const accountSummarySchema = z
 
 export type AccountSummary = z.infer<typeof accountSummarySchema>;
 
+const signedInField = z.boolean().meta({
+  description:
+    "False when the change was saved but no session could be created: sign in with the new " +
+    "password (WS-057).",
+});
+
+/** `200` of `POST /api/v1/account-links/accept`: the account, and whether it is signed in. */
+export const acceptLinkResponseSchema = z
+  .strictObject({ ...accountSummarySchema.shape, signedIn: signedInField })
+  .meta({ id: "AcceptLinkResponse" });
+
+/** `201` of `POST /api/v1/setup`: the first Admin, and whether it is signed in. */
+export const setupResponseSchema = z
+  .strictObject({ ...accountSummarySchema.shape, signedIn: signedInField })
+  .meta({ id: "SetupResponse" });
+
 /** Body of `GET /api/v1/me`: the caller's account and what its role allows. */
 export const meResponseSchema = z
   .strictObject({
@@ -145,8 +161,8 @@ export const setupContract = {
   request: { body: setupRequestSchema },
   responses: {
     201: {
-      description: "The Admin was created. The session cookie is set.",
-      schema: accountSummarySchema,
+      description: "The Admin was created. The session cookie is set when `signedIn` is true.",
+      schema: setupResponseSchema,
     },
     400: { description: "The body is not valid.", problem: true },
     403: {
@@ -180,8 +196,8 @@ export const acceptLinkContract = {
   request: { body: acceptLinkRequestSchema },
   responses: {
     200: {
-      description: "The password was set. The session cookie is set.",
-      schema: accountSummarySchema,
+      description: "The password was set. The session cookie is set when `signedIn` is true.",
+      schema: acceptLinkResponseSchema,
     },
     400: { description: "The body is not valid.", problem: true },
     403: { description: "The request does not come from the app's own origin.", problem: true },

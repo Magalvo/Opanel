@@ -90,7 +90,11 @@ describe("SetupForm", () => {
 
     await fillAndSubmit();
 
-    expect(await screen.findByText("This installation is already set up.")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "This installation is already set up. If you just created the administrator, sign in.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("asks to try again in a moment on a 429 and keeps the values (WS-056)", async () => {
@@ -118,6 +122,43 @@ describe("SetupForm", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveValue("ada@example.com");
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it("goes to the sign-in page with a notice when the Admin exists but no session was made (WS-057)", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+          kind: "human",
+          name: "Ada Admin",
+          email: "ada@example.com",
+          role: "admin",
+          signedIn: false,
+        },
+        { status: 201 },
+      ),
+    );
+
+    await fillAndSubmit();
+
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith("/sign-in?notice=admin-created");
+    });
+  });
+
+  it.each([
+    ["a server error", () => Promise.resolve(problem(500, { code: "internal_error" }))],
+    ["a network error", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ])("says the administrator may already exist on %s (WS-057)", async (_case, respond) => {
+    fetchMock.mockImplementationOnce(respond);
+
+    await fillAndSubmit();
+
+    expect(
+      await screen.findByText(
+        "We could not confirm the setup. The administrator may already exist: try signing in.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("disables the button while the request is in flight", async () => {

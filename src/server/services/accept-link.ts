@@ -9,9 +9,14 @@ import { invalidLink, rateLimited } from "@/server/http/errors";
 import { hashToken, lockAccount } from "./account-tokens";
 import { recordAudit } from "./audit";
 import { ACCEPT_LINK_IP_RULE, consumeRateLimit, purgeExpiredRateLimits } from "./rate-limit";
-import { signIn, type SignInResult } from "./sign-in";
+import {
+  type AfterCommitOptions,
+  type AfterCommitSignIn,
+  signInAfterCommit,
+  summarize,
+} from "./sign-in";
 
-export interface AcceptLinkOptions {
+export interface AcceptLinkOptions extends AfterCommitOptions {
   /** The password hasher. Tests inject a spy to see whether it ran. */
   hashPassword?: (password: string) => Promise<string>;
 }
@@ -59,8 +64,8 @@ export interface AcceptLinkInput {
 export async function acceptLink(
   input: AcceptLinkInput,
   db: Database = getDb(),
-  { hashPassword = defaultHashPassword }: AcceptLinkOptions = {},
-): Promise<SignInResult> {
+  { hashPassword = defaultHashPassword, ...afterCommit }: AcceptLinkOptions = {},
+): Promise<AfterCommitSignIn> {
   if (Math.random() < 0.02) {
     await purgeExpiredRateLimits(db);
   }
@@ -85,7 +90,7 @@ export async function acceptLink(
   // Slow, so done before the transaction takes the row lock.
   const passwordHash = await hashPassword(input.password);
 
-  const email = await db.transaction(async (tx) => {
+  const committed = await db.transaction(async (tx) => {
     // Serialise with a revocation of the same invitation before locking any row (WS-024).
     const [owner] = await tx
       .select({ accountId: accountTokens.accountId })
@@ -142,15 +147,22 @@ export async function acceptLink(
       entityId: account.id,
       ...(link.kind === "reset" ? { data: { via: "reset_link" } } : {}),
     });
-    return email;
+    return { email, summary: summarize(account) };
   });
 
-  // Better Auth keeps its session outside this transaction (as in first-run setup): if this
-  // fails the password is already set and the person can sign in normally. Trusted: the
-  // valid link just proved who this is, so the sign-in limiter neither refuses nor counts it.
-  return signIn(
-    { email, password: input.password, clientIp: input.clientIp, headers: input.headers },
+  // Better Auth keeps its session outside this transaction (as in first-run setup). If
+  // signing in fails now, the password is already set: the answer is still a success, with
+  // `signedIn: false`, and the person signs in normally (WS-057). Trusted: the valid link
+  // just proved who this is, so the sign-in limiter neither refuses nor counts it.
+  return signInAfterCommit(
+    {
+      email: committed.email,
+      password: input.password,
+      clientIp: input.clientIp,
+      headers: input.headers,
+    },
+    committed.summary,
     db,
-    { trusted: true },
+    afterCommit,
   );
 }

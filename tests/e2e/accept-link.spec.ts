@@ -64,7 +64,10 @@ test("an invited person sets a password and gets in; the link works once; a rese
     await again.page.getByLabel("Confirm password").fill(secondPassword);
     await again.page.getByRole("button", { name: "Set password" }).click();
     await expect(
-      again.page.getByText("This link is no longer valid. Ask an administrator for a new one."),
+      again.page.getByText(
+        "This link is no longer valid. If you just set your password with it, sign in with " +
+          "that password; otherwise ask an administrator for a new one.",
+      ),
     ).toBeVisible();
   } finally {
     await again.context.close();

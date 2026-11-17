@@ -9,6 +9,16 @@ import { problemSchema } from "@/lib/schemas/problem";
 
 type Field = "password" | "confirmation";
 
+// A server error or a lost response may come after the password was saved (WS-057).
+const UNCONFIRMED =
+  "We could not confirm the change. Your password may already be set: try signing in with " +
+  "it. If that does not work, ask an administrator for a new link.";
+
+/** True for a success body that says no session was made (WS-057). */
+function isNotSignedIn(body: unknown): boolean {
+  return typeof body === "object" && body !== null && "signedIn" in body && body.signedIn === false;
+}
+
 function waitMessage(retryAfter: string | null): string {
   const seconds = Number(retryAfter);
   if (!Number.isFinite(seconds) || seconds <= 0) {
@@ -87,12 +97,21 @@ export function AcceptForm() {
       });
 
       if (response.status === 200) {
+        // The password is set either way; without a session, the person signs in (WS-057).
+        const body: unknown = await response.json().catch(() => null);
+        if (isNotSignedIn(body)) {
+          router.push("/sign-in?notice=password-set");
+          return;
+        }
         router.push("/");
         router.refresh();
         return;
       }
       if (response.status === 404) {
-        setFormError("This link is no longer valid. Ask an administrator for a new one.");
+        setFormError(
+          "This link is no longer valid. If you just set your password with it, sign in with " +
+            "that password; otherwise ask an administrator for a new one.",
+        );
       } else if (response.status === 429) {
         setFormError(waitMessage(response.headers.get("Retry-After")));
       } else if (response.status === 400) {
@@ -105,11 +124,13 @@ export function AcceptForm() {
         } else {
           setFormError("Please check the details and try again.");
         }
+      } else if (response.status >= 500) {
+        setFormError(UNCONFIRMED);
       } else {
         setFormError("Something went wrong. Please try again.");
       }
     } catch {
-      setFormError("Something went wrong. Please try again.");
+      setFormError(UNCONFIRMED);
     } finally {
       setPending(false);
     }

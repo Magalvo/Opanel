@@ -11,10 +11,11 @@ export const dynamic = "force-dynamic";
 export const POST = route(setupContract, async (request) => {
   const body = await readJson(request, setupRequestSchema);
 
-  const { account, headers } = await createFirstAdmin({
+  const { account, headers, signedIn } = await createFirstAdmin({
     ...body,
     clientIp: clientIpFrom(request, getEnv().CLIENT_IP_HEADER),
     headers: request.headers,
   });
-  return json(account, 201, headers);
+  // No cookie when `signedIn` is false: the Admin exists, they sign in (WS-057).
+  return json({ ...account, signedIn }, 201, headers);
 });

@@ -21,7 +21,7 @@ import {
   rateLimits,
   sessions,
 } from "@/server/db/schema";
-import { ApiError } from "@/server/http/errors";
+import { ApiError, serverBusy } from "@/server/http/errors";
 
 import { acceptLink } from "./accept-link";
 import { inviteAccount, issueResetLink, revokeInvitation } from "./account-management";
@@ -440,5 +440,48 @@ describe("secrets", () => {
     expect(logged.join("\n")).not.toContain("Marker-Password-77aa-31c0");
     expect(logged.join("\n")).not.toContain(token);
     expect((await getDb().select().from(accounts)).length).toBeGreaterThan(0);
+  });
+});
+
+describe("a sign-in that fails after the password was set (WS-057)", () => {
+  const failingSignIn = {
+    signIn: () => Promise.reject(serverBusy()),
+    logError: () => undefined,
+  };
+
+  it("still answers success, with signedIn: false, and the change stands", async () => {
+    const { account, token } = await invited();
+    const before = (await auditRows()).length;
+
+    const result = await acceptLink(
+      { token, password: NEW_PASSWORD, clientIp: null, headers: new Headers() },
+      undefined,
+      failingSignIn,
+    );
+
+    expect(result.signedIn).toBe(false);
+    expect(result.account).toMatchObject({ id: account.id, email: "grace@example.com" });
+    expect(result.headers.getSetCookie()).toEqual([]);
+    const [link] = await getDb().select().from(accountTokens);
+    expect(link?.usedAt).toBeInstanceOf(Date);
+    const actions = (await auditRows()).slice(before).map((row) => row.action);
+    expect(actions).toEqual(["account.invitation_accepted"]);
+    expect(
+      await getDb().select().from(sessions).where(eq(sessions.accountId, account.id)),
+    ).toHaveLength(0);
+    // The new password works for an ordinary sign-in.
+    const signedIn = await signIn({
+      email: "grace@example.com",
+      password: NEW_PASSWORD,
+      clientIp: null,
+      headers: new Headers(),
+    });
+    expect(signedIn.account.id).toBe(account.id);
+  });
+
+  it("answers signedIn: true when the sign-in works", async () => {
+    const { token } = await invited();
+
+    expect((await accept(token)).signedIn).toBe(true);
   });
 });
