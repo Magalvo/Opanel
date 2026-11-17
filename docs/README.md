@@ -28,6 +28,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-054 (a keyboard move lands where it was announced, and the
   end-to-end suite is stable in parallel), on 2026-11-17, on the branch
   `claude/wi-054-e2e-parallel-stability`, stacked on WI-052.
+- **Also finished:** WI-053 (esbuild advisory, audit of 2026-11-17, finding A11), on
+  2026-11-17, on the branch `claude/wi-053-esbuild-advisory`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -117,6 +119,7 @@ above and comes after WT-06.
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
 | [WI-051](work-items/WI-051-cursor-date-validation.md)           | Creation-time cursors are checked as dates                  | Done        | [WS-051](work-specs/WS-051-cursor-date-validation.md)           | Done        |
 | [WI-052](work-items/WI-052-e2e-admin-isolation.md)              | End-to-end tests do not deactivate each other's Admins      | Done        | [WS-052](work-specs/WS-052-e2e-admin-isolation.md)              | Done        |
+| [WI-053](work-items/WI-053-esbuild-advisory.md)                 | No vulnerable esbuild in the dependency tree                | Done        | [WS-053](work-specs/WS-053-esbuild-advisory.md)                 | Done        |
 | [WI-054](work-items/WI-054-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E  | Done        | [WS-054](work-specs/WS-054-e2e-parallel-stability.md)           | Done        |
 
 ## Follow-ups
@@ -173,6 +176,15 @@ Other follow-ups:
   in WS-038, question 6), `claude/wi-044-request-body-limit` (WS-044, question 5) and
   `claude/wi-042-safe-error-logging` (WS-042, question 4) and
   `claude/wi-043-setup-refuses-before-hashing` (WS-043, question 5).
+- Upgrade drizzle-kit to 1.0 once it is stable (it drops the deprecated `@esbuild-kit`
+  packages), then delete the esbuild override in `pnpm-workspace.yaml` (WS-053,
+  question 2).
+- `pnpm audit` without `--prod` reports GHSA-g3hv-75wg-m249 (`minimatch`, a denial of
+  service, under `eslint`), a development dependency (found in WI-053). Decide whether
+  development advisories are audited too.
+- ESLint lints `.claude/worktrees/` (other sessions' worktrees), so `pnpm lint` can crash
+  or report another branch's files while one is open (found in WI-053). Candidate: add it
+  to `globalIgnores` in `eslint.config.mjs`, and check Prettier and Vitest likewise.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).

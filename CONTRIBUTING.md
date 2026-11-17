@@ -104,6 +104,20 @@ machine (WS-054).
 Do not weaken a check to make it pass: no `any`, no skipped or deleted tests, no
 `eslint-disable` without a reason. The complete list is in `AGENTS.md`, section 6.
 
+## Dependency advisories
+
+The `Dependency audit` workflow (`.github/workflows/audit.yml`) runs `pnpm audit --prod`
+weekly and on every change to the dependencies. When it fails:
+
+1. Look at the advisory's path (`pnpm why <package>`) and whether Opanel can reach the
+   vulnerable code at all.
+2. Prefer upgrading the package that brings it in.
+3. If no upgrade exists, add a scoped override (`"parent>package"`) to the `overrides` of
+   `pnpm-workspace.yaml`, with a comment naming the advisory and the work-spec that
+   decided it (as WS-053 did for esbuild).
+4. Never ignore an advisory wholesale, and never override a package everywhere when one
+   path is enough.
+
 ## Content Security Policy
 
 Every page is served with a Content Security Policy (WS-041), built in

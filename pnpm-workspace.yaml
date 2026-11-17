@@ -1,0 +1,7 @@
+# pnpm settings for this single-package repository (pnpm 10 reads them from here).
+
+overrides:
+  # GHSA-67mh-4wv8-2f99: drizzle-kit 0.31 lists the deprecated @esbuild-kit packages, whose
+  # core-utils pins esbuild 0.18. drizzle-kit never loads them; this replaces that esbuild
+  # with the patched version drizzle-kit itself uses (WS-053). Remove it with drizzle-kit 1.0.
+  "@esbuild-kit/core-utils>esbuild": "0.25.12"
