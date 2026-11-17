@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { commentPageSchema, commentSchema } from "@/lib/schemas/comments";
 import { problemSchema } from "@/lib/schemas/problem";
@@ -54,6 +54,31 @@ describe("task comment endpoints", () => {
       items: [comment],
       nextCursor: null,
     });
+  });
+
+  it("answers 400, not 500, to a cursor whose time is no real date, and logs nothing (WS-051)", async () => {
+    const { viewer } = await setup();
+    const cursor = Buffer.from(
+      JSON.stringify({
+        t: "2026-02-30T10:00:00.000000Z",
+        i: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+      }),
+    ).toString("base64url");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      const response = await GET(
+        apiRequest("GET", `${path}?cursor=${cursor}`, { cookie: viewer }),
+        task("OPA-1"),
+      );
+      expect(response.status).toBe(400);
+      expect(problemSchema.parse(await response.json()).errors).toEqual([
+        { path: "cursor", message: "Invalid cursor." },
+      ]);
+      expect(logged).not.toHaveBeenCalled();
+    } finally {
+      logged.mockRestore();
+    }
   });
 
   it("answers 403 to a Viewer writing and 401 without a session", async () => {

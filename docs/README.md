@@ -21,6 +21,8 @@ Updated at the end of every work-item, so that a new session can start from here
   track.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
+- **Also finished:** WI-051 (cursor date validation, audit of 2026-11-17, finding A08), on
+  2026-11-17, on the branch `claude/wi-051-cursor-validation`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -108,6 +110,7 @@ above and comes after WT-06.
 | [WI-046](work-items/WI-046-event-hub.md)                        | Event hub                                                   | Done        | [WS-046](work-specs/WS-046-event-hub.md)                        | Done        |
 | [WI-047](work-items/WI-047-events-endpoint.md)                  | Events endpoint                                             | Done        | [WS-047](work-specs/WS-047-events-endpoint.md)                  | Done        |
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
+| [WI-051](work-items/WI-051-cursor-date-validation.md)           | Creation-time cursors are checked as dates                  | Done        | [WS-051](work-specs/WS-051-cursor-date-validation.md)           | Done        |
 
 ## Follow-ups
 
