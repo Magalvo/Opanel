@@ -38,6 +38,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-057 (a committed password change is never reported as a failure,
   audit of 2026-11-17, finding A06), on 2026-11-17, on the branch
   `claude/wi-057-committed-reset-recovery`, stacked on WI-056.
+- **Also finished:** WI-058 (a session change and its audit entry stand or fall together,
+  audit of 2026-11-17, finding A07; adds a paragraph to canonical doc 0001), on 2026-11-17,
+  on the branch `claude/wi-058-session-audit-atomicity`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -132,7 +135,7 @@ above and comes after WT-06.
 | [WI-055](work-items/WI-055-setup-fail-closed.md)                | Production setup requires a setup token                     | Done        | [WS-055](work-specs/WS-055-setup-fail-closed.md)                | Done        |
 | [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                   | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
 | [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure               | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
-| [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together | Proposed    | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Proposed    |
+| [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together | Done        | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Done        |
 
 ## Follow-ups
 

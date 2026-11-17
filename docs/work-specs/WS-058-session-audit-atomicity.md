@@ -1,6 +1,6 @@
 # WS-058 — A session change and its audit entry stand or fall together
 
-- Status: Approved (by the owner on 2026-11-17, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-17, questions 1 to 4 as proposed)
 - Work-item: [WI-058](../work-items/WI-058-session-audit-atomicity.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (the audit log);
   [WS-015](WS-015-sign-in-and-authentication.md) (sign-in and sign-out);
@@ -165,3 +165,37 @@ For the owner:
    proposed.**
 4. **Canonical doc 0001 gets the guarantee paragraph** (section 6), so it is a canonical
    change approved with this spec. **Recommend: approve with this spec.**
+
+## Deviations from the approved spec
+
+1. **No new `src/server/db/fail-writes.ts`.** `src/server/auth/testing.ts` already had
+   `failAuditFor(action)`, a trigger that fails every audit write of one action. Integration
+   test files run one at a time (`fileParallelism: false`), so a per-account trigger is not
+   needed; the spec's concern about parallel files does not apply. Two helpers were added
+   next to it: `failSessionDeletes()` and `waitForAdvisoryLockWaiter()`.
+2. **`SignInOptions` gains `logError`**, so test 2 can read the cleanup log line, as
+   `signInAfterCommit` (WS-057) already does. Callers leave it unset.
+3. **One existing test changed to the new signature, not weakened:** the "never suppresses
+   a successful sign-in or a sign-out" test now passes `sessionId` to `signOut`.
+
+## Implementation record
+
+- Red (run before any code changed): 7 tests failed for the right reason. A failed
+  `auth.sign_in` write left a session row, through the service and the route; no cleanup
+  was logged; a failed `auth.sign_out` write left the session deleted, through the service
+  and the route; neither `signIn` nor `changeOwnPassword` ever waited for the account lock.
+- Green:
+  - `signIn()` reads the password hash before Better Auth, keeps the session token from
+    `signInEmail`'s response, and confirms in one transaction under `lockAccount`. A
+    deactivated account or a changed hash deletes the session and answers `401`
+    (`auth.sign_in_failed`, `bad_credentials`). A failed transaction deletes the session
+    by its token and rethrows; a failed delete is logged with `describeError` only.
+  - `signOut()` deletes the session row (by id and account) and writes `auth.sign_out` in
+    one transaction, then asks Better Auth only for the cookie-clearing headers. The route
+    passes `auth.sessionId`.
+  - `changeOwnPassword()` takes `lockAccount` first in its transaction.
+  - Canonical doc 0001, section 7: the guarantee paragraph.
+- `pnpm openapi:generate`: no change. `pnpm db:generate`: no change.
+- Gate on 2026-11-17: typecheck, lint and Prettier on the changed files pass; Vitest 1167 of
+  1167; `pnpm test:e2e` 68 of 68 with `--retries=0`. Windows, Node 24, pnpm 10.28.0, Compose
+  PostgreSQL on port 5433.

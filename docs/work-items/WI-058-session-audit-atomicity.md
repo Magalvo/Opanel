@@ -1,6 +1,6 @@
 # WI-058 — A session change and its audit entry stand or fall together
 
-- Status: Approved
+- Status: Done
 - Work-track: none: a hardening item from the audit of 2026-11-17 (finding A07)
 - Depends on: WI-057 (merged; its `signInAfterCommit` catches the errors this item makes
   clean)
@@ -31,22 +31,22 @@ After this item:
 
 ## Acceptance criteria
 
-- [ ] When the `auth.sign_in` audit write fails, sign-in answers `500`, sends no
+- [x] When the `auth.sign_in` audit write fails, sign-in answers `500`, sends no
       `Set-Cookie`, and leaves no session row for the attempt and no `last_seen_at` change.
-- [ ] When removing that session also fails, the error is still answered as `500`, and one
+- [x] When removing that session also fails, the error is still answered as `500`, and one
       log line without the error's message (WS-042) says a session may remain.
-- [ ] Sign-out deletes the caller's session row and writes `auth.sign_out` in one
+- [x] Sign-out deletes the caller's session row and writes `auth.sign_out` in one
       transaction: when the audit write fails, it answers `500` and the session still
       works; when it succeeds, the row is gone and the cookie is cleared.
-- [ ] A sign-in whose session is created while a password change (accepting a link,
+- [x] A sign-in whose session is created while a password change (accepting a link,
       changing one's own password) is committing ends with no session that survives the
       change: it is refused with `401` when the change committed first, and its session is
       deleted by the change otherwise.
-- [ ] Changing one's own password takes the per-account lock, as accepting a link already
+- [x] Changing one's own password takes the per-account lock, as accepting a link already
       does.
-- [ ] The guarantee is documented: what is atomic, and what a crash between Better Auth's
+- [x] The guarantee is documented: what is atomic, and what a crash between Better Auth's
       insert and the audit transaction can leave behind.
-- [ ] No API contract changes. The full quality gate passes.
+- [x] No API contract changes. The full quality gate passes.
 
 ## Notes
 
