@@ -16,6 +16,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc. Its work-items start at WI-045, after WI-043.
+- **Proposed on 2026-11-17:** amendment A1 to WT-04, the optional `SETUP_TOKEN` for the
+  first-run setup as WI-050 (owner's decision in WS-043, question 2), proposed to be done
+  first in the track. Awaits the owner's approval.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
 - **Planning gaps awaiting an owner decision** are listed first under

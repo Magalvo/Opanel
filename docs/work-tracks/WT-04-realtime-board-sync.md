@@ -1,10 +1,14 @@
 # WT-04 — Real-time board sync
 
-- Status: Approved (approved by the owner on 2026-11-16, with every proposal as drafted)
+- Status: Approved (approved by the owner on 2026-11-16, with every proposal as drafted).
+  Amendment A1 (the optional `SETUP_TOKEN`, decision 13 and WI-050) is **Proposed** on
+  2026-11-17 and awaits the owner's approval.
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (the design; amended by this
   track, see decision 1), [0004](../canonical/0004-api-conventions.md) (errors, ids,
   OpenAPI), [0003](../canonical/0003-task-management.md) (section 10: the end of this
-  track is the first usable release for a human-only team)
+  track is the first usable release for a human-only team); for amendment A1,
+  [WS-016](../work-specs/WS-016-first-run-setup.md) (question 1) and
+  [WS-043](../work-specs/WS-043-setup-refuses-before-hashing.md) (question 2)
 
 ## Goal
 
@@ -51,6 +55,10 @@ WT-03 left the ground ready (WT-03 decisions 6 and 7):
 - End-to-end tests with two browser contexts (doc 0002 section 7).
 - A short operator note in `README.md`: the app needs a long-lived Node.js server, and a
   reverse proxy must not buffer `/api/v1/projects/*/events`.
+- **Amendment A1:** the optional `SETUP_TOKEN` for the first-run setup (decision 13,
+  WI-050). It is not about sync: it joins this track because the end of WT-04 is the first
+  usable release, and the owner decided on 2026-11-16 (WS-043, question 2) that it must be
+  done before then.
 
 ## Out of scope
 
@@ -63,7 +71,8 @@ WT-03 left the ground ready (WT-03 decisions 6 and 7):
   there as soon as WT-05 adds them, with no change in this track.
 - Notifications to people (AGENTS.md section 1: none in v1).
 - Production deployment (Dockerfile, reverse proxy configuration): still a planning gap in
-  `docs/README.md`; this track only documents the two requirements above.
+  `docs/README.md`; this track only documents the two requirements above, and how to set
+  `SETUP_TOKEN` (decision 13).
 
 ## Design decisions
 
@@ -165,6 +174,31 @@ implements it. The owner approved all of them as proposed on 2026-11-16.
     like every other contract (hard rule 9). How `zod-openapi` 6.0.2 describes a stream is
     settled in the work-spec of WI-047.
 
+13. **Amendment A1 (proposed on 2026-11-17): an optional `SETUP_TOKEN` guards the
+    first-run setup.** Today whoever first reaches `/setup` on a fresh install becomes its
+    Admin (WS-016 decision 4, question 1); WI-043 closed only the hashing on an installed
+    server. Proposed behaviour:
+    - `SETUP_TOKEN` is a new optional environment variable, validated in
+      `src/server/env.ts` like the others: when set, at least 32 characters; when unset or
+      empty, nothing changes, so development and the end-to-end tests are unaffected.
+      `.env.example` and `README.md` tell the operator to set it, for example with
+      `openssl rand -hex 32`, on any install reachable by others before setup.
+    - When it is set, the setup page shows one more field, "Setup token", and
+      `POST /api/v1/setup` requires it as `setupToken` in the body. The request schema
+      gains an optional field, an additive change to `/api/v1` (hard rule 9; no new
+      version needed). The page learns whether the token is required from the service, as
+      it already learns whether setup is needed (WS-016, question 2).
+    - Order of checks in `createFirstAdmin`: an installed server answers `404` first
+      (WI-043); then the token; only then the password is hashed. A missing or wrong token
+      answers `403` with code `invalid_setup_token`, the same for both, and nothing is
+      hashed or written.
+    - The comparison is in constant time (`crypto.timingSafeEqual` over the SHA-256
+      digests of both values, so lengths never differ). The token is never logged, put in
+      the audit entry, or returned (hard rule 7).
+    - No rate limiter: a 32-character random token cannot be guessed, and each refusal
+      costs a hash of a short string, not an Argon2id hash.
+    - After setup the token has no further use; the operator may remove it.
+
 ## Work-items
 
 Each item leaves the repository green and is one branch/PR. Numbers start at WI-045:
@@ -177,9 +211,12 @@ WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 | WI-047 | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft  | WI-046     |
 | WI-048 | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft  | WI-047     |
 | WI-049 | Live task detail, epics page and project settings                                                                    | Draft  | WI-048     |
+| WI-050 | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Draft  | none       |
 
 As in earlier tracks, each item gets its work-item and work-spec files just before it is
-started, and each work-spec needs the owner's approval.
+started, and each work-spec needs the owner's approval. WI-050 is independent of the sync
+items and is proposed to be done first: it is small, and it closes a security gap that
+exists today.
 
 Test plan by item, from doc 0002 section 7:
 
@@ -205,6 +242,13 @@ Test plan by item, from doc 0002 section 7:
   open task detail; editing a field while it changes elsewhere shows the notice of
   decision 10; an epic created or closed appears on the epics page; a column renamed
   appears in the other project settings.
+- **WI-050** — unit: `SETUP_TOKEN` validation (unset, empty, too short, valid); the form
+  shows the field only when required. Integration, real PostgreSQL: with a token set, a
+  missing and a wrong token each answer `403 invalid_setup_token`, create no account and
+  compute no Argon2id hash; the right token creates the Admin; an installed server still
+  answers `404` before the token is looked at; without a token set, setup is unchanged;
+  the token appears in no log line, audit entry or response. The OpenAPI document shows
+  the new optional field.
 
 ## Exit criteria
 
@@ -222,6 +266,9 @@ Test plan by item, from doc 0002 section 7:
       closes within one heartbeat.
 - [ ] Doc 0002 lists the event types and payload of decision 1 and the echo rule of
       decision 4.
+- [ ] With `SETUP_TOKEN` set, a fresh install cannot be claimed without it
+      (`403 invalid_setup_token`, nothing hashed or written); without it, setup is
+      unchanged (amendment A1).
 - [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
       `pnpm openapi:generate` leaving no diff.
 
@@ -247,3 +294,9 @@ Questions 1 to 3 were resolved by the owner on 2026-11-16, by approving the prop
 6. **Risk, parallel end-to-end tests.** Playwright runs tests in parallel on one
    database. Events are routed by project and every test creates its own project, so tests
    cannot see each other's events; WI-048 keeps it that way.
+7. **Open: amendment A1** (decision 13, WI-050). Approve the `SETUP_TOKEN` behaviour as
+   proposed: optional, at least 32 characters, `403 invalid_setup_token` for a missing or
+   wrong token, checked after the `404` of an installed server and before hashing, and done
+   first in the track. Alternative: a one-time token printed in the server log at start-up
+   when the install is empty; not proposed, because it puts a secret in the log (hard
+   rule 7) and changes at every restart.
