@@ -11,10 +11,11 @@ export const dynamic = "force-dynamic";
 export const POST = route(acceptLinkContract, async (request) => {
   const body = await readJson(request, acceptLinkRequestSchema);
 
-  const { account, headers } = await acceptLink({
+  const { account, headers, signedIn } = await acceptLink({
     ...body,
     clientIp: clientIpFrom(request, getEnv().CLIENT_IP_HEADER),
     headers: request.headers,
   });
-  return json(account, 200, headers);
+  // No cookie when `signedIn` is false: the password is set, the person signs in (WS-057).
+  return json({ ...account, signedIn }, 200, headers);
 });

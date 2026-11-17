@@ -415,11 +415,11 @@
         },
         "responses": {
           "201": {
-            "description": "The Admin was created. The session cookie is set.",
+            "description": "The Admin was created. The session cookie is set when `signedIn` is true.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountSummary"
+                  "$ref": "#/components/schemas/SetupResponse"
                 }
               }
             }
@@ -504,11 +504,11 @@
         },
         "responses": {
           "200": {
-            "description": "The password was set. The session cookie is set.",
+            "description": "The password was set. The session cookie is set when `signedIn` is true.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountSummary"
+                  "$ref": "#/components/schemas/AcceptLinkResponse"
                 }
               }
             }
@@ -5163,6 +5163,90 @@
           "email",
           "role",
           "permissions"
+        ],
+        "additionalProperties": false
+      },
+      "SetupResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "human",
+              "agent"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string"
+          },
+          "signedIn": {
+            "type": "boolean",
+            "description": "False when the change was saved but no session could be created: sign in with the new password (WS-057)."
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "email",
+          "role",
+          "signedIn"
+        ],
+        "additionalProperties": false
+      },
+      "AcceptLinkResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "human",
+              "agent"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string"
+          },
+          "signedIn": {
+            "type": "boolean",
+            "description": "False when the change was saved but no session could be created: sign in with the new password (WS-057)."
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "email",
+          "role",
+          "signedIn"
         ],
         "additionalProperties": false
       },

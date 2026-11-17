@@ -6,7 +6,7 @@ import { hashPassword } from "@/server/auth/password";
 import { createTestAccount, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, credentials } from "@/server/db/schema";
-import { ApiError } from "@/server/http/errors";
+import { ApiError, serverBusy } from "@/server/http/errors";
 
 import { createFirstAdmin, isSetupNeeded, setupGuard } from "./setup";
 import { signIn } from "./sign-in";
@@ -304,4 +304,24 @@ describe("production without a setup token (WS-055)", () => {
       expect(result.account.role).toBe("admin");
     },
   );
+});
+
+describe("a sign-in that fails after the Admin was created (WS-057)", () => {
+  it("still answers success, with signedIn: false, and the Admin exists", async () => {
+    const result = await createFirstAdmin(input, getDb(), {
+      signIn: () => Promise.reject(serverBusy()),
+      logError: () => undefined,
+    });
+
+    expect(result.signedIn).toBe(false);
+    expect(result.account).toMatchObject({ email: "ada@example.com", role: "admin" });
+    expect(result.headers.getSetCookie()).toEqual([]);
+    expect(await getDb().select().from(credentials)).toHaveLength(1);
+    const actions = (await getDb().select().from(auditLog)).map((row) => row.action);
+    expect(actions).toEqual(["setup.first_admin_created"]);
+  });
+
+  it("answers signedIn: true when the sign-in works", async () => {
+    expect((await createFirstAdmin(input)).signedIn).toBe(true);
+  });
 });

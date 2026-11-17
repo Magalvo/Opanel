@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { accountSummarySchema, meResponseSchema } from "@/lib/schemas/auth";
+import { meResponseSchema, setupResponseSchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
+import type * as HashGate from "@/server/auth/hash-gate";
 import { HUMAN_ROLE_PERMISSIONS } from "@/server/auth/roles";
 import {
   APP_ORIGIN,
@@ -12,6 +13,7 @@ import {
 import { getDb } from "@/server/db/client";
 import { accounts, auditLog, sessions } from "@/server/db/schema";
 import type * as Env from "@/server/env";
+import { serverBusy } from "@/server/http/errors";
 
 import { GET as me } from "../me/route";
 import { POST } from "./route";
@@ -37,6 +39,23 @@ vi.mock("@/server/env", async (importOriginal) => {
   };
 });
 
+// The process hash gate (WS-056): lets `allowed` operations through, then refuses the rest,
+// so a test can make the sign-in after the commit meet a full gate (WS-057).
+const gate = vi.hoisted(() => ({ allowed: Number.POSITIVE_INFINITY }));
+vi.mock("@/server/auth/hash-gate", async (importOriginal) => {
+  const actual = await importOriginal<typeof HashGate>();
+  return {
+    ...actual,
+    hashGate: {
+      run: <T>(task: () => Promise<T>): Promise<T> => {
+        if (gate.allowed <= 0) return Promise.reject(serverBusy());
+        gate.allowed -= 1;
+        return actual.hashGate.run(task);
+      },
+    },
+  };
+});
+
 const path = "/api/v1/setup";
 const body = { name: "Ada Admin", email: "ada@example.com", password: "a very long password" };
 
@@ -46,7 +65,8 @@ describe("POST /api/v1/setup", () => {
 
     expect(response.status).toBe(201);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(accountSummarySchema.parse(await response.json())).toMatchObject({
+    expect(setupResponseSchema.parse(await response.json())).toMatchObject({
+      signedIn: true,
       email: "ada@example.com",
       role: "admin",
     });
@@ -167,7 +187,7 @@ describe("POST /api/v1/setup", () => {
       const response = await POST(postRequest(path, { ...body, setupToken: token }), undefined);
 
       expect(response.status).toBe(201);
-      expect(accountSummarySchema.parse(await response.json()).role).toBe("admin");
+      expect(setupResponseSchema.parse(await response.json()).role).toBe("admin");
     });
   });
 
@@ -196,5 +216,23 @@ describe("POST /api/v1/setup", () => {
       }
       expect(await getDb().select().from(accounts)).toHaveLength(0);
     });
+  });
+
+  it("answers 201 with signedIn: false and no cookie when the sign-in after the commit meets a full hash gate (WS-057)", async () => {
+    gate.allowed = 1; // the service's own hash, before the commit
+    let response: Response;
+    try {
+      response = await POST(postRequest(path, body), undefined);
+    } finally {
+      gate.allowed = Number.POSITIVE_INFINITY;
+    }
+
+    expect(response.status).toBe(201);
+    expect(response.headers.getSetCookie()).toEqual([]);
+    expect(setupResponseSchema.parse(await response.json())).toMatchObject({
+      role: "admin",
+      signedIn: false,
+    });
+    expect(await getDb().select().from(accounts)).toHaveLength(1);
   });
 });

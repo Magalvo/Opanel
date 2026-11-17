@@ -23,6 +23,15 @@ const FIELDS: readonly { name: Field; label: string; type: string; autoComplete:
   },
 ];
 
+// A server error or a lost response may come after the Admin was created (WS-057).
+const UNCONFIRMED =
+  "We could not confirm the setup. The administrator may already exist: try signing in.";
+
+/** True for a success body that says no session was made (WS-057). */
+function isNotSignedIn(body: unknown): boolean {
+  return typeof body === "object" && body !== null && "signedIn" in body && body.signedIn === false;
+}
+
 function isField(path: string): path is "setupToken" | "name" | "email" | "password" {
   return path === "setupToken" || path === "name" || path === "email" || path === "password";
 }
@@ -69,7 +78,9 @@ export function SetupForm({ tokenRequired }: { tokenRequired: boolean }) {
       });
 
       if (response.status === 201) {
-        router.push("/");
+        // The Admin exists either way; without a session, they sign in (WS-057).
+        const body: unknown = await response.json().catch(() => null);
+        router.push(isNotSignedIn(body) ? "/sign-in?notice=admin-created" : "/");
         return;
       }
 
@@ -79,7 +90,9 @@ export function SetupForm({ tokenRequired }: { tokenRequired: boolean }) {
           : null;
 
       if (response.status === 404) {
-        setFormError("This installation is already set up.");
+        setFormError(
+          "This installation is already set up. If you just created the administrator, sign in.",
+        );
       } else if (response.status === 429) {
         // Setup has no limiter: a 429 means the server is busy hashing (WS-056).
         setFormError("The server is busy. Try again in a moment.");
@@ -96,11 +109,13 @@ export function SetupForm({ tokenRequired }: { tokenRequired: boolean }) {
         if (Object.keys(next).length === 0) {
           setFormError("Please check the details and try again.");
         }
+      } else if (response.status >= 500) {
+        setFormError(UNCONFIRMED);
       } else {
         setFormError("Something went wrong. Please try again.");
       }
     } catch {
-      setFormError("Something went wrong. Please try again.");
+      setFormError(UNCONFIRMED);
     } finally {
       setPending(false);
     }

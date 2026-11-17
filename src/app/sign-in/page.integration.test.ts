@@ -12,8 +12,21 @@ function withCookie(cookie: string | undefined): void {
   vi.mocked(headers).mockResolvedValue(new Headers(cookie === undefined ? {} : { cookie }));
 }
 
-function props(next?: string | string[]) {
-  return { searchParams: Promise.resolve(next === undefined ? {} : { next }) };
+function props(next?: string | string[], notice?: string) {
+  return {
+    searchParams: Promise.resolve({
+      ...(next === undefined ? {} : { next }),
+      ...(notice === undefined ? {} : { notice }),
+    }),
+  };
+}
+
+/** Every text in the rendered element tree, joined. */
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return (node as ReactNode[]).map(textOf).join("");
+  if (typeof node !== "object" || node === null || !("props" in node)) return "";
+  return textOf((node as ReactElement<{ children?: ReactNode }>).props.children);
 }
 
 async function redirectTarget(promise: Promise<unknown>): Promise<string | null> {
@@ -65,5 +78,19 @@ describe("the /sign-in page", () => {
     expect(findNext(await SignInPage(props("//evil.com")))).toBe("/");
     expect(findNext(await SignInPage(props(["/a", "/b"])))).toBe("/");
     expect(findNext(await SignInPage(props()))).toBe("/");
+  });
+
+  it("shows the notice of a known value and nothing for another (WS-057)", async () => {
+    await createTestAccount();
+
+    expect(textOf(await SignInPage(props(undefined, "password-set")))).toContain(
+      "Your password is set. Sign in with it.",
+    );
+    expect(textOf(await SignInPage(props(undefined, "admin-created")))).toContain(
+      "The administrator was created. Sign in with your password.",
+    );
+    const other = textOf(await SignInPage(props(undefined, "Injected-Text-77")));
+    expect(other).not.toContain("Injected-Text-77");
+    expect(other).not.toContain("Your password is set");
   });
 });
