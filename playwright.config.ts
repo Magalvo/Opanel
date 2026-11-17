@@ -28,10 +28,19 @@ export default defineConfig({
       testMatch: "**/setup.spec.ts",
       use: { ...devices["Desktop Chrome"] },
     },
+    // A test that changes install-wide state other tests rely on runs here, alone, after
+    // first-run and before every other test (WS-052). Today: the last-Admin check, which
+    // deactivates every other Admin.
+    {
+      name: "exclusive",
+      testMatch: "**/last-admin.spec.ts",
+      dependencies: ["first-run"],
+      use: { ...devices["Desktop Chrome"] },
+    },
     {
       name: "chromium",
-      testIgnore: "**/setup.spec.ts",
-      dependencies: ["first-run"],
+      testIgnore: ["**/setup.spec.ts", "**/last-admin.spec.ts"],
+      dependencies: ["exclusive"],
       use: { ...devices["Desktop Chrome"] },
     },
   ],

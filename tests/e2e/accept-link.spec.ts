@@ -71,11 +71,12 @@ test("an invited person sets a password and gets in; the link works once; a rese
   }
 
   // An Admin issues a reset link: the new password replaces the old one.
-  const reset = resetLinkResponseSchema.parse(
-    await (
-      await request.post(`/api/v1/accounts/${invited.account.id}/reset-link`, { headers: origin })
-    ).json(),
-  );
+  const issued = await request.post(`/api/v1/accounts/${invited.account.id}/reset-link`, {
+    headers: origin,
+  });
+  // The status first, so that a refusal reads as one and not as a parse error (WS-052).
+  expect(issued.status()).toBe(201);
+  const reset = resetLinkResponseSchema.parse(await issued.json());
   const third = await setPasswordFromLink(browser, reset.link.url, secondPassword);
   try {
     await third.page.getByLabel("Password", { exact: true }).fill(secondPassword);
