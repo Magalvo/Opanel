@@ -9,13 +9,13 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-042 (safe error logging), merged on 2026-11-17 (PR #38).
-- **Next:** WI-043 (the first-run setup refuses before hashing) is already implemented and
-  marked done on the unmerged branch `claude/wi-043-setup-refuses-before-hashing-v2`,
-  stacked on WI-042: check it against `main` and open its pull request; then WT-04.
+- **Last finished:** WI-043 (the first-run setup refuses before hashing), merged on
+  2026-11-17 (PR #39), the last of the audit's security items.
+- **Next:** WT-04, starting with WI-050 (optional `SETUP_TOKEN`): draft WI-050 and WS-050
+  as `Proposed`, and stop for the owner's approval; then WI-045.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
-  WI-045 writes into the doc. Its work-items start at WI-045, after WI-043.
+  WI-045 writes into the doc.
 - **Approved on 2026-11-17:** amendment A1 to WT-04, the optional `SETUP_TOKEN` for the
   first-run setup as WI-050 (owner's decision in WS-043, question 2), done first in the
   track.
@@ -102,6 +102,7 @@ above and comes after WT-06.
 | [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                      | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
 | [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
+| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
 
 ## Follow-ups
@@ -126,7 +127,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 - **Optional `SETUP_TOKEN` for the first-run setup** (scheduled as WI-050 in WT-04,
   amendment A1, approved on 2026-11-17): if set, the form and endpoint require
   it, so a freshly deployed install cannot be claimed by the first visitor (see WS-016,
-  question 1). Needed before any install is reachable from the internet.
+  question 1). Needed before any install is reachable from the internet. On 2026-11-16 the
+  owner decided to schedule it as its own item before the end of WT-04 (WS-043, question 2).
 
 Other follow-ups:
 
@@ -156,11 +158,12 @@ Other follow-ups:
   branches: WI-042 (log errors without their message), WI-043 (refuse the first-run setup
   before hashing once the install has accounts) and WI-044 (bound the JSON request body,
   `413 payload_too_large`). On 2026-11-16 the owner decided to redo them on `main` before
-  WT-04. WI-044 and WI-042 are done.
+  WT-04. All three are done.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
   in WS-038, question 6), `claude/wi-044-request-body-limit` (WS-044, question 5) and
-  `claude/wi-042-safe-error-logging` (WS-042, question 4).
+  `claude/wi-042-safe-error-logging` (WS-042, question 4) and
+  `claude/wi-043-setup-refuses-before-hashing` (WS-043, question 5).
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).

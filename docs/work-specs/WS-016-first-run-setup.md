@@ -168,6 +168,8 @@ Technical, settled by the tests:
 
 ## Implementation record
 
+- Later change (WI-043, 2026-11-16): an installed server now answers `404` before hashing
+  the password; the check under the advisory lock still decides. See WS-043.
 - Red: schema, form, service, route and page tests failed on missing modules and
   behaviour (committed before any code).
 - Green: 272 Vitest tests (up from 250) and 15 Playwright tests (up from 14) pass.
