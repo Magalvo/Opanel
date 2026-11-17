@@ -1,6 +1,6 @@
 # WS-045 — Event contract and publishing
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-045](../work-items/WI-045-event-contract-and-publishing.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) sections 3 and 4 (amended
   here); [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decisions 1 to 4;

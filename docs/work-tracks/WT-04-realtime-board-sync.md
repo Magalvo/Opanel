@@ -206,7 +206,7 @@ WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 
 | Item                                                            | Title                                                                                                                | Status   | Depends on |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
-| [WI-045](../work-items/WI-045-event-contract-and-publishing.md) | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Proposed | none       |
+| [WI-045](../work-items/WI-045-event-contract-and-publishing.md) | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Approved | none       |
 | WI-046                                                          | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Draft    | WI-045     |
 | WI-047                                                          | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft    | WI-046     |
 | WI-048                                                          | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft    | WI-047     |

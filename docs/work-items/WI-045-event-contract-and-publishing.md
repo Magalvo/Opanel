@@ -1,6 +1,6 @@
 # WI-045 — Event contract and publishing
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (decisions 1 to 3)
 - Depends on: none
 - Work-spec: [WS-045](../work-specs/WS-045-event-contract-and-publishing.md)

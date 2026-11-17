@@ -11,8 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-050 (optional `SETUP_TOKEN` for the first-run setup), merged on
   2026-11-17 (PR #41), the first item of WT-04.
-- **Next:** WI-045 and WS-045 (event contract and publishing) are `Proposed` and await the
-  owner's approval; then implement WI-045, then WI-046.
+- **Next:** implement WI-045 (event contract and publishing; WS-045 approved on
+  2026-11-17); then WI-046.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -104,7 +104,7 @@ above and comes after WT-06.
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
 | [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
-| [WI-045](work-items/WI-045-event-contract-and-publishing.md)    | Event contract and publishing                               | Proposed    | [WS-045](work-specs/WS-045-event-contract-and-publishing.md)    | Proposed    |
+| [WI-045](work-items/WI-045-event-contract-and-publishing.md)    | Event contract and publishing                               | Approved    | [WS-045](work-specs/WS-045-event-contract-and-publishing.md)    | Approved    |
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
 
 ## Follow-ups
