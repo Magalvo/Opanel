@@ -33,8 +33,18 @@ export interface VersionConflictResponseContract {
   conflictOf: z.ZodType;
 }
 
+/**
+ * A Server-Sent Events stream (WS-047): `text/event-stream`, each event's `data` one value
+ * of `eventStream`.
+ */
+export interface EventStreamResponseContract {
+  description: string;
+  eventStream: z.ZodType;
+}
+
 export type ResponseContract =
   | JsonResponseContract
+  | EventStreamResponseContract
   | ProblemResponseContract
   | NoContentResponseContract
   | VersionConflictResponseContract;

@@ -44,7 +44,7 @@ test("the events stream reaches the browser through next start, unbuffered (WS-0
       received.push("open");
     });
     source.addEventListener("task.created", (event) => {
-      received.push(String((event as MessageEvent<string>).data));
+      received.push((event as MessageEvent<string>).data);
     });
   }, `/api/v1/projects/${key}/events`);
   await expect

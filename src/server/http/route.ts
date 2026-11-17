@@ -96,7 +96,11 @@ function withSharedBehaviour<Context>(
 
     // Copied because the headers of a response created elsewhere may be immutable.
     const headers = new Headers(response.headers);
-    headers.set("Cache-Control", "no-store");
+    // A handler may add directives to no-store (the event stream adds no-transform, WS-047),
+    // never weaken it.
+    if (!/(?:^|,)\s*no-store\s*(?:,|$)/.test(headers.get("Cache-Control") ?? "")) {
+      headers.set("Cache-Control", "no-store");
+    }
     headers.set("X-Request-Id", requestId);
     return new Response(response.body, {
       status: response.status,

@@ -187,6 +187,17 @@ export function rateLimited(retryAfterSeconds: number): ApiError {
   });
 }
 
+/** An account already holds the most event streams a process allows (WS-047). */
+export function tooManyStreams(): ApiError {
+  return new ApiError({
+    status: 429,
+    title: "Too Many Requests",
+    code: "too_many_streams",
+    detail: "Too many open event streams. Close one, or try again later.",
+    retryAfterSeconds: 30,
+  });
+}
+
 export function internalError(): ApiError {
   return new ApiError({
     status: 500,

@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+import type { EndpointContract } from "@/lib/openapi/contract";
+
+import { projectParamsSchema } from "./projects";
+
 /**
  * The events of a project (canonical doc 0002 section 3, as amended by WT-04 decision 1;
  * WS-045). Small and thin: identifiers and a version, never an entity's content, so the
@@ -87,3 +91,34 @@ export const PROJECT_EVENT_TYPES: readonly ProjectEventType[] = [
   "epic.changed",
   "project.changed",
 ];
+
+export const projectEventsContract = {
+  method: "get",
+  path: "/api/v1/projects/{projectId}/events",
+  summary: "Stream a project's events",
+  description:
+    "Server-Sent Events (WS-047): every change to the project's tasks, comments, columns, " +
+    "epics and the project itself, as it is committed. Each event says what changed, not " +
+    "how: read the entity again through its endpoint. Delivery is at most once; after a " +
+    "reconnection, reload what you show. At most 10 streams per account and app process.",
+  access: { kind: "permission", permission: "tasks:read" },
+  request: { params: projectParamsSchema },
+  responses: {
+    200: {
+      description:
+        "The stream. Each event is a frame `event: <type>` followed by `data: <the event as " +
+        "JSON>`. Lines starting with `:` are comments: `: connected` first, then `: heartbeat` " +
+        "every 25 seconds. `retry: 3000` asks the browser to wait 3 seconds before " +
+        "reconnecting. The stream ends when the session is no longer valid or events may " +
+        "have been missed.",
+      eventStream: projectEventSchema,
+    },
+    404: { description: "There is no such project.", problem: true },
+    429: {
+      description:
+        "The account has too many open streams (code `too_many_streams`); `Retry-After` says " +
+        "when to try again.",
+      problem: true,
+    },
+  },
+} satisfies EndpointContract;

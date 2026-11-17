@@ -28,6 +28,7 @@ import {
   listEpicsContract,
   updateEpicContract,
 } from "@/lib/schemas/epics";
+import { projectEventsContract } from "@/lib/schemas/events";
 import { healthContract } from "@/lib/schemas/health";
 import { openApiContract } from "@/lib/schemas/openapi";
 import { listPeopleContract } from "@/lib/schemas/people";
@@ -108,4 +109,5 @@ export const contracts: readonly EndpointContract[] = [
   updateEpicContract,
   listCommentsContract,
   createCommentContract,
+  projectEventsContract,
 ];

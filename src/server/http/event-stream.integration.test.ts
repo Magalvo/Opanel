@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Authenticated } from "@/server/auth/authenticate";
 import {
@@ -52,7 +52,7 @@ describe("openEventStream (WS-047)", () => {
     await reader.next();
 
     expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
-    await getDb().delete(sessions).where(eq(sessions.userId, member.id));
+    await getDb().delete(sessions).where(eq(sessions.accountId, member.id));
 
     await reader.closed();
   });
@@ -73,12 +73,13 @@ describe("openEventStream (WS-047)", () => {
 
   it("ends at the next heartbeat when the account no longer holds tasks:read", async () => {
     const { member, project, request } = await setup();
-    const withoutRead = async (): Promise<Authenticated> => ({
-      actor: { kind: "human", accountId: member.id, role: "viewer", permissions: new Set() },
-      account: member,
-      sessionId: "none",
-      headers: new Headers(),
-    });
+    const withoutRead = (): Promise<Authenticated> =>
+      Promise.resolve({
+        actor: { kind: "human", accountId: member.id, role: "viewer", permissions: new Set() },
+        account: member,
+        sessionId: "none",
+        headers: new Headers(),
+      });
 
     const reader = await stream({
       request,
@@ -131,8 +132,20 @@ describe("openEventStream (WS-047)", () => {
       }
     });
 
-    await reader.closed(10_000);
-    await stream({ request, projectId: project.id, account: member.id, maxStreamsPerAccount: 1 });
+    // Not read until it has been dropped: reading would drain the queue it is meant to fill.
+    // The notifications arrive after the commit, so wait for the place to come back.
+    await vi.waitFor(
+      async () => {
+        await stream({
+          request,
+          projectId: project.id,
+          account: member.id,
+          maxStreamsPerAccount: 1,
+        });
+      },
+      { timeout: 10_000, interval: 50 },
+    );
+    await reader.closed();
   });
 
   it("gives its place back when the hub cannot subscribe", async () => {
