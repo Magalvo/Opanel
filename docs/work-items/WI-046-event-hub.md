@@ -1,6 +1,6 @@
 # WI-046 — Event hub
 
-- Status: Approved
+- Status: Done
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (decisions 3 and 5)
 - Depends on: WI-045
 - Work-spec: [WS-046](../work-specs/WS-046-event-hub.md)
@@ -15,21 +15,21 @@ events endpoint is WI-047.
 
 ## Acceptance criteria
 
-- [ ] A subscriber of a project receives every event of that project, in the order
+- [x] A subscriber of a project receives every event of that project, in the order
       committed, and no event of another project.
-- [ ] Subscribing resolves only once `LISTEN` is active, so an event committed after that
+- [x] Subscribing resolves only once `LISTEN` is active, so an event committed after that
       is never missed. If `LISTEN` cannot be started, subscribing fails and a later
       subscription tries again.
-- [ ] An unsubscribed subscriber receives nothing more.
-- [ ] A payload that is not a valid event is dropped and logged without its content.
-- [ ] A subscriber that throws does not keep the others from receiving the event; the
+- [x] An unsubscribed subscriber receives nothing more.
+- [x] A payload that is not a valid event is dropped and logged without its content.
+- [x] A subscriber that throws does not keep the others from receiving the event; the
       failure is logged without its message (WS-042).
-- [ ] After the `LISTEN` connection is lost and comes back, every subscriber present at
+- [x] After the `LISTEN` connection is lost and comes back, every subscriber present at
       that time is told to reset and removed; events committed after that reach new
       subscribers.
-- [ ] One process opens one `LISTEN` connection, whatever the number of subscribers, and
+- [x] One process opens one `LISTEN` connection, whatever the number of subscribers, and
       hot reload in development does not open a second one.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

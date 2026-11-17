@@ -1,6 +1,6 @@
 # WS-046 — Event hub
 
-- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-17, questions 1 to 4 as proposed)
 - Work-item: [WI-046](../work-items/WI-046-event-hub.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) sections 2, 4 and 5;
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decisions 3, 5 and 8;
@@ -162,3 +162,24 @@ For the owner:
    **Recommend: keep it open; it is one idle connection.**
 4. **Notifications that are not events are logged.** Only code with database access can
    send one. Each is logged once, without content. **Recommend: as proposed.**
+
+## Deviations from the approved spec
+
+None in behaviour. Two details the spec left open:
+
+- `getEventHub()` passes the client's `listen` through a small arrow function, so the hub
+  depends only on the `Listen` type and not on the whole postgres.js client.
+- The unit tests' fake `listen` calls `onListen` before resolving, as the installed
+  library does (`src/index.js`: `listener.onlisten()` runs before `listen` returns).
+
+## Implementation record
+
+- Red: both test files failed on the missing `event-hub` module (committed before any
+  code).
+- Green: the 9 unit cases and the 3 integration tests pass. In the reconnection test, the
+  library listened again right after `pg_terminate_backend` and the reset came within its
+  first retry.
+- Full gate: 1078 Vitest tests (up from 1066) and 62 Playwright tests pass. Typecheck,
+  lint and format pass; `pnpm db:generate` and `pnpm openapi:generate` leave no diff.
+- Locally the database was PostgreSQL 16 (no Docker in the sandbox); CI runs the
+  PostgreSQL 18 of `compose.yaml`.
