@@ -12,6 +12,7 @@ import { type Database, getDb } from "@/server/db/client";
 import { notFound } from "@/server/http/errors";
 import { decodeCursor, encodeCursor } from "@/server/http/pagination";
 
+import { publishEvent } from "./events";
 import { lockWritableProject } from "./projects";
 import { recordTaskEvent } from "./task-events";
 import { findLiveTask } from "./tasks";
@@ -124,7 +125,15 @@ export async function createComment(
       type: "commented",
       newValue: { commentId: inserted.id },
     });
-    // WT-04 adds the `comment.created` notification here.
+    await publishEvent(tx, {
+      type: "comment.created",
+      entity: "comment",
+      projectId: task.projectId,
+      entityId: inserted.id,
+      taskId: task.id,
+      version: null,
+      actorAccountId: actor.accountId,
+    });
 
     const [row] = await tx.execute<CommentRow>(sql`${COMMENT_SELECT} where c.id = ${inserted.id}`);
     if (!row) throw new Error("The comment was not created.");

@@ -3,13 +3,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { ProjectEvent } from "@/lib/schemas/events";
 import { createTestAccount, failAuditFor, testActor } from "@/server/auth/testing";
-import { getDb } from "@/server/db/client";
+import { type Database, getDb } from "@/server/db/client";
 import { tasks } from "@/server/db/schema";
 
 import { createColumn, deleteColumn, listColumns, moveColumn, updateColumn } from "./columns";
 import { createComment } from "./comments";
 import { createEpic, updateEpic } from "./epics";
-import { publishEvent, type ProjectEventInput } from "./events";
+import { type ProjectEventInput,publishEvent } from "./events";
 import { type EventListener, listenForEvents } from "./events-testing";
 import { archiveProject, createProject, unarchiveProject, updateProject } from "./projects";
 import { createTask, deleteTask, moveTask, restoreTask, updateTask } from "./tasks";
@@ -420,7 +420,9 @@ describe("a refused or rolled-back write sends nothing", () => {
 
     const sent = await eventsOfRefused(() =>
       getDb().transaction(async (tx) => {
-        await createTask(actor, "OPA", { title: "Undone" }, tx);
+        // Services take the client, whose `transaction` a drizzle transaction also has (it
+        // opens a savepoint); only the pool handle `$client` is missing, which they never use.
+        await createTask(actor, "OPA", { title: "Undone" }, tx as unknown as Database);
         throw new Error("rolled back");
       }),
     );
