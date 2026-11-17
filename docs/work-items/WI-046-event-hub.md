@@ -1,6 +1,6 @@
 # WI-046 — Event hub
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (decisions 3 and 5)
 - Depends on: WI-045
 - Work-spec: [WS-046](../work-specs/WS-046-event-hub.md)

@@ -1,6 +1,6 @@
 # WS-046 — Event hub
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 4 as proposed)
 - Work-item: [WI-046](../work-items/WI-046-event-hub.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) sections 2, 4 and 5;
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decisions 3, 5 and 8;
