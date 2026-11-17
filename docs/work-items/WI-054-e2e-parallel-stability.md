@@ -1,16 +1,16 @@
-# WI-053 — A keyboard move lands where it was announced, and the suite is stable in parallel
+# WI-054 — A keyboard move lands where it was announced, and the suite is stable in parallel
 
 - Status: Proposed
 - Work-track: none: the follow-up of WI-052 (audit of 2026-11-17, finding A09)
 - Depends on: WI-052 (its branch is stacked on `claude/wi-052-e2e-isolation`, for the
   docs index and `playwright.config.ts`)
-- Work-spec: [WS-053](../work-specs/WS-053-e2e-parallel-stability.md)
+- Work-spec: [WS-054](../work-specs/WS-054-e2e-parallel-stability.md)
 
 ## Outcome
 
 WS-052 ("Deviations") recorded end-to-end tests that fail when the suite runs in
 parallel on a 12-core Windows machine, and one Vitest test that times out under load. The
-investigation in WS-053 found two different causes:
+investigation in WS-054 found two different causes:
 
 1. **A real bug on the board.** When a card is carried by keyboard into a column that
    holds exactly one card, the board first announces "position 2 of 2" and, about 40 ms
@@ -49,6 +49,6 @@ machine is.
 
 ## Notes
 
-The investigation, measurements and the trace that shows the cause are in WS-053,
+The investigation, measurements and the trace that shows the cause are in WS-054,
 "Investigation". The static-asset slowness of `next start` under parallel load is noted
 there and not changed by this item.

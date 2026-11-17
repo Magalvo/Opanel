@@ -1,7 +1,7 @@
-# WS-053 — A keyboard move lands where it was announced, and the suite is stable in parallel
+# WS-054 — A keyboard move lands where it was announced, and the suite is stable in parallel
 
 - Status: Proposed
-- Work-item: [WI-053](../work-items/WI-053-e2e-parallel-stability.md)
+- Work-item: [WI-054](../work-items/WI-054-e2e-parallel-stability.md)
 - Canonical docs: [WS-037](WS-037-board-page.md) (board, drag and drop, the collision
   rule), [WS-007](WS-007-e2e.md) (Playwright), [WS-052](WS-052-e2e-admin-isolation.md)
   ("Deviations", where the failures were recorded)
@@ -160,7 +160,7 @@ test runs first.
 | `src/lib/openapi/routes.test.ts`         | modify: route modules loaded once in `beforeAll`        |
 | `CONTRIBUTING.md`                        | modify: one line on local workers                       |
 | `docs/work-specs/WS-037-board-page.md`   | modify: the keyboard collision line points to this spec |
-| `docs/README.md`, WI-053, WS-053         | modify: statuses                                        |
+| `docs/README.md`, WI-054, WS-054         | modify: statuses                                        |
 
 No dependency, no migration, no API change.
 

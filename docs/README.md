@@ -25,9 +25,9 @@ Updated at the end of every work-item, so that a new session can start from here
   2026-11-17, on the branch `claude/wi-051-cursor-validation`.
 - **Also finished:** WI-052 (end-to-end Admin isolation, audit of 2026-11-17, finding A09),
   on 2026-11-17, on the branch `claude/wi-052-e2e-isolation`, stacked on WI-051.
-- **Proposed on 2026-11-17, awaiting the owner:** WI-053 and WS-053 (a keyboard move lands
+- **Proposed on 2026-11-17, awaiting the owner:** WI-054 and WS-054 (a keyboard move lands
   where it was announced, and the end-to-end suite is stable in parallel), the follow-up
-  of WI-052, on the branch `claude/wi-053-e2e-parallel-stability`, stacked on WI-052.
+  of WI-052, on the branch `claude/wi-054-e2e-parallel-stability`, stacked on WI-052.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -117,7 +117,7 @@ above and comes after WT-06.
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
 | [WI-051](work-items/WI-051-cursor-date-validation.md)           | Creation-time cursors are checked as dates                  | Done        | [WS-051](work-specs/WS-051-cursor-date-validation.md)           | Done        |
 | [WI-052](work-items/WI-052-e2e-admin-isolation.md)              | End-to-end tests do not deactivate each other's Admins      | Done        | [WS-052](work-specs/WS-052-e2e-admin-isolation.md)              | Done        |
-| [WI-053](work-items/WI-053-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E  | Proposed    | [WS-053](work-specs/WS-053-e2e-parallel-stability.md)           | Proposed    |
+| [WI-054](work-items/WI-054-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E  | Proposed    | [WS-054](work-specs/WS-054-e2e-parallel-stability.md)           | Proposed    |
 
 ## Follow-ups
 
@@ -174,7 +174,7 @@ Other follow-ups:
   `claude/wi-042-safe-error-logging` (WS-042, question 4) and
   `claude/wi-043-setup-refuses-before-hashing` (WS-043, question 5).
 - End-to-end tests that fail in parallel runs (WS-052, "Deviations"): investigated and
-  proposed as WI-053 / WS-053 on 2026-11-17. The keyboard move is a real board bug (the
+  proposed as WI-054 / WS-054 on 2026-11-17. The keyboard move is a real board bug (the
   drop target changes by itself about 40 ms after the arrow key); the rest is load on the
   local machine and does not show on CI.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
