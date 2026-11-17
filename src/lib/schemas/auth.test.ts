@@ -147,6 +147,17 @@ describe("setupRequestSchema", () => {
     expect(setup?.responses[403]?.description).toContain("invalid_setup_token");
   });
 
+  it.each([
+    ["post", "/api/v1/auth/sign-in"],
+    ["post", "/api/v1/setup"],
+    ["post", "/api/v1/account-links/accept"],
+    ["post", "/api/v1/me/password"],
+  ])("%s %s documents the 429 of a busy server (WS-056)", (method, path) => {
+    const contract = contracts.find((c) => c.method === method && c.path === path);
+
+    expect(contract?.responses[429]?.description).toContain("server_busy");
+  });
+
   it("documents the 403 of a production server with no setup token (WS-055)", () => {
     const setup = contracts.find((c) => c.method === "post" && c.path === "/api/v1/setup");
 

@@ -2,13 +2,28 @@ import { describe, expect, it, vi } from "vitest";
 
 import { accountSummarySchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
+import type * as HashGate from "@/server/auth/hash-gate";
 import { APP_ORIGIN, createTestAccount, postRequest, TEST_PASSWORD } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { auditLog, rateLimits, sessions } from "@/server/db/schema";
+import { serverBusy } from "@/server/http/errors";
 
 import { POST } from "./route";
 
 const path = "/api/v1/auth/sign-in";
+
+// The process hash gate, real unless a test fills it (WS-056).
+const gateState = vi.hoisted(() => ({ full: false }));
+vi.mock("@/server/auth/hash-gate", async (importOriginal) => {
+  const actual = await importOriginal<typeof HashGate>();
+  return {
+    ...actual,
+    hashGate: {
+      run: <T>(task: () => Promise<T>): Promise<T> =>
+        gateState.full ? Promise.reject(serverBusy()) : actual.hashGate.run(task),
+    },
+  };
+});
 
 describe("POST /api/v1/auth/sign-in", () => {
   it("returns 200 with the account and a hardened session cookie", async () => {
@@ -86,6 +101,32 @@ describe("POST /api/v1/auth/sign-in", () => {
     expect(right.status).toBe(429);
     expect(claimingTrust.status).toBe(400);
   });
+
+  it.each([
+    ["an existing account, through Better Auth's own verify", "ada@example.com"],
+    ["an unknown email, through the dummy verify", "nobody@example.com"],
+  ])(
+    "answers 429 server_busy with Retry-After 1 while the hash gate is full: %s (WS-056)",
+    async (_case, email) => {
+      await createTestAccount();
+      gateState.full = true;
+      let response: Response;
+      try {
+        response = await POST(postRequest(path, { email, password: TEST_PASSWORD }), undefined);
+      } finally {
+        gateState.full = false;
+      }
+
+      expect(response.status).toBe(429);
+      expect(response.headers.get("retry-after")).toBe("1");
+      const problem = problemSchema.parse(await response.json());
+      expect(problem.code).toBe("server_busy");
+      expect(problem.requestId).toBe(response.headers.get("x-request-id"));
+      const actions = (await getDb().select().from(auditLog)).map((row) => row.action);
+      expect(actions).not.toContain("auth.sign_in");
+      expect(await getDb().select().from(sessions)).toHaveLength(0);
+    },
+  );
 
   it("rejects a foreign Origin with 403 before reading the body", async () => {
     await createTestAccount();

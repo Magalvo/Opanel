@@ -15,6 +15,7 @@ export const PROBLEM_CODES = [
   "last_admin",
   "unsupported_media_type",
   "rate_limited",
+  "server_busy",
   "internal_error",
   "invalid_link",
   "invalid_setup_token",

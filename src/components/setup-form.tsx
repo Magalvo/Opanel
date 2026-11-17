@@ -80,6 +80,9 @@ export function SetupForm({ tokenRequired }: { tokenRequired: boolean }) {
 
       if (response.status === 404) {
         setFormError("This installation is already set up.");
+      } else if (response.status === 429) {
+        // Setup has no limiter: a 429 means the server is busy hashing (WS-056).
+        setFormError("The server is busy. Try again in a moment.");
       } else if (problem?.success && problem.data.code === "invalid_setup_token") {
         setErrors({ setupToken: "The setup token is not correct." });
       } else if (response.status === 400) {
