@@ -23,6 +23,7 @@ import {
 } from "@/server/http/errors";
 import { decodeBoardCursor, encodeBoardCursor } from "@/server/http/pagination";
 
+import { type ProjectEventInput, publishEvent } from "./events";
 import { isPerson } from "./people";
 import { claimTaskNumber, findProjectRef, lockWritableProject } from "./projects";
 import { recordTaskEvent } from "./task-events";
@@ -252,6 +253,25 @@ export async function listTasks(
   };
 }
 
+type TaskEventType =
+  "task.created" | "task.updated" | "task.moved" | "task.deleted" | "task.restored";
+
+/** The event that announces a write to a task, with its version after the write (WS-045). */
+function taskEvent(
+  type: TaskEventType,
+  task: { id: string; project_id: string; version: number },
+  actor: Actor,
+): ProjectEventInput {
+  return {
+    type,
+    entity: "task",
+    projectId: task.project_id,
+    entityId: task.id,
+    version: task.version,
+    actorAccountId: actor.accountId,
+  };
+}
+
 export async function createTask(
   actor: Actor,
   projectRef: string,
@@ -313,6 +333,7 @@ export async function createTask(
 
     const created = await findTask(tx, row.id);
     if (!created) throw taskNotFound();
+    await publishEvent(tx, taskEvent("task.created", created, actor));
     return toTask(created);
   });
 }
@@ -393,6 +414,7 @@ export async function updateTask(
 
     const updated = await findTask(tx, before.id);
     if (!updated) throw taskNotFound();
+    await publishEvent(tx, taskEvent("task.updated", updated, actor));
     return toTask(updated);
   });
 }
@@ -485,6 +507,7 @@ export async function moveTask(
 
     const moved = await findTask(tx, before.id);
     if (!moved) throw taskNotFound();
+    await publishEvent(tx, taskEvent("task.moved", moved, actor));
     return toTask(moved);
   });
 }
@@ -505,11 +528,14 @@ export async function deleteTask(actor: Actor, ref: string, db: Database = getDb
     if (!task) throw taskNotFound();
     if (!canDeleteTask(actor, { reporterId: task.reporter_id })) throw forbidden();
 
-    await tx.execute(sql`
+    const [deleted] = await tx.execute<{ version: number }>(sql`
       update tasks set deleted_at = now(), deleted_by = ${actor.accountId},
         version = version + 1, updated_at = now()
-      where id = ${task.id}`);
+      where id = ${task.id}
+      returning version`);
+    if (!deleted) throw taskNotFound();
     await recordTaskEvent(tx, { taskId: task.id, actor, type: "deleted" });
+    await publishEvent(tx, taskEvent("task.deleted", { ...task, version: deleted.version }, actor));
   });
 }
 
@@ -537,6 +563,7 @@ export async function restoreTask(
 
     const restored = await findTask(tx, task.id);
     if (!restored) throw taskNotFound();
+    await publishEvent(tx, taskEvent("task.restored", restored, actor));
     return toTask(restored);
   });
 }

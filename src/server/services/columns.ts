@@ -22,6 +22,7 @@ import {
 } from "@/server/http/errors";
 
 import { recordAudit } from "./audit";
+import { publishEvent } from "./events";
 import { getProject, lockWritableProject } from "./projects";
 import { recordTaskEvent } from "./task-events";
 
@@ -170,7 +171,28 @@ export async function createColumn(
       sql`select ${COLUMN_COLUMNS} from columns c where c.id = ${row.id}`,
     );
     if (!created) throw columnNotFound();
+    await publishColumnChanged(tx, actor, created, created.version);
     return toColumn(created);
+  });
+}
+
+/**
+ * Announces a change to a column (WS-045). `version` is the column's after the write, or
+ * `null` when it was deleted.
+ */
+async function publishColumnChanged(
+  executor: Executor,
+  actor: Actor,
+  column: { id: string; project_id: string },
+  version: number | null,
+): Promise<void> {
+  await publishEvent(executor, {
+    type: "column.changed",
+    entity: "column",
+    projectId: column.project_id,
+    entityId: column.id,
+    version,
+    actorAccountId: actor.accountId,
   });
 }
 
@@ -220,6 +242,7 @@ export async function updateColumn(
         data: { projectId: column.project_id, changed },
       });
     }
+    await publishColumnChanged(tx, actor, saved, saved.version);
     return toColumn(saved);
   });
 }
@@ -268,6 +291,7 @@ export async function moveColumn(
         data: { projectId: column.project_id },
       });
     }
+    await publishColumnChanged(tx, actor, saved, saved.version);
     return toColumn(saved);
   });
 }
@@ -346,5 +370,7 @@ async function deleteColumnRow(actor: Actor, columnId: string, db: Database): Pr
       entityId: column.id,
       data: { projectId: column.project_id, name: column.name, category: column.category },
     });
+    // The deleted tasks moved out above send no events (WS-045, question 1).
+    await publishColumnChanged(tx, actor, column, null);
   });
 }

@@ -9,11 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-050 (optional `SETUP_TOKEN` for the first-run setup), on
-  2026-11-17, the first item of WT-04. Its branch is stacked on the WT-04 docs branch
-  (`claude/dreamy-pasteur-fdl401`), so its pull request follows that one.
-- **Next:** draft WI-045 (event contract and publishing) and WS-045 as `Proposed`, and stop
-  for the owner's approval.
+- **Last finished:** WI-045 (event contract and publishing), on 2026-11-17: every board
+  write sends its event with `pg_notify`; doc 0002 carries the WT-04 amendment.
+- **Next:** draft WI-046 (event hub) and WS-046 as `Proposed`, and stop for the owner's
+  approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -105,6 +104,7 @@ above and comes after WT-06.
 | [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                          | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
 | [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                      | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
+| [WI-045](work-items/WI-045-event-contract-and-publishing.md)    | Event contract and publishing                               | Done        | [WS-045](work-specs/WS-045-event-contract-and-publishing.md)    | Done        |
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
 
 ## Follow-ups

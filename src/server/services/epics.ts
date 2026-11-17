@@ -15,6 +15,7 @@ import { invalidRequest, notFound, versionConflict } from "@/server/http/errors"
 import { decodeNameCursor, encodeNameCursor } from "@/server/http/pagination";
 
 import { recordAudit } from "./audit";
+import { publishEvent } from "./events";
 import { findProjectRef, lockWritableProject } from "./projects";
 
 type Executor = Pick<Database, "execute">;
@@ -120,6 +121,22 @@ export async function getEpic(actor: Actor, epicId: string, db: Database = getDb
   return toEpic(row);
 }
 
+/** Announces a change to an epic, with its version after the write (WS-045). */
+async function publishEpicChanged(
+  executor: Pick<Database, "execute">,
+  actor: Actor,
+  epic: { id: string; project_id: string; version: number },
+): Promise<void> {
+  await publishEvent(executor, {
+    type: "epic.changed",
+    entity: "epic",
+    projectId: epic.project_id,
+    entityId: epic.id,
+    version: epic.version,
+    actorAccountId: actor.accountId,
+  });
+}
+
 export async function createEpic(
   actor: Actor,
   projectRef: string,
@@ -153,6 +170,7 @@ export async function createEpic(
 
     const created = await findEpic(tx, row.id);
     if (!created) throw epicNotFound();
+    await publishEpicChanged(tx, actor, created);
     return toEpic(created);
   });
 }
@@ -233,6 +251,7 @@ export async function updateEpic(
 
     const updated = await findEpic(tx, epicId);
     if (!updated) throw epicNotFound();
+    await publishEpicChanged(tx, actor, updated);
     return toEpic(updated);
   });
 }

@@ -15,6 +15,7 @@ import { notFound, projectArchived, projectKeyTaken, versionConflict } from "@/s
 import { decodeNameCursor, encodeNameCursor } from "@/server/http/pagination";
 
 import { recordAudit } from "./audit";
+import { publishEvent } from "./events";
 
 type Executor = Pick<Database, "execute">;
 
@@ -257,7 +258,24 @@ export async function updateProject(
         data: { changed },
       });
     }
+    await publishProjectChanged(tx, actor, updated);
     return toProject(updated);
+  });
+}
+
+/** Announces a change to a project, with its version after the write (WS-045). */
+async function publishProjectChanged(
+  executor: Executor,
+  actor: Actor,
+  project: { id: string; version: number },
+): Promise<void> {
+  await publishEvent(executor, {
+    type: "project.changed",
+    entity: "project",
+    projectId: project.id,
+    entityId: project.id,
+    version: project.version,
+    actorAccountId: actor.accountId,
   });
 }
 
@@ -291,6 +309,7 @@ async function setArchived(
       entityId: project.id,
       data: { key: project.key },
     });
+    await publishProjectChanged(tx, actor, updated);
     return toProject(updated);
   });
 }
