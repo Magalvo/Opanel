@@ -208,7 +208,7 @@ WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------ | ---------- |
 | [WI-045](../work-items/WI-045-event-contract-and-publishing.md) | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Done   | none       |
 | [WI-046](../work-items/WI-046-event-hub.md)                     | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Done   | WI-045     |
-| WI-047                                                          | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Draft  | WI-046     |
+| [WI-047](../work-items/WI-047-events-endpoint.md)               | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Done   | WI-046     |
 | WI-048                                                          | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft  | WI-047     |
 | WI-049                                                          | Live task detail, epics page and project settings                                                                    | Draft  | WI-048     |
 | [WI-050](../work-items/WI-050-setup-token.md)                   | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Done   | none       |
@@ -261,7 +261,7 @@ Test plan by item, from doc 0002 section 7:
       rollback, tested on the real database.
 - [ ] After the stream or the `LISTEN` connection drops, an open board reconnects and
       shows the current state.
-- [ ] The events endpoint refuses without a session (`401`), without `tasks:read`
+- [x] The events endpoint refuses without a session (`401`), without `tasks:read`
       (`403`) and beyond the cap (`429 too_many_streams`); a revoked session's stream
       closes within one heartbeat.
 - [x] Doc 0002 lists the event types and payload of decision 1 and the echo rule of

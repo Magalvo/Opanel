@@ -49,6 +49,14 @@ it. The health endpoint is at
 If port 5432 is already in use on your machine, see
 [CONTRIBUTING.md](CONTRIBUTING.md#local-database).
 
+## Running in production
+
+Opanel must run as a long-lived Node.js server (`pnpm build`, then `pnpm start`), not on
+serverless or edge hosting: open boards keep a Server-Sent Events stream to
+`/api/v1/projects/{projectId}/events`. A reverse proxy in front of it must not buffer that
+path (Opanel sends `X-Accel-Buffering: no`, which nginx honours) and must let a response
+stay open far longer than the 25-second heartbeat.
+
 ## Commands
 
 The five commands marked **gate** are the quality gate: all of them must pass before a

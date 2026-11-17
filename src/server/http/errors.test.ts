@@ -10,6 +10,7 @@ import {
   notFound,
   payloadTooLarge,
   rateLimited,
+  tooManyStreams,
   unauthenticated,
   unsupportedMediaType,
   versionConflict,
@@ -61,6 +62,7 @@ describe("ApiError constructors", () => {
     ],
     ["payloadTooLarge", payloadTooLarge(), 413, "Content Too Large", "payload_too_large"],
     ["rateLimited", rateLimited(30), 429, "Too Many Requests", "rate_limited"],
+    ["tooManyStreams", tooManyStreams(), 429, "Too Many Requests", "too_many_streams"],
     ["internalError", internalError(), 500, "Internal Server Error", "internal_error"],
   ])("%s carries the status and code of doc 0004", (_name, error, status, title, code) => {
     expect(error).toBeInstanceOf(ApiError);
@@ -81,6 +83,10 @@ describe("ApiError constructors", () => {
   it("keeps a custom detail", () => {
     expect(conflict("Already exists.").detail).toBe("Already exists.");
     expect(notFound("No such project.").detail).toBe("No such project.");
+  });
+
+  it("asks a client with too many streams to wait 30 seconds (WS-047)", () => {
+    expect(tooManyStreams().retryAfterSeconds).toBe(30);
   });
 
   it("keeps the wait of a rate limit, in whole seconds", () => {

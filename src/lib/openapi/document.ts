@@ -53,6 +53,12 @@ function toResponse(response: ResponseContract): Responses[StatusCode] {
   if ("noContent" in response) {
     return { description: response.description };
   }
+  if ("eventStream" in response) {
+    return {
+      description: response.description,
+      content: { "text/event-stream": { schema: response.eventStream } },
+    };
+  }
   if ("conflictOf" in response) {
     return {
       description: response.description,
