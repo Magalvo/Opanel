@@ -1,6 +1,6 @@
 # WS-047 — Events endpoint
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (approved by the owner on 2026-11-17, questions 1 to 5 as proposed)
 - Work-item: [WI-047](../work-items/WI-047-events-endpoint.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) sections 3 to 5;
   [WT-04](../work-tracks/WT-04-realtime-board-sync.md) decisions 6, 7, 8, 11 and 12;

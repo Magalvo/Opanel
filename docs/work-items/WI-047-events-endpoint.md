@@ -1,6 +1,6 @@
 # WI-047 — Events endpoint
 
-- Status: Proposed
+- Status: Approved
 - Work-track: [WT-04](../work-tracks/WT-04-realtime-board-sync.md) (decisions 6, 7, 8, 11
   and 12)
 - Depends on: WI-046

@@ -11,8 +11,8 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-046 (event hub), on 2026-11-17, on the branch
   `claude/wi-046-event-hub` (WI-045 was merged in PR #42).
-- **Next:** WI-047 and WS-047 (events endpoint) are `Proposed` and await the owner's
-  approval. Their branch `claude/dreamy-pasteur-fdl401` is stacked on WI-046 (PR #43).
+- **Next:** implement WI-047 (events endpoint; WS-047 approved on 2026-11-17) on the
+  branch `claude/dreamy-pasteur-fdl401`, stacked on WI-046 (PR #43); then WI-048.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -106,7 +106,7 @@ above and comes after WT-06.
 | [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                     | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
 | [WI-045](work-items/WI-045-event-contract-and-publishing.md)    | Event contract and publishing                               | Done        | [WS-045](work-specs/WS-045-event-contract-and-publishing.md)    | Done        |
 | [WI-046](work-items/WI-046-event-hub.md)                        | Event hub                                                   | Done        | [WS-046](work-specs/WS-046-event-hub.md)                        | Done        |
-| [WI-047](work-items/WI-047-events-endpoint.md)                  | Events endpoint                                             | Proposed    | [WS-047](work-specs/WS-047-events-endpoint.md)                  | Proposed    |
+| [WI-047](work-items/WI-047-events-endpoint.md)                  | Events endpoint                                             | Approved    | [WS-047](work-specs/WS-047-events-endpoint.md)                  | Approved    |
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
 
 ## Follow-ups
