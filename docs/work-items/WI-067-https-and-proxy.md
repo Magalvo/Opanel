@@ -32,8 +32,8 @@ After this item:
 - [x] Behind the example proxy, `http://` redirects to `https://`.
 - [x] Behind it, the events stream's first frame (`: connected`) arrives within 2 seconds
       and an event committed afterwards arrives without the stream closing.
-- [x] Behind it, a JSON body of 700 KiB is answered by the app with `413
-  payload_too_large`; one of 2 MiB is refused by the proxy itself.
+- [x] Behind it, a JSON body of 700 KiB is answered by the app itself, with a `413` and
+      the code `payload_too_large`; one of 2 MiB is refused by the proxy itself.
 - [x] Behind it, a client's own `X-Forwarded-For` is ignored: the sign-in limiter of the
       client's address answers `429` at the 51st attempt from one client whatever address
       it claims.
