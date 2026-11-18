@@ -2,6 +2,7 @@ import type { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { type FieldError, type Problem, PROBLEM_CONTENT_TYPE } from "@/lib/schemas/problem";
+import { strictTransportSecurity } from "@/lib/security-headers";
 import { requirePermission } from "@/server/auth/actor";
 import { authenticate, type Authenticated } from "@/server/auth/authenticate";
 import { assertSameOrigin } from "@/server/auth/origin";
@@ -76,6 +77,7 @@ function problemResponse(error: ApiError, requestId: string): Response {
 function withSharedBehaviour<Context>(
   handler: RouteHandler<Context>,
   logError: (message: string) => void,
+  appUrl: string | undefined,
 ): (request: Request, context: Context) => Promise<Response> {
   return async (request, context) => {
     // Always generated here: an id supplied by the client would let it write into logs.
@@ -102,6 +104,9 @@ function withSharedBehaviour<Context>(
       headers.set("Cache-Control", "no-store");
     }
     headers.set("X-Request-Id", requestId);
+    // Only on an install served over HTTPS (WS-067).
+    const hsts = strictTransportSecurity(appUrl ?? getEnv().APP_URL);
+    if (hsts !== null) headers.set("Strict-Transport-Security", hsts);
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
@@ -125,27 +130,31 @@ export function route<const Contract extends EndpointContract, Context = unknown
   handler: ContractHandler<Contract, Context>,
   { logError = console.error, appUrl }: RouteOptions = {},
 ): ContractRoute<Context> {
-  const wrapped = withSharedBehaviour<Context>(async (request, context) => {
-    if (STATE_CHANGING_METHODS.has(request.method)) {
-      assertSameOrigin(request, appUrl ?? getEnv().APP_URL);
-    }
+  const wrapped = withSharedBehaviour<Context>(
+    async (request, context) => {
+      if (STATE_CHANGING_METHODS.has(request.method)) {
+        assertSameOrigin(request, appUrl ?? getEnv().APP_URL);
+      }
 
-    if (contract.access.kind === "public") {
-      // AuthFor<Contract> is undefined exactly when the access is public.
-      return handler(request, context, undefined as AuthFor<Contract>);
-    }
+      if (contract.access.kind === "public") {
+        // AuthFor<Contract> is undefined exactly when the access is public.
+        return handler(request, context, undefined as AuthFor<Contract>);
+      }
 
-    const auth = await authenticate(request);
-    if (contract.access.kind === "permission") {
-      requirePermission(auth.actor, contract.access.permission);
-    }
+      const auth = await authenticate(request);
+      if (contract.access.kind === "permission") {
+        requirePermission(auth.actor, contract.access.permission);
+      }
 
-    const response = await handler(request, context, auth as AuthFor<Contract>);
-    if (response.headers.getSetCookie().length > 0) {
-      return response;
-    }
-    return withCookies(new Response(response.body, response), auth.headers);
-  }, logError);
+      const response = await handler(request, context, auth as AuthFor<Contract>);
+      if (response.headers.getSetCookie().length > 0) {
+        return response;
+      }
+      return withCookies(new Response(response.body, response), auth.headers);
+    },
+    logError,
+    appUrl,
+  );
 
   return Object.assign(wrapped, { contract });
 }
@@ -156,9 +165,9 @@ export function route<const Contract extends EndpointContract, Context = unknown
  */
 export function unknownPathRoute<Context = unknown>(
   handler: RouteHandler<Context>,
-  { logError = console.error }: Pick<RouteOptions, "logError"> = {},
+  { logError = console.error, appUrl }: RouteOptions = {},
 ): (request: Request, context: Context) => Promise<Response> {
-  return withSharedBehaviour(handler, logError);
+  return withSharedBehaviour(handler, logError, appUrl);
 }
 
 /** Copies only the `Set-Cookie` headers of `source` onto `response`, which must be mutable. */

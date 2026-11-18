@@ -666,3 +666,36 @@ describe("ApiError outside the wrapper", () => {
     expect(() => readQuery(new Request(`${URL_BASE}?x=1`), z.strictObject({}))).toThrow(ApiError);
   });
 });
+
+describe("route: Strict-Transport-Security (WS-067)", () => {
+  function wrapped(appUrl: string, respond: () => Response | Promise<Response>) {
+    return route(publicThing, respond, { logError: () => undefined, appUrl });
+  }
+
+  it("is on a success, a problem and a streamed response when APP_URL is https:", async () => {
+    const https = "https://opanel.example.com";
+    const success = await wrapped(https, () => json({ ok: true }))(get(), undefined);
+    const problem = await wrapped(https, () => {
+      throw notFound();
+    })(get(), undefined);
+    const stream = await wrapped(
+      https,
+      () =>
+        new Response(new ReadableStream(), {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-store, no-transform",
+          },
+        }),
+    )(get(), undefined);
+
+    for (const response of [success, problem, stream]) {
+      expect(response.headers.get("Strict-Transport-Security")).toBe("max-age=31536000");
+    }
+  });
+
+  it("is not there when APP_URL is http:", async () => {
+    const response = await wrapped(APP_URL, () => json({ ok: true }))(get(), undefined);
+    expect(response.headers.get("Strict-Transport-Security")).toBeNull();
+  });
+});

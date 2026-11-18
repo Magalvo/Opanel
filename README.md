@@ -65,6 +65,14 @@ link, printed once; send it to the Admin and do not keep it (WS-065):
 docker compose -f compose.production.yaml run --rm app node dist/recover-admin.mjs --email admin@example.com
 ```
 
+No HTTPS proxy of your own? Start the example one, Caddy with
+`docker/production/Caddyfile`: set `OPANEL_SITE` to your public name (for example
+`opanel.example.com`) in the shell or in a `.env` file next to `compose.production.yaml`,
+`APP_URL` in `.env.production` to the same with `https://`, and
+`CLIENT_IP_HEADER=x-forwarded-for`, then add `--profile proxy` to the `up` command. Caddy
+obtains the certificate, redirects HTTP to HTTPS and passes the events stream through
+unbuffered; Opanel then sends `Strict-Transport-Security` (WS-067).
+
 Schedule the maintenance command daily (cron, a systemd timer): it deletes expired
 sessions, links used or expired more than 30 days ago and ended rate-limit counters, and
 never touches the audit log or the task history (WS-066):

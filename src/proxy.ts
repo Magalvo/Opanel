@@ -1,8 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { contentSecurityPolicy, createNonce } from "@/lib/security-headers";
+import {
+  contentSecurityPolicy,
+  createNonce,
+  strictTransportSecurity,
+} from "@/lib/security-headers";
 import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
-import { getNodeEnv } from "@/server/env";
+import { getEnv, getNodeEnv } from "@/server/env";
 
 const PUBLIC_PATHS = ["/sign-in", "/setup", "/accept"];
 
@@ -14,9 +18,11 @@ function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
-function withPageHeaders(response: NextResponse, policy: string): NextResponse {
+function withPageHeaders(response: NextResponse, policy: string, appUrl: string): NextResponse {
   response.headers.set("Content-Security-Policy", policy);
   response.headers.set("X-Frame-Options", "DENY");
+  const hsts = strictTransportSecurity(appUrl);
+  if (hsts !== null) response.headers.set("Strict-Transport-Security", hsts);
   return response;
 }
 
@@ -34,6 +40,14 @@ function withPageHeaders(response: NextResponse, policy: string): NextResponse {
  * API requests pass through untouched: they are JSON, never rendered as a page.
  */
 export function proxy(request: NextRequest): NextResponse {
+  return handleProxy(request, getEnv().APP_URL);
+}
+
+/**
+ * The proxy's work, with the app's public address given (WS-067: it decides
+ * `Strict-Transport-Security`). Exported for the tests.
+ */
+export function handleProxy(request: NextRequest, appUrl: string): NextResponse {
   const { pathname, search } = request.nextUrl;
   if (isApi(pathname)) {
     return NextResponse.next();
@@ -49,12 +63,12 @@ export function proxy(request: NextRequest): NextResponse {
     const headers = new Headers(request.headers);
     headers.set("x-nonce", nonce);
     headers.set("Content-Security-Policy", policy);
-    return withPageHeaders(NextResponse.next({ request: { headers } }), policy);
+    return withPageHeaders(NextResponse.next({ request: { headers } }), policy, appUrl);
   }
 
   const signIn = new URL("/sign-in", request.url);
   signIn.searchParams.set("next", `${pathname}${search}`);
-  return withPageHeaders(NextResponse.redirect(signIn), policy);
+  return withPageHeaders(NextResponse.redirect(signIn), policy, appUrl);
 }
 
 export const config = {

@@ -22,6 +22,7 @@ on:
       - src/**
       - scripts/**
       - .github/workflows/image.yml
+      - docker/**
   push:
     branches: [main]
     paths:
@@ -37,6 +38,7 @@ on:
       - src/**
       - scripts/**
       - .github/workflows/image.yml
+      - docker/**
 
 concurrency:
   group: image-${{ github.event.pull_request.number || github.ref }}
@@ -56,3 +58,7 @@ jobs:
 
       - name: Build the image and check the example install
         run: bash scripts/smoke-production.sh
+
+      # The same install behind the example reverse proxy (WS-067).
+      - name: Check the example install behind the example proxy
+        run: bash scripts/smoke-proxy.sh

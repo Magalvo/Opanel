@@ -1,0 +1,24 @@
+# An example HTTPS reverse proxy in front of Opanel (WS-067, canonical doc 0006 section 4),
+# run by the `proxy` profile of compose.production.yaml. Caddy obtains the certificate and
+# redirects HTTP to HTTPS by itself.
+#
+# OPANEL_SITE: the public address, for example opanel.example.com. Set APP_URL to the same
+# with https://, and CLIENT_IP_HEADER=x-forwarded-for.
+{$OPANEL_SITE} {
+	# Empty in production. The smoke test sets it to `tls internal` (a local test CA).
+	{$OPANEL_CADDY_TLS}
+
+	# Above the app's own 512 KiB limit, so the app answers its 413 for bodies between the
+	# two, and nothing larger reaches it.
+	request_body {
+		max_size 1MB
+	}
+
+	reverse_proxy app:3000 {
+		# The address Caddy saw, replacing anything the client sent: CLIENT_IP_HEADER can
+		# trust it.
+		header_up X-Forwarded-For {remote_host}
+		# The events stream (/api/v1/projects/*/events) passes through as it is written.
+		flush_interval -1
+	}
+}
