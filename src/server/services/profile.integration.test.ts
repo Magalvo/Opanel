@@ -9,12 +9,14 @@ import {
   signInCookie,
   TEST_PASSWORD,
   testActor,
+  waitForAdvisoryLockWaiter,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, accountTokens, auditLog, credentials, sessions } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
 import { issueResetLink } from "./account-management";
+import { lockAccount } from "./account-tokens";
 import { changeOwnPassword, renameSelf } from "./profile";
 import { signIn } from "./sign-in";
 
@@ -199,5 +201,40 @@ describe("changeOwnPassword", () => {
 
     expect(await getDb().select().from(sessions)).toHaveLength(2);
     expect(await canSignIn(TEST_PASSWORD)).toBe(true);
+  });
+});
+
+describe("changeOwnPassword and the account lock (WS-058)", () => {
+  it("waits for the per-account lock, then finishes once it is released", async () => {
+    const { account, actor, sessionId } = await signedIn();
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let locked = (): void => undefined;
+    const isLocked = new Promise<void>((resolve) => {
+      locked = resolve;
+    });
+    const holder = getDb().transaction(async (tx) => {
+      await lockAccount(tx, account.id);
+      locked();
+      await held;
+    });
+    await isLocked;
+
+    const change = changeOwnPassword(actor, {
+      sessionId,
+      currentPassword: TEST_PASSWORD,
+      newPassword: NEW_PASSWORD,
+    });
+    try {
+      await waitForAdvisoryLockWaiter();
+    } finally {
+      release();
+      await holder;
+    }
+    await change;
+
+    expect(await canSignIn(NEW_PASSWORD)).toBe(true);
   });
 });

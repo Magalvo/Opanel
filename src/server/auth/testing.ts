@@ -127,3 +127,41 @@ export async function failAuditFor(action: string): Promise<() => Promise<void>>
     await getDb().execute(sql`drop function fail_test_audit()`);
   };
 }
+
+/** Makes every delete of a session row fail, to test what happens when cleanup fails too. */
+export async function failSessionDeletes(): Promise<() => Promise<void>> {
+  await getDb().execute(
+    sql.raw(`
+    create function fail_test_session_delete() returns trigger as $$
+    begin raise exception 'session delete failed'; end;
+    $$ language plpgsql`),
+  );
+  await getDb().execute(
+    sql.raw(`
+    create trigger fail_test_session_delete before delete on sessions
+    for each row execute function fail_test_session_delete()`),
+  );
+  return async () => {
+    await getDb().execute(sql`drop trigger fail_test_session_delete on sessions`);
+    await getDb().execute(sql`drop function fail_test_session_delete()`);
+  };
+}
+
+/**
+ * Resolves once some session waits for an advisory lock that another one holds, so a test
+ * can release the holder at a known point. Throws after `timeoutMs` (a caller that never
+ * takes the lock).
+ */
+export async function waitForAdvisoryLockWaiter(timeoutMs = 3000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const waiting = await getDb().execute<{ n: number }>(
+      sql`select count(*)::int as n from pg_locks where locktype = 'advisory' and not granted`,
+    );
+    if ((waiting[0]?.n ?? 0) > 0) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error("nobody waited for the advisory lock");
+}

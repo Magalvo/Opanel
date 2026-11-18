@@ -3,7 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { accountSummarySchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
 import type * as HashGate from "@/server/auth/hash-gate";
-import { APP_ORIGIN, createTestAccount, postRequest, TEST_PASSWORD } from "@/server/auth/testing";
+import {
+  APP_ORIGIN,
+  createTestAccount,
+  failAuditFor,
+  postRequest,
+  TEST_PASSWORD,
+} from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { auditLog, rateLimits, sessions } from "@/server/db/schema";
 import { serverBusy } from "@/server/http/errors";
@@ -214,6 +220,27 @@ describe("POST /api/v1/auth/sign-in", () => {
     expect(problemSchema.parse(await response.json()).code).toBe("payload_too_large");
     expect(await getDb().select().from(auditLog)).toEqual([]);
     expect(await getDb().select().from(rateLimits)).toEqual([]);
+    expect(await getDb().select().from(sessions)).toEqual([]);
+  });
+
+  it("answers 500 without a cookie and keeps no session when the sign-in audit fails (WS-058)", async () => {
+    await createTestAccount();
+    const restore = await failAuditFor("auth.sign_in");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    let response: Response;
+    try {
+      response = await POST(
+        postRequest(path, { email: "ada@example.com", password: TEST_PASSWORD }),
+        undefined,
+      );
+    } finally {
+      await restore();
+      logged.mockRestore();
+    }
+
+    expect(response.status).toBe(500);
+    expect(response.headers.getSetCookie()).toEqual([]);
     expect(await getDb().select().from(sessions)).toEqual([]);
   });
 });

@@ -1,13 +1,16 @@
 import { isAPIError } from "better-auth/api";
+import { and, eq } from "drizzle-orm";
 
 import type { AccountSummary } from "@/lib/schemas/auth";
 import { type Actor, humanActor } from "@/server/auth/actor";
 import { getAuth } from "@/server/auth/auth";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { type Database, getDb } from "@/server/db/client";
+import { accounts, credentials, sessions } from "@/server/db/schema";
 import { rateLimited, unauthenticated } from "@/server/http/errors";
 import { describeError } from "@/server/http/safe-error";
 
+import { lockAccount } from "./account-tokens";
 import { type AccountRow, findAccountByEmail, touchLastSeen } from "./accounts";
 import { recordAudit } from "./audit";
 import {
@@ -41,6 +44,8 @@ export interface SignInOptions {
    * request input: the sign-in endpoint calls `signIn` without options.
    */
   trusted?: boolean;
+  /** Where a failed cleanup is reported (WS-058). Tests replace it. */
+  logError?: (message: string) => void;
 }
 
 export interface SignInResult {
@@ -151,15 +156,55 @@ async function checkLimits(
   }
 }
 
+/** The account's password hash, or null when it has none. */
+async function passwordHashOf(
+  executor: Pick<Database, "select">,
+  accountId: string,
+): Promise<string | null> {
+  const [credential] = await executor
+    .select({ passwordHash: credentials.passwordHash })
+    .from(credentials)
+    .where(and(eq(credentials.accountId, accountId), eq(credentials.providerId, "credential")))
+    .limit(1);
+  return credential?.passwordHash ?? null;
+}
+
+/**
+ * Removes a session that Better Auth created for a sign-in that is then not completed
+ * (WS-058). A failure here is logged without its message; the caller throws its own error.
+ */
+async function removeSession(
+  db: Database,
+  token: string,
+  logError: (message: string) => void,
+): Promise<void> {
+  try {
+    await db.delete(sessions).where(eq(sessions.token, token));
+  } catch (error) {
+    logError(`A session may remain after a failed sign-in audit: ${describeError(error)}`);
+  }
+}
+
 /**
  * Signs a person in. Wrong password, unknown email and deactivated account are one and the
  * same `401`. Limits are checked before the password is, so a blocked caller learns
  * nothing about it. A `trusted` caller skips the limits (see `SignInOptions`).
+ *
+ * Better Auth inserts the session in its own statement. Then, under the account lock that
+ * password changes also take, the account is checked again: if it was deactivated or its
+ * password changed meanwhile, the session is deleted and the attempt answers `401`;
+ * otherwise `last_seen_at` and `auth.sign_in` are written. If that transaction fails, the
+ * session is deleted again, so a sign-in never leaves an unaudited session behind it
+ * (WS-058; only a crash between the two steps can).
  */
 export async function signIn(
   input: SignInInput,
   db: Database = getDb(),
-  { failureAuditRule = SIGN_IN_FAILURE_AUDIT_RULE, trusted = false }: SignInOptions = {},
+  {
+    failureAuditRule = SIGN_IN_FAILURE_AUDIT_RULE,
+    trusted = false,
+    logError = console.error,
+  }: SignInOptions = {},
 ): Promise<SignInResult> {
   if (!trusted) {
     await checkLimits(db, input, failureAuditRule);
@@ -173,7 +218,11 @@ export async function signIn(
     throw unauthenticated(INVALID_CREDENTIALS);
   }
 
+  // The hash the password is checked against, unless a change commits meanwhile.
+  const hashBefore = await passwordHashOf(db, account.id);
+
   let cookies: Headers;
+  let token: string;
   try {
     const signedIn = await getAuth().api.signInEmail({
       body: { email: account.email ?? input.email, password: input.password },
@@ -181,6 +230,7 @@ export async function signIn(
       returnHeaders: true,
     });
     cookies = signedIn.headers;
+    token = signedIn.response.token;
   } catch (error) {
     if (!isAPIError(error)) {
       throw error;
@@ -190,30 +240,61 @@ export async function signIn(
   }
 
   const actor = humanActor({ accountId: account.id, role: account.role as Actor["role"] });
-  await db.transaction(async (tx) => {
-    await touchLastSeen(tx, account.id);
-    await recordAudit(tx, {
-      actor,
-      action: "auth.sign_in",
-      entity: "account",
-      entityId: account.id,
+  let completed: boolean;
+  try {
+    completed = await db.transaction(async (tx) => {
+      await lockAccount(tx, account.id);
+      const [now] = await tx
+        .select({ disabledAt: accounts.disabledAt })
+        .from(accounts)
+        .where(eq(accounts.id, account.id))
+        .limit(1);
+      if (now?.disabledAt !== null || (await passwordHashOf(tx, account.id)) !== hashBefore) {
+        // Deactivated or given a new password while this attempt was in flight.
+        await tx.delete(sessions).where(eq(sessions.token, token));
+        return false;
+      }
+      await touchLastSeen(tx, account.id);
+      await recordAudit(tx, {
+        actor,
+        action: "auth.sign_in",
+        entity: "account",
+        entityId: account.id,
+      });
+      return true;
     });
-  });
+  } catch (error) {
+    await removeSession(db, token, logError);
+    throw error;
+  }
+  if (!completed) {
+    await auditFailure(db, failureAuditRule, "bad_credentials", account.id);
+    throw unauthenticated(INVALID_CREDENTIALS);
+  }
 
   return { account: summarize(account), headers: cookies };
 }
 
-/** Ends the caller's session. Returns the headers that clear the cookie. */
+/**
+ * Ends the caller's session: the row is deleted and `auth.sign_out` recorded in one
+ * transaction (WS-058). Better Auth is then asked only for the headers that clear the
+ * cookie; its own delete finds nothing left. Returns those headers.
+ */
 export async function signOut(
-  input: { actor: Actor; headers: Headers },
+  input: { actor: Actor; sessionId: string; headers: Headers },
   db: Database = getDb(),
 ): Promise<Headers> {
-  const result = await getAuth().api.signOut({ headers: input.headers, returnHeaders: true });
-  await recordAudit(db, {
-    actor: input.actor,
-    action: "auth.sign_out",
-    entity: "account",
-    entityId: input.actor.accountId,
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(sessions)
+      .where(and(eq(sessions.id, input.sessionId), eq(sessions.accountId, input.actor.accountId)));
+    await recordAudit(tx, {
+      actor: input.actor,
+      action: "auth.sign_out",
+      entity: "account",
+      entityId: input.actor.accountId,
+    });
   });
+  const result = await getAuth().api.signOut({ headers: input.headers, returnHeaders: true });
   return result.headers;
 }
