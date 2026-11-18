@@ -51,3 +51,10 @@ jobs:
 
       - name: Audit production dependencies
         run: pnpm audit --prod
+
+      # An ignored advisory (auditConfig.ignoreGhsas) stops being ignored once it has a
+      # fix: this fails, naming it (WS-061).
+      - name: Ignored advisories still have no fix
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm exec tsx scripts/check-ignored-advisories.ts

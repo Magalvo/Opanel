@@ -5,3 +5,11 @@ overrides:
   # core-utils pins esbuild 0.18. drizzle-kit never loads them; this replaces that esbuild
   # with the patched version drizzle-kit itself uses (WS-053). Remove it with drizzle-kit 1.0.
   "@esbuild-kit/core-utils>esbuild": "0.25.12"
+
+auditConfig:
+  ignoreGhsas:
+    # picomatch <=4.0.7, ReDoS on attacker-supplied extglob patterns; no fix published.
+    # Only path: better-auth's optional peer vitest (our own test runner); Opanel never
+    # gives picomatch a pattern from outside the repository. The audit workflow fails
+    # once a fix exists (WS-061).
+    - GHSA-fc5q-39xc-vjpf

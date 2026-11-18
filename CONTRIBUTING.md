@@ -116,7 +116,10 @@ weekly and on every change to the dependencies. When it fails:
    `pnpm-workspace.yaml`, with a comment naming the advisory and the work-spec that
    decided it (as WS-053 did for esbuild).
 4. Never ignore an advisory wholesale, and never override a package everywhere when one
-   path is enough.
+   path is enough. An advisory with no fix published and no path Opanel runs in production
+   may be ignored by its id in `auditConfig.ignoreGhsas` of `pnpm-workspace.yaml`, decided
+   in a work-spec and with a comment naming it. The audit workflow fails as soon as such
+   an advisory has a fix (WS-061).
 
 ## Content Security Policy
 
