@@ -58,6 +58,13 @@ an example install: PostgreSQL, a one-shot `migrate` service, then the app on
 `docker compose -f compose.production.yaml up -d --build`. The full operations guide comes
 with WT-12 (canonical doc 0006).
 
+If the only Admin loses their password, an operator on the server issues them a one-time
+link, printed once; send it to the Admin and do not keep it (WS-065):
+
+```bash
+docker compose -f compose.production.yaml run --rm app node dist/recover-admin.mjs --email admin@example.com
+```
+
 Opanel must run as a long-lived Node.js server (`pnpm build`, then `pnpm start`), not on
 serverless or edge hosting: open boards keep a Server-Sent Events stream to
 `/api/v1/projects/{projectId}/events`. A reverse proxy in front of it must not buffer that
