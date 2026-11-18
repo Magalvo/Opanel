@@ -9,11 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-063 (an owner role for migrations, a least-privilege role for the
-  app, WT-12 item B), on 2026-11-18, on the branch `claude/wi-063-database-roles`.
-- **Next:** draft WI-064 (WT-12 item C: schema version check at start-up) and WS-064 as
-  `Proposed`, and stop for the owner's approval. Items D (`recover-admin`) and E
-  (`maintenance`) are independent of it.
+- **Last finished:** WI-064 (the app refuses to start on a schema it does not match,
+  WT-12 item C), on 2026-11-18, on the branch `claude/wi-064-schema-check`.
+- **Next:** draft WI-065 (WT-12 item D: the `recover-admin` operator command) and WS-065
+  as `Proposed`, and stop for the owner's approval. Item E (`maintenance`) is independent
+  of it.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -160,6 +160,7 @@ outlined above and comes right after WT-04.
 | [WI-061](work-items/WI-061-picomatch-advisory.md)               | Triage of the picomatch advisory, with no fix published          | Done        | [WS-061](work-specs/WS-061-picomatch-advisory.md)               | Done        |
 | [WI-062](work-items/WI-062-production-image.md)                 | Production image, example Compose file and `migrate`             | Done        | [WS-062](work-specs/WS-062-production-image.md)                 | Done        |
 | [WI-063](work-items/WI-063-database-roles.md)                   | An owner role for migrations, a least-privilege role for the app | Done        | [WS-063](work-specs/WS-063-database-roles.md)                   | Done        |
+| [WI-064](work-items/WI-064-schema-check.md)                     | The app refuses to start on a schema it does not match           | Done        | [WS-064](work-specs/WS-064-schema-check.md)                     | Done        |
 
 ## Follow-ups
 

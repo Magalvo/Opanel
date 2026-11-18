@@ -1,6 +1,7 @@
 /**
  * Runs once when the Next.js server starts, before it accepts requests.
- * Validates configuration so a bad environment stops the server immediately.
+ * Validates configuration so a bad environment stops the server immediately, then checks
+ * that the database's schema is the one this build was made for (WS-064).
  */
 export async function register(): Promise<void> {
   // NEXT_RUNTIME is a framework constant that Next.js inlines at build time, so it must be
@@ -19,5 +20,15 @@ export async function register(): Promise<void> {
       }
       throw error;
     }
+
+    // Only on the schema this build was made for (WS-064): stops the server otherwise.
+    const { getDb } = await import("@/server/db/client");
+    const { verifySchema } = await import("@/server/db/schema-version");
+    await verifySchema({
+      db: getDb(),
+      exit: (code) => {
+        process.exit(code);
+      },
+    });
   }
 }

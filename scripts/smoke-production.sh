@@ -117,4 +117,25 @@ set -e
 [[ $status -ne 0 ]] || fail "the app started with APP_URL=not-a-url"
 [[ "$output" == *"Invalid environment configuration"* ]] || fail "no validation message: ${output}"
 
+echo "== a migration the app does not know stops it, with the message (WS-064)"
+owner_sql() { compose exec -T db psql -U opanel -d opanel -qtAc "$1"; }
+owner_sql "insert into drizzle.__drizzle_migrations (hash, created_at) values ('smoke-future', 9999999999999)"
+compose restart app >/dev/null
+for _ in $(seq 1 30); do
+  logs="$(compose logs --no-color app 2>&1)"
+  [[ "$logs" == *"does not know"* ]] && break
+  sleep 2
+done
+[[ "$logs" == *"does not know"* ]] || fail "the app did not refuse an unknown migration"
+
+echo "== once it is gone, the app starts and is healthy again"
+owner_sql "delete from drizzle.__drizzle_migrations where hash = 'smoke-future'"
+compose restart app >/dev/null
+for _ in $(seq 1 60); do
+  health="$(docker inspect --format '{{.State.Health.Status}}' "$(compose ps -q app)")"
+  [[ "$health" == "healthy" ]] && break
+  sleep 2
+done
+[[ "$health" == "healthy" ]] || fail "the app is ${health} after the unknown migration was removed"
+
 echo "OK: the production image and the example install pass every check."

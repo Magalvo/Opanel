@@ -41,7 +41,7 @@ Doc 0006 section 11.
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ | -------------- |
 | [WI-062](../work-items/WI-062-production-image.md) | A: production image and example Compose file; `migrate` as a one-shot command            | Done   | WT-04          |
 | [WI-063](../work-items/WI-063-database-roles.md)   | B: database roles: owner and runtime, grants in migrations, the runtime role in CI       | Done   | WI-062         |
-| WI-064                                             | C: schema version check at start-up                                                      | Draft  | WI-062         |
+| [WI-064](../work-items/WI-064-schema-check.md)     | C: schema version check at start-up                                                      | Done   | WI-062         |
 | WI-065                                             | D: `recover-admin` operator command                                                      | Draft  | WI-062         |
 | WI-066                                             | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Draft  | WI-062         |
 | WI-067                                             | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Draft  | WI-062         |
