@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Opanel's production image (WS-062, canonical doc 0006 section 3). It runs the app with
 # `next start`, and one-shot commands: `node dist/migrate.mjs`, and
-# `node dist/recover-admin.mjs --email <admin email>` (WS-065). Every
+# `node dist/recover-admin.mjs --email <admin email>` (WS-065), `node dist/maintenance.mjs`
+# (WS-066). Every
 # setting comes from the environment at run time; nothing secret is built in.
 
 # Node.js of .nvmrc, pinned by digest. Update both together.
@@ -32,7 +33,7 @@ ENV NODE_ENV=production
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/package.json /app/next.config.ts ./
 COPY --from=build /app/src/server/db/migrations ./src/server/db/migrations
-COPY --from=build /app/dist/migrate.mjs /app/dist/recover-admin.mjs ./dist/
+COPY --from=build /app/dist/migrate.mjs /app/dist/recover-admin.mjs /app/dist/maintenance.mjs ./dist/
 # `next start` writes its cache under .next, so the app's user owns it.
 COPY --from=build --chown=node:node /app/.next ./.next
 USER node

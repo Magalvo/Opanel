@@ -91,11 +91,12 @@ export async function consumeRateLimit(
   };
 }
 
-/** Deletes counters whose window has ended. */
-export async function purgeExpiredRateLimits(executor: RateLimitExecutor): Promise<void> {
-  await executor.execute(sql`
+/** Deletes counters whose window has ended, and says how many (WS-066). */
+export async function purgeExpiredRateLimits(executor: RateLimitExecutor): Promise<number> {
+  const deleted = await executor.execute(sql`
     delete from rate_limits
     where window_started_at < now() - make_interval(secs => ${LONGEST_WINDOW_SECONDS})`);
+  return deleted.count;
 }
 
 /**
