@@ -44,6 +44,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-059 (one unused link per account, under one lock order, audit of
   2026-11-17, what WS-040 left of finding A05; migration 0013), on 2026-11-18, on the
   branch `claude/wi-059-link-lifecycle-locks`.
+- **Also finished:** WI-060 (the formatting gate passes on every checkout, audit of
+  2026-11-17, finding A10; adds `.gitattributes`, `.editorconfig` and a Windows format job
+  to CI), on 2026-11-18, on the branch `claude/wi-060-portable-formatting`.
 - **Also finished:** WI-061 (triage of the picomatch advisory GHSA-fc5q-39xc-vjpf, with
   no fix published: ignored by id until a fix exists; amends step 4 of the advisory
   process in `CONTRIBUTING.md`), on 2026-11-18, on the branch
@@ -144,6 +147,7 @@ above and comes after WT-06.
 | [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure               | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
 | [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together | Done        | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Done        |
 | [WI-059](work-items/WI-059-link-lifecycle-locks.md)             | One unused link per account, under one lock order           | Done        | [WS-059](work-specs/WS-059-link-lifecycle-locks.md)             | Done        |
+| [WI-060](work-items/WI-060-portable-formatting.md)              | The formatting gate passes on every checkout                | Done        | [WS-060](work-specs/WS-060-portable-formatting.md)              | Done        |
 | [WI-061](work-items/WI-061-picomatch-advisory.md)               | Triage of the picomatch advisory, with no fix published     | Done        | [WS-061](work-specs/WS-061-picomatch-advisory.md)               | Done        |
 
 ## Follow-ups

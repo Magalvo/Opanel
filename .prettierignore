@@ -4,3 +4,5 @@ out
 coverage
 next-env.d.ts
 docs/api/openapi.json
+# Local tool state and Claude Code worktrees, never source (WS-060).
+.claude/
