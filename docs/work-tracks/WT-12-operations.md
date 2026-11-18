@@ -1,7 +1,8 @@
 # WT-12 — Production deployment and operations
 
-- Status: Approved (outline, approved by the owner on 2026-11-18 with doc 0006). Starts
-  right after WT-04, before WT-05; its work-items get files and numbers then.
+- Status: In progress (outline approved by the owner on 2026-11-18 with doc 0006; started
+  on 2026-11-18, after WT-04). Items A to H are WI-062 to WI-069; each gets its files and
+  work-spec just before it starts.
 - Canonical docs: [0006](../canonical/0006-operations.md) (the design),
   [0002](../canonical/0002-realtime-sync.md) (one process, SSE),
   [0004](../canonical/0004-api-conventions.md) (health, setup token); audit of
@@ -36,16 +37,16 @@ Doc 0006 section 11.
 
 ## Work-items (outline)
 
-| Item | Title                                                                                    | Status | Depends on |
-| ---- | ---------------------------------------------------------------------------------------- | ------ | ---------- |
-| A    | Production image and example Compose file; `migrate` as a one-shot command               | Draft  | WT-04      |
-| B    | Database roles: owner and runtime, grants in migrations, the runtime role in CI          | Draft  | A          |
-| C    | Schema version check at start-up                                                         | Draft  | A          |
-| D    | `recover-admin` operator command                                                         | Draft  | A          |
-| E    | `maintenance` command: expired sessions, old links, rate limits; measured index check    | Draft  | A          |
-| F    | `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements, tested | Draft  | A          |
-| G    | Backup and restore rehearsal in CI                                                       | Draft  | B, C       |
-| H    | `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers          | Draft  | A–G        |
+| Item                                               | Title                                                                                    | Status | Depends on     |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ | -------------- |
+| [WI-062](../work-items/WI-062-production-image.md) | A: production image and example Compose file; `migrate` as a one-shot command            | Done   | WT-04          |
+| WI-063                                             | B: database roles: owner and runtime, grants in migrations, the runtime role in CI       | Draft  | WI-062         |
+| WI-064                                             | C: schema version check at start-up                                                      | Draft  | WI-062         |
+| WI-065                                             | D: `recover-admin` operator command                                                      | Draft  | WI-062         |
+| WI-066                                             | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Draft  | WI-062         |
+| WI-067                                             | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Draft  | WI-062         |
+| WI-068                                             | G: backup and restore rehearsal in CI                                                    | Draft  | WI-063, WI-064 |
+| WI-069                                             | H: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-068  |
 
 ## Exit criteria
 

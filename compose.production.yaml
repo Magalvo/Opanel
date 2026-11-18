@@ -1,0 +1,51 @@
+# An example production install of Opanel (WS-062, canonical doc 0006). Not for local
+# development or CI: that is compose.yaml.
+#
+#   cp .env.production.example .env.production   # then fill it in
+#   docker compose -f compose.production.yaml up -d --build
+#
+# The app is published on this host's loopback interface only: put your HTTPS reverse
+# proxy in front of it. `migrate` runs once, before the app starts, and exits.
+name: opanel
+
+x-app: &app
+  build: .
+  image: opanel-app:local
+  env_file: ${OPANEL_ENV_FILE:-.env.production}
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: opanel
+      POSTGRES_DB: opanel
+    # Reads POSTGRES_PASSWORD from the same file as the app.
+    env_file: ${OPANEL_ENV_FILE:-.env.production}
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opanel -d opanel"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    <<: *app
+    command: ["node", "dist/migrate.mjs"]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    <<: *app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OPANEL_PORT:-3000}:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  db-data:

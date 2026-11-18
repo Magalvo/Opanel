@@ -1,0 +1,17 @@
+# Kept out of the image's build context (WS-062 section 5). `tests` stays in: `next build`
+# type-checks the whole project, the Playwright configuration and its helpers included.
+node_modules
+.next
+dist
+.git
+.github
+.claude
+coverage
+test-results
+playwright-report
+blob-report
+docs
+*.log
+.env*
+!.env.example
+!.env.production.example

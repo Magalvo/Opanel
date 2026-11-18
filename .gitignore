@@ -18,7 +18,11 @@ blob-report
 # env files
 .env*
 !.env.example
+!.env.production.example
 !.env.test
+
+# the bundled migrate command of the production image (WS-062)
+dist
 
 # misc
 .DS_Store

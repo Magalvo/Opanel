@@ -9,12 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-049 (live task detail, epics page and project settings), on
-  2026-11-18, on the branch `claude/wi-049-live-detail-epics-settings`. It closes WT-04:
-  the first usable release for a human-only team.
-- **Next:** start WT-12 (production deployment and operations, doc 0006): give its
-  work-items numbers, draft item A (production image, example Compose file, `migrate`) and
-  its work-spec as `Proposed`, and stop for the owner's approval.
+- **Last finished:** WI-062 (production image, example Compose file and `migrate`,
+  WT-12 item A), on 2026-11-18, on the branch `claude/wi-062-production-image`.
+- **Next:** draft WI-063 (WT-12 item B: owner and runtime database roles) and WS-063 as
+  `Proposed`, and stop for the owner's approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -72,14 +70,14 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                  | Title                                                   | Status   |
-| ------------------------------------------------------ | ------------------------------------------------------- | -------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
-| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Done     |
-| [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
-| [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations (outline)          | Approved |
+| Track                                                  | Title                                                   | Status      |
+| ------------------------------------------------------ | ------------------------------------------------------- | ----------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done        |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done        |
+| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done        |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Done        |
+| [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved    |
+| [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations (outline)          | In progress |
 
 Planned next, not yet drafted:
 
@@ -159,6 +157,7 @@ outlined above and comes right after WT-04.
 | [WI-059](work-items/WI-059-link-lifecycle-locks.md)             | One unused link per account, under one lock order           | Done        | [WS-059](work-specs/WS-059-link-lifecycle-locks.md)             | Done        |
 | [WI-060](work-items/WI-060-portable-formatting.md)              | The formatting gate passes on every checkout                | Done        | [WS-060](work-specs/WS-060-portable-formatting.md)              | Done        |
 | [WI-061](work-items/WI-061-picomatch-advisory.md)               | Triage of the picomatch advisory, with no fix published     | Done        | [WS-061](work-specs/WS-061-picomatch-advisory.md)               | Done        |
+| [WI-062](work-items/WI-062-production-image.md)                 | Production image, example Compose file and `migrate`        | Done        | [WS-062](work-specs/WS-062-production-image.md)                 | Done        |
 
 ## Follow-ups
 
