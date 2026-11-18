@@ -1,0 +1,58 @@
+name: Production image
+
+# Builds the production image and checks the example install of compose.production.yaml
+# (WS-062): migrate, health, the setup token, a non-root user, no development dependency.
+# Its own workflow: it needs Docker, which the quality gate does not. What it runs is
+# scripts/smoke-production.sh, which also runs locally.
+on:
+  schedule:
+    - cron: "37 6 * * 1"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - compose.production.yaml
+      - .env.production.example
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - next.config.ts
+      - tsconfig.json
+      - src/**
+      - scripts/**
+      - .github/workflows/image.yml
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - compose.production.yaml
+      - .env.production.example
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - next.config.ts
+      - tsconfig.json
+      - src/**
+      - scripts/**
+      - .github/workflows/image.yml
+
+concurrency:
+  group: image-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Production image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build the image and check the example install
+        run: bash scripts/smoke-production.sh

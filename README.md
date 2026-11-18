@@ -51,6 +51,13 @@ If port 5432 is already in use on your machine, see
 
 ## Running in production
 
+The repository builds a production image (`Dockerfile`), and `compose.production.yaml` is
+an example install: PostgreSQL, a one-shot `migrate` service, then the app on
+`127.0.0.1:3000` for your HTTPS reverse proxy. Copy `.env.production.example` to
+`.env.production`, fill it in, and run
+`docker compose -f compose.production.yaml up -d --build`. The full operations guide comes
+with WT-12 (canonical doc 0006).
+
 Opanel must run as a long-lived Node.js server (`pnpm build`, then `pnpm start`), not on
 serverless or edge hosting: open boards keep a Server-Sent Events stream to
 `/api/v1/projects/{projectId}/events`. A reverse proxy in front of it must not buffer that

@@ -1,13 +1,19 @@
-// Applies pending database migrations: `pnpm db:migrate`.
+// Applies pending database migrations: `pnpm db:migrate` in development, and
+// `node dist/migrate.mjs` in the production image, where it is bundled (WS-062).
 import { closeDb, getDb } from "@/server/db/client";
-import { runMigrations } from "@/server/db/migrate";
+import { migrateCommand } from "@/server/db/migrate-command";
+import { EnvValidationError } from "@/server/env";
 import { loadEnvFiles } from "@/server/env-files";
 
 loadEnvFiles();
 
 try {
-  const result = await runMigrations(getDb());
-  console.warn(result === "applied" ? "Migrations are up to date." : "No migrations to apply yet.");
+  process.exitCode = await migrateCommand({ db: getDb() });
+} catch (error) {
+  // A bad environment: its message names the variables, never their values (WS-003).
+  if (!(error instanceof EnvValidationError)) throw error;
+  console.error(error.message);
+  process.exitCode = 1;
 } finally {
   await closeDb();
 }

@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
+    "build:migrate": "esbuild scripts/migrate.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist/migrate.mjs",
     "openapi:generate": "tsx scripts/generate-openapi.ts"
   },
   "dependencies": {
@@ -62,6 +63,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",
     "drizzle-kit": "0.31.11",
+    "esbuild": "0.28.2",
     "eslint": "10.14.0",
     "eslint-config-next": "16.4.6",
     "eslint-config-prettier": "10.1.8",
