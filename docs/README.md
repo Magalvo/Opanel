@@ -9,10 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-048 (live board), on 2026-11-18, on the branch
-  `claude/wi-048-live-board`.
-- **Next:** draft WI-049 (live task detail, epics page and project settings) and WS-049 as
-  `Proposed`, and stop for the owner's approval.
+- **Last finished:** WI-049 (live task detail, epics page and project settings), on
+  2026-11-18, on the branch `claude/wi-049-live-detail-epics-settings`. It closes WT-04:
+  the first usable release for a human-only team.
+- **Next:** start WT-12 (production deployment and operations, doc 0006): give its
+  work-items numbers, draft item A (production image, example Compose file, `migrate`) and
+  its work-spec as `Proposed`, and stop for the owner's approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -75,7 +77,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
 | [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
 | [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Approved |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Done     |
 | [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
 | [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations (outline)          | Approved |
 
@@ -144,6 +146,7 @@ outlined above and comes right after WT-04.
 | [WI-046](work-items/WI-046-event-hub.md)                        | Event hub                                                   | Done        | [WS-046](work-specs/WS-046-event-hub.md)                        | Done        |
 | [WI-047](work-items/WI-047-events-endpoint.md)                  | Events endpoint                                             | Done        | [WS-047](work-specs/WS-047-events-endpoint.md)                  | Done        |
 | [WI-048](work-items/WI-048-live-board.md)                       | Live board                                                  | Done        | [WS-048](work-specs/WS-048-live-board.md)                       | Done        |
+| [WI-049](work-items/WI-049-live-detail-epics-settings.md)       | Live task detail, epics page and project settings           | Done        | [WS-049](work-specs/WS-049-live-detail-epics-settings.md)       | Done        |
 | [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
 | [WI-051](work-items/WI-051-cursor-date-validation.md)           | Creation-time cursors are checked as dates                  | Done        | [WS-051](work-specs/WS-051-cursor-date-validation.md)           | Done        |
 | [WI-052](work-items/WI-052-e2e-admin-isolation.md)              | End-to-end tests do not deactivate each other's Admins      | Done        | [WS-052](work-specs/WS-052-e2e-admin-isolation.md)              | Done        |

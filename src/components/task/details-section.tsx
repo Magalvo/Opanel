@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { TYPE_LABELS } from "@/components/board/task-card";
 import { Markdown } from "@/components/markdown";
@@ -101,6 +101,13 @@ export interface DetailsProps {
   onFailure: (failure: unknown, fallback: string) => void;
   onMove: (columnId: string) => void;
   setBusy: (busy: boolean) => void;
+  /**
+   * The version a save is based on, when it is not the task's: the version the viewer
+   * started editing from, after someone else changed the task (WS-049 section 3).
+   */
+  saveVersion?: number | null;
+  /** Whether the form has unsaved edits. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 /**
@@ -159,6 +166,8 @@ function DetailsForm({
   onFailure,
   onMove,
   setBusy,
+  saveVersion = null,
+  onDirtyChange,
 }: Readonly<DetailsProps>) {
   const id = useId();
   const [draft, setDraft] = useState<Draft>(() => draftOf(task));
@@ -182,6 +191,16 @@ function DetailsForm({
   const changes = changesOf(task, draft);
   const changed = Object.keys(changes).length > 0;
 
+  useEffect(() => {
+    onDirtyChange?.(changed);
+  }, [changed, onDirtyChange]);
+  useEffect(
+    () => () => {
+      onDirtyChange?.(false);
+    },
+    [onDirtyChange],
+  );
+
   function set<Key extends keyof Draft>(key: Key, value: Draft[Key]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
@@ -199,7 +218,10 @@ function DetailsForm({
     setErrors({});
     setBusy(true);
     try {
-      onSaved(await updateTask(task.key, { ...changes, version: task.version }), "Saved.");
+      onSaved(
+        await updateTask(task.key, { ...changes, version: saveVersion ?? task.version }),
+        "Saved.",
+      );
     } catch (failure) {
       if (failure instanceof ApiFailure && failure.code === "version_conflict") {
         const current = currentOf(failure);

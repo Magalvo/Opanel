@@ -18,9 +18,10 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 
 import { getProject } from "@/components/projects/api";
+import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,45 +65,32 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     getProject(projectKey).then(setProject, () => undefined);
   }, [projectKey, setProject]);
 
-  // The project as shown, for the live handler below.
-  const projectRef = useRef(project);
-  useEffect(() => {
-    projectRef.current = project;
-  });
-
-  /**
-   * Someone renamed, archived or unarchived the project (WS-048 sections 4 and 6). Only an
-   * archive or an unarchive is announced: it changes what the viewer may do.
-   */
-  const projectChanged = useCallback(
-    (version: number) => {
-      if (version <= projectRef.current.version) return;
-      getProject(projectKey).then(
-        (loaded) => {
-          const was = projectRef.current.archivedAt !== null;
-          const now = loaded.archivedAt !== null;
-          setProject(loaded);
-          if (was !== now) {
-            setMessage(
-              now
-                ? "This project was archived. The board is read-only."
-                : "This project was unarchived.",
-            );
-          }
-        },
-        () => undefined,
-      );
-    },
-    [projectKey, setProject],
-  );
-
   const { phase, columns, board, moving, live, reload, added, drop, hold } = useBoard({
     projectKey,
-    projectId: project.id,
     announce: setMessage,
     onArchived: refreshProject,
-    onProjectChanged: projectChanged,
   });
+
+  // Someone archived or unarchived the project: the frame read it again (WS-049 section 2).
+  // Only a change that follows a `project.changed` event is announced, since it changes what
+  // the viewer may do (WS-048 section 6).
+  const [remoteVersion, setRemoteVersion] = useState(0);
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (event.type === "project.changed") setRemoteVersion(event.version);
+    },
+  });
+  const [shownArchived, setShownArchived] = useState(archived);
+  if (shownArchived !== archived) {
+    setShownArchived(archived);
+    if (remoteVersion > 0 && project.version >= remoteVersion) {
+      setMessage(
+        archived
+          ? "This project was archived. The board is read-only."
+          : "This project was unarchived.",
+      );
+    }
+  }
 
   // While a card is dragged the board is shown from `preview`, which follows the card
   // across columns; `drop` saves the result once it is released.

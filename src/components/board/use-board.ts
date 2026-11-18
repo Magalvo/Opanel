@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useProjectEventListener } from "@/components/projects/project-events";
 import { getTask } from "@/components/task/api";
 import { onTaskEvents } from "@/components/task/events";
-import { useProjectEvents } from "@/hooks/use-project-events";
 import { ApiFailure } from "@/lib/api-client";
 import type { Column } from "@/lib/schemas/columns";
 import type { ProjectEvent } from "@/lib/schemas/events";
@@ -53,18 +53,13 @@ function moveFailure(failure: unknown, key: string): string {
  */
 export function useBoard({
   projectKey,
-  projectId,
   announce,
   onArchived,
-  onProjectChanged,
   fallbackMs = FALLBACK_MS,
 }: {
   projectKey: string;
-  projectId: string;
   announce: (message: string) => void;
   onArchived: () => void;
-  /** A `project.changed` event, with the project's version after it. */
-  onProjectChanged: (version: number) => void;
   fallbackMs?: number;
 }) {
   const [phase, setPhase] = useState<BoardPhase>("loading");
@@ -201,15 +196,14 @@ export function useBoard({
         case "column.changed":
           void reload();
           return;
+        // The frame reads the project again (WS-049 section 2).
         case "project.changed":
-          onProjectChanged(event.version);
-          return;
         case "comment.created":
         case "epic.changed":
           return;
       }
     },
-    [onProjectChanged, refreshTask, reload, setBoard],
+    [refreshTask, reload, setBoard],
   );
 
   /** Applies the held events once neither a drag nor a move is in progress. */
@@ -245,13 +239,21 @@ export function useBoard({
     [apply],
   );
 
-  const onOpen = useCallback(() => {
-    // The first open starts the first load; any later one, or one after the fallback load,
-    // is a reconnect after which the board may have missed events (doc 0002 section 4).
-    void reload();
-  }, [reload]);
-
-  const { status: live } = useProjectEvents(projectId, { onEvent, onOpen });
+  // The page's stream (WS-049 section 2). Its first open starts the first load, at once
+  // when it is already open as the board mounts; a reconnect, or an open after the fallback
+  // load, reloads, since events may have been missed (doc 0002 section 4).
+  const { status: live, opened } = useProjectEventListener({
+    onEvent,
+    onReconnect: () => void reload(),
+  });
+  useEffect(() => {
+    if (!opened) return;
+    // Started from a timer, like the fallback load, so the effect sets no state itself.
+    const timer = setTimeout(() => void reload(), 0);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [opened, reload]);
 
   /** Holds incoming events while a card is dragged (WS-048 section 5). */
   const hold = useCallback(

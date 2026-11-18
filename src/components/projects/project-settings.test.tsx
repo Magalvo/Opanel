@@ -1,9 +1,11 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { FakeSource } from "@/hooks/fake-event-source";
 import type { Column } from "@/lib/schemas/columns";
+import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Project } from "@/lib/schemas/projects";
 import type { TaskSummary } from "@/lib/schemas/tasks";
 
@@ -369,5 +371,101 @@ describe("ProjectSettings: deleted tasks", () => {
 
     expect(screen.queryByRole("region", { name: "Deleted tasks" })).not.toBeInTheDocument();
     expect(calls("GET").some(([url]) => url.includes("deleted=true"))).toBe(false);
+  });
+});
+
+describe("ProjectSettings: live (WS-049 section 5)", () => {
+  function send(type: ProjectEvent["type"], entity: string, entityId: string, version: number) {
+    act(() => {
+      FakeSource.latest().send(type, {
+        id: crypto.randomUUID(),
+        type,
+        projectId: PROJECT_ID,
+        entity,
+        entityId,
+        version,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-18T10:00:00.000Z",
+      });
+    });
+  }
+
+  async function renderLive() {
+    const user = await renderSettings();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    return user;
+  }
+
+  it("takes someone else's change to the details when nothing is unsaved", async () => {
+    await renderLive();
+    on(PROJECT, json({ ...opa, name: "Opanel, renamed", version: 4 }));
+
+    send("project.changed", "project", PROJECT_ID, 4);
+
+    await waitFor(() => {
+      expect(within(section("Details")).getByLabelText("Name")).toHaveValue("Opanel, renamed");
+    });
+  });
+
+  it("keeps unsaved details, says so, and saves on the old version", async () => {
+    on("PATCH /api/v1/projects/OPA", problem(409, "version_conflict"));
+    const user = await renderLive();
+    await user.type(within(section("Details")).getByLabelText("Description"), " Mine.");
+    on(PROJECT, json({ ...opa, name: "Opanel, renamed", version: 4 }));
+
+    send("project.changed", "project", PROJECT_ID, 4);
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent(
+        "Someone else changed this project. Saving will show their version first.",
+      );
+    });
+    expect(within(section("Details")).getByLabelText("Description")).toHaveValue(
+      "The *tracker*. Mine.",
+    );
+    await user.click(within(section("Details")).getByRole("button", { name: "Save" }));
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toMatchObject({ version: 3 });
+  });
+
+  it("reads the columns again when one changes", async () => {
+    await renderLive();
+    on(COLUMNS, columns([todo, { ...doing, name: "Doing", version: 3 }, done]));
+
+    send("column.changed", "column", doing.id, 3);
+
+    expect(await screen.findByRole("row", { name: /Doing/ })).toBeInTheDocument();
+  });
+
+  it("reads the deleted tasks again when a task is deleted or restored", async () => {
+    await renderLive();
+    on(DELETED, json({ items: [], nextCursor: null }));
+
+    send("task.restored", "task", deleted.id, 3);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Old idea")).not.toBeInTheDocument();
+    });
+  });
+
+  it("reads everything again after a reconnect", async () => {
+    await renderLive();
+    on(
+      COLUMNS,
+      columns([
+        todo,
+        doing,
+        done,
+        column("66666666-6666-4666-8666-666666666666", "Review", "in_progress"),
+      ]),
+    );
+
+    act(() => {
+      FakeSource.latest().drop();
+      FakeSource.latest().open();
+    });
+
+    expect(await screen.findByRole("row", { name: /Review/ })).toBeInTheDocument();
   });
 });

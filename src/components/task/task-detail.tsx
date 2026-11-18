@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { isNewer } from "@/components/board/live";
 import { getProject } from "@/components/projects/api";
+import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
 import {
   AlertDialog,
@@ -60,6 +62,10 @@ interface Loaded {
 type Phase = "loading" | "missing" | "error" | "ready";
 
 const CONFLICT = "Someone else changed this task. Their version is shown; make your change again.";
+const CHANGED = "Someone else changed this task.";
+const CHANGED_WHILE_EDITING =
+  "Someone else changed this task. Saving will show their version first.";
+const DELETED = "This task was deleted.";
 
 /**
  * A task: its fields, description, column, comments and deletion (WS-038). The same screen
@@ -81,9 +87,23 @@ export function TaskDetail({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [conflicts, setConflicts] = useState(0);
+  // Live (WS-049 section 3): unsaved edits in the form, the version saves stay based on
+  // after someone else changed the task, and whether it was deleted meanwhile.
+  const [dirty, setDirty] = useState(false);
+  const [saveVersion, setSaveVersion] = useState<number | null>(null);
+  const [deleted, setDeleted] = useState(false);
+
+  // The latest task version and edit state, read by the live handlers after an `await`;
+  // and a newer version heard of while a write of this screen was running, checked when it
+  // ends, since that event may be the write's own (WS-049 section 3).
+  const live = useRef({ version: 0, dirty: false, busy: false, pending: 0 });
+  useEffect(() => {
+    live.current.dirty = dirty;
+    if (data !== null) live.current.version = Math.max(live.current.version, data.task.version);
+  });
 
   const archived = project.archivedAt !== null;
-  const editable = canWriteTasks && !archived;
+  const editable = canWriteTasks && !archived && !deleted;
 
   const load = useCallback(async (): Promise<Loaded | "missing"> => {
     let task: Task;
@@ -142,17 +162,30 @@ export function TaskDetail({
   }
 
   function setTask(task: Task) {
+    live.current.version = task.version;
     setData((current) => (current === null ? current : { ...current, task }));
+  }
+
+  /** Marks a write of this screen running or done; a version heard of meanwhile is read then. */
+  function setWriting(writing: boolean) {
+    live.current.busy = writing;
+    setBusy(writing);
+    if (writing) return;
+    const heard = live.current.pending;
+    live.current.pending = 0;
+    if (isNewer(live.current.version, heard)) refresh();
   }
 
   /** A write the API accepted: shown, announced and passed on to the board. */
   function saved(task: Task, text: string) {
+    setSaveVersion(null);
     setTask(task);
     setMessage(text);
     announceTaskChanged(task);
   }
 
   function conflict(current: Task) {
+    setSaveVersion(null);
     setConflicts((count) => count + 1);
     setTask(current);
     setMessage(CONFLICT);
@@ -178,8 +211,106 @@ export function TaskDetail({
     setMessage(fallback);
   }
 
+  /**
+   * A newer version written by someone else (WT-04 decision 10). With unsaved edits the form
+   * keeps them and takes the other fields, but saves stay on the version the viewer started
+   * from, so the next save gets the conflict and shows their version first.
+   */
+  function changedElsewhere(current: Task) {
+    const held = live.current.version;
+    if (live.current.dirty) {
+      setSaveVersion((version) => version ?? held);
+      setMessage(CHANGED_WHILE_EDITING);
+    } else {
+      setMessage(CHANGED);
+    }
+    setTask(current);
+  }
+
+  /** Reads the task again after an event or a reconnect, and shows what it finds. */
+  function refresh() {
+    getTask(taskKey).then(
+      (current) => {
+        if (current.deletedAt !== null) {
+          setDeleted(true);
+          setMessage(DELETED);
+          return;
+        }
+        if (live.current.busy) {
+          live.current.pending = Math.max(live.current.pending, current.version);
+          return;
+        }
+        if (isNewer(live.current.version, current.version)) changedElsewhere(current);
+      },
+      (failure: unknown) => {
+        if (failure instanceof ApiFailure && failure.status === 404) {
+          setDeleted(true);
+          setMessage(DELETED);
+        }
+      },
+    );
+  }
+
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (data === null) return;
+      const own = event.entityId === data.task.id;
+      switch (event.type) {
+        case "task.updated":
+        case "task.moved":
+          if (!own || deleted || !isNewer(live.current.version, event.version)) return;
+          if (live.current.busy) {
+            live.current.pending = Math.max(live.current.pending, event.version);
+          } else {
+            refresh();
+          }
+          return;
+        case "task.deleted":
+          if (!own) return;
+          setDeleted(true);
+          setMessage(DELETED);
+          return;
+        case "task.restored":
+          if (!own) return;
+          load().then(
+            (loaded) => {
+              setDeleted(false);
+              setSaveVersion(null);
+              show(loaded);
+            },
+            () => undefined,
+          );
+          return;
+        case "column.changed":
+          listColumns(project.key).then(
+            (columns) => {
+              setData((current) =>
+                current === null ? current : { ...current, columns: columns.items },
+              );
+            },
+            () => undefined,
+          );
+          return;
+        case "epic.changed":
+          if (!canWriteTasks) return;
+          listOpenEpics(project.key).then(
+            (epics) => {
+              setData((current) => (current === null ? current : { ...current, epics }));
+            },
+            () => undefined,
+          );
+          return;
+        default:
+          return;
+      }
+    },
+    onReconnect: () => {
+      if (data !== null && !deleted) refresh();
+    },
+  });
+
   async function move(task: Task, columnId: string, columns: readonly Column[]) {
-    setBusy(true);
+    setWriting(true);
     try {
       const moved = await moveTaskTo(task.key, columnId, task.version);
       const name = columns.find((column) => column.id === columnId)?.name ?? "the column";
@@ -189,12 +320,12 @@ export function TaskDetail({
       if (current === null) failed(failure, "Could not move the task. Try again.");
       else conflict(current);
     } finally {
-      setBusy(false);
+      setWriting(false);
     }
   }
 
   async function remove(task: Task) {
-    setBusy(true);
+    setWriting(true);
     try {
       await deleteTask(task.key);
       announceTaskDeleted(task.id);
@@ -203,7 +334,7 @@ export function TaskDetail({
     } catch (failure) {
       failed(failure, `Could not delete ${task.key}. Try again.`);
     } finally {
-      setBusy(false);
+      setWriting(false);
     }
   }
 
@@ -295,15 +426,18 @@ export function TaskDetail({
         onConflict={conflict}
         onFailure={failed}
         onMove={(columnId) => void move(task, columnId, data.columns)}
-        setBusy={setBusy}
+        setBusy={setWriting}
+        saveVersion={saveVersion}
+        onDirtyChange={setDirty}
       />
       <CommentsSection
         taskKey={task.key}
+        taskId={task.id}
         initial={data.comments}
         initialCursor={data.commentsCursor}
-        canComment={canComment && !archived}
+        canComment={canComment && !archived && !deleted}
         busy={busy}
-        setBusy={setBusy}
+        setBusy={setWriting}
         onAdded={() => {
           setMessage("Comment added.");
         }}
