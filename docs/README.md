@@ -9,11 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-064 (the app refuses to start on a schema it does not match,
-  WT-12 item C), on 2026-11-18, on the branch `claude/wi-064-schema-check`.
-- **Next:** draft WI-065 (WT-12 item D: the `recover-admin` operator command) and WS-065
-  as `Proposed`, and stop for the owner's approval. Item E (`maintenance`) is independent
-  of it.
+- **Last finished:** WI-065 (`recover-admin`, an operator command to get back in, WT-12
+  item D), on 2026-11-18, on the branch `claude/wi-065-recover-admin`.
+- **Next:** draft WI-066 (WT-12 item E: the `maintenance` command) and WS-066 as
+  `Proposed`, and stop for the owner's approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -161,6 +160,7 @@ outlined above and comes right after WT-04.
 | [WI-062](work-items/WI-062-production-image.md)                 | Production image, example Compose file and `migrate`             | Done        | [WS-062](work-specs/WS-062-production-image.md)                 | Done        |
 | [WI-063](work-items/WI-063-database-roles.md)                   | An owner role for migrations, a least-privilege role for the app | Done        | [WS-063](work-specs/WS-063-database-roles.md)                   | Done        |
 | [WI-064](work-items/WI-064-schema-check.md)                     | The app refuses to start on a schema it does not match           | Done        | [WS-064](work-specs/WS-064-schema-check.md)                     | Done        |
+| [WI-065](work-items/WI-065-recover-admin.md)                    | `recover-admin`: an operator command to get back in              | Done        | [WS-065](work-specs/WS-065-recover-admin.md)                    | Done        |
 
 ## Follow-ups
 
@@ -168,12 +168,11 @@ Deferred decisions that need a work-item before they are acted on.
 
 Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 
-- **Planned in WT-12 (doc 0006), approved on 2026-11-18:** the last-Admin recovery command
-  answers the first gap below, and WT-12 as a whole answers the one on production
-  deployment. Both stay listed until WT-12 closes them.
-- **No way back in if the only Admin loses their password.** A reset link can only be
-  created by another Admin (WT-02 decision 6). Candidate: a command-line script, run on
-  the server, that issues a reset link for an Admin.
+- **Planned in WT-12 (doc 0006), approved on 2026-11-18:** WT-12 as a whole answers the gap
+  on production deployment below; it stays listed until WT-12 closes it.
+- **Answered by WI-065 (2026-11-18): no way back in if the only Admin lost their
+  password.** An operator on the server runs `recover-admin --email <admin email>`, which
+  prints a one-time link for that Admin (README, "Running in production").
 - **An email can be neither corrected nor freed** once its invitation was accepted. An
   invitation that was never accepted can now be revoked, which frees its email (WI-024).
   Changing the email of an account that has signed in remains undecided.

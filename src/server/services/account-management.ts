@@ -15,6 +15,7 @@ import { conflict, lastAdmin, notFound } from "@/server/http/errors";
 import { decodeCursor, encodeCursor } from "@/server/http/pagination";
 
 import { issueLink, type LinkKind, lockAccount } from "./account-tokens";
+import { findAccountByEmail } from "./accounts";
 import { recordAudit } from "./audit";
 
 // Serialises every change that can reduce the number of active Admins. Rare actions by
@@ -256,6 +257,34 @@ export async function updateAccount(
 }
 
 /**
+ * The core of issuing a link, shared by an Admin (`issueResetLink`) and the operator
+ * (`issueOperatorResetLink`), so the two cannot drift: an invitation for an account that has
+ * no password yet, a reset link for one that has. Runs in the caller's transaction, after
+ * the account lock.
+ */
+async function issueAccountLink(
+  tx: Parameters<Parameters<Database["transaction"]>[0]>[0],
+  input: {
+    target: ManagedAccount;
+    createdBy: string;
+    actor: Actor | null;
+    data?: Record<string, unknown>;
+  },
+): Promise<{ token: string; expiresAt: Date }> {
+  const { target } = input;
+  const kind: LinkKind = target.status === "invited" ? "invitation" : "reset";
+  const link = await issueLink(tx, { accountId: target.id, kind, createdBy: input.createdBy });
+  await recordAudit(tx, {
+    actor: input.actor,
+    action: "account.reset_link_created",
+    entity: "account",
+    entityId: target.id,
+    data: { kind, ...input.data },
+  });
+  return link;
+}
+
+/**
  * A fresh one-time link: an invitation for an account that has no password yet, a reset link
  * for one that has. A deactivated account is refused.
  */
@@ -274,19 +303,56 @@ export async function issueResetLink(
     if (target.status === "deactivated") {
       throw conflict("This account is deactivated. Reactivate it first.");
     }
-    const kind: LinkKind = target.status === "invited" ? "invitation" : "reset";
-    const link = await issueLink(tx, { accountId, kind, createdBy: actor.accountId });
-    await recordAudit(tx, {
-      actor,
-      action: "account.reset_link_created",
-      entity: "account",
-      entityId: accountId,
-      data: { kind },
-    });
-    return link;
+    return issueAccountLink(tx, { target, createdBy: actor.accountId, actor });
   });
 
   return { link: toLink(issued) };
+}
+
+export type OperatorRefusalReason = "unknown_account" | "not_admin" | "deactivated";
+
+const OPERATOR_REFUSALS: Record<OperatorRefusalReason, string> = {
+  unknown_account: "No human account has this email.",
+  not_admin: "This account is not an Admin. An Admin can reset it from the People page.",
+  deactivated: "This Admin is deactivated. The command does not reactivate accounts.",
+};
+
+/** Why the operator command refused (WS-065): said plainly, the operator is trusted. */
+export class OperatorRefusal extends Error {
+  constructor(readonly reason: OperatorRefusalReason) {
+    super(OPERATOR_REFUSALS[reason]);
+    this.name = "OperatorRefusal";
+  }
+}
+
+/**
+ * The operator's way back in when no Admin can act (WS-065, doc 0006 section 7): a link for
+ * a human Admin who is not deactivated, made like an Admin's "Create reset link". The audit
+ * entry has no acting account and says `via: "operator"`; the link's `created_by` is the
+ * Admin's own account. Only `scripts/recover-admin.ts` calls it, never an HTTP route.
+ */
+export async function issueOperatorResetLink(
+  email: string,
+  db: Database = getDb(),
+): Promise<AccountLink> {
+  const found = await findAccountByEmail(db, email);
+  if (found?.kind !== "human") throw new OperatorRefusal("unknown_account");
+
+  const issued = await db.transaction(async (tx) => {
+    await lockAccount(tx, found.id);
+    // Checked again under the lock: the account may have changed meanwhile.
+    const target = await loadManaged(tx, found.id);
+    if (target.role !== "admin") throw new OperatorRefusal("not_admin");
+    if (target.status === "deactivated") throw new OperatorRefusal("deactivated");
+    return issueAccountLink(tx, {
+      target,
+      createdBy: target.id,
+      actor: null,
+      data: { via: "operator" },
+    });
+  });
+
+  return toLink(issued);
 }
 
 /**

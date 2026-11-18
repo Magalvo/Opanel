@@ -29,6 +29,7 @@ trap cleanup EXIT
 secret() { od -An -tx1 -N32 /dev/urandom | tr -d ' \n'; }
 DB_PASSWORD="$(secret)"
 APP_DB_PASSWORD="$(secret)"
+SETUP_TOKEN="$(secret)"
 cat >"$ENV_FILE" <<EOF
 POSTGRES_PASSWORD=${DB_PASSWORD}
 OPANEL_APP_DB_PASSWORD=${APP_DB_PASSWORD}
@@ -36,7 +37,7 @@ DATABASE_URL=postgres://opanel_app:${APP_DB_PASSWORD}@db:5432/opanel
 MIGRATION_DATABASE_URL=postgres://opanel:${DB_PASSWORD}@db:5432/opanel
 BETTER_AUTH_SECRET=$(secret)
 APP_URL=${URL}
-SETUP_TOKEN=$(secret)
+SETUP_TOKEN=${SETUP_TOKEN}
 EOF
 
 echo "== build and start"
@@ -116,6 +117,21 @@ status=$?
 set -e
 [[ $status -ne 0 ]] || fail "the app started with APP_URL=not-a-url"
 [[ "$output" == *"Invalid environment configuration"* ]] || fail "no validation message: ${output}"
+
+echo "== recover-admin prints a link for the Admin, and refuses anyone else (WS-065)"
+body="{\"name\":\"Smoke Admin\",\"email\":\"smoke.admin@example.com\","
+body+="\"password\":\"a smoke admin password, long enough\",\"setupToken\":\"${SETUP_TOKEN}\"}"
+code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "${URL}/api/v1/setup" \
+  -H "Content-Type: application/json" -H "Origin: ${URL}" --data "$body")"
+[[ "$code" == 2* ]] || fail "setup with the token answered ${code}"
+output="$(compose run --rm -T app node dist/recover-admin.mjs --email smoke.admin@example.com 2>&1)" ||
+  fail "recover-admin failed: ${output}"
+[[ "$output" == *"${URL}/accept#"* ]] || fail "recover-admin printed no link: ${output}"
+set +e
+output="$(compose run --rm -T app node dist/recover-admin.mjs --email nobody@example.com 2>&1)"
+status=$?
+set -e
+[[ $status -eq 1 && "$output" == *"No human account"* ]] || fail "recover-admin for nobody: ${status} ${output}"
 
 echo "== a migration the app does not know stops it, with the message (WS-064)"
 owner_sql() { compose exec -T db psql -U opanel -d opanel -qtAc "$1"; }
