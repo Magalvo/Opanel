@@ -41,6 +41,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-058 (a session change and its audit entry stand or fall together,
   audit of 2026-11-17, finding A07; adds a paragraph to canonical doc 0001), on 2026-11-17,
   on the branch `claude/wi-058-session-audit-atomicity`.
+- **Also finished:** WI-059 (one unused link per account, under one lock order, audit of
+  2026-11-17, what WS-040 left of finding A05; migration 0013), on 2026-11-18, on the
+  branch `claude/wi-059-link-lifecycle-locks`.
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
@@ -136,6 +139,7 @@ above and comes after WT-06.
 | [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                   | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
 | [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure               | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
 | [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together | Done        | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Done        |
+| [WI-059](work-items/WI-059-link-lifecycle-locks.md)             | One unused link per account, under one lock order           | Done        | [WS-059](work-specs/WS-059-link-lifecycle-locks.md)             | Done        |
 
 ## Follow-ups
 

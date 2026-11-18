@@ -4,9 +4,11 @@ import { describe, expect, it } from "vitest";
 import {
   createTestAccount,
   failAuditFor,
+  holdAccountLock,
   signInCookie,
   TEST_PASSWORD,
   testActor,
+  waitForAdvisoryLockWaiter,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, accountTokens, auditLog, sessions } from "@/server/db/schema";
@@ -563,5 +565,89 @@ describe("revokeInvitation", () => {
         ).toEqual([]);
       }
     }
+  });
+});
+
+describe("issuing a link races other changes of the same account (WS-059)", () => {
+  async function unusedLinks(accountId: string) {
+    return (
+      await getDb().select().from(accountTokens).where(eq(accountTokens.accountId, accountId))
+    ).filter((link) => link.usedAt === null);
+  }
+
+  async function resetLinkAudits(accountId: string): Promise<number> {
+    const rows = await getDb().select().from(auditLog).where(eq(auditLog.entityId, accountId));
+    return rows.filter((row) => row.action === "account.reset_link_created").length;
+  }
+
+  for (const earlier of [false, true]) {
+    it(`two issues queued together leave only the second one's link (${earlier ? "with" : "without"} an earlier link)`, async () => {
+      const { actor } = await admin();
+      const member = await createTestAccount({ email: "m@example.com" });
+      if (earlier) {
+        await issueResetLink(actor, member.id);
+      }
+      const auditsBefore = await resetLinkAudits(member.id);
+
+      const lock = await holdAccountLock(member.id);
+      let first: Promise<{ link: { url: string } }>;
+      let second: Promise<{ link: { url: string } }>;
+      try {
+        first = issueResetLink(actor, member.id);
+        await waitForAdvisoryLockWaiter(3000, 1);
+        second = issueResetLink(actor, member.id);
+        await waitForAdvisoryLockWaiter(3000, 2);
+      } finally {
+        await lock.release();
+      }
+      const [, last] = await Promise.all([first, second]);
+
+      const unused = await unusedLinks(member.id);
+      expect(unused.map((link) => link.tokenHash)).toEqual([hashToken(tokenOf(last.link))]);
+      expect((await resetLinkAudits(member.id)) - auditsBefore).toBe(2);
+    });
+  }
+
+  it("an issue queued before a deactivation: the link is issued, then deleted by the deactivation", async () => {
+    const { actor } = await admin();
+    const member = await createTestAccount({ email: "m@example.com" });
+
+    const lock = await holdAccountLock(member.id);
+    let issue: Promise<unknown>;
+    let deactivate: Promise<unknown>;
+    try {
+      issue = issueResetLink(actor, member.id);
+      await waitForAdvisoryLockWaiter(3000, 1);
+      deactivate = updateAccount(actor, member.id, { active: false });
+      await waitForAdvisoryLockWaiter(3000, 2);
+    } finally {
+      await lock.release();
+    }
+    await Promise.all([issue, deactivate]);
+
+    expect(await unusedLinks(member.id)).toHaveLength(0);
+    expect(await auditActions()).toContain("account.deactivated");
+  });
+
+  it("an issue queued after a deactivation is refused with 409 and writes nothing", async () => {
+    const { actor } = await admin();
+    const member = await createTestAccount({ email: "m@example.com" });
+
+    const lock = await holdAccountLock(member.id);
+    let deactivate: Promise<unknown>;
+    let issue: Promise<unknown>;
+    try {
+      deactivate = updateAccount(actor, member.id, { active: false });
+      await waitForAdvisoryLockWaiter(3000, 1);
+      issue = issueResetLink(actor, member.id);
+      await waitForAdvisoryLockWaiter(3000, 2);
+    } finally {
+      await lock.release();
+    }
+    await deactivate;
+
+    expect((await failure(issue)).status).toBe(409);
+    expect(await unusedLinks(member.id)).toHaveLength(0);
+    expect(await resetLinkAudits(member.id)).toBe(0);
   });
 });

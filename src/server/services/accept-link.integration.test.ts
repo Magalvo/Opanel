@@ -7,10 +7,12 @@ import {
   cookieHeaderFrom,
   createTestAccount,
   failAuditFor,
+  holdAccountLock,
   setDisabled,
   signInCookie,
   TEST_PASSWORD,
   testActor,
+  waitForAdvisoryLockWaiter,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import {
@@ -24,7 +26,12 @@ import {
 import { ApiError, serverBusy } from "@/server/http/errors";
 
 import { acceptLink } from "./accept-link";
-import { inviteAccount, issueResetLink, revokeInvitation } from "./account-management";
+import {
+  inviteAccount,
+  issueResetLink,
+  revokeInvitation,
+  updateAccount,
+} from "./account-management";
 import { hashToken } from "./account-tokens";
 import { signIn } from "./sign-in";
 
@@ -483,5 +490,68 @@ describe("a sign-in that fails after the password was set (WS-057)", () => {
     const { token } = await invited();
 
     expect((await accept(token)).signedIn).toBe(true);
+  });
+});
+
+describe("accepting a link races a deactivation (WS-059)", () => {
+  it("a deactivation queued first: the link is refused with 404 and no password is set", async () => {
+    const { actor } = await admin();
+    const member = await createTestAccount({ email: "m@example.com" });
+    const { link } = await issueResetLink(actor, member.id);
+    const [before] = await getDb()
+      .select({ passwordHash: credentials.passwordHash })
+      .from(credentials)
+      .where(eq(credentials.accountId, member.id));
+
+    const lock = await holdAccountLock(member.id);
+    let deactivate: Promise<unknown>;
+    let accepting: Promise<unknown>;
+    try {
+      deactivate = updateAccount(actor, member.id, { active: false });
+      await waitForAdvisoryLockWaiter(3000, 1);
+      accepting = accept(tokenOf(link));
+      await waitForAdvisoryLockWaiter(5000, 2);
+    } finally {
+      await lock.release();
+    }
+    await deactivate;
+
+    const error = await failure(accepting);
+    expect(error.status).toBe(404);
+    const [after] = await getDb()
+      .select({ passwordHash: credentials.passwordHash })
+      .from(credentials)
+      .where(eq(credentials.accountId, member.id));
+    expect(after?.passwordHash).toBe(before?.passwordHash);
+    expect(await getDb().select().from(sessions)).toHaveLength(0);
+  });
+
+  it("an acceptance queued first: the password is set, then the deactivation ends every session", async () => {
+    const { actor } = await admin();
+    const member = await createTestAccount({ email: "m@example.com" });
+    const { link } = await issueResetLink(actor, member.id);
+
+    const lock = await holdAccountLock(member.id);
+    let accepting: Promise<unknown>;
+    let deactivate: Promise<unknown>;
+    try {
+      accepting = accept(tokenOf(link));
+      await waitForAdvisoryLockWaiter(5000, 1);
+      deactivate = updateAccount(actor, member.id, { active: false });
+      await waitForAdvisoryLockWaiter(3000, 2);
+    } finally {
+      await lock.release();
+    }
+    await Promise.all([accepting, deactivate]);
+
+    const [account] = await getDb().select().from(accounts).where(eq(accounts.id, member.id));
+    expect(account?.disabledAt).not.toBeNull();
+    expect(
+      await getDb().select().from(sessions).where(eq(sessions.accountId, member.id)),
+    ).toHaveLength(0);
+    const audit = (await auditRows()).map((row) => row.action);
+    expect(audit.indexOf("account.password_changed")).toBeLessThan(
+      audit.indexOf("account.deactivated"),
+    );
   });
 });

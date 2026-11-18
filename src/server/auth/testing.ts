@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { getDb } from "@/server/db/client";
 import { accounts, credentials } from "@/server/db/schema";
+import { lockAccount } from "@/server/services/account-tokens";
 
 import { type Actor, humanActor } from "./actor";
 import { getAuth } from "./auth";
@@ -148,20 +149,50 @@ export async function failSessionDeletes(): Promise<() => Promise<void>> {
 }
 
 /**
- * Resolves once some session waits for an advisory lock that another one holds, so a test
- * can release the holder at a known point. Throws after `timeoutMs` (a caller that never
- * takes the lock).
+ * Resolves once `count` sessions wait for an advisory lock that another one holds, so a test
+ * can release the holder at a known point, or queue operations in a known order: PostgreSQL
+ * grants a contended lock to its waiters in the order they asked (WS-059). Throws after
+ * `timeoutMs` (a caller that never takes the lock).
  */
-export async function waitForAdvisoryLockWaiter(timeoutMs = 3000): Promise<void> {
+export async function waitForAdvisoryLockWaiter(timeoutMs = 3000, count = 1): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const waiting = await getDb().execute<{ n: number }>(
       sql`select count(*)::int as n from pg_locks where locktype = 'advisory' and not granted`,
     );
-    if ((waiting[0]?.n ?? 0) > 0) {
+    if ((waiting[0]?.n ?? 0) >= count) {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
   throw new Error("nobody waited for the advisory lock");
+}
+
+/**
+ * Holds the per-account lock in a transaction of its own until `release()` is called
+ * (WS-059). `release()` resolves once that transaction has ended.
+ */
+export async function holdAccountLock(
+  accountId: string,
+): Promise<{ release: () => Promise<void> }> {
+  let open = (): void => undefined;
+  const held = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  let locked = (): void => undefined;
+  const isLocked = new Promise<void>((resolve) => {
+    locked = resolve;
+  });
+  const holder = getDb().transaction(async (tx) => {
+    await lockAccount(tx, accountId);
+    locked();
+    await held;
+  });
+  await isLocked;
+  return {
+    release: async () => {
+      open();
+      await holder;
+    },
+  };
 }
