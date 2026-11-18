@@ -28,9 +28,12 @@ trap cleanup EXIT
 
 secret() { od -An -tx1 -N32 /dev/urandom | tr -d ' \n'; }
 DB_PASSWORD="$(secret)"
+APP_DB_PASSWORD="$(secret)"
 cat >"$ENV_FILE" <<EOF
 POSTGRES_PASSWORD=${DB_PASSWORD}
-DATABASE_URL=postgres://opanel:${DB_PASSWORD}@db:5432/opanel
+OPANEL_APP_DB_PASSWORD=${APP_DB_PASSWORD}
+DATABASE_URL=postgres://opanel_app:${APP_DB_PASSWORD}@db:5432/opanel
+MIGRATION_DATABASE_URL=postgres://opanel:${DB_PASSWORD}@db:5432/opanel
 BETTER_AUTH_SECRET=$(secret)
 APP_URL=${URL}
 SETUP_TOKEN=$(secret)
@@ -81,13 +84,25 @@ echo "== no development dependency in the image"
 dev="$(compose exec -T app sh -c 'ls node_modules/.bin' | grep -xE 'tsx|vitest|playwright|drizzle-kit|eslint' || true)"
 [[ -z "$dev" ]] || fail "development dependencies in the image: ${dev}"
 
+echo "== the app connects as the runtime role (WS-063)"
+users="$(compose exec -T db psql -U opanel -d opanel -tAc   "select string_agg(distinct usename, ',') from pg_stat_activity
+   where datname = 'opanel' and backend_type = 'client backend' and pid <> pg_backend_pid()")"
+[[ "$users" == "opanel_app" ]] || fail "the app's connections use: ${users}"
+
+echo "== the runtime role cannot truncate the audit log"
+set +e
+output="$(compose exec -T -e PGPASSWORD="$APP_DB_PASSWORD" db   psql -h 127.0.0.1 -U opanel_app -d opanel -c "truncate audit_log" 2>&1)"
+status=$?
+set -e
+[[ $status -ne 0 && "$output" == *"permission denied"* ]] || fail "truncate as opanel_app: ${output}"
+
 echo "== migrate again: nothing to do, exits 0"
 compose run --rm -T migrate >/dev/null || fail "a second migrate failed"
 
 echo "== migrate with a wrong password fails and does not print it"
 set +e
 output="$(compose run --rm -T \
-  -e DATABASE_URL="postgres://opanel:wrong-smoke-password@db:5432/opanel" migrate 2>&1)"
+  -e MIGRATION_DATABASE_URL="postgres://opanel:wrong-smoke-password@db:5432/opanel" migrate 2>&1)"
 status=$?
 set -e
 [[ $status -ne 0 ]] || fail "migrate with a wrong password exited 0"

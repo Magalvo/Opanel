@@ -1,7 +1,7 @@
 // Runs once, in the main Vitest process, before any integration test file.
 import { closeDb, getDb } from "@/server/db/client";
 import { runMigrations } from "@/server/db/migrate";
-import { assertTestDatabaseUrl } from "@/server/db/testing";
+import { assertTestDatabaseUrl, ensureRuntimeTestRole } from "@/server/db/testing";
 import { getEnv } from "@/server/env";
 import { loadEnvFiles } from "@/server/env-files";
 
@@ -19,5 +19,6 @@ export default async function setup(): Promise<void> {
   }
 
   await runMigrations(getDb());
+  await ensureRuntimeTestRole(getDb());
   await closeDb();
 }

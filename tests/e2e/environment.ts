@@ -10,6 +10,18 @@ export const E2E_DATABASE_URL =
 
 export const E2E_DATABASE_SUFFIX = "_e2e_test";
 
+/**
+ * The same database as the app under test reaches it: as the runtime test role, a login
+ * member of `opanel_app` (WS-063). `prepare.ts` creates the role; E2E_DATABASE_URL stays the
+ * owner, for migrations and for seeding.
+ */
+export const E2E_APP_DATABASE_URL = (() => {
+  const url = new URL(E2E_DATABASE_URL);
+  url.username = "opanel_app_test";
+  url.password = "opanel_app_test";
+  return url.toString();
+})();
+
 /** Placeholder session secret for the app under test. Not a secret: the database is a throwaway. */
 export const E2E_AUTH_SECRET = "e2e-secret-only-for-playwright-0123456789abcdef";
 

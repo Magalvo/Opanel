@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 import {
+  E2E_APP_DATABASE_URL,
   E2E_AUTH_SECRET,
   E2E_BASE_URL,
   E2E_DATABASE_URL,
@@ -59,7 +60,9 @@ export default defineConfig({
     command: `tsx tests/e2e/prepare.ts && next build && next start -p ${String(E2E_PORT)}`,
     url: `${E2E_BASE_URL}/api/v1/health`,
     env: {
-      DATABASE_URL: E2E_DATABASE_URL,
+      // The app connects as the runtime role, `prepare.ts` and `migrate` as the owner (WS-063).
+      DATABASE_URL: E2E_APP_DATABASE_URL,
+      MIGRATION_DATABASE_URL: E2E_DATABASE_URL,
       BETTER_AUTH_SECRET: E2E_AUTH_SECRET,
       APP_URL: E2E_BASE_URL,
       SETUP_TOKEN: E2E_SETUP_TOKEN,
