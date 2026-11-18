@@ -68,6 +68,20 @@ describe("the runtime role can do what the app does", () => {
   });
 });
 
+describe("the runtime role reads the migrations' table, and only reads it (WS-064)", () => {
+  it("reads the latest applied migration", async () => {
+    const rows = await app<{ latest: string | null }[]>`
+      select max(created_at)::text as latest from drizzle.__drizzle_migrations`;
+    expect(rows[0]?.latest).not.toBeNull();
+  });
+
+  it("cannot add to it", async () => {
+    expect(
+      await codeOf(app.unsafe("insert into drizzle.__drizzle_migrations (hash) values ('x')")),
+    ).toBe("42501");
+  });
+});
+
 describe("every table carries the runtime role's rights (WS-063 section 2)", () => {
   it("gives every table its rights, and append-only tables no UPDATE or DELETE", async () => {
     const rows = await getDb().$client<
