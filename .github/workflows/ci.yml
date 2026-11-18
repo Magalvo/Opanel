@@ -74,3 +74,34 @@ jobs:
             test-results/
           retention-days: 7
           if-no-files-found: ignore
+
+  # Git for Windows checks text files out with CRLF unless .gitattributes says otherwise;
+  # this job keeps the format check honest on such a checkout (WS-060).
+  format-windows:
+    name: Format check (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Version comes from `packageManager` in package.json.
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Show line-ending settings
+        run: |
+          git config --show-origin --get-all core.autocrlf
+          git ls-files --eol package.json
+
+      - name: Format check
+        run: pnpm format:check
