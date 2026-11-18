@@ -133,6 +133,11 @@ status=$?
 set -e
 [[ $status -eq 1 && "$output" == *"No human account"* ]] || fail "recover-admin for nobody: ${status} ${output}"
 
+echo "== maintenance runs in the image and says what it deleted (WS-066)"
+output="$(compose run --rm -T app node dist/maintenance.mjs 2>&1)" || fail "maintenance failed: ${output}"
+[[ "$output" == *"Deleted "*" expired sessions, "*" verifications."* ]] ||
+  fail "maintenance printed: ${output}"
+
 echo "== a migration the app does not know stops it, with the message (WS-064)"
 owner_sql() { compose exec -T db psql -U opanel -d opanel -qtAc "$1"; }
 owner_sql "insert into drizzle.__drizzle_migrations (hash, created_at) values ('smoke-future', 9999999999999)"

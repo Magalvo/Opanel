@@ -9,10 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-065 (`recover-admin`, an operator command to get back in, WT-12
-  item D), on 2026-11-18, on the branch `claude/wi-065-recover-admin`.
-- **Next:** draft WI-066 (WT-12 item E: the `maintenance` command) and WS-066 as
-  `Proposed`, and stop for the owner's approval.
+- **Last finished:** WI-066 (`maintenance`: remove what has expired, WT-12 item E), on
+  2026-11-18, on the branch `claude/wi-066-maintenance`.
+- **Next:** draft WI-067 (WT-12 item F: `Strict-Transport-Security` on `https:` installs,
+  and the reverse-proxy requirements) and WS-067 as `Proposed`, and stop for the owner's
+  approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -161,6 +162,7 @@ outlined above and comes right after WT-04.
 | [WI-063](work-items/WI-063-database-roles.md)                   | An owner role for migrations, a least-privilege role for the app | Done        | [WS-063](work-specs/WS-063-database-roles.md)                   | Done        |
 | [WI-064](work-items/WI-064-schema-check.md)                     | The app refuses to start on a schema it does not match           | Done        | [WS-064](work-specs/WS-064-schema-check.md)                     | Done        |
 | [WI-065](work-items/WI-065-recover-admin.md)                    | `recover-admin`: an operator command to get back in              | Done        | [WS-065](work-specs/WS-065-recover-admin.md)                    | Done        |
+| [WI-066](work-items/WI-066-maintenance.md)                      | `maintenance`: remove what has expired                           | Done        | [WS-066](work-specs/WS-066-maintenance.md)                      | Done        |
 
 ## Follow-ups
 

@@ -65,6 +65,14 @@ link, printed once; send it to the Admin and do not keep it (WS-065):
 docker compose -f compose.production.yaml run --rm app node dist/recover-admin.mjs --email admin@example.com
 ```
 
+Schedule the maintenance command daily (cron, a systemd timer): it deletes expired
+sessions, links used or expired more than 30 days ago and ended rate-limit counters, and
+never touches the audit log or the task history (WS-066):
+
+```bash
+docker compose -f compose.production.yaml run --rm app node dist/maintenance.mjs
+```
+
 Opanel must run as a long-lived Node.js server (`pnpm build`, then `pnpm start`), not on
 serverless or edge hosting: open boards keep a Server-Sent Events stream to
 `/api/v1/projects/{projectId}/events`. A reverse proxy in front of it must not buffer that
