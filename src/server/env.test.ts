@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createEnvAccessor,
   EnvValidationError,
+  migrationDatabaseUrl,
   parseEnv,
   parseNodeEnv,
   productionWarnings,
@@ -179,6 +180,34 @@ describe("SETUP_TOKEN (WS-050)", () => {
 
   it("keeps the configured token as it is", () => {
     expect(parseEnv({ ...base, SETUP_TOKEN: token }).SETUP_TOKEN).toBe(token);
+  });
+});
+
+describe("MIGRATION_DATABASE_URL (WS-063)", () => {
+  it("is optional, and an empty value means not set", () => {
+    expect(parseEnv(base).MIGRATION_DATABASE_URL).toBeUndefined();
+    expect(
+      parseEnv({ ...base, MIGRATION_DATABASE_URL: "" }).MIGRATION_DATABASE_URL,
+    ).toBeUndefined();
+  });
+
+  it("accepts a postgres URL", () => {
+    const url = "postgres://owner:pw@db:5432/opanel";
+    expect(parseEnv({ ...base, MIGRATION_DATABASE_URL: url }).MIGRATION_DATABASE_URL).toBe(url);
+  });
+
+  it("is what migrate connects with, and DATABASE_URL when it is not set", () => {
+    const owner = "postgres://owner:pw@db:5432/opanel";
+    expect(migrationDatabaseUrl(parseEnv({ ...base, MIGRATION_DATABASE_URL: owner }))).toBe(owner);
+    expect(migrationDatabaseUrl(parseEnv(base))).toBe(base.DATABASE_URL);
+  });
+
+  it("rejects anything else, naming the variable but never the value", () => {
+    const error = captureError({ ...base, MIGRATION_DATABASE_URL: "mysql://marker-secret@db" });
+
+    expect(error.variables).toEqual(["MIGRATION_DATABASE_URL"]);
+    expect(error.message).toContain("postgres:// or postgresql:// URL");
+    expect(error.message).not.toContain("marker-secret");
   });
 });
 

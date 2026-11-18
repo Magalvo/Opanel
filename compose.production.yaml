@@ -20,10 +20,12 @@ services:
     environment:
       POSTGRES_USER: opanel
       POSTGRES_DB: opanel
-    # Reads POSTGRES_PASSWORD from the same file as the app.
+    # Reads POSTGRES_PASSWORD (the schema owner's) and OPANEL_APP_DB_PASSWORD (the app's
+    # role, created by the init script on a new volume, WS-063) from the same file.
     env_file: ${OPANEL_ENV_FILE:-.env.production}
     volumes:
       - db-data:/var/lib/postgresql
+      - ./docker/production/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U opanel -d opanel"]
       interval: 5s

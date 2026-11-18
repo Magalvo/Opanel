@@ -30,6 +30,15 @@ const envSchema = z.object({
     .string({ error: "required" })
     .min(1, { error: "required" })
     .refine(isPostgresUrl, { error: "must be a postgres:// or postgresql:// URL" }),
+  // The schema owner's connection, for `migrate` only (WS-063). Optional: without it,
+  // `migrate` uses DATABASE_URL, which is then the owner too. Never logged.
+  MIGRATION_DATABASE_URL: z
+    .string()
+    .optional()
+    .transform((value) => (value === "" ? undefined : value))
+    .refine((value) => value === undefined || isPostgresUrl(value), {
+      error: "must be a postgres:// or postgresql:// URL",
+    }),
   // Signs and encrypts sessions. Read by Better Auth through getEnv(), never logged.
   BETTER_AUTH_SECRET: z
     .string({ error: "required" })
@@ -61,6 +70,11 @@ const envSchema = z.object({
 });
 
 export type Env = Readonly<z.infer<typeof envSchema>>;
+
+/** The connection `migrate` uses: the schema owner's when it is set apart (WS-063). */
+export function migrationDatabaseUrl(env: Env): string {
+  return env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL;
+}
 
 export type EnvSource = Readonly<Record<string, string | undefined>>;
 

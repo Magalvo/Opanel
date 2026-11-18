@@ -75,6 +75,16 @@ docker compose down -v
 docker compose up -d
 ```
 
+## Database roles and migrations
+
+The app connects as `opanel_app`, a role with only the rights it needs; migrations connect
+as the schema owner (`MIGRATION_DATABASE_URL`, else `DATABASE_URL`; WS-063). Default
+privileges give `opanel_app` `SELECT`, `INSERT`, `UPDATE` and `DELETE` on every table a
+migration creates, so a new table needs no grant. A migration that creates an append-only
+table (one with an `*_append_only` trigger) also runs
+`REVOKE UPDATE, DELETE ON <table> FROM opanel_app`. The test
+`src/server/db/runtime-role.integration.test.ts` fails if either is missing.
+
 ## Quality gate
 
 All five must pass before a change is accepted. CI runs the same five on every pull

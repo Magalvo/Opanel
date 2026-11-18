@@ -71,8 +71,11 @@ WI-041).
   backups only.
 - **Runtime role** (`opanel_app`): what `DATABASE_URL` uses. `SELECT`, `INSERT`, `UPDATE`,
   `DELETE` on the application tables; on `audit_log` and `task_events` only `SELECT` and
-  `INSERT`; `USAGE` on sequences. No `TRUNCATE`, no DDL, no ownership. Every migration
-  that creates a table grants the runtime role what it needs, in the same migration.
+  `INSERT`; `USAGE` on sequences. No `TRUNCATE`, no DDL, no ownership. Default
+  privileges give the runtime role these rights on every table and sequence a migration
+  creates; a migration that creates an append-only table revokes `UPDATE` and `DELETE` on
+  it; a test checks both (amended by WS-063, 2026-11-18). `opanel_app` is a group role:
+  the app connects as any login role that is a member of it.
 - Threat model: the operator and the owner role are trusted; the append-only triggers
   protect the audit log from the application (a bug or a compromised app process), not
   from the database owner. A compromised app process can read and change application data

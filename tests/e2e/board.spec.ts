@@ -264,7 +264,9 @@ test("a card someone else moved is refreshed, with an explanation", async ({ pag
   // as after a lost event, and its move is then refused with a version conflict.
   await page.route("**/api/v1/projects/*/events", (route) => route.abort());
   await page.goto(`/projects/${key}`);
-  await expect(column(page, "To do").getByText("Hotel")).toBeVisible();
+  // With no stream, the board loads after its 3-second fallback (WS-048 section 3), so the
+  // first card can take longer than the default 5 seconds on a busy test server.
+  await expect(column(page, "To do").getByText("Hotel")).toBeVisible({ timeout: 15_000 });
 
   const [, doing] = await columnsOf(page, key);
   if (!doing) throw new Error("no second column");

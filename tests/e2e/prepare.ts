@@ -1,10 +1,13 @@
 // Runs before the app under test is built and started (see playwright.config.ts).
-// Checks that DATABASE_URL points at a reachable end-to-end database, then migrates it.
+// Checks that the owner's connection (MIGRATION_DATABASE_URL) points at a reachable
+// end-to-end database, migrates it, and creates the runtime test role the app connects as
+// (WS-063).
 import { sql } from "drizzle-orm";
 
-import { closeDb, getDb } from "@/server/db/client";
+import { closeMigrationDb, getMigrationDb } from "@/server/db/client";
 import { runMigrations } from "@/server/db/migrate";
-import { getEnv } from "@/server/env";
+import { ensureRuntimeTestRole } from "@/server/db/testing";
+import { getEnv, migrationDatabaseUrl } from "@/server/env";
 
 import { E2E_DATABASE_SUFFIX } from "./environment";
 
@@ -13,14 +16,18 @@ function databaseName(url: string): string {
 }
 
 async function prepare(): Promise<void> {
-  if (!databaseName(getEnv().DATABASE_URL).endsWith(E2E_DATABASE_SUFFIX)) {
+  const env = getEnv();
+  if (
+    !databaseName(env.DATABASE_URL).endsWith(E2E_DATABASE_SUFFIX) ||
+    !databaseName(migrationDatabaseUrl(env)).endsWith(E2E_DATABASE_SUFFIX)
+  ) {
     throw new Error(
       `Refusing to run end-to-end tests: the database name must end in "${E2E_DATABASE_SUFFIX}".`,
     );
   }
 
   try {
-    await getDb().$client`select 1`;
+    await getMigrationDb().$client`select 1`;
   } catch {
     throw new Error(
       "Cannot reach the end-to-end database. Start it with `docker compose up -d`. " +
@@ -29,12 +36,15 @@ async function prepare(): Promise<void> {
     );
   }
 
-  await runMigrations(getDb());
+  await runMigrations(getMigrationDb());
+  await ensureRuntimeTestRole(getMigrationDb());
 
   // The first-run setup test needs an install with no accounts, and this database is not
   // emptied between runs. Safe: the name was checked above. Cascades to credentials,
   // sessions and the audit log; rate limits are emptied too so each run starts clean.
-  await getDb().execute(sql`truncate table accounts, rate_limits restart identity cascade`);
+  await getMigrationDb().execute(
+    sql`truncate table accounts, rate_limits restart identity cascade`,
+  );
 }
 
 try {
@@ -43,5 +53,5 @@ try {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 } finally {
-  await closeDb();
+  await closeMigrationDb();
 }
