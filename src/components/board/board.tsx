@@ -18,7 +18,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { getProject } from "@/components/projects/api";
 import { useProject } from "@/components/projects/project-frame";
@@ -64,10 +64,44 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     getProject(projectKey).then(setProject, () => undefined);
   }, [projectKey, setProject]);
 
-  const { phase, columns, board, moving, reload, added, drop } = useBoard({
+  // The project as shown, for the live handler below.
+  const projectRef = useRef(project);
+  useEffect(() => {
+    projectRef.current = project;
+  });
+
+  /**
+   * Someone renamed, archived or unarchived the project (WS-048 sections 4 and 6). Only an
+   * archive or an unarchive is announced: it changes what the viewer may do.
+   */
+  const projectChanged = useCallback(
+    (version: number) => {
+      if (version <= projectRef.current.version) return;
+      getProject(projectKey).then(
+        (loaded) => {
+          const was = projectRef.current.archivedAt !== null;
+          const now = loaded.archivedAt !== null;
+          setProject(loaded);
+          if (was !== now) {
+            setMessage(
+              now
+                ? "This project was archived. The board is read-only."
+                : "This project was unarchived.",
+            );
+          }
+        },
+        () => undefined,
+      );
+    },
+    [projectKey, setProject],
+  );
+
+  const { phase, columns, board, moving, live, reload, added, drop, hold } = useBoard({
     projectKey,
+    projectId: project.id,
     announce: setMessage,
     onArchived: refreshProject,
+    onProjectChanged: projectChanged,
   });
 
   // While a card is dragged the board is shown from `preview`, which follows the card
@@ -117,6 +151,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     );
 
   function onDragStart(event: DragStartEvent) {
+    hold(true);
     setActiveId(String(event.active.id));
     setPreview(board);
   }
@@ -159,16 +194,21 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
       (was !== null && was.columnId === place.columnId && was.index === place.index)
     ) {
       lastDrop.current = `${keyOf(id)} was dropped in its place.`;
+      hold(false);
       return;
     }
     lastDrop.current = `${result[place.columnId]?.[place.index]?.key ?? "The card"} was moved to ${positionText(result, id)}.`;
+    // The move holds the events itself until it is saved, so it starts before the drag's
+    // hold ends and no held event lands between the drop and the move.
     void drop(id, place.columnId, place.index);
+    hold(false);
   }
 
   function onDragCancel(event: DragCancelEvent) {
     setPreview(null);
     setActiveId(null);
     keepFocus(event);
+    hold(false);
   }
 
   const announcements: Announcements = {
@@ -209,6 +249,11 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
       <p role="status" aria-label="Board messages" className="min-h-5 text-sm">
         {message}
       </p>
+      {live === "paused" && (
+        <p role="status" aria-label="Live updates" className="text-sm text-muted-foreground">
+          Live updates are paused. Reconnecting…
+        </p>
+      )}
 
       {phase === "loading" && (
         <div className="grid gap-2">

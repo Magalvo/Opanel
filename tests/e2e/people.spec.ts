@@ -20,11 +20,18 @@ const admin = base.extend({
   },
 });
 
-/** The end-to-end database keeps every account of the run, so the newest may be on page two. */
+/**
+ * The end-to-end database keeps every account of the run, so the newest may be on page two.
+ * "Load more" is disabled while a page loads and removed after the last one, so each click
+ * waits for that load to end; clicking a disabled button that then disappears would wait
+ * for it until the test times out (seen once the run had more than 50 accounts, WS-048).
+ */
 async function showEveryone(page: Page) {
   const more = page.getByRole("button", { name: "Load more" });
+  const loading = page.getByRole("button", { name: "Load more", disabled: true });
   while (await more.isVisible()) {
-    await more.click();
+    if (await more.isEnabled()) await more.click();
+    await expect(loading).toHaveCount(0);
   }
 }
 

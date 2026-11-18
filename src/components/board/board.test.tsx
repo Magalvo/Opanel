@@ -1,8 +1,9 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { FakeSource } from "@/hooks/fake-event-source";
 import type { Project } from "@/lib/schemas/projects";
 
 import {
@@ -56,6 +57,9 @@ function columnRegion(name: string) {
 
 beforeEach(() => {
   installFetch();
+  FakeSource.all = [];
+  FakeSource.autoOpen = true;
+  vi.stubGlobal("EventSource", FakeSource);
   on(COLUMNS, page([todo, doing, done]));
   on(TASKS, page([t1, t2, t3]));
 });
@@ -266,5 +270,77 @@ describe("Board: who may change it", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add task" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Move OPA-1/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("Board: live (WS-048 section 6)", () => {
+  function projectChanged(version: number) {
+    act(() => {
+      FakeSource.latest().send("project.changed", {
+        id: crypto.randomUUID(),
+        type: "project.changed",
+        projectId: opa.id,
+        entity: "project",
+        entityId: opa.id,
+        version,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-18T10:00:00.000Z",
+      });
+    });
+  }
+
+  function projectReads(): number {
+    return calls("GET").filter(([url]) => url === "/api/v1/projects/OPA").length;
+  }
+
+  it("turns read-only and says so when someone archives the project", async () => {
+    await renderBoard();
+    on(PROJECT, json({ ...opa, archivedAt: "2026-11-18T10:00:00.000Z", version: 4 }));
+
+    projectChanged(4);
+
+    expect(await screen.findByRole("status", { name: "Board messages" })).toHaveTextContent(
+      "This project was archived. The board is read-only.",
+    );
+    expect(screen.getByText("This project is archived. The board is read-only.")).toBeVisible();
+    expect(screen.queryByRole("button", { name: /^Add task/ })).not.toBeInTheDocument();
+  });
+
+  it("turns writable again and says so when someone unarchives it", async () => {
+    await renderBoard({ project: { ...opa, archivedAt: "2026-11-16T10:00:00.000Z", version: 4 } });
+    on(PROJECT, json({ ...opa, version: 5 }));
+
+    projectChanged(5);
+
+    await waitFor(() => {
+      expect(screen.getByRole("status", { name: "Board messages" })).toHaveTextContent(
+        "This project was unarchived.",
+      );
+    });
+    expect(
+      screen.queryByText("This project is archived. The board is read-only."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not read the project again for a version it already holds", async () => {
+    await renderBoard();
+    const before = projectReads();
+
+    projectChanged(opa.version);
+
+    expect(projectReads()).toBe(before);
+  });
+
+  it("says when live updates are paused", async () => {
+    await renderBoard();
+    expect(screen.queryByText("Live updates are paused. Reconnecting…")).not.toBeInTheDocument();
+
+    act(() => {
+      FakeSource.latest().refuse();
+    });
+
+    expect(screen.getByRole("status", { name: "Live updates" })).toHaveTextContent(
+      "Live updates are paused. Reconnecting…",
+    );
   });
 });

@@ -38,3 +38,23 @@ export function createTask(projectKey: string, body: CreateTaskRequest) {
 export function moveTask(taskId: string, body: MoveTaskRequest) {
   return call(`/api/v1/tasks/${taskId}/move`, { method: "POST", ...jsonBody(body) }, taskSchema);
 }
+
+/** One column's tasks, in board order (WS-048 section 4): every page, as the first load. */
+export async function listColumnTasks(
+  projectKey: string,
+  columnId: string,
+): Promise<TaskSummary[]> {
+  const tasks: TaskSummary[] = [];
+  let cursor: string | null = null;
+  do {
+    const query: string = cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`;
+    const page = await call(
+      `/api/v1/projects/${projectKey}/tasks?limit=${String(MAX_PAGE_LIMIT)}&columnId=${columnId}${query}`,
+      {},
+      taskPageSchema,
+    );
+    tasks.push(...page.items);
+    cursor = page.nextCursor;
+  } while (cursor !== null);
+  return tasks;
+}
