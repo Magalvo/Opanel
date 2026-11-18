@@ -21,6 +21,9 @@ Updated at the end of every work-item, so that a new session can start from here
   track.
 - **Approved on 2026-11-16:** canonical doc 0005 (MCP server) and the outline of WT-11,
   which starts after WT-06.
+- **Approved on 2026-11-18:** canonical doc 0006 (operations: deployment, database roles,
+  backup and recovery; audit of 2026-11-17, finding A12) and the outline of WT-12, which
+  starts right after WT-04, before WT-05.
 - **Also finished:** WI-051 (cursor date validation, audit of 2026-11-17, finding A08), on
   2026-11-17, on the branch `claude/wi-051-cursor-validation`.
 - **Also finished:** WI-052 (end-to-end Admin isolation, audit of 2026-11-17, finding A09),
@@ -63,6 +66,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [0003](canonical/0003-task-management.md)         | Task management: roles, tickets, boards and planning        | Approved |
 | [0004](canonical/0004-api-conventions.md)         | API conventions                                             | Approved |
 | [0005](canonical/0005-mcp-server.md)              | MCP server: Opanel as tools for AI assistants               | Approved |
+| [0006](canonical/0006-operations.md)              | Operations: deployment, database roles, backup and recovery | Approved |
 
 ## Work-tracks (`work-tracks/`)
 
@@ -73,6 +77,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
 | [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Approved |
 | [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
+| [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations (outline)          | Approved |
 
 Planned next, not yet drafted:
 
@@ -84,7 +89,8 @@ Planned next, not yet drafted:
 - WT-10 Sprints and story points
 
 WT-07 to WT-10 come from canonical doc 0003. WT-11, the MCP server (doc 0005), is outlined
-above and comes after WT-06.
+above and comes after WT-06. WT-12, production deployment and operations (doc 0006), is
+outlined above and comes right after WT-04.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
@@ -156,6 +162,9 @@ Deferred decisions that need a work-item before they are acted on.
 
 Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 
+- **Planned in WT-12 (doc 0006), approved on 2026-11-18:** the last-Admin recovery command
+  answers the first gap below, and WT-12 as a whole answers the one on production
+  deployment. Both stay listed until WT-12 closes them.
 - **No way back in if the only Admin loses their password.** A reset link can only be
   created by another Admin (WT-02 decision 6). Candidate: a command-line script, run on
   the server, that issues a reset link for an Admin.
