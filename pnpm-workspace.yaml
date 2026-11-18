@@ -9,3 +9,11 @@ overrides:
 # A pnpm other than the one in `packageManager` stops at once, naming both versions,
 # instead of warning and carrying on (WS-060).
 packageManagerStrictVersion: true
+
+auditConfig:
+  ignoreGhsas:
+    # picomatch <=4.0.7, ReDoS on attacker-supplied extglob patterns; no fix published.
+    # Only path: better-auth's optional peer vitest (our own test runner); Opanel never
+    # gives picomatch a pattern from outside the repository. The audit workflow fails
+    # once a fix exists (WS-061).
+    - GHSA-fc5q-39xc-vjpf
