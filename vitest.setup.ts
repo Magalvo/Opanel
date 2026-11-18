@@ -1,10 +1,20 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+
+import { FakeSource } from "@/hooks/fake-event-source";
 
 afterEach(() => {
   cleanup();
+});
+
+// jsdom has no EventSource; every project page opens one (WS-049). Each test starts with a
+// fake whose sources stay closed until the test opens them, or set `FakeSource.autoOpen`.
+beforeEach(() => {
+  FakeSource.all = [];
+  FakeSource.autoOpen = false;
+  vi.stubGlobal("EventSource", FakeSource);
 });
 
 // jsdom has no matchMedia; the sidebar uses it to detect narrow screens.

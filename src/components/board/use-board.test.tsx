@@ -1,11 +1,25 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bodyOf, calls, fetchMock, installFetch, on, problem } from "@/components/fake-api";
+import { ProjectEventsProvider } from "@/components/projects/project-events";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { ProjectEvent } from "@/lib/schemas/events";
 
-import { COLUMNS, doing, done, full, json, page, PROJECT_ID, task, TASKS, todo } from "./test-data";
+import {
+  COLUMNS,
+  doing,
+  done,
+  full,
+  json,
+  opa,
+  page,
+  PROJECT_ID,
+  task,
+  TASKS,
+  todo,
+} from "./test-data";
 import { useBoard } from "./use-board";
 
 const t1 = task(1, todo.id);
@@ -16,21 +30,21 @@ function keys(board: Readonly<Record<string, readonly { key: string }[]>>, colum
   return (board[columnId] ?? []).map((item) => item.key);
 }
 
+function Provider({ children }: { children: ReactNode }) {
+  return (
+    <ProjectEventsProvider project={opa} setProject={vi.fn()}>
+      {children}
+    </ProjectEventsProvider>
+  );
+}
+
 function mount(fallbackMs = 60_000) {
   const announce = vi.fn<(message: string) => void>();
   const onArchived = vi.fn<() => void>();
-  const onProjectChanged = vi.fn<(version: number) => void>();
-  const hook = renderHook(() =>
-    useBoard({
-      projectKey: "OPA",
-      projectId: PROJECT_ID,
-      announce,
-      onArchived,
-      onProjectChanged,
-      fallbackMs,
-    }),
-  );
-  return { ...hook, announce, onArchived, onProjectChanged };
+  const hook = renderHook(() => useBoard({ projectKey: "OPA", announce, onArchived, fallbackMs }), {
+    wrapper: Provider,
+  });
+  return { ...hook, announce, onArchived };
 }
 
 /** Mounts the board, opens its events stream and waits for the first load. */
@@ -267,6 +281,26 @@ describe("useBoard: changes made in the task detail (WS-038 section 4)", () => {
 });
 
 describe("useBoard: the first load waits for the events stream (WS-048 section 3)", () => {
+  it("loads at once when the page's stream is already open (WS-049 section 2)", async () => {
+    function Probe() {
+      const { phase } = useBoard({ projectKey: "OPA", announce: vi.fn(), onArchived: vi.fn() });
+      return <p>{phase}</p>;
+    }
+    function Page({ shown }: { shown: boolean }) {
+      return <Provider>{shown && <Probe />}</Provider>;
+    }
+    const { rerender } = render(<Page shown={false} />);
+    act(() => {
+      FakeSource.latest().open();
+    });
+
+    rerender(<Page shown />);
+
+    expect(await screen.findByText("ready")).toBeInTheDocument();
+    expect(loads()).toBe(1);
+    expect(FakeSource.all).toHaveLength(1);
+  });
+
   it("opens the project's stream and loads only once it is open", async () => {
     const { result } = mount();
 
@@ -419,12 +453,12 @@ describe("useBoard: other people's changes (WS-048 section 4)", () => {
     });
   });
 
-  it("hands a project change to the page", async () => {
-    const { onProjectChanged } = await renderBoard();
+  it("leaves a project change to the frame (WS-049 section 2)", async () => {
+    await renderBoard();
 
-    send("project.changed", PROJECT_ID, 4);
+    send("project.changed", PROJECT_ID, opa.version);
 
-    expect(onProjectChanged).toHaveBeenCalledWith(4);
+    expect(calls("GET")).toHaveLength(2);
   });
 
   it("does nothing for comments and epics, which a card does not show", async () => {

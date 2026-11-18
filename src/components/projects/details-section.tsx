@@ -19,10 +19,13 @@ import { ApiFailure } from "@/lib/api-client";
 import { projectNameSchema, projectSchema } from "@/lib/schemas/projects";
 
 import { setArchived, updateProject } from "./api";
+import { useProjectEventListener } from "./project-events";
 import { useProject } from "./project-frame";
 
 const CONFLICT =
   "Someone else changed this project. Their version is shown; make your change again.";
+const CHANGED_WHILE_EDITING =
+  "Someone else changed this project. Saving will show their version first.";
 
 /** Name and description, archive and unarchive (WS-036 section 5). */
 export function DetailsSection({ announce }: Readonly<{ announce: (message: string) => void }>) {
@@ -35,6 +38,30 @@ export function DetailsSection({ announce }: Readonly<{ announce: (message: stri
   const [nameError, setNameError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [confirmingArchive, setConfirmingArchive] = useState(false);
+
+  // Live (WS-049 section 5): the frame sets a project someone else changed. The form takes
+  // it unless it has unsaved edits; then it keeps them and its version, so the next save
+  // gets the conflict and shows their version first.
+  const [basedOn, setBasedOn] = useState(project);
+  const [keepEdits, setKeepEdits] = useState(false);
+  const dirty = name !== basedOn.name || description !== basedOn.description;
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (event.type !== "project.changed" || event.version <= version || !dirty) return;
+      setKeepEdits(true);
+      announce(CHANGED_WHILE_EDITING);
+    },
+  });
+  if (basedOn !== project) {
+    setBasedOn(project);
+    if (keepEdits && project.version > version) {
+      setKeepEdits(false);
+    } else if (project.version > version) {
+      setName(project.name);
+      setDescription(project.description);
+      setVersion(project.version);
+    }
+  }
 
   function show(current: typeof project) {
     setProject(current);

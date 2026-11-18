@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 
 import { Markdown } from "@/components/markdown";
 import { MarkdownEditor } from "@/components/markdown-editor";
+import { useProjectEventListener } from "@/components/projects/project-events";
 import { Button } from "@/components/ui/button";
 import type { Comment } from "@/lib/schemas/comments";
 import { commentBodySchema } from "@/lib/schemas/comments";
@@ -16,6 +17,7 @@ import { addComment, listComments } from "./api";
  */
 export function CommentsSection({
   taskKey,
+  taskId,
   initial,
   initialCursor,
   canComment,
@@ -25,6 +27,7 @@ export function CommentsSection({
   onFailure,
 }: Readonly<{
   taskKey: string;
+  taskId: string;
   initial: readonly Comment[];
   initialCursor: string | null;
   canComment: boolean;
@@ -39,6 +42,38 @@ export function CommentsSection({
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+
+  /**
+   * Reads the comments again from the start, until at least `count` are read or there are
+   * no more (WS-049 section 3).
+   */
+  async function reloadShown(count: number) {
+    const read: Comment[] = [];
+    let next: string | null = null;
+    try {
+      do {
+        const page = await listComments(taskKey, next ?? undefined);
+        read.push(...page.items);
+        next = page.nextCursor;
+      } while (next !== null && read.length < count);
+      setComments(read);
+      setCursor(next);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    }
+  }
+
+  // A comment someone else added appears once every page is shown; until then it comes
+  // with "Load more". One's own comment is already shown, so it is not read again.
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (event.type !== "comment.created" || event.taskId !== taskId) return;
+      if (cursor !== null || comments.some((item) => item.id === event.entityId)) return;
+      void reloadShown(Number.POSITIVE_INFINITY);
+    },
+    onReconnect: () => void reloadShown(comments.length),
+  });
 
   async function loadMore() {
     if (cursor === null) return;
@@ -63,7 +98,10 @@ export function CommentsSection({
     setBusy(true);
     try {
       const added = await addComment(taskKey, parsed.data);
-      setComments((current) => [...current, added]);
+      // Its event may have brought it in already (WS-049).
+      setComments((current) =>
+        current.some((item) => item.id === added.id) ? current : [...current, added],
+      );
       setBody("");
       onAdded();
     } catch (failure) {

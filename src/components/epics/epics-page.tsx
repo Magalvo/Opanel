@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { getProject } from "@/components/projects/api";
+import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,9 @@ import { NewEpicDialog } from "./new-epic-dialog";
 export type { EpicsShow } from "./api";
 
 type Phase = "loading" | "error" | "ready";
+
+/** The least time between two live reloads of the list (WS-049 section 4). */
+const RELOAD_GAP_MS = 500;
 
 const SHOW_LABELS: Record<EpicsShow, string> = { open: "Open", closed: "Closed", all: "All" };
 
@@ -97,6 +101,63 @@ export function EpicsPage({
       setMessage("Could not load more epics. Try again.");
     }
   }
+
+  // Live (WS-049 section 4): epics and their progress change with epic and task events.
+  // Reloads are coalesced: one at a time, at least `RELOAD_GAP_MS` apart, and the events of
+  // a running reload cause one more after it.
+  const reloading = useRef({ running: false, again: false, last: 0 });
+  const latest = useRef({ epics, opened });
+  useEffect(() => {
+    latest.current = { epics, opened };
+  });
+
+  async function reloadShown() {
+    const state = reloading.current;
+    if (state.running) {
+      state.again = true;
+      return;
+    }
+    state.running = true;
+    try {
+      const wait = state.last + RELOAD_GAP_MS - Date.now();
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+      state.last = Date.now();
+      const count = latest.current.epics.length;
+      const read: Epic[] = [];
+      let next: string | null = null;
+      do {
+        const page = await listEpics(projectKey, show, next ?? undefined);
+        read.push(...page.items);
+        next = page.nextCursor;
+      } while (next !== null && read.length < count);
+      // An epic open in its dialog stays, even if it no longer comes back in the list.
+      const open = latest.current.opened;
+      const kept =
+        open === null || read.some((item) => item.id === open.id)
+          ? []
+          : latest.current.epics.filter((item) => item.id === open.id);
+      setEpics([...read, ...kept]);
+      setNextCursor(next);
+    } catch {
+      // The list shown stays; the next event or reconnect tries again.
+    } finally {
+      state.running = false;
+      if (state.again) {
+        state.again = false;
+        void reloadShown();
+      }
+    }
+  }
+
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (phase !== "ready") return;
+      if (event.type === "epic.changed" || event.type.startsWith("task.")) void reloadShown();
+    },
+    onReconnect: () => {
+      if (phase === "ready") void reloadShown();
+    },
+  });
 
   function failed(failure: unknown, fallback: string) {
     if (failure instanceof ApiFailure && failure.code === "project_archived") {

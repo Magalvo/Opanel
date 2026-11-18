@@ -15,6 +15,7 @@ import { ApiFailure } from "@/lib/api-client";
 import type { TaskSummary } from "@/lib/schemas/tasks";
 
 import { listDeletedTasks, restoreTask } from "./api";
+import { useProjectEventListener } from "./project-events";
 import { useProject } from "./project-frame";
 
 /** Deleted tasks of the project, each of which can be restored (WS-036 section 5). */
@@ -46,6 +47,35 @@ export function DeletedTasksSection({
       cancelled = true;
     };
   }, [projectKey]);
+
+  /**
+   * Reads the list again from the start, as many as are shown (WS-049 section 5): a task
+   * deleted or restored elsewhere, or a reconnect.
+   */
+  async function reloadShown() {
+    const count = tasks?.length ?? 0;
+    const read: TaskSummary[] = [];
+    let next: string | null = null;
+    try {
+      do {
+        const page = await listDeletedTasks(projectKey, next ?? undefined);
+        read.push(...page.items);
+        next = page.nextCursor;
+      } while (next !== null && read.length < count);
+      setTasks(read);
+      setNextCursor(next);
+      setFailedToLoad(false);
+    } catch {
+      // The list shown stays; the next event or reconnect tries again.
+    }
+  }
+
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (event.type === "task.deleted" || event.type === "task.restored") void reloadShown();
+    },
+    onReconnect: () => void reloadShown(),
+  });
 
   async function loadMore() {
     if (nextCursor === null) return;

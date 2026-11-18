@@ -1,10 +1,12 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { json, opa, page, PROJECT } from "@/components/board/test-data";
 import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { FakeSource } from "@/hooks/fake-event-source";
 import type { Epic } from "@/lib/schemas/epics";
+import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Project } from "@/lib/schemas/projects";
 
 const router = { back: vi.fn(), push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -460,5 +462,111 @@ describe("EpicsPage: accessibility", () => {
     await waitFor(() => {
       expect(opener).toHaveFocus();
     });
+  });
+});
+
+describe("EpicsPage: live (WS-049 section 4)", () => {
+  function send(type: ProjectEvent["type"], entity: string, version: number | null = 2) {
+    act(() => {
+      FakeSource.latest().send(type, {
+        id: crypto.randomUUID(),
+        type,
+        projectId: opa.id,
+        entity,
+        entityId: launch.id,
+        version,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-18T10:00:00.000Z",
+      });
+    });
+  }
+
+  async function renderLive() {
+    const user = await renderEpics();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    return user;
+  }
+
+  function reads(): number {
+    return calls("GET").filter(([url]) => url.startsWith("/api/v1/projects/OPA/epics?")).length;
+  }
+
+  it("shows an epic created elsewhere", async () => {
+    await renderLive();
+    on(OPEN, page([launch, polish, epic(3, "Beta")]));
+
+    send("epic.changed", "epic");
+
+    expect(await screen.findByRole("button", { name: "Beta" })).toBeInTheDocument();
+  });
+
+  it("updates progress when a task changes", async () => {
+    await renderLive();
+    on(OPEN, page([{ ...launch, progress: { doneTasks: 3, totalTasks: 5 } }, polish]));
+
+    send("task.moved", "task");
+
+    expect(
+      await within(rowOf("Launch")).findByRole("progressbar", { name: "3 of 5 tasks done" }),
+    ).toBeInTheDocument();
+  });
+
+  it("reloads once for a burst of events, and once more after it", async () => {
+    await renderLive();
+    const before = reads();
+
+    for (let i = 0; i < 5; i++) send("task.updated", "task");
+
+    await waitFor(
+      () => {
+        expect(reads() - before).toBe(2);
+      },
+      { timeout: 2_000 },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(reads() - before).toBe(2);
+  });
+
+  it("reads as many epics as are shown", async () => {
+    on(OPEN, page([launch], "C2"));
+    on(`${OPEN}&cursor=C2`, page([polish]));
+    const user = await renderEpics();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+    await screen.findByRole("button", { name: "Polish" });
+    on(`${OPEN}&cursor=C2`, page([{ ...polish, title: "Polish, renamed" }]));
+
+    send("epic.changed", "epic");
+
+    expect(await screen.findByRole("button", { name: "Polish, renamed" })).toBeInTheDocument();
+  });
+
+  it("keeps an open epic's dialog when it leaves the list elsewhere", async () => {
+    const user = await renderLive();
+    const dialog = await openEpic(user, "Launch");
+    on(OPEN, page([polish]));
+
+    send("epic.changed", "epic");
+
+    await waitFor(() => {
+      expect(reads()).toBeGreaterThan(1);
+    });
+    expect(dialog).toBeVisible();
+  });
+
+  it("reloads after a reconnect", async () => {
+    await renderLive();
+    on(OPEN, page([launch, polish, epic(4, "Missed")]));
+
+    act(() => {
+      FakeSource.latest().drop();
+      FakeSource.latest().open();
+    });
+
+    expect(await screen.findByRole("button", { name: "Missed" })).toBeInTheDocument();
   });
 });

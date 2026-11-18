@@ -12,6 +12,7 @@ import type { Project } from "@/lib/schemas/projects";
 import { cn } from "@/lib/utils";
 
 import { getProject } from "./api";
+import { ProjectEventsProvider } from "./project-events";
 
 type Phase = "loading" | "missing" | "error" | "ready";
 
@@ -162,8 +163,11 @@ export function ProjectFrame({
               )}
             </nav>
           </header>
-          {children}
-          {modal}
+          {/* One events stream for the page and the task dialog over it (WS-049). */}
+          <ProjectEventsProvider project={project} setProject={setProject}>
+            {children}
+            {modal}
+          </ProjectEventsProvider>
         </ProjectContext>
       )}
     </div>

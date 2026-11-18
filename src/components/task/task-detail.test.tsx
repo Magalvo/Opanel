@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,9 +14,11 @@ import {
   task,
   todo,
 } from "@/components/board/test-data";
-import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { bodyOf, calls, fetchMock, installFetch, on, problem } from "@/components/fake-api";
+import { FakeSource } from "@/hooks/fake-event-source";
 import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
+import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Project } from "@/lib/schemas/projects";
 import type { Task } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
@@ -612,5 +614,180 @@ describe("TaskDetail: accessibility", () => {
     expect(within(within(details()).getByLabelText("Column")).getAllByRole("option")).toHaveLength(
       4,
     );
+  });
+});
+
+describe("TaskDetail: live (WS-049 section 3)", () => {
+  function send(type: ProjectEvent["type"], extra: Record<string, unknown>) {
+    act(() => {
+      FakeSource.latest().send(type, {
+        id: crypto.randomUUID(),
+        type,
+        projectId: opa.id,
+        entity: type.split(".")[0],
+        entityId: base.id,
+        version: null,
+        actorAccountId: ada.id,
+        at: "2026-11-18T10:00:00.000Z",
+        ...extra,
+      });
+    });
+  }
+
+  async function renderLive(options: Options = {}) {
+    const user = await renderTask(options);
+    act(() => {
+      FakeSource.latest().open();
+    });
+    return user;
+  }
+
+  function reads(url: string): number {
+    return calls("GET").filter(([called]) => called === url).length;
+  }
+
+  it("shows a newer version at once when nothing is unsaved, and says so", async () => {
+    await renderLive();
+    on(TASK, json({ ...base, title: "Their title", version: 4 }));
+
+    send("task.updated", { version: 4 });
+
+    expect(await screen.findByRole("heading", { level: 2, name: "Their title" })).toBeVisible();
+    expect(within(details()).getByLabelText("Title")).toHaveValue("Their title");
+    expect(status()).toHaveTextContent("Someone else changed this task.");
+  });
+
+  it("keeps unsaved edits, updates the other fields, and saves on the old version", async () => {
+    const user = await renderLive();
+    await user.type(within(details()).getByLabelText("Title"), " mine");
+    on(TASK, json({ ...base, description: "Their description", version: 4 }));
+
+    send("task.updated", { version: 4 });
+
+    await waitFor(() => {
+      expect(within(details()).getByLabelText("Description")).toHaveValue("Their description");
+    });
+    expect(within(details()).getByLabelText("Title")).toHaveValue("Write the board mine");
+    expect(status()).toHaveTextContent(
+      "Someone else changed this task. Saving will show their version first.",
+    );
+
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Write the board mine", version: 3 });
+  });
+
+  it("takes its own save's event as its own, whatever answers first", async () => {
+    const saved = { ...base, title: "Write the board mine", version: 4 };
+    on("PATCH /api/v1/tasks/OPA-1", json(saved));
+    let readAgain: (response: Response) => void = () => undefined;
+    on(TASK, () => Response.json(saved));
+    const user = await renderLive();
+    await user.type(within(details()).getByLabelText("Title"), " mine");
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          readAgain = resolve;
+        }),
+    );
+
+    // The event of the save arrives first and starts a read, which answers last.
+    send("task.updated", { version: 4 });
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+    await screen.findByRole("heading", { level: 2, name: "Write the board mine" });
+    await act(async () => {
+      readAgain(Response.json(saved));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(status()).toHaveTextContent("Saved.");
+    await user.type(within(details()).getByLabelText("Title"), "!");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+    expect(bodyOf(calls("PATCH")[1]?.[1])).toMatchObject({ version: 4 });
+  });
+
+  it("ignores the echo of a version it holds, and events of other tasks", async () => {
+    await renderLive();
+    const before = reads("/api/v1/tasks/OPA-1");
+
+    send("task.updated", { version: 3 });
+    send("task.moved", { entityId: task(2, todo.id).id, version: 9 });
+
+    expect(reads("/api/v1/tasks/OPA-1")).toBe(before);
+  });
+
+  it("turns read-only and says so when the task is deleted, and comes back when restored", async () => {
+    await renderLive();
+
+    send("task.deleted", { version: 4 });
+
+    expect(status()).toHaveTextContent("This task was deleted.");
+    expect(within(details()).queryByLabelText("Title")).not.toBeInTheDocument();
+    expect(within(comments()).queryByLabelText("New comment")).not.toBeInTheDocument();
+
+    on(TASK, json({ ...base, version: 5 }));
+    send("task.restored", { version: 5 });
+
+    expect(await within(details()).findByLabelText("Title")).toBeVisible();
+  });
+
+  it("shows a new comment once every page is loaded, and never twice", async () => {
+    await renderLive();
+    on(
+      COMMENTS,
+      page([comment(1, "First *comment*"), comment(2, "Second"), comment(3, "Third, theirs")]),
+    );
+    const before = reads("/api/v1/tasks/OPA-1/comments?limit=50");
+
+    send("comment.created", { entityId: comment(2, "").id, taskId: base.id });
+    expect(reads("/api/v1/tasks/OPA-1/comments?limit=50")).toBe(before);
+
+    send("comment.created", { entityId: comment(3, "").id, taskId: base.id });
+
+    expect(await within(comments()).findByText("Third, theirs")).toBeVisible();
+    expect(within(comments()).getAllByText("Second")).toHaveLength(1);
+  });
+
+  it("leaves a new comment to Load more when not every page is loaded", async () => {
+    on(COMMENTS, page([comment(1, "First *comment*")], "NEXT"));
+    await renderLive();
+    const before = reads("/api/v1/tasks/OPA-1/comments?limit=50");
+
+    send("comment.created", { entityId: comment(3, "").id, taskId: base.id });
+
+    expect(reads("/api/v1/tasks/OPA-1/comments?limit=50")).toBe(before);
+  });
+
+  it("reads the columns and the open epics again when they change", async () => {
+    await renderLive();
+    on(
+      COLUMNS,
+      page([
+        todo,
+        doing,
+        done,
+        column("44444444-4444-4444-8444-444444444444", "Review", "in_progress"),
+      ]),
+    );
+    on(EPICS, page([launch, epic("aaaa0000-0000-4000-8000-000000000003", "Beta", "open")]));
+
+    send("column.changed", { entity: "column", entityId: todo.id, version: 2 });
+    send("epic.changed", { entity: "epic", entityId: launch.id, version: 2 });
+
+    expect(await within(details()).findByRole("option", { name: "Review" })).toBeInTheDocument();
+    expect(await within(details()).findByRole("option", { name: "Beta" })).toBeInTheDocument();
+  });
+
+  it("loads the task and its comments again after a reconnect", async () => {
+    await renderLive();
+    on(TASK, json({ ...base, title: "After the gap", version: 6 }));
+    on(COMMENTS, page([comment(1, "First *comment*"), comment(2, "Second"), comment(4, "Missed")]));
+
+    act(() => {
+      FakeSource.latest().drop();
+      FakeSource.latest().open();
+    });
+
+    expect(await screen.findByRole("heading", { level: 2, name: "After the gap" })).toBeVisible();
+    expect(await within(comments()).findByText("Missed")).toBeVisible();
   });
 });

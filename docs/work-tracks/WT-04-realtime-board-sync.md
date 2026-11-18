@@ -1,6 +1,7 @@
 # WT-04 — Real-time board sync
 
-- Status: Approved (approved by the owner on 2026-11-16, with every proposal as drafted).
+- Status: Done (2026-11-18, with WI-049; approved by the owner on 2026-11-16, with every
+  proposal as drafted).
   Amendment A1 (the optional `SETUP_TOKEN`, decision 13 and WI-050) approved by the owner
   on 2026-11-17 as proposed.
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (the design; amended by this
@@ -214,7 +215,7 @@ WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 | [WI-046](../work-items/WI-046-event-hub.md)                     | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Done   | WI-045     |
 | [WI-047](../work-items/WI-047-events-endpoint.md)               | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Done   | WI-046     |
 | [WI-048](../work-items/WI-048-live-board.md)                    | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Done   | WI-047     |
-| WI-049                                                          | Live task detail, epics page and project settings                                                                    | Draft  | WI-048     |
+| [WI-049](../work-items/WI-049-live-detail-epics-settings.md)    | Live task detail, epics page and project settings                                                                    | Done   | WI-048     |
 | [WI-050](../work-items/WI-050-setup-token.md)                   | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Done   | none       |
 
 As in earlier tracks, each item gets its work-item and work-spec files just before it is
@@ -259,11 +260,11 @@ Test plan by item, from doc 0002 section 7:
 - [x] A card moved, created, edited, deleted or restored in one browser shows the change
       in a second browser on the same board within a second, without a reload.
 - [x] A task created through the API appears on an open board.
-- [ ] An open task detail shows new comments and other people's field changes, and never
+- [x] An open task detail shows new comments and other people's field changes, and never
       discards what its viewer is typing.
 - [x] Every write of decision 2 sends exactly one event after commit and none after a
       rollback, tested on the real database.
-- [ ] After the stream or the `LISTEN` connection drops, an open board reconnects and
+- [x] After the stream or the `LISTEN` connection drops, an open board reconnects and
       shows the current state.
 - [x] The events endpoint refuses without a session (`401`), without `tasks:read`
       (`403`) and beyond the cap (`429 too_many_streams`); a revoked session's stream
@@ -273,7 +274,7 @@ Test plan by item, from doc 0002 section 7:
 - [x] With `SETUP_TOKEN` set, a fresh install cannot be claimed without it
       (`403 invalid_setup_token`, nothing hashed or written); without it, setup is
       unchanged (amendment A1).
-- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
+- [x] The full quality gate passes on `main`, with `pnpm db:generate` and
       `pnpm openapi:generate` leaving no diff.
 
 ## Risks and open questions

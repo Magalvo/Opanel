@@ -34,6 +34,7 @@ import {
   updateColumn,
 } from "./api";
 import { ColumnDialog, type ColumnDraft } from "./column-dialog";
+import { useProjectEventListener } from "./project-events";
 import { useProject } from "./project-frame";
 
 const MESSAGES: Record<string, string> = {
@@ -86,6 +87,15 @@ export function ColumnsSection({
       cancelled = true;
     };
   }, [projectKey]);
+
+  // Live (WS-049 section 5): someone else's column change, or a reconnect, reads the list
+  // again. An open add or edit dialog is not touched.
+  useProjectEventListener({
+    onEvent: (event) => {
+      if (event.type === "column.changed") void reload();
+    },
+    onReconnect: () => void reload(),
+  });
 
   /** Runs a change, announces its outcome and reads the list again either way. */
   async function change(run: () => Promise<unknown>, success: string, fallback: string) {
