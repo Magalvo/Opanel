@@ -5,3 +5,7 @@ overrides:
   # core-utils pins esbuild 0.18. drizzle-kit never loads them; this replaces that esbuild
   # with the patched version drizzle-kit itself uses (WS-053). Remove it with drizzle-kit 1.0.
   "@esbuild-kit/core-utils>esbuild": "0.25.12"
+
+# A pnpm other than the one in `packageManager` stops at once, naming both versions,
+# instead of warning and carrying on (WS-060).
+packageManagerStrictVersion: true
