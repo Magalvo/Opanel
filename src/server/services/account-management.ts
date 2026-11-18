@@ -172,6 +172,9 @@ export async function updateAccount(
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${ADMIN_CHANGE_LOCK_KEY})`);
+    // Serialises with issuing and accepting a link (WS-059): a link issued just before a
+    // deactivation is deleted by it, one issued after it is refused.
+    await lockAccount(tx, accountId);
     const [account] = await tx
       .select()
       .from(accounts)

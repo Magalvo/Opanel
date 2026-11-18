@@ -16,8 +16,11 @@ export type LinkExecutor = Pick<Database, "insert" | "delete">;
 const ACCOUNT_LOCK_SPACE = 7_201_024;
 
 /**
- * Serialises the transactions that remove an invited account or set its first password
- * (WS-024). Taken before any row lock, so the two cannot deadlock on the account's links.
+ * Serialises every transaction that changes an account's links, password, sessions or
+ * status: revoking an invitation (WS-024), issuing and accepting a link (WS-040), changing
+ * one's password and confirming a sign-in (WS-058), and `updateAccount` (WS-059). Taken
+ * before any row lock, so none of them can deadlock on the account's links. Where the Admin
+ * lock of WS-018 is also needed, it is taken first; nothing takes them in the other order.
  * Released at the end of the transaction.
  */
 export async function lockAccount(
