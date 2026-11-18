@@ -213,7 +213,7 @@ WI-042 and WI-043, the remaining audit items, are done first (`docs/README.md`).
 | [WI-045](../work-items/WI-045-event-contract-and-publishing.md) | Event contract and publishing: Zod schemas, doc 0002 amendment, `pg_notify` from every write of decision 2           | Done   | none       |
 | [WI-046](../work-items/WI-046-event-hub.md)                     | Event hub: dedicated `LISTEN` connection, fan-out by project, reconnect and close-all                                | Done   | WI-045     |
 | [WI-047](../work-items/WI-047-events-endpoint.md)               | Events endpoint: `GET /api/v1/projects/{projectId}/events`, heartbeat, session re-check, cap, OpenAPI, operator note | Done   | WI-046     |
-| WI-048                                                          | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Draft  | WI-047     |
+| [WI-048](../work-items/WI-048-live-board.md)                    | Live board: the client hook, every event applied to the board, reload after a reconnect                              | Done   | WI-047     |
 | WI-049                                                          | Live task detail, epics page and project settings                                                                    | Draft  | WI-048     |
 | [WI-050](../work-items/WI-050-setup-token.md)                   | Optional `SETUP_TOKEN` for the first-run setup (amendment A1, decision 13)                                           | Done   | none       |
 
@@ -256,9 +256,9 @@ Test plan by item, from doc 0002 section 7:
 
 ## Exit criteria
 
-- [ ] A card moved, created, edited, deleted or restored in one browser shows the change
+- [x] A card moved, created, edited, deleted or restored in one browser shows the change
       in a second browser on the same board within a second, without a reload.
-- [ ] A task created through the API appears on an open board.
+- [x] A task created through the API appears on an open board.
 - [ ] An open task detail shows new comments and other people's field changes, and never
       discards what its viewer is typing.
 - [x] Every write of decision 2 sends exactly one event after commit and none after a

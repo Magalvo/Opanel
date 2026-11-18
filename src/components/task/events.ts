@@ -1,5 +1,7 @@
-// The bridge between the task detail and the board behind it (WS-038 section 4), until
-// live updates (WT-04): two window events carrying what the API returned.
+// The bridge between the task detail and the board behind it (WS-038 section 4): two window
+// events carrying what the API returned. They stay with live updates (WT-04 decision 9,
+// WS-048): they show a save in the same tab at once, and the event that follows it through
+// the stream carries the same version, so the board ignores it.
 import { z } from "zod";
 
 import { type Task, taskSchema } from "@/lib/schemas/tasks";

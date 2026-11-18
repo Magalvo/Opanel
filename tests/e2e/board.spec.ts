@@ -260,6 +260,9 @@ test("a card someone else moved is refreshed, with an explanation", async ({ pag
   await signInAs(page, "member");
   const golf = await createTask(page, key, "Golf");
   await createTask(page, key, "Hotel");
+  // A board that missed the other move: without its events stream it is not live (WS-048),
+  // as after a lost event, and its move is then refused with a version conflict.
+  await page.route("**/api/v1/projects/*/events", (route) => route.abort());
   await page.goto(`/projects/${key}`);
   await expect(column(page, "To do").getByText("Hotel")).toBeVisible();
 
