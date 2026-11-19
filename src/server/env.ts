@@ -22,23 +22,28 @@ function isHttpUrl(value: string): boolean {
 
 const HEADER_NAME = /^[A-Za-z0-9-]+$/;
 
+const nodeEnvSchema = z
+  .enum(NODE_ENVS, { error: `must be one of ${NODE_ENVS.join(", ")}` })
+  .default("development");
+
+const POSTGRES_URL_ERROR = "must be a postgres:// or postgresql:// URL";
+
+/** An optional postgres URL; an empty value means not set. */
+const optionalPostgresUrl = z
+  .string()
+  .optional()
+  .transform((value) => (value === "" ? undefined : value))
+  .refine((value) => value === undefined || isPostgresUrl(value), { error: POSTGRES_URL_ERROR });
+
 const envSchema = z.object({
-  NODE_ENV: z
-    .enum(NODE_ENVS, { error: `must be one of ${NODE_ENVS.join(", ")}` })
-    .default("development"),
+  NODE_ENV: nodeEnvSchema,
   DATABASE_URL: z
     .string({ error: "required" })
     .min(1, { error: "required" })
-    .refine(isPostgresUrl, { error: "must be a postgres:// or postgresql:// URL" }),
+    .refine(isPostgresUrl, { error: POSTGRES_URL_ERROR }),
   // The schema owner's connection, for `migrate` only (WS-063). Optional: without it,
   // `migrate` uses DATABASE_URL, which is then the owner too. Never logged.
-  MIGRATION_DATABASE_URL: z
-    .string()
-    .optional()
-    .transform((value) => (value === "" ? undefined : value))
-    .refine((value) => value === undefined || isPostgresUrl(value), {
-      error: "must be a postgres:// or postgresql:// URL",
-    }),
+  MIGRATION_DATABASE_URL: optionalPostgresUrl,
   // Signs and encrypts sessions. Read by Better Auth through getEnv(), never logged.
   BETTER_AUTH_SECRET: z
     .string({ error: "required" })
@@ -71,9 +76,37 @@ const envSchema = z.object({
 
 export type Env = Readonly<z.infer<typeof envSchema>>;
 
+/**
+ * What `migrate` reads, and nothing else (WS-079): in production it receives only the
+ * owner's connection, never the app's secrets. In development it falls back to
+ * DATABASE_URL, as before.
+ */
+const migrationEnvSchema = z
+  .object({
+    NODE_ENV: nodeEnvSchema,
+    DATABASE_URL: optionalPostgresUrl,
+    MIGRATION_DATABASE_URL: optionalPostgresUrl,
+  })
+  .refine((env) => env.MIGRATION_DATABASE_URL !== undefined || env.DATABASE_URL !== undefined, {
+    error: "required (or DATABASE_URL)",
+    path: ["MIGRATION_DATABASE_URL"],
+  });
+
+export type MigrationEnv = Readonly<{
+  NODE_ENV: Env["NODE_ENV"];
+  DATABASE_URL?: string | undefined;
+  MIGRATION_DATABASE_URL?: string | undefined;
+}>;
+
+const MISSING_MIGRATION_URL = new Map([["MIGRATION_DATABASE_URL", "required (or DATABASE_URL)"]]);
+
 /** The connection `migrate` uses: the schema owner's when it is set apart (WS-063). */
-export function migrationDatabaseUrl(env: Env): string {
-  return env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL;
+export function migrationDatabaseUrl(env: MigrationEnv): string {
+  const url = env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL;
+  if (url === undefined) {
+    throw new EnvValidationError(MISSING_MIGRATION_URL);
+  }
+  return url;
 }
 
 export type EnvSource = Readonly<Record<string, string | undefined>>;
@@ -90,20 +123,32 @@ export class EnvValidationError extends Error {
   }
 }
 
-export function parseEnv(source: EnvSource): Env {
-  const result = envSchema.safeParse(source);
-  if (result.success) {
-    return Object.freeze(result.data);
-  }
-
+function validationError(error: z.ZodError): EnvValidationError {
   const problems = new Map<string, string>();
-  for (const issue of result.error.issues) {
+  for (const issue of error.issues) {
     const name = String(issue.path[0] ?? "(root)");
     if (!problems.has(name)) {
       problems.set(name, issue.message);
     }
   }
-  throw new EnvValidationError(problems);
+  return new EnvValidationError(problems);
+}
+
+export function parseEnv(source: EnvSource): Env {
+  const result = envSchema.safeParse(source);
+  if (result.success) {
+    return Object.freeze(result.data);
+  }
+  throw validationError(result.error);
+}
+
+/** Validates only what `migrate` reads (WS-079). */
+export function parseMigrationEnv(source: EnvSource): MigrationEnv {
+  const result = migrationEnvSchema.safeParse(source);
+  if (result.success) {
+    return Object.freeze(result.data);
+  }
+  throw validationError(result.error);
 }
 
 /**
@@ -133,15 +178,23 @@ export function createEnvAccessor(readSource: () => EnvSource): () => Env {
   };
 }
 
-/** The validated server configuration. With `getNodeEnv`, the only readers of `process.env`. */
+/**
+ * The validated server configuration. With `getMigrationEnv` and `getNodeEnv`, the only
+ * readers of `process.env`.
+ */
 export const getEnv = createEnvAccessor(() => process.env);
+
+/** The validated configuration of `migrate`, which needs none of the app's secrets. */
+export function getMigrationEnv(): MigrationEnv {
+  return parseMigrationEnv(process.env);
+}
 
 /**
  * `NODE_ENV` alone, validated like the full configuration, for code that runs on every
  * request and must not need the rest: the proxy (WS-041).
  */
 export function parseNodeEnv(source: EnvSource): Env["NODE_ENV"] {
-  const result = envSchema.shape.NODE_ENV.safeParse(source.NODE_ENV);
+  const result = nodeEnvSchema.safeParse(source.NODE_ENV);
   if (result.success) {
     return result.data;
   }
