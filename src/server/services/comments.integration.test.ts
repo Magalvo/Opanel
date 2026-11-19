@@ -1,7 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createTestAccount, testActor } from "@/server/auth/testing";
+import { agentActor } from "@/server/auth/actor";
+import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { comments, taskEvents } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
@@ -43,6 +44,25 @@ async function eventsOf(taskId: string) {
     .orderBy(taskEvents.id);
 }
 
+describe("the author's kind (WS-074)", () => {
+  it("is agent for an agent's comment and human for a person's, created and listed", async () => {
+    const { member, memberAccount } = await setup();
+    const scopes = ["projects:read", "tasks:read", "comments:write"] as const;
+    const account = await createTestAgent({ name: "QA Bot", scopes: [...scopes] });
+    const bot = agentActor({ accountId: account.id, role: "qa_agent", scopes, projectIds: null });
+
+    const byBot = await createComment(bot, "OPA-1", { body: "Found a bug" });
+    await createComment(member, "OPA-1", { body: "Thanks" });
+
+    expect(byBot.author).toEqual({ id: account.id, name: "QA Bot", kind: "agent" });
+    const listed = await listComments(member, "OPA-1", { limit: 50 });
+    expect(listed.items.map((comment) => comment.author)).toEqual([
+      { id: account.id, name: "QA Bot", kind: "agent" },
+      { id: memberAccount.id, name: "Mia", kind: "human" },
+    ]);
+  });
+});
+
 describe("createComment", () => {
   it("stores the body as written, with kind user and the actor as author", async () => {
     const { member, memberAccount, task } = await setup();
@@ -52,7 +72,7 @@ describe("createComment", () => {
     expect(comment).toMatchObject({
       taskId: task.id,
       kind: "user",
-      author: { id: memberAccount.id, name: "Mia" },
+      author: { id: memberAccount.id, name: "Mia", kind: "human" },
       body: "  **Seen** it\n",
     });
     expect(comment.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);

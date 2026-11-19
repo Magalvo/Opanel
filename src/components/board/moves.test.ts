@@ -42,7 +42,7 @@ function task(number: number, columnId: string, version = 1): TaskSummary {
     assigneeTeam: null,
     assignee: null,
     epic: null,
-    reporter: { id: "55555555-5555-4555-8555-555555555555", name: "Ada" },
+    reporter: { id: "55555555-5555-4555-8555-555555555555", name: "Ada", kind: "human" },
     version,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",

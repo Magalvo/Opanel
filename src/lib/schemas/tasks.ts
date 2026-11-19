@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
+import { accountRefSchema } from "./account-ref";
 import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
@@ -45,7 +46,7 @@ const taskFields = {
   assigneeTeam: teamRefSchema.nullable(),
   assignee: personSchema.nullable(),
   epic: epicRefSchema.nullable(),
-  reporter: z.strictObject({ id: z.uuid(), name: z.string() }),
+  reporter: accountRefSchema,
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

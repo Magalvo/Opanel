@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { commentPageSchema, commentSchema } from "@/lib/schemas/comments";
 import { problemSchema } from "@/lib/schemas/problem";
-import { apiRequest, createTestAccount, signInCookie } from "@/server/auth/testing";
+import { agentActor } from "@/server/auth/actor";
+import {
+  apiRequest,
+  createTestAccount,
+  createTestAgent,
+  signInCookie,
+} from "@/server/auth/testing";
+import { createComment } from "@/server/services/comments";
 
 import { POST as createTask } from "../../../projects/[projectId]/tasks/route";
 import { POST as createProject } from "../../../projects/route";
@@ -46,13 +53,33 @@ describe("task comment endpoints", () => {
     );
     expect(created.status).toBe(201);
     const comment = commentSchema.parse(await created.json());
-    expect(comment).toMatchObject({ kind: "user", author: { name: "member" } });
+    expect(comment).toMatchObject({ kind: "user", author: { name: "member", kind: "human" } });
 
     const listed = await GET(apiRequest("GET", path, { cookie: viewer }), task("OPA-1"));
     expect(listed.status).toBe(200);
     expect(commentPageSchema.parse(await listed.json())).toEqual({
       items: [comment],
       nextCursor: null,
+    });
+  });
+
+  it("lists an agent's comment with the author's kind agent (WS-074)", async () => {
+    const { viewer } = await setup();
+    const scopes = ["projects:read", "tasks:read", "comments:write"] as const;
+    const agent = await createTestAgent({ name: "QA Bot", scopes: [...scopes] });
+    await createComment(
+      agentActor({ accountId: agent.id, role: "qa_agent", scopes, projectIds: null }),
+      "OPA-1",
+      { body: "Found a bug" },
+    );
+
+    const listed = await GET(apiRequest("GET", path, { cookie: viewer }), task("OPA-1"));
+
+    expect(listed.status).toBe(200);
+    expect(commentPageSchema.parse(await listed.json()).items[0]?.author).toEqual({
+      id: agent.id,
+      name: "QA Bot",
+      kind: "agent",
     });
   });
 

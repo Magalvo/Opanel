@@ -1,6 +1,6 @@
 # WI-074 — Agents where humans see them: the "Agent" badge
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item G,
   decision 10)
 - Depends on: WI-071 (done)
@@ -20,18 +20,18 @@ component to use, and nothing else.
 
 ## Acceptance criteria
 
-- [ ] A task's `reporter` and a comment's `author` carry `kind` (`human` | `agent`) in
+- [x] A task's `reporter` and a comment's `author` carry `kind` (`human` | `agent`) in
       every response that returns them; the OpenAPI document shows it, generated from Zod.
-- [ ] One shared component shows an account's name and, for an agent, an "Agent" badge
+- [x] One shared component shows an account's name and, for an agent, an "Agent" badge
       whose text is visible and read by screen readers; a human's name has no badge.
-- [ ] The task detail (dialog and page, read and edit views) shows the badge next to an
+- [x] The task detail (dialog and page, read and edit views) shows the badge next to an
       agent reporter; the comments list shows it next to an agent author; a `system`
       comment still shows "Opanel" with no badge.
-- [ ] The task dialog with an agent reporter and an agent comment has no axe violations in
+- [x] The task dialog with an agent reporter and an agent comment has no axe violations in
       light and dark mode.
-- [ ] An agent can never be assigned a task (`400` on `assigneeAccountId`), joins no team,
+- [x] An agent can never be assigned a task (`400` on `assigneeAccountId`), joins no team,
       and is never listed by `GET /people`, each covered by a test.
-- [ ] No migration, no new endpoint, no permission change. The full quality gate passes.
+- [x] No migration, no new endpoint, no permission change. The full quality gate passes.
 
 ## Notes
 

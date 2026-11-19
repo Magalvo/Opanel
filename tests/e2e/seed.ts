@@ -119,3 +119,69 @@ export async function seedTasks(input: {
     await client.end();
   }
 }
+
+/**
+ * Creates a QA agent directly in the end-to-end database, with the rows `createTestAgent`
+ * writes (WS-074): all projects and the `qa_agent` scopes. Returns its id.
+ */
+export async function seedAgent(name: string): Promise<string> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    const db = drizzle({ client, schema });
+    const [agent] = await db
+      .insert(schema.accounts)
+      .values({ kind: "agent", name, role: "qa_agent", allProjects: true })
+      .returning();
+    if (!agent) throw new Error("agent not created");
+    await db
+      .insert(schema.agentScopes)
+      .values(
+        (["projects:read", "tasks:read", "reports:write", "comments:write"] as const).map(
+          (scope) => ({ accountId: agent.id, scope }),
+        ),
+      );
+    return agent.id;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Inserts one task reported by an agent, at the end of the project's first column, and one
+ * `user` comment by the same agent on it (WS-074). Returns the task's key.
+ */
+export async function seedAgentWork(input: {
+  agentId: string;
+  projectKey: string;
+  title: string;
+  comment: string;
+}): Promise<string> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    return await client.begin(async (sql) => {
+      const [project] = await sql<{ id: string; next: number }[]>`
+        select id, next_task_number as next from projects where key = ${input.projectKey}
+        for update`;
+      if (!project) throw new Error("no such project");
+      const [column] = await sql<{ id: string }[]>`
+        select id from columns where project_id = ${project.id} order by position limit 1`;
+      if (!column) throw new Error("no column");
+      const [max] = await sql<{ position: string | null }[]>`
+        select max(position) as position from tasks where column_id = ${column.id}`;
+      const [position] = positionsBetween(max?.position ?? null, null, 1);
+      const [task] = await sql<{ id: string }[]>`
+        insert into tasks (project_id, number, title, column_id, position, reporter_account_id)
+        values (${project.id}, ${project.next}, ${input.title}, ${column.id}, ${position ?? ""},
+          ${input.agentId})
+        returning id`;
+      if (!task) throw new Error("task not created");
+      await sql`
+        insert into comments (task_id, kind, author_account_id, body)
+        values (${task.id}, 'user', ${input.agentId}, ${input.comment})`;
+      await sql`update projects set next_task_number = ${project.next + 1} where id = ${project.id}`;
+      return `${input.projectKey}-${String(project.next)}`;
+    });
+  } finally {
+    await client.end();
+  }
+}

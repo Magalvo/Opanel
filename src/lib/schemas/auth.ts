@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
+import { accountKindSchema } from "./account-ref";
 import { accountNameSchema } from "./accounts";
 import { permissionSchema } from "./permissions";
 
@@ -49,7 +50,7 @@ export const acceptLinkRequestSchema = z
 export const accountSummarySchema = z
   .strictObject({
     id: z.uuid(),
-    kind: z.enum(["human", "agent"]),
+    kind: accountKindSchema,
     name: z.string(),
     email: z.string().nullable(),
     role: z.string(),

@@ -1,6 +1,6 @@
 # WS-074 — Agents where humans see them: the "Agent" badge
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 4 as proposed)
 - Work-item: [WI-074](../work-items/WI-074-agent-badge.md)
 - Canonical docs: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (decision
   10); [0003](../canonical/0003-task-management.md) (section 9: history names human or
@@ -248,3 +248,41 @@ Risks:
   already joined row, so no query plan changes.
 - UI fixtures without `kind` fail to typecheck once the schema changes; that is the
   intended guard, and section 5 lists them.
+
+## Deviations from the approved spec
+
+1. **`AccountRef.kind` is a `$ref` to the `AccountKind` component**, not an inline enum,
+   because `accountKindSchema` carries its own id. Test 2 checks the reference and the
+   enum of `AccountKind`. `AccountSummary.kind` references it too; same values.
+2. **Tests 8 and 9 passed at Red.** They guard behaviour that `isPerson` already gave
+   (section 7 asked for them because no test covered it); no code changed for them.
+3. **Test 11 runs once per colour scheme** (two tests, as `accessibility.spec.ts` does),
+   rather than one test checking both.
+4. **`seedAgentWork` writes no `task_events` row** for the seeded task and comment: nothing
+   reads history yet, and the board and the dialog do not need it.
+5. **A comment's `author_kind` falls back to `human`** when the joined row lacks it, like
+   `author_name` falls back to `""`; it cannot happen while the foreign key holds.
+
+## Implementation record
+
+- Red, unit: `account-ref.test.ts` could not import `./account-ref`; the OpenAPI test found
+  no `AccountRef`; `account-name.test.tsx` could not import the component; every
+  `task-detail.test.tsx` test failed, since the fixtures now carry `kind` and the strict
+  response schemas refused it.
+- Red, integration: the reporter and author tests failed with `{ id, name }` where
+  `{ id, name, kind }` was expected (services and both route handlers), as did the existing
+  author assertions given `kind`; tests 8 and 9 passed (deviation 2).
+- Green: `account-ref.ts`; `reporter` and `author` as `AccountRef`, `CommentAuthor` gone;
+  `r.kind` and `a.kind` in the two selects; `AccountName`; the two "Reporter" rows and the
+  comment author; `kind: "human"` in four UI fixtures; `docs/api/openapi.json` regenerated;
+  `seedAgent`, `seedAgentWork` and `agent-badge.spec.ts`.
+- Gate on 2026-11-19, against this item's own databases (`opanel_wi074_test`,
+  `opanel_wi074_e2e_test`), since parallel sessions share the Compose PostgreSQL:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1363 of 1364: the sign-in limiter test timed out at 5 s while other sessions
+    loaded the machine; that file alone then passed 11 of 11;
+  - `pnpm test:e2e --retries=0` 77 of 81: four timeouts (`projects.spec.ts` "a Manager
+    creates a project…", three of `task-detail.spec.ts`), none on an assertion about this
+    item; those two files with `agent-badge.spec.ts` then passed 15 of 15. Both new E2E
+    tests passed in the full run too;
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

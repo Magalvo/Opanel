@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 
+import { AccountName } from "@/components/account-name";
 import { Markdown } from "@/components/markdown";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { useProjectEventListener } from "@/components/projects/project-events";
@@ -124,7 +125,7 @@ export function CommentsSection({
             <article key={comment.id} className="grid min-w-0 gap-1 rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {comment.author?.name ?? "Opanel"}
+                  {comment.author === null ? "Opanel" : <AccountName account={comment.author} />}
                 </span>{" "}
                 · {new Date(comment.createdAt).toLocaleString()}
               </p>

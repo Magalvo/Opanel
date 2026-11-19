@@ -4985,11 +4985,7 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "kind": {
-            "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ]
+            "$ref": "#/components/schemas/AccountKind"
           },
           "name": {
             "type": "string"
@@ -5012,6 +5008,13 @@
           "role"
         ],
         "additionalProperties": false
+      },
+      "AccountKind": {
+        "type": "string",
+        "enum": [
+          "human",
+          "agent"
+        ]
       },
       "Problem": {
         "type": "object",
@@ -5113,11 +5116,7 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "kind": {
-            "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ]
+            "$ref": "#/components/schemas/AccountKind"
           },
           "name": {
             "type": "string"
@@ -5175,11 +5174,7 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "kind": {
-            "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ]
+            "$ref": "#/components/schemas/AccountKind"
           },
           "name": {
             "type": "string"
@@ -5217,11 +5212,7 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "kind": {
-            "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ]
+            "$ref": "#/components/schemas/AccountKind"
           },
           "name": {
             "type": "string"
@@ -5882,22 +5873,7 @@
             ]
           },
           "reporter": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "name": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "name"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/AccountRef"
           },
           "version": {
             "type": "integer",
@@ -5983,6 +5959,29 @@
         ],
         "additionalProperties": false
       },
+      "AccountRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "`agent` for an AI agent account.",
+            "$ref": "#/components/schemas/AccountKind"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
       "Task": {
         "type": "object",
         "properties": {
@@ -6047,22 +6046,7 @@
             ]
           },
           "reporter": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "name": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "name"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/AccountRef"
           },
           "version": {
             "type": "integer",
@@ -6411,7 +6395,7 @@
           "author": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/CommentAuthor"
+                "$ref": "#/components/schemas/AccountRef"
               },
               {
                 "type": "null"
@@ -6445,24 +6429,6 @@
           "user",
           "system"
         ]
-      },
-      "CommentAuthor": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ],
-        "additionalProperties": false
       },
       "ProjectEvent": {
         "oneOf": [

@@ -174,7 +174,7 @@ right after WT-04 and is done.
 | [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`          | Done        | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Done        |
 | [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Done        | [WS-072](work-specs/WS-072-api-tokens.md)                       | Done        |
 | [WI-073](work-items/WI-073-project-restrictions.md)             | Project restrictions enforced in every service                   | Done        | [WS-073](work-specs/WS-073-project-restrictions.md)             | Done        |
-| [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Proposed    | [WS-074](work-specs/WS-074-agent-badge.md)                      | Proposed    |
+| [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Done        | [WS-074](work-specs/WS-074-agent-badge.md)                      | Done        |
 
 ## Follow-ups
 
@@ -212,6 +212,9 @@ Other follow-ups:
 - Make `pnpm typecheck` independent of a stale `.next` directory (for example by
   generating route types first). Until then see the note in `CONTRIBUTING.md`.
 - Declare the bearer-token security scheme in the OpenAPI document with WT-05.
+- The activity timeline (WT-08) returns each event's actor as `AccountRef` and renders it
+  with `AccountName`, so agents carry the "Agent" badge there too (WS-074 section 6). The
+  reporter of a bug report (WT-06) is the task's `reporter`, already an `AccountRef`.
 - Add a browsable API documentation page once there are real endpoints (see WS-006).
 - Give the shared `destructive` button style enough contrast in light mode: red text on its
   pale red background is 4:1, below the 4.5:1 of WCAG AA (found by axe in WI-035). It

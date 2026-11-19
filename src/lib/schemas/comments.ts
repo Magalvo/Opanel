@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
+import { accountRefSchema } from "./account-ref";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { taskParamsSchema } from "./tasks";
 
@@ -17,17 +18,12 @@ export const commentBodySchema = z
   .max(10_000)
   .refine((body) => body.trim().length > 0, { message: "Write something." });
 
-/** The account that wrote a comment, as a task shows its reporter. */
-export const commentAuthorSchema = z
-  .strictObject({ id: z.uuid(), name: z.string() })
-  .meta({ id: "CommentAuthor" });
-
 export const commentSchema = z
   .strictObject({
     id: z.uuid(),
     taskId: z.uuid(),
     kind: commentKindSchema,
-    author: commentAuthorSchema
+    author: accountRefSchema
       .nullable()
       .meta({ description: "`null` only for a `system` comment." }),
     body: z.string().meta({ description: "Markdown." }),

@@ -70,7 +70,7 @@ const base: Task = full(
     title: "Write the board",
     assignee: ada,
     assigneeTeam: { id: web.id, name: web.name },
-    reporter: { id: ME, name: "Me Myself" },
+    reporter: { id: ME, name: "Me Myself", kind: "human" },
     version: 3,
   }),
   { description: "Some **bold** text." },
@@ -81,7 +81,7 @@ function comment(n: number, body: string): Comment {
     id: `cccccccc-cccc-4ccc-8ccc-${String(n).padStart(12, "0")}`,
     taskId: base.id,
     kind: "user",
-    author: { id: ada.id, name: "Ada Lovelace" },
+    author: { id: ada.id, name: "Ada Lovelace", kind: "human" },
     body,
     createdAt: "2026-11-14T10:00:00.000Z",
   };
@@ -543,6 +543,54 @@ describe("TaskDetail: comments", () => {
     await renderTask({ canComment: false });
 
     expect(within(comments()).queryByLabelText("New comment")).toBeNull();
+  });
+});
+
+describe("TaskDetail: agents (WS-074)", () => {
+  const bot = {
+    id: "14141414-1414-4414-8414-141414141414",
+    name: "QA Bot",
+    kind: "agent",
+  } as const;
+
+  function reporterCell() {
+    return within(details()).getByText("Reporter").nextElementSibling;
+  }
+
+  it("follows an agent reporter with the Agent badge, read-only and in the edit form", async () => {
+    await renderTask({ current: { ...base, reporter: bot }, canWriteTasks: false });
+    expect(reporterCell()).toHaveTextContent(/^QA Bot\s*Agent$/);
+  });
+
+  it("shows the badge in the edit form too", async () => {
+    await renderTask({ current: { ...base, reporter: bot } });
+    expect(reporterCell()).toHaveTextContent(/^QA Bot\s*Agent$/);
+  });
+
+  it("shows no badge for a human reporter", async () => {
+    await renderTask({ canWriteTasks: false });
+    expect(reporterCell()).toHaveTextContent(/^Me Myself$/);
+    expect(within(details()).queryByText("Agent")).not.toBeInTheDocument();
+  });
+
+  it("badges an agent's comment only; a system comment is Opanel with no badge", async () => {
+    on(
+      COMMENTS,
+      page([
+        { ...comment(1, "From the bot"), author: bot },
+        comment(2, "From Ada"),
+        { ...comment(3, "From Opanel"), kind: "system", author: null },
+      ]),
+    );
+    await renderTask();
+
+    const articles = within(comments()).getAllByRole("article");
+    expect(articles.map((article) => article.textContent)).toEqual([
+      expect.stringMatching(/^QA Bot\s*Agent ·/),
+      expect.stringMatching(/^Ada Lovelace ·/),
+      expect.stringMatching(/^Opanel ·/),
+    ]);
+    expect(within(comments()).getAllByText("Agent")).toHaveLength(1);
   });
 });
 
