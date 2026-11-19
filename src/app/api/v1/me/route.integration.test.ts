@@ -1,11 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { meResponseSchema } from "@/lib/schemas/auth";
+import { agentMeSchema, humanMeSchema, meResponseSchema } from "@/lib/schemas/auth";
 import { problemSchema } from "@/lib/schemas/problem";
 import { HUMAN_ROLE_PERMISSIONS } from "@/server/auth/roles";
-import { apiRequest, APP_ORIGIN, createTestAccount, signInCookie } from "@/server/auth/testing";
+import {
+  apiRequest,
+  APP_ORIGIN,
+  bearerRequest,
+  createTestAccount,
+  createTestAgent,
+  createTestToken,
+  signInCookie,
+  testActor,
+} from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { auditLog } from "@/server/db/schema";
+import { createProject } from "@/server/services/projects";
 
 import { GET, PATCH } from "./route";
 
@@ -22,9 +32,66 @@ describe("GET /api/v1/me", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    const body = meResponseSchema.parse(await response.json());
-    expect(body).toMatchObject({ id: account.id, role: "viewer", kind: "human" });
+    const body = humanMeSchema.parse(await response.json());
+    expect(body).toMatchObject({
+      id: account.id,
+      role: "viewer",
+      kind: "human",
+      email: account.email,
+      projectIds: null,
+    });
     expect(new Set(body.permissions)).toEqual(HUMAN_ROLE_PERMISSIONS.viewer);
+  });
+
+  it("returns an agent its role, scopes and projectIds null, with no email (WS-076)", async () => {
+    const agent = await createTestAgent({
+      name: "Board Reader",
+      scopes: ["tasks:read", "projects:read"],
+    });
+    const { token } = await createTestToken(agent.id);
+
+    const response = await GET(bearerRequest("/api/v1/me", token), undefined);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    const json: unknown = await response.json();
+    expect(json).toEqual({
+      id: agent.id,
+      kind: "agent",
+      name: "Board Reader",
+      role: "qa_agent",
+      permissions: ["projects:read", "tasks:read"],
+      projectIds: null,
+    });
+    expect(agentMeSchema.parse(json)).toEqual(json);
+  });
+
+  it("returns a restricted agent its projects and its stored scopes, sorted (WS-076)", async () => {
+    const admin = testActor(await createTestAccount({ role: "admin" }));
+    const first = await createProject(admin, { key: "MEA", name: "Project MEA" });
+    const second = await createProject(admin, { key: "MEB", name: "Project MEB" });
+    await createProject(admin, { key: "MEC", name: "Project MEC" });
+    const agent = await createTestAgent({
+      role: "worker_agent",
+      scopes: ["tasks:write", "comments:write", "tasks:read"],
+      projectIds: [second.id, first.id],
+    });
+    const { token } = await createTestToken(agent.id);
+
+    const bodies = [];
+    for (let call = 0; call < 2; call += 1) {
+      const response = await GET(bearerRequest("/api/v1/me", token), undefined);
+      expect(response.status).toBe(200);
+      bodies.push(agentMeSchema.parse(await response.json()));
+    }
+
+    expect(bodies[0]).toMatchObject({
+      kind: "agent",
+      role: "worker_agent",
+      permissions: ["comments:write", "tasks:read", "tasks:write"],
+      projectIds: [first.id, second.id].sort(),
+    });
+    expect(bodies[1]).toEqual(bodies[0]);
   });
 
   it("answers 401 without a session, with the problem body", async () => {
@@ -47,8 +114,13 @@ describe("PATCH /api/v1/me", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    const body = meResponseSchema.parse(await response.json());
-    expect(body).toMatchObject({ id: account.id, name: "Ada King", role: "viewer" });
+    const body = humanMeSchema.parse(await response.json());
+    expect(body).toMatchObject({
+      id: account.id,
+      name: "Ada King",
+      role: "viewer",
+      projectIds: null,
+    });
     expect(new Set(body.permissions)).toEqual(HUMAN_ROLE_PERMISSIONS.viewer);
     const who = meResponseSchema.parse(
       await (await GET(request({ Cookie: cookie }), undefined)).json(),
