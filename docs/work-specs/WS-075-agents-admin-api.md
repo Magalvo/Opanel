@@ -1,6 +1,6 @@
 # WS-075 — The Admin API for agents and their tokens
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 6 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 6 as proposed)
 - Work-item: [WI-075](../work-items/WI-075-agents-admin-api.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4);
   [0004](../canonical/0004-api-conventions.md) (errors, lists, writes, versioning);
@@ -232,3 +232,42 @@ Risks:
 - **Two sessions are changing `/me` and `document.ts` at the same time**: WI-076 (item E)
   changes `GET /me`. The overlap is expected in `docs/api/openapi.json` (regenerate after
   merging), `contracts.ts` and the docs tables.
+
+## Deviations from the approved spec
+
+1. **The services' integration tests are in `agents-admin.integration.test.ts`**, next to
+   `agents.integration.test.ts` (which tests `loadAgentActor`), to keep each file to one
+   concern. The functions are in `agents.ts`, as planned.
+2. **Two existing catalogue tests** (`audit.test.ts`, `problem.test.ts`) list every action
+   and code exactly. They gain the six actions and the three codes.
+3. **`scopesOfRole` lives in `src/lib/schemas/agents.ts`** for the request schemas, which
+   cannot import server code, and mirrors `AGENT_ROLE_SCOPES` of `roles.ts`. The
+   test in `roles.test.ts` checks that both give each role the same scopes.
+4. **WS-073's coverage test lists the seven functions** as not project-scoped (Admin only,
+   `agents:manage`). The spec's file table did not name that test.
+
+## Implementation record
+
+- Red, unit: `agents.test.ts` could not import `./agents`. The OpenAPI tests failed four
+  times: no `bearerAuth` scheme, the cookie only on every operation, and the committed
+  document.
+- Red, integration: `agents-admin.integration.test.ts` failed because none of the seven
+  functions existed.
+- Green:
+  - schemas and contracts;
+  - three errors, six audit actions;
+  - the service, with a `for update` lock on the agent for token creation and edits;
+  - four route files;
+  - the bearer scheme;
+  - `docs/api/openapi.json` regenerated.
+  - Unit tests 238 of 238 in `src/lib`; routes and services 33 of 33; `roles.test.ts`
+    checks that `scopesOfRole` and `AGENT_ROLE_SCOPES` agree.
+- Docs: doc 0004 section 4 (the three codes). The Follow-up about the bearer scheme is
+  closed.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1503 of 1503;
+  - `pnpm test:e2e` 81 of 81 with `--retries=0`;
+  - the first full run found the seven new functions unclassified by WS-073's coverage
+    test, as that test intends. They are listed as not project-scoped, Admin only.
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

@@ -123,7 +123,8 @@ Rules:
   `403` of a first-run setup on a production server with no token configured, WS-055, or
   `too_many_streams` for the `429` of an
   account that holds too many event streams, WS-047, or `server_busy` for the `429` of a
-  request that needs a password hash while the hashing queue is full, WS-056) and extra fields that belong to it (doc 0002 returns the
+  request that needs a password hash while the hashing queue is full, WS-056, or, for the `409`
+  of the agents API, `agent_name_taken`, `too_many_tokens` and `agent_disabled`, WS-075) and extra fields that belong to it (doc 0002 returns the
   current entity with a version conflict, as `current`). Codes are never renamed or reused.
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged

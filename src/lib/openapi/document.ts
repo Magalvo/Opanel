@@ -23,11 +23,11 @@ const CREDENTIAL_RESPONSES: Readonly<Record<number, ResponseContract>> = {
 };
 
 /**
- * How a person's browser authenticates (canonical doc 0004, section 7). The bearer token of
- * agents is declared together with tokens, in WT-05: the document must not describe what
- * the server rejects.
+ * How a person's browser authenticates (canonical doc 0004, section 7), and how an agent
+ * does: its API token, as a bearer token (WS-072, declared by WS-075).
  */
 const SESSION_COOKIE_SCHEME = "sessionCookie";
+const BEARER_SCHEME = "bearerAuth";
 const [SESSION_COOKIE, SECURE_SESSION_COOKIE] = SESSION_COOKIE_NAMES;
 
 /** One conflict schema per entity schema, so each is registered under its name only once. */
@@ -98,7 +98,12 @@ function toOperation(contract: EndpointContract): Operation {
     // Agent authors (WT-05) need to know which permission or scope an operation needs.
     ...(permission === undefined ? {} : { "x-opanel-permission": permission }),
     // An empty list means "no credentials required" for this operation.
-    security: isPublic ? [] : [{ [SESSION_COOKIE_SCHEME]: [] }],
+    // Either credential, except on the `session` operations, which refuse a token (WS-072).
+    security: isPublic
+      ? []
+      : contract.access.kind === "session"
+        ? [{ [SESSION_COOKIE_SCHEME]: [] }]
+        : [{ [SESSION_COOKIE_SCHEME]: [] }, { [BEARER_SCHEME]: [] }],
     ...(params === undefined && query === undefined
       ? {}
       : {
@@ -145,6 +150,13 @@ export function buildOpenApiDocument(
           description:
             "The session cookie set by `POST /api/v1/auth/sign-in`. When Opanel is served " +
             `over https the cookie is named \`${SECURE_SESSION_COOKIE}\`.`,
+        },
+        [BEARER_SCHEME]: {
+          type: "http",
+          scheme: "bearer",
+          description:
+            "An agent's API token, `opk_…`, created by an Admin (canonical doc 0001 section 4). " +
+            "It reaches what the agent's scopes and projects allow.",
         },
       },
     },

@@ -29,6 +29,9 @@ export const PROBLEM_CODES = [
   "last_done_column",
   "team_in_use",
   "column_not_empty",
+  "agent_name_taken",
+  "too_many_tokens",
+  "agent_disabled",
 ] as const;
 
 export const problemCodeSchema = z.enum(PROBLEM_CODES);

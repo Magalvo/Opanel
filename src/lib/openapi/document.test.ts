@@ -84,25 +84,34 @@ describe("buildOpenApiDocument", () => {
     expect(parsedDocument().paths["/api/v1/health"]?.get?.security).toEqual([]);
   });
 
-  it("declares the session cookie as the way to authenticate", () => {
+  it("declares the session cookie and the agents' bearer token (WS-075)", () => {
     const scheme = parsedDocument().components.securitySchemes?.sessionCookie;
 
     expect(scheme).toMatchObject({ type: "apiKey", in: "cookie", name: SESSION_COOKIE_NAMES[0] });
     // Over https the cookie has another name; OpenAPI can declare only one.
     expect(scheme?.description).toContain(SESSION_COOKIE_NAMES[1]);
-    expect(Object.keys(parsedDocument().components.securitySchemes ?? {})).toEqual([
+    expect(Object.keys(parsedDocument().components.securitySchemes ?? {}).sort()).toEqual([
+      "bearerAuth",
       "sessionCookie",
     ]);
+    expect(parsedDocument().components.securitySchemes?.bearerAuth).toMatchObject({
+      type: "http",
+      scheme: "bearer",
+    });
   });
 
-  it("requires the session cookie on every operation that is not public, and only there", () => {
+  it("requires credentials on every operation that is not public: a token too, unless session-only", () => {
     const { paths } = parsedDocument();
 
     for (const contract of contracts) {
       const security = paths[contract.path]?.[contract.method]?.security;
-      expect(security, `${contract.method} ${contract.path}`).toEqual(
-        contract.access.kind === "public" ? [] : [{ sessionCookie: [] }],
-      );
+      const expected =
+        contract.access.kind === "public"
+          ? []
+          : contract.access.kind === "session"
+            ? [{ sessionCookie: [] }]
+            : [{ sessionCookie: [] }, { bearerAuth: [] }];
+      expect(security, `${contract.method} ${contract.path}`).toEqual(expected);
     }
     expect(contracts.some((contract) => contract.access.kind !== "public")).toBe(true);
   });
@@ -342,8 +351,11 @@ describe("buildOpenApiDocument", () => {
       expect(Object.keys(responses).sort()).toEqual(["204", "401", "403"]);
     });
 
-    it("requires the session cookie on the protected one and nothing on the public one", () => {
-      expect(operation(createThing.path, "post").security).toEqual([{ sessionCookie: [] }]);
+    it("accepts a session or a token on the protected one and nothing on the public one", () => {
+      expect(operation(createThing.path, "post").security).toEqual([
+        { sessionCookie: [] },
+        { bearerAuth: [] },
+      ]);
       expect(operation(publicThing.path, "get").security).toEqual([]);
     });
 

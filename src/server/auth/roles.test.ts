@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { scopesOfRole } from "@/lib/schemas/agents";
 import {
   HUMAN_ROLES,
   type HumanRole,
@@ -93,5 +94,11 @@ describe("scopesForAgentRole (WS-071)", () => {
     expect(() => scopesForAgentRole("admin")).toThrow();
     expect(() => scopesForAgentRole("root")).toThrow();
     expect(() => scopesForAgentRole(undefined)).toThrow();
+  });
+});
+
+describe("scopesOfRole mirrors AGENT_ROLE_SCOPES (WS-075)", () => {
+  it.each(["qa_agent", "worker_agent"] as const)("for %s", (role) => {
+    expect([...scopesOfRole(role)].sort()).toEqual([...AGENT_ROLE_SCOPES[role]].sort());
   });
 });

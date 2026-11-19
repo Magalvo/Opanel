@@ -14,8 +14,16 @@ describe("auditActionSchema", () => {
     }
   });
 
-  it("includes the actions of WT-02 and of WS-026, WS-028, WS-029 and WS-033", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(30);
+  it("includes the actions of WT-02 and of WS-026, WS-028, WS-029, WS-033 and WS-075", () => {
+    expect(AUDIT_ACTIONS).toHaveLength(36);
+    expect(AUDIT_ACTIONS.filter((action) => action.startsWith("agent."))).toEqual([
+      "agent.created",
+      "agent.updated",
+      "agent.disabled",
+      "agent.reenabled",
+      "agent.token_created",
+      "agent.token_revoked",
+    ]);
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("epic."))).toEqual([
       "epic.created",
       "epic.updated",

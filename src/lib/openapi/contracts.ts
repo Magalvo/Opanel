@@ -6,6 +6,15 @@ import {
   updateAccountContract,
 } from "@/lib/schemas/accounts";
 import {
+  createAgentContract,
+  createApiTokenContract,
+  getAgentContract,
+  listAgentsContract,
+  listApiTokensContract,
+  revokeApiTokenContract,
+  updateAgentContract,
+} from "@/lib/schemas/agents";
+import {
   acceptLinkContract,
   changePasswordContract,
   meContract,
@@ -110,4 +119,11 @@ export const contracts: readonly EndpointContract[] = [
   listCommentsContract,
   createCommentContract,
   projectEventsContract,
+  listAgentsContract,
+  createAgentContract,
+  getAgentContract,
+  updateAgentContract,
+  listApiTokensContract,
+  createApiTokenContract,
+  revokeApiTokenContract,
 ];
