@@ -1,6 +1,6 @@
 # WS-075 — The Admin API for agents and their tokens
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 6 as proposed)
 - Work-item: [WI-075](../work-items/WI-075-agents-admin-api.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4);
   [0004](../canonical/0004-api-conventions.md) (errors, lists, writes, versioning);

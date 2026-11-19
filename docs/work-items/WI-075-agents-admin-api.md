@@ -1,6 +1,6 @@
 # WI-075 — The Admin API for agents and their tokens
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item C)
 - Depends on: WI-072 (done)
 - Work-spec: [WS-075](../work-specs/WS-075-agents-admin-api.md)
