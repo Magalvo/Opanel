@@ -98,5 +98,6 @@ it, the new one passes against the same data.
 
 ## Deviations
 
-- Risk 1: WI-084 has still not landed on `main`, so there was no README follow-up entry
-  naming these two assertions to remove.
+- Risk 1: WI-084 landed on `main` while this item was in review. Merging `main` brought its
+  README follow-up entry naming these two assertions, which this item then removed, and
+  its fix for `agents.spec.ts:136`, the failure in the first gate run above.
