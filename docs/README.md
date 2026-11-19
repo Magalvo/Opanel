@@ -11,9 +11,12 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-070 (the operations guide, `docs/operations.md`, WT-12 item I),
   on 2026-11-19, on the branch `claude/wi-070-operations-guide`. WT-12 is done.
-- **Next:** the owner reviews WT-05 (agent accounts and API tokens), drafted as
-  `Proposed` on 2026-11-19 with 14 design decisions, an amendment to doc 0001 (decision 1)
-  and six open questions. Once approved, item A gets its work-item and work-spec.
+- **Next:** the owner reviews WI-071 and WS-071 (WT-05 item A: agent accounts in the
+  data model, and the agent `Actor`), drafted as `Proposed` on 2026-11-19 with five open
+  questions. No code until WS-071 is `Approved`.
+- **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
+  and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
+  writes.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -79,7 +82,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    | Done     |
 | [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved |
 | [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done     |
-| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Proposed |
+| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Approved |
 
 Planned next, not yet drafted:
 
@@ -167,6 +170,7 @@ right after WT-04 and is done.
 | [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                              | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
 | [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
 | [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                       | Done        | [WS-070](work-specs/WS-070-operations-guide.md)                 | Done        |
+| [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`          | Proposed    | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Proposed    |
 
 ## Follow-ups
 
