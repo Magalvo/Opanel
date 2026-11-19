@@ -31,6 +31,16 @@
               }
             }
           },
+          "400": {
+            "description": "The query string names a parameter this operation does not take.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "503": {
             "description": "The database is unavailable.",
             "content": {
@@ -56,6 +66,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OpenApiDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query string names a parameter this operation does not take.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -141,6 +161,18 @@
           },
           "429": {
             "description": "Too many attempts (code `rate_limited`), or the server is busy hashing passwords (code `server_busy`). See Retry-After.",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -164,6 +196,16 @@
         "responses": {
           "204": {
             "description": "Signed out."
+          },
+          "400": {
+            "description": "The query string names a parameter this operation does not take.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           },
           "401": {
             "description": "No valid credentials were sent.",
@@ -211,6 +253,16 @@
               }
             }
           },
+          "400": {
+            "description": "The query string names a parameter this operation does not take.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "401": {
             "description": "No valid credentials were sent.",
             "content": {
@@ -223,6 +275,28 @@
           },
           "403": {
             "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -390,6 +464,18 @@
           },
           "429": {
             "description": "Too many attempts for this account (code `rate_limited`), or the server is busy hashing passwords (code `server_busy`). See Retry-After.",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -479,6 +565,18 @@
           },
           "429": {
             "description": "The server is busy hashing passwords (code `server_busy`). See Retry-After.",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -568,6 +666,18 @@
           },
           "429": {
             "description": "Too many attempts from this address (code `rate_limited`), or the server is busy hashing passwords (code `server_busy`). See Retry-After.",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -646,6 +756,28 @@
           },
           "403": {
             "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -741,6 +873,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -867,6 +1021,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -956,6 +1132,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -1031,6 +1229,28 @@
           },
           "409": {
             "description": "The invitation was already accepted.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1127,6 +1347,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -1198,6 +1440,28 @@
           },
           "403": {
             "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1300,6 +1564,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -1372,6 +1658,28 @@
           },
           "404": {
             "description": "There is no such team.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1496,6 +1804,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       },
@@ -1569,6 +1899,28 @@
           },
           "409": {
             "description": "Tasks are assigned to this team (code `team_in_use`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1695,6 +2047,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -1770,6 +2144,28 @@
           },
           "404": {
             "description": "There is no such team, or the person is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1861,6 +2257,28 @@
           },
           "403": {
             "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1963,6 +2381,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -2045,6 +2485,28 @@
           },
           "404": {
             "description": "There is no such project.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2151,11 +2613,18 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`).",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProjectVersionConflict"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ProjectVersionConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ]
                 }
               }
             }
@@ -2172,6 +2641,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2268,6 +2759,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -2357,6 +2870,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -2439,6 +2974,28 @@
           },
           "404": {
             "description": "There is no such project.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2573,6 +3130,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -2664,11 +3243,18 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or it would leave the project without a Done column (code `last_done_column`).",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ColumnVersionConflict"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ColumnVersionConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ]
                 }
               }
             }
@@ -2685,6 +3271,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2765,6 +3373,28 @@
           },
           "409": {
             "description": "It is the last `done` column (code `last_done_column`), a task is still in it (code `column_not_empty`), or the project is archived (code `project_archived`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2863,11 +3493,18 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`).",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ColumnVersionConflict"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ColumnVersionConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ]
                 }
               }
             }
@@ -2884,6 +3521,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3023,6 +3682,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       },
@@ -3150,6 +3831,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -3232,6 +3935,28 @@
           },
           "404": {
             "description": "There is no such task.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3338,11 +4063,18 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or the person to assign is deactivated (code `account_inactive`).",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaskVersionConflict"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TaskVersionConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ]
                 }
               }
             }
@@ -3359,6 +4091,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3449,6 +4203,28 @@
           },
           "409": {
             "description": "The project is archived (code `project_archived`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3557,11 +4333,18 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`).",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaskVersionConflict"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TaskVersionConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ]
                 }
               }
             }
@@ -3578,6 +4361,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3677,6 +4482,28 @@
           },
           "409": {
             "description": "The project is archived (code `project_archived`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3799,6 +4626,28 @@
           },
           "404": {
             "description": "There is no such project.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3933,6 +4782,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -4005,6 +4876,28 @@
           },
           "404": {
             "description": "There is no such epic.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4101,11 +4994,18 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`).",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EpicVersionConflict"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/EpicVersionConflict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ]
                 }
               }
             }
@@ -4122,6 +5022,28 @@
           },
           "415": {
             "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4230,6 +5152,28 @@
           },
           "404": {
             "description": "There is no such task.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4364,6 +5308,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -4414,6 +5380,16 @@
               }
             }
           },
+          "400": {
+            "description": "The path is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "401": {
             "description": "No valid credentials were sent.",
             "content": {
@@ -4445,7 +5421,19 @@
             }
           },
           "429": {
-            "description": "The account has too many open streams (code `too_many_streams`); `Retry-After` says when to try again.",
+            "description": "The account has too many open streams (code `too_many_streams`); `Retry-After` says when to try again. The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4524,6 +5512,28 @@
           },
           "403": {
             "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4626,6 +5636,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -4698,6 +5730,28 @@
           },
           "404": {
             "description": "There is no such agent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4822,6 +5876,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -4894,6 +5970,28 @@
           },
           "404": {
             "description": "There is no such agent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5018,6 +6116,28 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -5093,6 +6213,28 @@
           },
           "404": {
             "description": "The agent has no such token.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5896,54 +7038,6 @@
         "additionalProperties": false,
         "description": "Whether the service can do its job. `degraded` means the database is down."
       },
-      "OpenApiDocument": {
-        "type": "object",
-        "propertyNames": {
-          "type": "string"
-        },
-        "additionalProperties": {},
-        "description": "An OpenAPI 3.1 document."
-      },
-      "AccountSummary": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/AccountKind"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "role": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "kind",
-          "name",
-          "email",
-          "role"
-        ],
-        "additionalProperties": false
-      },
-      "AccountKind": {
-        "type": "string",
-        "enum": [
-          "human",
-          "agent"
-        ]
-      },
       "Problem": {
         "type": "object",
         "properties": {
@@ -6037,6 +7131,54 @@
         ],
         "additionalProperties": false,
         "description": "An error, as RFC 9457 problem details (`application/problem+json`)."
+      },
+      "OpenApiDocument": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {},
+        "description": "An OpenAPI 3.1 document."
+      },
+      "AccountSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AccountKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "email",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "AccountKind": {
+        "type": "string",
+        "enum": [
+          "human",
+          "agent"
+        ]
       },
       "Me": {
         "oneOf": [

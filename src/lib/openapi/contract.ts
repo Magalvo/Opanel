@@ -1,6 +1,7 @@
 import type { z } from "zod";
 
 import type { Permission } from "@/lib/schemas/permissions";
+import type { ProblemCode } from "@/lib/schemas/problem";
 
 export type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
 
@@ -25,12 +26,15 @@ export interface NoContentResponseContract {
 
 /**
  * `409 version_conflict` for an entity (WS-027): a problem body whose `current` is the
- * entity. Write it with `versionConflictResponse(entitySchema)`. The entity schema needs a
- * `meta({ id })`, which names the conflict schema `<id>VersionConflict`.
+ * entity. Write it with `versionConflictResponse(entitySchema, otherCodes)`. The entity
+ * schema needs a `meta({ id })`, which names the conflict schema `<id>VersionConflict`.
+ * `otherCodes` are the other `409`s the operation can answer (WS-083), plain problems; the
+ * document then offers both schemas.
  */
 export interface VersionConflictResponseContract {
   description: string;
   conflictOf: z.ZodType;
+  otherCodes: readonly ProblemCode[];
 }
 
 /**
@@ -91,7 +95,9 @@ export interface EndpointContract {
   request?: RequestContract;
   /**
    * Keyed by HTTP status code. `401` and `403` are added to every non-public operation
-   * automatically; list them only to give a more specific description.
+   * automatically, and `429 rate_limited` to every operation a token may call (WS-083);
+   * list them only to give a more specific description. An operation's own `429` keeps
+   * its description, and the token's sentence is added to it.
    */
   responses: Readonly<Record<number, ResponseContract>>;
 }

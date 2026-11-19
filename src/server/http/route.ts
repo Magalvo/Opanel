@@ -130,8 +130,10 @@ function withSharedBehaviour<Context>(
  * Wraps the handler of one API operation (WS-025). Before the handler runs, and in this
  * order: a state-changing request must come from the app's own origin (`403`); unless the
  * contract is public, the caller is authenticated (`401`); if the contract names a
- * permission, the caller must hold it (`403`). The handler then receives the authenticated
- * caller, or `undefined` for a public operation. Object-level rules stay in the services.
+ * permission, the caller must hold it (`403`); an operation whose contract declares no
+ * query refuses any query parameter (`400`, WS-083). The handler then receives the
+ * authenticated caller, or `undefined` for a public operation. Object-level rules stay in
+ * the services.
  *
  * When authentication produced `Set-Cookie` headers (an extended session), they are added
  * to the handler's response, unless the handler set cookies of its own.
@@ -148,6 +150,7 @@ export function route<const Contract extends EndpointContract, Context = unknown
       }
 
       if (contract.access.kind === "public") {
+        refuseUndeclaredQuery(contract, request);
         // AuthFor<Contract> is undefined exactly when the access is public.
         return handler(request, context, undefined as AuthFor<Contract>);
       }
@@ -162,6 +165,7 @@ export function route<const Contract extends EndpointContract, Context = unknown
       if (contract.access.kind === "permission") {
         requirePermission(auth.actor, contract.access.permission);
       }
+      refuseUndeclaredQuery(contract, request);
 
       const response = await handler(request, context, auth as AuthFor<Contract>);
       if (response.headers.getSetCookie().length > 0) {
@@ -174,6 +178,21 @@ export function route<const Contract extends EndpointContract, Context = unknown
   );
 
   return Object.assign(wrapped, { contract });
+}
+
+/**
+ * An operation that declares no query takes none (canonical doc 0004 section 3, WS-083):
+ * any parameter is a `400` naming it. Operations that declare one validate it themselves
+ * with `readQuery`.
+ */
+function refuseUndeclaredQuery(contract: EndpointContract, request: Request): void {
+  if (contract.request?.query !== undefined) return;
+  const names = [...new Set(new URL(request.url).searchParams.keys())];
+  if (names.length === 0) return;
+  throw invalidRequest(
+    names.map((name) => ({ path: name, message: "Unknown field" })),
+    "The query string is not valid.",
+  );
 }
 
 /**

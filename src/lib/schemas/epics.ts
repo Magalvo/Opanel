@@ -169,7 +169,7 @@ export const updateEpicContract = {
     200: { description: "The epic after the change.", schema: epicSchema },
     400: { description: "The path or the body is not valid.", problem: true },
     404: { description: "There is no such epic.", problem: true },
-    409: versionConflictResponse(epicSchema),
+    409: versionConflictResponse(epicSchema, ["project_archived"]),
     413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },

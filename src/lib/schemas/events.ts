@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { BAD_PATH } from "@/lib/openapi/responses";
 
 import { projectParamsSchema } from "./projects";
 
@@ -113,6 +114,7 @@ export const projectEventsContract = {
         "have been missed.",
       eventStream: projectEventSchema,
     },
+    400: BAD_PATH,
     404: { description: "There is no such project.", problem: true },
     429: {
       description:

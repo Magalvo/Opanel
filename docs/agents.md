@@ -99,8 +99,10 @@ problem; the response's `X-Request-Id` header carries the same value.
 | `404`  | `not_found`         | It does not exist                                                        |
 | `409`  | `version_conflict`  | Someone changed it first: `current` holds it as it is now; retry on that |
 | `409`  | `project_archived`  | The project is read-only                                                 |
+| `409`  | `account_inactive`  | The person you assign is deactivated                                     |
 | `413`  | `payload_too_large` | Keep JSON bodies under 512 KiB                                           |
 | `429`  | `rate_limited`      | Wait the `Retry-After` seconds; a token may make 600 requests a minute   |
+| `429`  | `too_many_streams`  | Close a stream; wait the `Retry-After` seconds                           |
 | `500`  | `internal_error`    | Retry later; report the `requestId`                                      |
 
 - **`401` never says why.** An unknown, expired or revoked token, and a disabled agent, all
@@ -133,6 +135,8 @@ changes. It needs `tasks:read`, and the project must be one of yours.
   checked again, so a revoked token or a disabled agent loses its stream within 25
   seconds.
 - **Reconnecting.** Events are not replayed. After a reconnect, reload what you track.
+- **How many.** At most 10 open streams per account and app process; the 11th is a
+  `429 too_many_streams`.
 
 ## Rotating and revoking
 

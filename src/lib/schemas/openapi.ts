@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { UNKNOWN_QUERY } from "@/lib/openapi/responses";
 
 export const openApiDocumentSchema = z.record(z.string(), z.unknown()).meta({
   id: "OpenApiDocument",
@@ -18,5 +19,6 @@ export const openApiContract = {
       description: "The OpenAPI document.",
       schema: openApiDocumentSchema,
     },
+    400: UNKNOWN_QUERY,
   },
 } satisfies EndpointContract;

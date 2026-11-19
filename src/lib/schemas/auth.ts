@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
+import { PAYLOAD_TOO_LARGE, UNKNOWN_QUERY } from "@/lib/openapi/responses";
 
 import { accountKindSchema } from "./account-ref";
 import { accountNameSchema } from "./accounts";
@@ -149,7 +149,7 @@ export const signOutContract = {
   summary: "Sign out",
   description: "Ends the current session and clears its cookie. Needs a session, no permission.",
   access: { kind: "session" },
-  responses: { 204: { description: "Signed out.", noContent: true } },
+  responses: { 204: { description: "Signed out.", noContent: true }, 400: UNKNOWN_QUERY },
 } satisfies EndpointContract;
 
 /** Body of `PATCH /api/v1/me`: the caller's new name. */
@@ -182,7 +182,7 @@ export const meContract = {
     '`kind: "human"` and an email; an agent gets `kind: "agent"`, its agent role and scopes, ' +
     "and `projectIds` (null for all projects). Needs a session or an API token, no permission.",
   access: { kind: "authenticated" },
-  responses: { 200: { description: "The caller.", schema: meResponseSchema } },
+  responses: { 200: { description: "The caller.", schema: meResponseSchema }, 400: UNKNOWN_QUERY },
 } satisfies EndpointContract;
 
 export const setupContract = {

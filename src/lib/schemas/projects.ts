@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
-import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
+import { BAD_PATH, PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { accountNameSchema } from "./accounts";
 import { pageSchema, paginationQuerySchema } from "./pagination";
@@ -82,7 +82,6 @@ export const projectParamsSchema = z.strictObject({ projectId: projectRefSchema 
 const READ = { kind: "permission", permission: "projects:read" } as const;
 const MANAGE = { kind: "permission", permission: "projects:manage" } as const;
 const NO_PROJECT = { description: "There is no such project.", problem: true } as const;
-const BAD_PATH = { description: "The path is not valid.", problem: true } as const;
 
 export const listProjectsContract = {
   method: "get",
@@ -139,7 +138,7 @@ export const updateProjectContract = {
     200: { description: "The project after the change.", schema: projectSchema },
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_PROJECT,
-    409: versionConflictResponse(projectSchema),
+    409: versionConflictResponse(projectSchema, ["project_archived"]),
     413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
