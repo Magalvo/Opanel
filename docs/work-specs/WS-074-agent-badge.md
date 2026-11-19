@@ -1,6 +1,6 @@
 # WS-074 — Agents where humans see them: the "Agent" badge
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as proposed)
 - Work-item: [WI-074](../work-items/WI-074-agent-badge.md)
 - Canonical docs: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (decision
   10); [0003](../canonical/0003-task-management.md) (section 9: history names human or

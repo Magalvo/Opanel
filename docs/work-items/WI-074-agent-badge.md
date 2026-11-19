@@ -1,6 +1,6 @@
 # WI-074 — Agents where humans see them: the "Agent" badge
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item G,
   decision 10)
 - Depends on: WI-071 (done)
