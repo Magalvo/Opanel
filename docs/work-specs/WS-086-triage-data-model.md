@@ -1,6 +1,6 @@
 # WS-086 — The data model of bug reports and triage
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 3 as recommended)
 - Work-item: [WI-086](../work-items/WI-086-triage-data-model.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5 to 7;
   [0003](../canonical/0003-task-management.md) sections 4, 5 and 7;

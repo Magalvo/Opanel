@@ -1,6 +1,6 @@
 # WI-086 — The data model of bug reports and triage
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item A)
 - Depends on: WT-05 (done)
 - Work-spec: [WS-086](../work-specs/WS-086-triage-data-model.md)

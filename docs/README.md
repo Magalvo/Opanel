@@ -213,7 +213,7 @@ right after WT-04 and is done.
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
 | [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
 | [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
-| [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Proposed    | [WS-086](work-specs/WS-086-triage-data-model.md)                | Proposed    |
+| [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Approved    | [WS-086](work-specs/WS-086-triage-data-model.md)                | Approved    |
 
 ## Follow-ups
 
