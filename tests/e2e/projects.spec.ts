@@ -130,7 +130,11 @@ test("a Viewer sees projects but no New project, no Settings, and not the settin
 
   await page.goto(`/projects/${key}`);
   await expect(page.getByRole("heading", { level: 1, name: `Viewed ${key}` })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Settings" })).toHaveCount(0);
+  // Scoped to the project tabs and exact: a page-wide substring match would also count a
+  // task card whose title contains "Settings" (WI-085).
+  const projectNav = page.getByRole("navigation", { name: "Project" });
+  await expect(projectNav.getByRole("link", { name: "Board", exact: true })).toBeVisible();
+  await expect(projectNav.getByRole("link", { name: "Settings", exact: true })).toHaveCount(0);
 
   // A not-found page. Its status stays 200 because the response is already streaming when
   // the settings page refuses (the project layout comes first), so Next.js marks it
