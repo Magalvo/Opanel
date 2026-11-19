@@ -22,6 +22,18 @@ describe("describeError (WS-042)", () => {
     expect(describeError(error)).toBe("DrizzleQueryError");
   });
 
+  it("names a DrizzleQueryError whose class name was minified (WS-069)", () => {
+    class sh extends DrizzleQueryError {}
+
+    expect(describeError(new sh(MARKER, [MARKER]))).toBe("DrizzleQueryError");
+  });
+
+  it("does not take a minified constructor name for a plain Error (WS-069)", () => {
+    class sh extends Error {}
+
+    expect(describeError(new sh(MARKER))).toBe("Error");
+  });
+
   it("adds an allowed code and constraint from the cause chain, two levels down", () => {
     const driver = withFields({
       code: "23505",

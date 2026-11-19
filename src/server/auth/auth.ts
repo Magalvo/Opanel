@@ -6,6 +6,7 @@ import { COOKIE_PREFIX } from "@/lib/session-cookie";
 import { getDb } from "@/server/db/client";
 import { accounts, credentials, sessions, verification } from "@/server/db/schema";
 import { type Env, getEnv } from "@/server/env";
+import { describeError } from "@/server/http/safe-error";
 
 import { hashPassword, verifyPassword } from "./password";
 
@@ -14,13 +15,25 @@ const DAY_SECONDS = 24 * 60 * 60;
 /** The configuration this code needs from the environment. */
 type AuthEnv = Pick<Env, "BETTER_AUTH_SECRET" | "APP_URL">;
 
+export interface CreateAuthOptions {
+  /** Receives Better Auth's errors, as one safe line each. */
+  logError?: (message: string) => void;
+}
+
 /** Builds a Better Auth instance. Application code uses `getAuth()`; tests pass their own env. */
-export function createAuth(env: AuthEnv) {
+export function createAuth(env: AuthEnv, { logError = console.error }: CreateAuthOptions = {}) {
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.APP_URL,
     // Opanel contains no calls to outside services (AGENTS.md section 1).
     telemetry: { enabled: false },
+    // Replaces Better Auth's own error logging, which prints a failed query's message and
+    // parameters, a session token among them (WS-069). The response is unchanged.
+    onAPIError: {
+      onError: (error) => {
+        logError(`Better Auth: ${describeError(error)}`);
+      },
+    },
     database: drizzleAdapter(getDb(), {
       provider: "pg",
       schema: { accounts, credentials, sessions, verification },

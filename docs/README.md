@@ -9,12 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-068 (backup and restore, rehearsed in CI, WT-12 item G), on
-  2026-11-19, on the branch `claude/wi-068-backup-rehearsal`.
-- **Next:** draft WI-069 (WT-12 item H: `docs/operations.md`, which closes WT-12) and
-  WS-069 as `Proposed`, and stop for the owner's approval. WS-068 question 4 leaves it to
-  record the upgrade criterion and a follow-up to rehearse a real upgrade after the first
-  tagged release.
+- **Last finished:** WI-069 (no request data in the logs when a query fails, WT-12 item
+  H), on 2026-11-19, on the branch `claude/wi-069-safe-logs`.
+- **Next:** draft WI-070 (WT-12 item I: `docs/operations.md`, which closes WT-12) and
+  WS-070 as `Proposed`, and stop for the owner's approval. It records the upgrade
+  criterion and a follow-up to rehearse a real upgrade after the first tagged release
+  (WS-068, question 4).
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -166,6 +166,7 @@ outlined above and comes right after WT-04.
 | [WI-066](work-items/WI-066-maintenance.md)                      | `maintenance`: remove what has expired                           | Done        | [WS-066](work-specs/WS-066-maintenance.md)                      | Done        |
 | [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested         | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
 | [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                              | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
+| [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
 
 ## Follow-ups
 
@@ -188,7 +189,9 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   `https:` installs, with a tested example proxy).
   The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
   ones itself (WI-044). It also decides log access and retention, and whether the logs
-  of Better Auth and Next.js can hold request data (WS-042, question 2: not examined).
+  of Better Auth and Next.js can hold request data (WS-042, question 2): examined on
+  2026-11-19, they could (a session token, when a query failed); fixed by WI-069. Log
+  access and retention stay for the operations guide (WI-070).
 
 Other follow-ups:
 
@@ -241,3 +244,7 @@ Other follow-ups:
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
 - Add Firefox and WebKit to the end-to-end tests once there is real UI to protect.
 - Return from TypeScript 6.0 to 7 once `typescript-eslint` supports it (see WS-002).
+- The People page can show an account twice: in one E2E run of WI-069 (2026-11-19),
+  `people.spec.ts` ("an Admin revokes an invitation…") found the invited account's row
+  twice after "Load more" (a strict-mode violation). Not seen before; check whether the
+  invited account added to the list is also loaded again with the next page.
