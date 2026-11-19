@@ -11,6 +11,12 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-080 (paged lists never show a row twice, audit of 2026-11-19,
   finding B02), on 2026-11-19, on the branch `claude/wi-080-lists-without-duplicates`.
+- **Also finished:** WI-079 (each production service gets only the secrets it needs,
+  audit of 2026-11-19, finding B01; amends canonical doc 0006 sections 3 and 5), on
+  2026-11-19, on the branch `claude/jolly-darwin-2xjb04`.
+- **Also finished:** WI-085 (the absent People and project Settings link checks look only
+  inside their navigation, with an exact name, a test-only fix), on 2026-11-19, on the
+  branch `claude/great-curie-4lffec`.
 - **Also finished:** WI-084 (the Manager's Agents-link check looks only at the sidebar, a
   test-only fix), on 2026-11-19, on the branch `claude/blissful-franklin-u14sjv`.
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
@@ -24,7 +30,7 @@ Updated at the end of every work-item, so that a new session can start from here
   (production services get only their own secrets; paged lists without duplicates; name
   cursors that fit epic titles; board loads ordered around moves; every API response
   documented). The lower findings B06 to B16 are listed under [Follow-ups](#follow-ups).
-  The owner chose to do these before WT-06. WI-080 is done.
+  The owner chose to do these before WT-06. WI-079 and WI-080 are done.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -189,12 +195,13 @@ right after WT-04 and is done.
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
 | [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
-| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Approved    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Approved    |
+| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Done        | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Done        |
 | [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Done        | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Done        |
 | [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Approved    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Approved    |
 | [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Approved    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Approved    |
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Approved    | [WS-083](work-specs/WS-083-documented-responses.md)             | Approved    |
 | [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
+| [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
 
 ## Follow-ups
 
@@ -329,11 +336,3 @@ Optimisations found by the same audit, none urgent:
   `400` (WS-081, question 3).
 - CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
   has no BuildKit cache.
-
-End-to-end locators found while fixing WI-084, none failing today:
-
-- `tests/e2e/people.spec.ts:144` (`link "People"`, on `/`) and
-  `tests/e2e/projects.spec.ts:133` (`link "Settings"`, on a project page) assert
-  `toHaveCount(0)` on the whole page, and Playwright matches `name` as a substring. They
-  would break like WI-084 did if test data ever named a project or task "People…" or
-  "…settings…". Scoping them needs a work-item.

@@ -184,7 +184,11 @@ admin("the page fits a phone and renders in the dark theme", async ({ page }) =>
 member("a Member does not see People and gets a not-found page at /people", async ({ page }) => {
   await page.goto("/");
   await expectSigned(page.getByRole("button", { name: "Account menu" })).toBeVisible();
-  await expectSigned(page.getByRole("link", { name: "People" })).toHaveCount(0);
+  // Scoped to the sidebar and exact: a page-wide substring match would also count any
+  // other link whose name contains "People" (WI-085).
+  const nav = page.getByRole("navigation", { name: "Main" });
+  await expectSigned(nav.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
+  await expectSigned(nav.getByRole("link", { name: "People", exact: true })).toHaveCount(0);
 
   const response = await page.goto("/people");
 
