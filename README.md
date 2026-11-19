@@ -81,6 +81,15 @@ never touches the audit log or the task history (WS-066):
 docker compose -f compose.production.yaml run --rm app node dist/maintenance.mjs
 ```
 
+Back up with the database server's own `pg_dump`, as the owner, while the app runs; keep
+the env file with the backups, since it holds the passwords and the session secret. CI
+restores such a backup into a new install every week (`scripts/rehearse-backup.sh`,
+WS-068):
+
+```bash
+docker compose -f compose.production.yaml exec -T db pg_dump -U opanel -d opanel --format=custom >opanel-backup.dump
+```
+
 Opanel must run as a long-lived Node.js server (`pnpm build`, then `pnpm start`), not on
 serverless or edge hosting: open boards keep a Server-Sent Events stream to
 `/api/v1/projects/{projectId}/events`. A reverse proxy in front of it must not buffer that

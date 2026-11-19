@@ -1,9 +1,11 @@
 name: Production image
 
 # Builds the production image and checks the example install of compose.production.yaml
-# (WS-062): migrate, health, the setup token, a non-root user, no development dependency.
-# Its own workflow: it needs Docker, which the quality gate does not. What it runs is
-# scripts/smoke-production.sh, which also runs locally.
+# (WS-062): migrate, health, the setup token, a non-root user, no development dependency;
+# then the same behind the example proxy (WS-067), and a backup restored into a new install
+# (WS-068).
+# Its own workflow: it needs Docker, which the quality gate does not. Each step is a script
+# under scripts/, which also runs locally.
 on:
   schedule:
     - cron: "37 6 * * 1"
@@ -51,7 +53,7 @@ jobs:
   smoke:
     name: Production image smoke test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -62,3 +64,7 @@ jobs:
       # The same install behind the example reverse proxy (WS-067).
       - name: Check the example install behind the example proxy
         run: bash scripts/smoke-proxy.sh
+
+      # A backup of a seeded install, restored into a new one (WS-068, doc 0006 section 8).
+      - name: Rehearse a backup and a restore
+        run: bash scripts/rehearse-backup.sh
