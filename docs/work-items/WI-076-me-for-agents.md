@@ -1,6 +1,6 @@
 # WI-076 — `GET /me` for agents
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item E,
   decision 9)
 - Depends on: WI-072 (done)
@@ -20,18 +20,18 @@ nothing else changes here.
 
 ## Acceptance criteria
 
-- [ ] `GET /me` with an agent token answers `200` with `kind: "agent"`, the agent's `id`,
+- [x] `GET /me` with an agent token answers `200` with `kind: "agent"`, the agent's `id`,
       `name` and `role`, `permissions` equal to its stored scopes, and `projectIds` equal
       to its projects, or `null` when it is not restricted. The body has no `email`.
-- [ ] A restricted agent's `projectIds` and its `permissions` are sorted, so the same agent
+- [x] A restricted agent's `projectIds` and its `permissions` are sorted, so the same agent
       always gets the same body.
-- [ ] `GET /me` and `PATCH /me` with a session answer as before, plus `projectIds: null`.
-- [ ] `meResponseSchema` is a union discriminated by `kind`: a human body cannot carry
+- [x] `GET /me` and `PATCH /me` with a session answer as before, plus `projectIds: null`.
+- [x] `meResponseSchema` is a union discriminated by `kind`: a human body cannot carry
       agent fields or values, and an agent body cannot carry an `email`, a human role or
       a permission outside the agent scopes.
-- [ ] The OpenAPI document shows `Me` as one of `HumanMe` and `AgentMe`; `PATCH /me`
+- [x] The OpenAPI document shows `Me` as one of `HumanMe` and `AgentMe`; `PATCH /me`
       answers `HumanMe`. The committed `docs/api/openapi.json` is regenerated.
-- [ ] Every existing consumer of `meResponseSchema` (UI, integration and E2E tests)
+- [x] Every existing consumer of `meResponseSchema` (UI, integration and E2E tests)
       type-checks and passes. The full quality gate passes.
 
 ## Notes

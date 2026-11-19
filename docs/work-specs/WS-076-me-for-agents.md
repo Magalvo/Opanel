@@ -1,6 +1,6 @@
 # WS-076 — `GET /me` for agents
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 4 as recommended)
 - Work-item: [WI-076](../work-items/WI-076-me-for-agents.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (section 3: the MCP server reads
   `GET /me` at start); [0004](../canonical/0004-api-conventions.md) (section 7:
@@ -216,3 +216,30 @@ Risks:
   rebase.
 - **zod-openapi's output for a discriminated union** (section 4) is checked before coding;
   test 5 fixes whatever it produces.
+
+## Deviations from the approved spec
+
+1. **zod-openapi 6.0.2 writes the `discriminator` itself**: `Me` is `oneOf` `HumanMe` and
+   `AgentMe` with `discriminator: { propertyName: "kind", mapping }`, with no option. Test 5
+   checks both.
+2. **`PATCH /me` needs no runtime check on `actor.kind`.** `session` access already types
+   the actor as `HumanActor` (WS-072), so the handler calls the human builder directly.
+3. **An agent's `permissions` go through `agentScopeSchema.array().parse()`** instead of a
+   type cast. It cannot throw, because `agentActor` validated the scopes; it keeps the code
+   free of casts.
+
+## Implementation record
+
+- Red: `auth.test.ts` (2 failing: no `projectIds`, no `humanMeSchema`/`agentMeSchema`),
+  `me/route.integration.test.ts` (4 failing: the agent body had `email: null` and no
+  `projectIds`; the new schemas did not exist), `document.test.ts` (1 failing: `PATCH /me`
+  referred to `Me`).
+- Green: section 2 in `src/lib/schemas/auth.ts`, section 3 in `src/app/api/v1/me/route.ts`,
+  `docs/api/openapi.json` regenerated. No other consumer needed a change: `tsc` passes on
+  the UI, the integration tests and the E2E specs as they were.
+- Gate on 2026-11-19, on the private databases `opanel_wi076_test` and
+  `opanel_wi076_e2e_test` (port 5433):
+  - typecheck, lint and Prettier pass;
+  - Vitest 1481 of 1481;
+  - `pnpm test:e2e --retries=0` 81 of 81;
+  - Windows, Node 24, pnpm 10.28.0.
