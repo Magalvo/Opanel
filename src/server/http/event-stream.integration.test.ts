@@ -13,7 +13,7 @@ import {
   testActor,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
-import { apiTokens, sessions } from "@/server/db/schema";
+import { agentProjects, apiTokens, sessions } from "@/server/db/schema";
 import { closeEventHub, type EventHub } from "@/server/services/event-hub";
 import { publishEvent } from "@/server/services/events";
 import { createProject } from "@/server/services/projects";
@@ -100,41 +100,6 @@ describe("openEventStream (WS-047)", () => {
     });
 
     await reader.closed();
-  });
-
-  it("ends at the next heartbeat when the actor no longer reaches the project (WS-073)", async () => {
-    const { member, project, request } = await setup();
-    const agentWith = (projectIds: string[]): Authenticated => ({
-      actor: {
-        kind: "agent",
-        accountId: member.id,
-        role: "qa_agent",
-        permissions: new Set(["tasks:read"]),
-        projectIds: new Set(projectIds),
-      },
-      account: member,
-      sessionId: "none",
-      headers: new Headers(),
-    });
-    let reaches = true;
-    const authenticate = (): Promise<Authenticated> =>
-      Promise.resolve(agentWith(reaches ? [project.id] : []));
-
-    const reader = await stream({
-      request,
-      projectId: project.id,
-      account: member.id,
-      heartbeatMs: 50,
-      authenticate,
-      maxStreamsPerAccount: 1,
-    });
-    await reader.next();
-    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
-
-    reaches = false;
-
-    await reader.closed();
-    await stream({ request, projectId: project.id, account: member.id, maxStreamsPerAccount: 1 });
   });
 
   it("ends when the hub resets, and frees its place", async () => {
@@ -242,5 +207,27 @@ describe("openEventStream with an API token (WS-072)", () => {
     await setDisabled(agent.id, true);
 
     await reader.closed();
+  });
+
+  it("ends at the next heartbeat when the agent no longer reaches the project (WS-073)", async () => {
+    const manager = await createTestAccount({ email: "manager@example.com", role: "manager" });
+    const project = await createProject(testActor(manager), { key: "ONE", name: "One" });
+    const agent = await createTestAgent({ scopes: ["tasks:read"], projectIds: [project.id] });
+    const { token } = await createTestToken(agent.id);
+    const request = bearerRequest("/api/v1/projects/ONE/events", token);
+    const reader = await stream({
+      request,
+      projectId: project.id,
+      account: agent.id,
+      heartbeatMs: 50,
+      maxStreamsPerAccount: 1,
+    });
+    await reader.next();
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+
+    await getDb().delete(agentProjects).where(eq(agentProjects.accountId, agent.id));
+
+    await reader.closed();
+    await stream({ request, projectId: project.id, account: agent.id, maxStreamsPerAccount: 1 });
   });
 });

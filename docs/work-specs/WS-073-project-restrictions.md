@@ -287,10 +287,17 @@ Risks:
    coverage test, rather than in `projects.integration.test.ts`: it spans tasks, comments
    and projects, and reuses that file's two-project fixture. Test 6 (the list filter) is in
    `projects.integration.test.ts`, as planned.
+3. **Test 8 uses a real API token** after the rebase onto WI-072, rather than an injected
+   `authenticate`: an agent restricted to the project opens the stream with
+   `bearerRequest`, and the stream closes at the heartbeat after its `agent_projects` row
+   is deleted. This exercises item B's `authenticate()` re-building the agent's actor on
+   each heartbeat, the dependency named under Risks. The injected-actor version no longer
+   type-checked (`Authenticated` gained `via`). With the heartbeat's project check
+   disabled, the test fails (it times out on a stream that stays open).
 
 ## Implementation record
 
-- Red (commit `9140130`): 59 tests failed for the right reasons: `canAccessProject` and
+- Red (commit `9140130`, `fd42578` after the rebase): 59 tests failed for the right reasons: `canAccessProject` and
   `requireProjectAccess` did not exist; every project-scoped function answered with
   success, `404` (the resolvers received the actor as their `ref`) or `409
 project_archived` instead of `403`; `listProjects` returned every project; the stream
@@ -313,3 +320,13 @@ project_archived` instead of `403`; `listProjects` returned every project; the s
     files run alone: 41 of 41;
   - `pnpm test:e2e` 79 of 79;
   - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+- Rebased on 2026-11-19 onto `main` at `82294c8` (WI-072 merged). Only the docs
+  conflicted (`docs/README.md`, the WT-05 table); WI-072 added no service export, so the
+  coverage test's lists were unchanged. Test 8 was rewritten (deviation 3). Gate after the
+  rebase, same databases:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1457 of 1457;
+  - `pnpm test:e2e` 78 of 79: `people.spec.ts` "an Admin invites, changes a role,
+    deactivates and reactivates" failed on a strict-mode violation (the invited
+    account's row twice), the People page Follow-up of `docs/README.md`; this item does
+    not touch people; `people.spec.ts` alone then passed 6 of 6.
