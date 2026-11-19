@@ -1,6 +1,6 @@
 # WS-080 — Paged lists never show a row twice
 
-- Status: Approved (by the owner on 2026-11-19, every question as proposed)
+- Status: Done (2026-11-19; approved by the owner the same day, questions 1 to 4 as proposed)
 - Work-item: [WI-080](../work-items/WI-080-lists-without-duplicates.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 5 (pagination);
   audit of 2026-11-19, finding B02
@@ -166,4 +166,36 @@ For the owner:
 
 ## Deviations from the approved spec
 
-None yet.
+1. **`PagedList`'s members are function-typed properties**, not methods as in the sketch of
+   section 2, so pages can destructure them (`show`, `invalidate`) without
+   `@typescript-eslint/unbound-method`.
+2. **`src/components/fake-api.ts` gained `hold(key)`**, which keeps a request pending until
+   the test answers it; the Epics, Comments and Projects tests use it. The People component
+   tests hold their requests by hand, as that file has its own fake.
+3. **People's second test holds the invitation's `POST`** and lands the last page while it
+   is pending (`fireEvent`, since the page behind the modal takes no pointer events): that
+   is the case in which the dialog calls a handler one render old.
+4. **The People E2E test (10) asserts the status line before counting rows.** Against the
+   old page it failed there ("Invited Race Condition." instead of "They appear at the end
+   of the list."), before reaching the duplicate.
+
+## Implementation record
+
+- Red: `paged-list.test.ts` and `use-paged-list.test.tsx` failed to import their modules;
+  People 2, Epics 3, Comments 2, Projects 1, Agents 1 and Teams 1 new cases failed on
+  their assertions (two rows, two requests, a stale row, a button not disabled).
+- Green: `mergePage` (4 cases) and `usePagedList` (11 cases); the six pages moved onto the
+  hook. Every existing test of the six components passes unchanged (test 9).
+- E2E (test 10): red against the old `people-page.tsx` (deviation 4), green with the new
+  one, 3 of 3 with `--repeat-each=3`. The first green run failed because the status line
+  is set before the first page lands; the test now waits for "Load more" first.
+- `pnpm openapi:generate` leaves no diff (test 11).
+- One full E2E run failed once in `projects.spec.ts:34` ("Someone else changed this
+  project" instead of "Saved."), on the project settings form, which this item does not
+  touch. It passed 3 of 3 alone and in the next full run. Noted with B15 in
+  `docs/README.md`.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1571 of 1571;
+  - `pnpm test:e2e --retries=0` 88 of 88;
+  - Linux, Node 22.23.5, pnpm 10, Compose PostgreSQL 18 on port 5432.

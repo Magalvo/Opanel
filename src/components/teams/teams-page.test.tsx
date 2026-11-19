@@ -93,6 +93,21 @@ describe("TeamsPage: the list", () => {
   });
 });
 
+describe("TeamsPage: paging (WS-080)", () => {
+  it("shows a team that comes back with a later page once", async () => {
+    on(FIRST, page([backend, frontend], "c1"));
+    on("GET /api/v1/teams?limit=50&cursor=c1", page([frontend, qa]));
+    const user = userEvent.setup();
+    render(<TeamsPage canManageTeams={false} />);
+    await screen.findByRole("table");
+
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+
+    expect(await screen.findByRole("link", { name: "QA" })).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(4);
+  });
+});
+
 describe("TeamsPage: a new team", () => {
   it("has no New team button for someone who cannot manage teams", async () => {
     await renderLoaded(false);

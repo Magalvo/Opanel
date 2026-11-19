@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -221,6 +221,77 @@ describe("PeoplePage: inviting", () => {
     });
     expect(screen.getByRole("status")).toHaveTextContent("Invited Grace.");
     expect(screen.getByText("grace@example.com")).toBeInTheDocument();
+  });
+
+  it("an invitation finished while the first page loads shows the account once (WS-080)", async () => {
+    let releaseFirst: (response: Response) => void = () => undefined;
+    const firstPage = new Promise<Response>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const respond = fetchMock.getMockImplementation();
+    fetchMock.mockImplementation((input, init) =>
+      `${init?.method ?? "GET"} ${urlOf(input)}` === "GET /api/v1/accounts?limit=50"
+        ? firstPage
+        : (respond?.(input, init) ?? Promise.reject(new Error("no fetch"))),
+    );
+    on("POST /api/v1/accounts", () =>
+      Response.json({ account: grace, link: LINK }, { status: 201 }),
+    );
+    on("GET /api/v1/accounts?limit=50&cursor=CURSOR1", page([linus, grace]));
+    const user = userEvent.setup();
+    render(<PeoplePage currentAccountId={SELF} />);
+    expect(screen.getByText("Loading people…")).toBeInTheDocument();
+
+    const dialog = await openInvite(user);
+    await user.type(within(dialog).getByLabelText("Name"), "Grace");
+    await user.type(within(dialog).getByLabelText("Email"), "grace@example.com");
+    await user.click(within(dialog).getByRole("button", { name: "Create invitation" }));
+    const linkDialog = await screen.findByRole("dialog", { name: "Invitation link" });
+    await user.click(within(linkDialog).getByRole("button", { name: "Done" }));
+
+    releaseFirst(Response.json({ items: [ada], nextCursor: "CURSOR1" }));
+    await screen.findByRole("table");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Invited Grace. They appear at the end of the list.",
+    );
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+
+    await screen.findByText("linus@example.com");
+    expect(screen.getAllByText("grace@example.com")).toHaveLength(1);
+  });
+
+  it("decides from the list as it is now whether to add the account at once (WS-080)", async () => {
+    on("GET /api/v1/accounts?limit=50", page([ada], "CURSOR1"));
+    on("GET /api/v1/accounts?limit=50&cursor=CURSOR1", page([linus]));
+    let releasePost: (response: Response) => void = () => undefined;
+    const posted = new Promise<Response>((resolve) => {
+      releasePost = resolve;
+    });
+    const respond = fetchMock.getMockImplementation();
+    fetchMock.mockImplementation((input, init) =>
+      init?.method === "POST"
+        ? posted
+        : (respond?.(input, init) ?? Promise.reject(new Error("no fetch"))),
+    );
+    const user = userEvent.setup();
+    render(<PeoplePage currentAccountId={SELF} />);
+    await screen.findByRole("table");
+
+    const dialog = await openInvite(user);
+    await user.type(within(dialog).getByLabelText("Name"), "Grace");
+    await user.type(within(dialog).getByLabelText("Email"), "grace@example.com");
+    await user.click(within(dialog).getByRole("button", { name: "Create invitation" }));
+    // The last page arrives while the invitation is being created: the dialog's submit
+    // captured a render in which more pages remained.
+    fireEvent.click(screen.getByRole("button", { name: "Load more", hidden: true }));
+    await screen.findByText("linus@example.com");
+    releasePost(Response.json({ account: grace, link: LINK }, { status: 201 }));
+    const linkDialog = await screen.findByRole("dialog", { name: "Invitation link" });
+    await user.click(within(linkDialog).getByRole("button", { name: "Done" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Invited Grace.");
+    expect(screen.getByRole("status")).not.toHaveTextContent("end of the list");
+    expect(screen.getAllByText("grace@example.com")).toHaveLength(1);
   });
 
   it("shows the server's field errors and a duplicate email", async () => {

@@ -1,6 +1,6 @@
 # WI-079 — Each production service gets only the secrets it needs
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: none: a hardening item from the audit of 2026-11-19 (finding B01)
 - Depends on: none
 - Work-spec: [WS-079](../work-specs/WS-079-production-secrets-split.md)
@@ -22,22 +22,22 @@ start.
 
 ## Acceptance criteria
 
-- [ ] The `app` container's environment has no `MIGRATION_DATABASE_URL`, `POSTGRES_PASSWORD`
+- [x] The `app` container's environment has no `MIGRATION_DATABASE_URL`, `POSTGRES_PASSWORD`
       or `OPANEL_APP_DB_PASSWORD`.
-- [ ] The `db` container's environment has no `BETTER_AUTH_SECRET`, `SETUP_TOKEN`,
+- [x] The `db` container's environment has no `BETTER_AUTH_SECRET`, `SETUP_TOKEN`,
       `APP_URL`, `DATABASE_URL` or `MIGRATION_DATABASE_URL`.
-- [ ] The `migrate` container's environment has no `BETTER_AUTH_SECRET`, `SETUP_TOKEN`,
+- [x] The `migrate` container's environment has no `BETTER_AUTH_SECRET`, `SETUP_TOKEN`,
       `DATABASE_URL`, `POSTGRES_PASSWORD` or `OPANEL_APP_DB_PASSWORD`, and it migrates.
-- [ ] `migrate` validates only its own connection: it runs without `BETTER_AUTH_SECRET` and
+- [x] `migrate` validates only its own connection: it runs without `BETTER_AUTH_SECRET` and
       `APP_URL`, and a missing or invalid connection names the variable, never its value.
-- [ ] An existing install's single `.env.production` works unchanged; the operations guide
+- [x] An existing install's single `.env.production` works unchanged; the operations guide
       says how to upgrade, and the `OPANEL_ENV_FILE` knob keeps working.
-- [ ] Every existing check of `smoke-production.sh`, `smoke-proxy.sh` and
+- [x] Every existing check of `smoke-production.sh`, `smoke-proxy.sh` and
       `rehearse-backup.sh` still passes, and the smoke test checks the three lists above
       without printing a value.
-- [ ] Canonical doc 0006 states the rule: the app's environment holds no owner credential.
-- [ ] `docs/operations.md` still passes its test (variables it names are known).
-- [ ] The full quality gate passes.
+- [x] Canonical doc 0006 states the rule: the app's environment holds no owner credential.
+- [x] `docs/operations.md` still passes its test (variables it names are known).
+- [x] The full quality gate passes.
 
 ## Notes
 

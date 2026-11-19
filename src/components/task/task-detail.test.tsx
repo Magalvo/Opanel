@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,7 +14,7 @@ import {
   task,
   todo,
 } from "@/components/board/test-data";
-import { bodyOf, calls, fetchMock, installFetch, on, problem } from "@/components/fake-api";
+import { bodyOf, calls, fetchMock, hold, installFetch, on, problem } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
@@ -537,6 +537,47 @@ describe("TaskDetail: comments", () => {
     expect(within(section).getAllByRole("article")).toHaveLength(3);
     expect(status()).toHaveTextContent("Comment added.");
     expect(within(section).getByLabelText("New comment")).toHaveValue("");
+  });
+
+  it("shows one's own comment once, at the end, when Load more returns it (WS-080)", async () => {
+    on(COMMENTS, page([comment(1, "First *comment*")], "c1"));
+    on(`${COMMENTS}&cursor=c1`, page([comment(2, "Second"), comment(3, "Mine")]));
+    on("POST /api/v1/tasks/OPA-1/comments", json(comment(3, "Mine"), 201));
+    const user = await renderTask();
+    const section = comments();
+
+    await user.type(within(section).getByLabelText("New comment"), "Mine");
+    await user.click(within(section).getByRole("button", { name: "Add comment" }));
+    await within(section).findByText("Mine");
+    await user.click(within(section).getByRole("button", { name: "Load more" }));
+    await within(section).findByText("Second");
+
+    expect(
+      within(section)
+        .getAllByRole("article")
+        .map((item) => item.textContent),
+    ).toEqual([
+      expect.stringContaining("First"),
+      expect.stringContaining("Second"),
+      expect.stringContaining("Mine"),
+    ]);
+  });
+
+  it("disables Load more while it loads, and asks once (WS-080)", async () => {
+    on(COMMENTS, page([comment(1, "First *comment*")], "c1"));
+    const release = hold(`${COMMENTS}&cursor=c1`);
+    await renderTask();
+    const more = within(comments()).getByRole("button", { name: "Load more" });
+
+    fireEvent.click(more);
+    fireEvent.click(more);
+
+    await waitFor(() => {
+      expect(more).toBeDisabled();
+    });
+    expect(calls("GET").filter(([url]) => url.includes("cursor=c1"))).toHaveLength(1);
+    await act(() => release(page([comment(2, "Second")])));
+    expect(within(comments()).getAllByRole("article")).toHaveLength(2);
   });
 
   it("has no comment form without comments:write", async () => {

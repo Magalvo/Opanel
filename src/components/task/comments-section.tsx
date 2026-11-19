@@ -7,6 +7,7 @@ import { Markdown } from "@/components/markdown";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { Button } from "@/components/ui/button";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { Comment } from "@/lib/schemas/comments";
 import { commentBodySchema } from "@/lib/schemas/comments";
 
@@ -38,8 +39,8 @@ export function CommentsSection({
   onFailure: (failure: unknown, fallback: string) => void;
 }>) {
   const id = useId();
-  const [comments, setComments] = useState<readonly Comment[]>(initial);
-  const [cursor, setCursor] = useState<string | null>(initialCursor);
+  const list = usePagedList<Comment>({ items: initial, nextCursor: initialCursor });
+  const { items: comments, nextCursor: cursor, loadingMore } = list;
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -57,8 +58,7 @@ export function CommentsSection({
         read.push(...page.items);
         next = page.nextCursor;
       } while (next !== null && read.length < count);
-      setComments(read);
-      setCursor(next);
+      list.show({ items: read, nextCursor: next });
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -77,11 +77,8 @@ export function CommentsSection({
   });
 
   async function loadMore() {
-    if (cursor === null) return;
     try {
-      const page = await listComments(taskKey, cursor);
-      setComments((current) => [...current, ...page.items]);
-      setCursor(page.nextCursor);
+      await list.loadMore((next) => listComments(taskKey, next));
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -99,10 +96,9 @@ export function CommentsSection({
     setBusy(true);
     try {
       const added = await addComment(taskKey, parsed.data);
-      // Its event may have brought it in already (WS-049).
-      setComments((current) =>
-        current.some((item) => item.id === added.id) ? current : [...current, added],
-      );
+      // Its event may have brought it in already (WS-049). If "Load more" returns it later,
+      // it moves to its place there, once (WS-080).
+      list.add(added);
       setBody("");
       onAdded();
     } catch (failure) {
@@ -141,7 +137,13 @@ export function CommentsSection({
       )}
       {cursor !== null && (
         <div>
-          <Button type="button" variant="outline" size="sm" onClick={() => void loadMore()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loadingMore}
+            onClick={() => void loadMore()}
+          >
             Load more
           </Button>
         </div>
