@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import { ApiError } from "@/server/http/errors";
 
-import { agentActor, can, canDeleteTask, humanActor, requirePermission } from "./actor";
+import {
+  type Actor,
+  agentActor,
+  can,
+  canAccessProject,
+  canDeleteTask,
+  humanActor,
+  requirePermission,
+  requireProjectAccess,
+} from "./actor";
 import { permissionsForRole } from "./roles";
 
 describe("humanActor", () => {
@@ -119,5 +128,49 @@ describe("agentActor (WS-071)", () => {
 describe("humanActor and project restrictions (WS-071)", () => {
   it("carries no restriction", () => {
     expect(humanActor({ accountId: "a", role: "member" }).projectIds).toBeNull();
+  });
+});
+
+describe("canAccessProject (WS-073)", () => {
+  const agent = (projectIds: string[] | null): Actor =>
+    agentActor({ accountId: "a", role: "qa_agent", scopes: [], projectIds });
+
+  it("is true for a human, for an agent with all projects, and for a listed project", () => {
+    expect(canAccessProject(humanActor({ accountId: "h", role: "viewer" }), "p1")).toBe(true);
+    expect(canAccessProject(agent(null), "p1")).toBe(true);
+    expect(canAccessProject(agent(["p1", "p2"]), "p2")).toBe(true);
+  });
+
+  it("is false for an unlisted project, and for an agent restricted to no project", () => {
+    expect(canAccessProject(agent(["p1"]), "p2")).toBe(false);
+    expect(canAccessProject(agent([]), "p1")).toBe(false);
+  });
+});
+
+describe("requireProjectAccess (WS-073)", () => {
+  it("returns for a reachable project", () => {
+    expect(() => {
+      requireProjectAccess(humanActor({ accountId: "h", role: "member" }), "p1");
+    }).not.toThrow();
+  });
+
+  it("throws the forbidden ApiError, naming neither the project nor the list", () => {
+    const actor = agentActor({
+      accountId: "a",
+      role: "qa_agent",
+      scopes: [],
+      projectIds: ["p1"],
+    });
+    try {
+      requireProjectAccess(actor, "p2");
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error).toMatchObject({ status: 403, code: "forbidden" });
+      const { detail } = error as ApiError;
+      expect(detail).not.toContain("p1");
+      expect(detail).not.toContain("p2");
+      expect(detail).toBe("You are not allowed to do this.");
+    }
   });
 });

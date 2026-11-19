@@ -1,10 +1,12 @@
 import { asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createTestAccount, failAuditFor, testActor } from "@/server/auth/testing";
+import { createTestAccount, createTestAgent, failAuditFor, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { auditLog, columns, projects } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
+
+import { loadAgentActor } from "./agents";
 
 import {
   archiveProject,
@@ -232,6 +234,48 @@ describe("listProjects", () => {
   });
 });
 
+describe("listProjects for a restricted agent (WS-073)", () => {
+  async function agentRestrictedTo(projectIds: string[]) {
+    const account = await createTestAgent({ projectIds });
+    const loaded = await loadAgentActor(getDb(), account.id);
+    if (!loaded) throw new Error("no agent");
+    return loaded.actor;
+  }
+
+  it("lists only the agent's projects, archived or not, and pages over them alone", async () => {
+    const { actor } = await manager();
+    const ids: Record<string, string> = {};
+    for (const [key, name] of [
+      ["AA", "Alpha"],
+      ["BB", "Bravo"],
+      ["CC", "Charlie"],
+      ["DD", "Delta"],
+      ["EE", "Echo"],
+    ] as const) {
+      ids[key] = (await createProject(actor, { key, name })).id;
+    }
+    await archiveProject(actor, "CC");
+    const agent = await agentRestrictedTo([ids.AA ?? "", ids.CC ?? "", ids.EE ?? ""]);
+
+    const first = await listProjects(agent, { limit: 1 });
+    const second = await listProjects(agent, { limit: 1, cursor: first.nextCursor ?? "" });
+    const archived = await listProjects(agent, { limit: 50, archived: "true" });
+
+    expect(first.items.map((project) => project.key)).toEqual(["AA"]);
+    expect(second.items.map((project) => project.key)).toEqual(["EE"]);
+    expect(second.nextCursor).toBeNull();
+    expect(archived.items.map((project) => project.key)).toEqual(["CC"]);
+  });
+
+  it("gives an agent restricted to no project an empty page", async () => {
+    const { actor } = await manager();
+    await createProject(actor, { key: "AA", name: "Alpha" });
+    const agent = await agentRestrictedTo([]);
+
+    expect(await listProjects(agent, { limit: 50 })).toEqual({ items: [], nextCursor: null });
+  });
+});
+
 describe("lockWritableProject", () => {
   it("returns a writable project, 404 for an unknown one and project_archived for an archived one", async () => {
     const { actor } = await manager();
@@ -239,14 +283,14 @@ describe("lockWritableProject", () => {
     await createProject(actor, { key: "OLD", name: "Old" });
     await archiveProject(actor, "OLD");
 
-    const locked = await getDb().transaction((tx) => lockWritableProject(tx, "OPA"));
+    const locked = await getDb().transaction((tx) => lockWritableProject(tx, actor, "OPA"));
 
     expect(locked).toMatchObject({ id: project.id, key: "OPA" });
     expect(
-      (await failure(getDb().transaction((tx) => lockWritableProject(tx, UNKNOWN)))).status,
+      (await failure(getDb().transaction((tx) => lockWritableProject(tx, actor, UNKNOWN)))).status,
     ).toBe(404);
-    expect((await failure(getDb().transaction((tx) => lockWritableProject(tx, "OLD")))).code).toBe(
-      "project_archived",
-    );
+    expect(
+      (await failure(getDb().transaction((tx) => lockWritableProject(tx, actor, "OLD")))).code,
+    ).toBe("project_archived");
   });
 });
