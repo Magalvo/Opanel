@@ -139,6 +139,35 @@ status=$?
 set -e
 [[ $status -eq 1 && "$output" == *"No human account"* ]] || fail "recover-admin for nobody: ${status} ${output}"
 
+echo "== a failed query leaves no request data in the logs (WS-069)"
+COOKIES="$(mktemp)"
+code="$(curl -s -c "$COOKIES" -o /dev/null -w '%{http_code}' -X POST "${URL}/api/v1/auth/sign-in" \
+  -H "Content-Type: application/json" -H "Origin: ${URL}" \
+  --data '{"email":"smoke.admin@example.com","password":"a smoke admin password, long enough"}')"
+[[ "$code" == 2* ]] || fail "signing in as the Admin answered ${code}"
+# The session cookie's value is the token, a dot, and its signature.
+cookie="$(grep 'session_token' "$COOKIES" | awk '{print $NF}')"
+token="${cookie%%.*}"
+[[ ${#token} -ge 20 ]] || fail "no session token in the cookie jar"
+since="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+sleep 1
+owner_psql() { compose exec -T db psql -U opanel -d opanel -v ON_ERROR_STOP=1 -qtAc "$1"; }
+owner_psql "revoke all on sessions from opanel_app"
+curl -s -b "$COOKIES" -o /dev/null "${URL}/projects" || true
+curl -s -b "$COOKIES" -o /dev/null "${URL}/api/v1/me" || true
+curl -s -b "$COOKIES" -o /dev/null -X POST "${URL}/api/v1/auth/sign-in" \
+  -H "Content-Type: application/json" -H "Origin: ${URL}" \
+  --data '{"email":"smoke.admin@example.com","password":"a smoke admin password, long enough"}' || true
+sleep 1
+logs="$(compose logs --no-color --since "$since" app 2>&1)"
+owner_psql "grant select, insert, update, delete on sessions to opanel_app"
+[[ "$logs" != *"$token"* ]] || fail "the session token is in the app's log"
+[[ "$logs" != *"params:"* && "$logs" != *"Failed query"* ]] || fail "a failed query is in the app's log"
+[[ "$logs" == *"DrizzleQueryError code=42501"* ]] || fail "no safe line for the failed query: ${logs: -400}"
+code="$(curl -s -b "$COOKIES" -o /dev/null -w '%{http_code}' "${URL}/api/v1/me")"
+rm -f "$COOKIES"
+[[ "$code" == "200" ]] || fail "with its rights back, GET /api/v1/me answered ${code}"
+
 echo "== maintenance runs in the image and says what it deleted (WS-066)"
 output="$(compose run --rm -T app node dist/maintenance.mjs 2>&1)" || fail "maintenance failed: ${output}"
 [[ "$output" == *"Deleted "*" expired sessions, "*" verifications."* ]] ||

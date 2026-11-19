@@ -8,8 +8,13 @@ export async function register(): Promise<void> {
   // read literally here rather than through the validated env module.
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { EnvValidationError, getEnv, productionWarnings } = await import("@/server/env");
+    const { installSafeConsole } = await import("@/server/safe-console");
     try {
-      for (const warning of productionWarnings(getEnv())) {
+      const env = getEnv();
+      // First: in production, nothing this process prints may hold an error's message
+      // (WS-069).
+      installSafeConsole({ nodeEnv: env.NODE_ENV });
+      for (const warning of productionWarnings(env)) {
         console.warn(`Warning: ${warning}`);
       }
     } catch (error) {

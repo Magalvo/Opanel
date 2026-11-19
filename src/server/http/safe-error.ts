@@ -3,6 +3,8 @@
 // nothing is taken from free text: only a class name, an error code and a constraint name,
 // each checked against a pattern, from the error and its causes.
 
+import { DrizzleQueryError } from "drizzle-orm/errors";
+
 const CLASS_NAME = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 /** A PostgreSQL SQLSTATE such as `23505`, or a Node system code such as `ECONNREFUSED`. */
 const CODE = /^(?:[0-9A-Z]{5}|E[A-Z0-9_]{2,20})$/;
@@ -11,9 +13,10 @@ const CONSTRAINT = /^[a-z0-9_]{1,63}$/;
 const MAX_CAUSES = 5;
 
 function classNameOf(error: Error): string {
-  // The installed DrizzleQueryError keeps the generic name "Error"; its constructor is named.
-  const name = error.name === "Error" ? error.constructor.name : error.name;
-  return CLASS_NAME.test(name) ? name : "Error";
+  // The installed DrizzleQueryError keeps the generic name "Error", and the production build
+  // minifies constructor names, so it is recognised by its class (WS-069).
+  if (error instanceof DrizzleQueryError) return "DrizzleQueryError";
+  return CLASS_NAME.test(error.name) ? error.name : "Error";
 }
 
 /** The error and its causes, at most MAX_CAUSES deep, each once. */

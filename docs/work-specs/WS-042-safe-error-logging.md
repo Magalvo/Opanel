@@ -112,6 +112,8 @@ For the owner:
    Better Auth and Next.js write their own logs, and whether those can include request data
    was not examined. **Recommend: record it as a follow-up for the production deployment
    work, which also decides log access and retention.**
+   Examined on 2026-11-19: both could print a session token when a query failed; fixed by
+   WI-069 (WS-069).
 3. **This branch is stacked on WI-044** (`claude/wi-044-request-body-limit-v2`, PR #37),
    because both change `src/server/http/route.ts` and the status lines of `docs/README.md`.
    Its pull request is opened once #37 is merged, so it shows WI-042 alone.

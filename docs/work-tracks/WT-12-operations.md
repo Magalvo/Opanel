@@ -1,7 +1,7 @@
 # WT-12 — Production deployment and operations
 
 - Status: In progress (outline approved by the owner on 2026-11-18 with doc 0006; started
-  on 2026-11-18, after WT-04). Items A to H are WI-062 to WI-069; each gets its files and
+  on 2026-11-18, after WT-04). Items A to I are WI-062 to WI-070 (item H added on 2026-11-19); each gets its files and
   work-spec just before it starts.
 - Canonical docs: [0006](../canonical/0006-operations.md) (the design),
   [0002](../canonical/0002-realtime-sync.md) (one process, SSE),
@@ -46,7 +46,8 @@ Doc 0006 section 11.
 | [WI-066](../work-items/WI-066-maintenance.md)      | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Done   | WI-062         |
 | [WI-067](../work-items/WI-067-https-and-proxy.md)  | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Done   | WI-062         |
 | [WI-068](../work-items/WI-068-backup-rehearsal.md) | G: backup and restore rehearsal in CI                                                    | Done   | WI-063, WI-064 |
-| WI-069                                             | H: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-068  |
+| [WI-069](../work-items/WI-069-safe-logs.md)        | H: no request data in the logs when a query fails (found while drafting item I)          | Done   | WI-062         |
+| WI-070                                             | I: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-069  |
 
 ## Exit criteria
 
