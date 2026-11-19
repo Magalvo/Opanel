@@ -1,9 +1,9 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { json, opa, page, PROJECT } from "@/components/board/test-data";
-import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { bodyOf, calls, hold, installFetch, on, problem } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { Epic } from "@/lib/schemas/epics";
 import type { ProjectEvent } from "@/lib/schemas/events";
@@ -158,6 +158,66 @@ describe("EpicsPage: the list", () => {
 
     expect(await screen.findByRole("button", { name: "Polish" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+  });
+
+  it("sends one request for a double click on Load more, and disables it meanwhile (WS-080)", async () => {
+    on(OPEN, page([launch], "c1"));
+    const release = hold(`${OPEN}&cursor=c1`);
+    await renderEpics();
+
+    const more = screen.getByRole("button", { name: "Load more" });
+    fireEvent.click(more);
+    fireEvent.click(more);
+
+    expect(calls("GET").filter(([url]) => url.includes("cursor=c1"))).toHaveLength(1);
+    await waitFor(() => {
+      expect(more).toBeDisabled();
+    });
+    await act(() => release(page([polish])));
+    expect(screen.getAllByRole("button", { name: "Polish" })).toHaveLength(1);
+  });
+
+  it("shows a created epic once when Load more returns it (WS-080)", async () => {
+    on(OPEN, page([launch], "c1"));
+    on(`${OPEN}&cursor=c1`, page([epic(3, "Beta"), polish]));
+    on("POST /api/v1/projects/OPA/epics", json(epic(3, "Beta"), 201));
+    const user = await renderEpics();
+    await user.click(screen.getByRole("button", { name: "New epic" }));
+    const dialog = screen.getByRole("dialog", { name: "New epic" });
+    await user.type(within(dialog).getByLabelText("Title"), "Beta");
+    await user.click(within(dialog).getByRole("button", { name: "Create epic" }));
+    await screen.findByRole("button", { name: "Beta" });
+
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+
+    await screen.findByRole("button", { name: "Polish" });
+    expect(screen.getAllByRole("button", { name: "Beta" })).toHaveLength(1);
+  });
+
+  it("drops a Load more answered after the Show choice changed (WS-080)", async () => {
+    on(OPEN, page([launch], "c1"));
+    on(ALL, page([launch]));
+    const release = hold(`${OPEN}&cursor=c1`);
+    on(PROJECT, json(opa));
+    const view = render(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        <EpicsPage show="open" canManageEpics />
+      </ProjectFrame>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+
+    view.rerender(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        <EpicsPage show="all" canManageEpics />
+      </ProjectFrame>,
+    );
+    await waitFor(() => {
+      expect(calls("GET").some(([url]) => url.endsWith("status=all"))).toBe(true);
+    });
+    await act(() => release(page([epic(9, "Stale")])));
+
+    await screen.findByRole("button", { name: "Launch" });
+    expect(screen.queryByRole("button", { name: "Stale" })).toBeNull();
   });
 
   it.each([

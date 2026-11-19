@@ -1,6 +1,6 @@
 # WI-080 — Paged lists never show a row twice
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B02)
 - Depends on: none
 - Work-spec: [WS-080](../work-specs/WS-080-lists-without-duplicates.md)
@@ -22,22 +22,22 @@ order of clicks, invitations, creations, live reloads and filter changes.
 
 ## Acceptance criteria
 
-- [ ] People: inviting someone while the first page loads, then "Load more", shows the
+- [x] People: inviting someone while the first page loads, then "Load more", shows the
       invited account exactly once (reproduced deterministically end to end).
-- [ ] People: whether the invited account is added at once is decided from the list's
+- [x] People: whether the invited account is added at once is decided from the list's
       current state, not from the state when the dialog was submitted.
-- [ ] Every "Load more" (people, epics, comments, agents, teams, projects) is disabled while
+- [x] Every "Load more" (people, epics, comments, agents, teams, projects) is disabled while
       it runs, and a second call while one runs asks for nothing.
-- [ ] A page that arrives after the list was replaced (first load, retry, live reload) or
+- [x] A page that arrives after the list was replaced (first load, retry, live reload) or
       after its filter or view changed (epics "Show", projects "Active/Archived") is
       dropped, not appended.
-- [ ] An item that is already shown and comes back with a later page appears once, at the
+- [x] An item that is already shown and comes back with a later page appears once, at the
       position the server gives it.
-- [ ] Existing behaviour is kept: one's own new comment and a new epic still appear at once;
+- [x] Existing behaviour is kept: one's own new comment and a new epic still appear at once;
       people, agents, teams and projects keep their messages.
-- [ ] No contract changes; no server code changes.
-- [ ] The README follow-up "The People page can show an account twice" is closed.
-- [ ] The full quality gate passes.
+- [x] No contract changes; no server code changes.
+- [x] The README follow-up "The People page can show an account twice" is closed.
+- [x] The full quality gate passes.
 
 ## Notes
 

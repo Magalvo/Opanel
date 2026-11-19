@@ -4,6 +4,7 @@ import { vi } from "vitest";
 export const fetchMock = vi.fn<typeof fetch>();
 
 const responses = new Map<string, () => Response>();
+const held = new Map<string, Promise<Response>>();
 
 export function urlOf(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === "string") return input;
@@ -13,6 +14,26 @@ export function urlOf(input: Parameters<typeof fetch>[0]): string {
 /** Answers every request for `key` ("GET /api/v1/teams?limit=50") with `response`. */
 export function on(key: string, response: () => Response): void {
   responses.set(key, response);
+}
+
+/**
+ * Holds every request for `key` until the returned function is called with its answer, to
+ * test what happens while it is pending.
+ */
+export function hold(key: string): (response: () => Response) => Promise<void> {
+  let release: (response: Response) => void = () => undefined;
+  held.set(
+    key,
+    new Promise<Response>((resolve) => {
+      release = resolve;
+    }),
+  );
+  return async (response) => {
+    held.delete(key);
+    release(response());
+    // Lets the page handle the answer before the test goes on.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  };
 }
 
 export function problem(status: number, code: string, errors?: unknown[]): () => Response {
@@ -45,8 +66,11 @@ export function bodyOf(init: RequestInit | undefined): unknown {
 export function installFetch(): void {
   fetchMock.mockReset();
   responses.clear();
+  held.clear();
   fetchMock.mockImplementation((input, init) => {
     const key = `${init?.method ?? "GET"} ${urlOf(input)}`;
+    const waiting = held.get(key);
+    if (waiting) return waiting;
     const respond = responses.get(key);
     if (!respond) return Promise.reject(new Error(`unexpected request: ${key}`));
     return Promise.resolve(respond());

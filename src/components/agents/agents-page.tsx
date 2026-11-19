@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { Agent } from "@/lib/schemas/agents";
 
 import { AgentFormDialog } from "./agent-form";
@@ -26,15 +27,13 @@ type Phase = "loading" | "error" | "ready";
 /** The Admin "Agents" page (WS-077): a client of `/api/v1/agents`. */
 export function AgentsPage() {
   const router = useRouter();
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const list = usePagedList<Agent>();
+  const { items: agents, nextCursor, loadingMore, show } = list;
   const [phase, setPhase] = useState<Phase>("loading");
-  const [loadingMore, setLoadingMore] = useState(false);
   const [message, setMessage] = useState("");
 
   function showFirstPage(page: Awaited<ReturnType<typeof listAgents>>) {
-    setAgents(page.items);
-    setNextCursor(page.nextCursor);
+    show(page);
     setPhase("ready");
   }
 
@@ -42,7 +41,9 @@ export function AgentsPage() {
     let cancelled = false;
     listAgents().then(
       (page) => {
-        if (!cancelled) showFirstPage(page);
+        if (cancelled) return;
+        show(page);
+        setPhase("ready");
       },
       () => {
         if (!cancelled) setPhase("error");
@@ -51,7 +52,7 @@ export function AgentsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [show]);
 
   function retry() {
     setPhase("loading");
@@ -61,16 +62,10 @@ export function AgentsPage() {
   }
 
   async function loadMore() {
-    if (nextCursor === null) return;
-    setLoadingMore(true);
     try {
-      const page = await listAgents(nextCursor);
-      setAgents((current) => [...current, ...page.items]);
-      setNextCursor(page.nextCursor);
+      await list.loadMore((cursor) => listAgents(cursor));
     } catch {
       setMessage("Could not load more agents. Try again.");
-    } finally {
-      setLoadingMore(false);
     }
   }
 

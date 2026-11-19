@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { ApiFailure } from "@/lib/api-client";
 import type { Epic, EpicPage } from "@/lib/schemas/epics";
 
@@ -56,24 +57,27 @@ export function EpicsPage({
   const archived = project.archivedAt !== null;
   const writable = canManageEpics && !archived;
 
-  const [epics, setEpics] = useState<Epic[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const list = usePagedList<Epic>();
+  const { items: epics, nextCursor, loadingMore, show: showPage, invalidate } = list;
   const [phase, setPhase] = useState<Phase>("loading");
   const [message, setMessage] = useState("");
   // The open epic, and the title button that gets the focus back when it closes.
   const [opened, setOpened] = useState<{ id: string; opener: HTMLElement } | null>(null);
 
   function showFirstPage(page: EpicPage) {
-    setEpics(page.items);
-    setNextCursor(page.nextCursor);
+    showPage(page);
     setPhase("ready");
   }
 
   useEffect(() => {
     let cancelled = false;
+    // A page still loading for the previous project or Show choice is dropped (WS-080).
+    invalidate();
     listEpics(projectKey, show).then(
       (page) => {
-        if (!cancelled) showFirstPage(page);
+        if (cancelled) return;
+        showPage(page);
+        setPhase("ready");
       },
       () => {
         if (!cancelled) setPhase("error");
@@ -82,7 +86,7 @@ export function EpicsPage({
     return () => {
       cancelled = true;
     };
-  }, [projectKey, show]);
+  }, [projectKey, show, showPage, invalidate]);
 
   function retry() {
     setPhase("loading");
@@ -92,11 +96,8 @@ export function EpicsPage({
   }
 
   async function loadMore() {
-    if (nextCursor === null) return;
     try {
-      const page = await listEpics(projectKey, show, nextCursor);
-      setEpics((current) => [...current, ...page.items]);
-      setNextCursor(page.nextCursor);
+      await list.loadMore((cursor) => listEpics(projectKey, show, cursor));
     } catch {
       setMessage("Could not load more epics. Try again.");
     }
@@ -136,8 +137,7 @@ export function EpicsPage({
         open === null || read.some((item) => item.id === open.id)
           ? []
           : latest.current.epics.filter((item) => item.id === open.id);
-      setEpics([...read, ...kept]);
-      setNextCursor(next);
+      showPage({ items: [...read, ...kept], nextCursor: next });
     } catch {
       // The list shown stays; the next event or reconnect tries again.
     } finally {
@@ -169,7 +169,7 @@ export function EpicsPage({
   }
 
   function changed(epic: Epic, text: string) {
-    setEpics((current) => current.map((item) => (item.id === epic.id ? epic : item)));
+    list.update((current) => current.map((item) => (item.id === epic.id ? epic : item)));
     setMessage(text);
   }
 
@@ -210,7 +210,7 @@ export function EpicsPage({
           <NewEpicDialog
             projectKey={projectKey}
             onCreated={(epic) => {
-              if (show !== "closed") setEpics((current) => [...current, epic]);
+              if (show !== "closed") list.add(epic);
               setMessage(`${epic.title} was created.`);
             }}
             onFailure={failed}
@@ -292,7 +292,7 @@ export function EpicsPage({
 
       {phase === "ready" && nextCursor !== null && (
         <div>
-          <Button variant="outline" onClick={() => void loadMore()}>
+          <Button variant="outline" disabled={loadingMore} onClick={() => void loadMore()}>
             Load more
           </Button>
         </div>
