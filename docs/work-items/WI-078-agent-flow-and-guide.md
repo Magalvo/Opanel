@@ -1,6 +1,6 @@
 # WI-078 — The agent flow end to end, and the guide for agent authors
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item H, the last)
 - Depends on: WI-075, WI-076, WI-077, WI-073 (all done)
 - Work-spec: [WS-078](../work-specs/WS-078-agent-flow-and-guide.md)

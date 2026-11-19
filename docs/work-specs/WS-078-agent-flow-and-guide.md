@@ -1,6 +1,6 @@
 # WS-078 — The agent flow end to end, and the guide for agent authors
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as proposed)
 - Work-item: [WI-078](../work-items/WI-078-agent-flow-and-guide.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4);
   [0004](../canonical/0004-api-conventions.md) (the conventions the guide summarizes);
