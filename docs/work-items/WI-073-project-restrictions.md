@@ -1,6 +1,6 @@
 # WI-073 — Project restrictions enforced in every service, with the coverage test
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item D)
 - Depends on: [WI-071](WI-071-agent-data-model.md) (done)
 - Work-spec: [WS-073](../work-specs/WS-073-project-restrictions.md)

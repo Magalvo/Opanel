@@ -1,6 +1,6 @@
 # WS-073 — Project restrictions enforced in every service, with the coverage test
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 5 as proposed)
 - Work-item: [WI-073](../work-items/WI-073-project-restrictions.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4:
   an agent restricted to projects gets `403` elsewhere);
