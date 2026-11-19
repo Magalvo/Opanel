@@ -31,9 +31,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
-  and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
-  it.
+- **Next:** the owner reviews WT-06 (bug reports and automated triage), drafted on
+  2026-11-19 as `Proposed` with 16 decisions and 8 questions; then its item A gets
+  WI-086 and its work-spec. WT-11 (the MCP server) follows WT-06.
 - **Approved and done on 2026-11-19:** WI-079 to WI-083 with their work-specs, every
   question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
   (production services get only their own secrets; paged lists without duplicates; name
@@ -109,10 +109,10 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved |
 | [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done     |
 | [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Done     |
+| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Proposed |
 
 Planned next, not yet drafted:
 
-- WT-06 Bug reports and automated triage (next)
 - WT-07 Backlog, priority, due dates, labels
 - WT-08 Search, filters, list view, activity timeline
 - WT-09 Sub-tasks and task links
