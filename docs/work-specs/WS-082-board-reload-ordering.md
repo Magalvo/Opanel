@@ -1,6 +1,6 @@
 # WS-082 — The board applies only the latest load, never during a move
 
-- Status: Approved (by the owner on 2026-11-19, every question as proposed)
+- Status: Done (2026-11-19; approved by the owner the same day, questions 1 to 4 as proposed)
 - Work-item: [WI-082](../work-items/WI-082-board-reload-ordering.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4 (server is
   authoritative, own echo, reconnects); WS-048 sections 3 to 5; audit of 2026-11-19,
@@ -148,4 +148,37 @@ For the owner:
 
 ## Deviations from the approved spec
 
-None yet.
+1. **A `column.changed` that arrives during a load is not held** with the other events:
+   it asks for one more load at once (`again`), so a burst costs two loads as test 4
+   requires. Held behind a drag or a move, a `column.changed` among the held events makes
+   the release load the whole board instead of applying the queue, like the overflow.
+2. **The load loop calls `flush` through a ref** (`flushHeld`), set in an effect, since
+   `flush` is declared after `load` and depends on it through `reload`.
+3. **`askedAgain(loader)`** reads `again` through a function after the `await`, for the
+   same reason as `isMounted`: the type checker would otherwise narrow it to `false`.
+4. **Tests 1 and 2 are each run for both triggers** (reconnect, first open after the
+   fallback load), and tests 5 and 8 let the competing request finish before releasing the
+   held one, so that they fail for the right reason before the change.
+
+## Amendment to WS-048 section 5 (owner's question 1)
+
+Events are held while a load is in flight too, not only during a drag or a move. They are
+applied once the snapshot lands, with the version rule.
+
+## Implementation record
+
+- Red: 15 new cases (tests 1 to 11, tests 1, 2, 7 and 11 parametrised) failed on their
+  assertions: a load during the move, a card in the wrong column, a stale snapshot shown,
+  four loads for a burst, `phase: "error"` from a replaced load, a `getTask` during a load,
+  a lost `task.created`, a duplicated card, a detail change applied with an old version.
+- Green: 96 of 96 board tests, the 33 existing `useBoard` cases unchanged (test 12).
+- Test 13: the full E2E suite 87 of 87. `board.spec.ts` and `live-board.spec.ts` with
+  `--repeat-each=3`, twice: 38 of 38 both times. In one earlier loaded run the keyboard
+  move test (`board.spec.ts:208`) failed twice on "position 2 of 2"; the base, without
+  this item, failed it once in two identical runs. It is the timing flake of audit finding
+  B11 (`settle()` waits 200 ms), not a change of this item.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1561 of 1561;
+  - `pnpm test:e2e --retries=0` 87 of 87;
+  - Linux, Node 22.23.5, pnpm 10, Compose PostgreSQL 18 on port 5432.

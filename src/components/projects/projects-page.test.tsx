@@ -1,8 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { bodyOf, calls, hold, installFetch, on, problem } from "@/components/fake-api";
 import type { Project } from "@/lib/schemas/projects";
 
 const router = { replace: vi.fn(), refresh: vi.fn(), push: vi.fn() };
@@ -130,6 +130,25 @@ describe("ProjectsPage: the list", () => {
 
     expect(await screen.findByRole("link", { name: "Website" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectsPage: paging (WS-080)", () => {
+  it("drops a Load more answered after the view switched", async () => {
+    on(ACTIVE, page([opa], "c1"));
+    on(ARCHIVED, page([old]));
+    const release = hold(`${ACTIVE}&cursor=c1`);
+    const view = render(<ProjectsPage view="active" canManageProjects={false} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+
+    view.rerender(<ProjectsPage view="archived" canManageProjects={false} />);
+    await waitFor(() => {
+      expect(calls("GET").some(([url]) => url.endsWith("archived=true"))).toBe(true);
+    });
+    await act(() => release(page([web])));
+
+    expect(await screen.findByRole("link", { name: old.name })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Website" })).not.toBeInTheDocument();
   });
 });
 

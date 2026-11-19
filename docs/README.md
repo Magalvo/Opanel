@@ -12,20 +12,34 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Last finished:** WI-083 (every response the API sends is documented, audit of
   2026-11-19, findings B05 and B14; an operation that takes no query now refuses one), on
   2026-11-19, on the branch `claude/wi-083-documented-responses`.
+- **Also finished:** WI-082 (the board applies only the latest load, never during a move,
+  audit of 2026-11-19, finding B04 and the board's part of B15), on 2026-11-19, on the
+  branch `claude/wi-082-board-reload-ordering`.
+- **Also finished:** WI-081 (name cursors fit the longest name they carry, audit of
+  2026-11-19, finding B03; the `cursor` parameter now takes up to 2048 characters), on
+  2026-11-19, on the branch `claude/wi-081-name-cursor-length`.
+- **Also finished:** WI-080 (paged lists never show a row twice, audit of 2026-11-19,
+  finding B02), on 2026-11-19, on the branch `claude/wi-080-lists-without-duplicates`.
+- **Also finished:** WI-079 (each production service gets only the secrets it needs,
+  audit of 2026-11-19, finding B01; amends canonical doc 0006 sections 3 and 5), on
+  2026-11-19, on the branch `claude/jolly-darwin-2xjb04`.
+- **Also finished:** WI-085 (the absent People and project Settings link checks look only
+  inside their navigation, with an exact name, a test-only fix), on 2026-11-19, on the
+  branch `claude/great-curie-4lffec`.
 - **Also finished:** WI-084 (the Manager's Agents-link check looks only at the sidebar, a
   test-only fix), on 2026-11-19, on the branch `claude/blissful-franklin-u14sjv`.
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** the rest of WI-079 to WI-083, then draft WT-06 (bug reports and automated
-  triage, canonical doc 0001 sections 5 and 6) as `Proposed`, and stop for the owner's
-  approval. WT-11 (the MCP server) follows it.
-- **Approved on 2026-11-19, in progress:** WI-079 to WI-083 with their work-specs, every
+- **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
+  and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
+  it.
+- **Approved and done on 2026-11-19:** WI-079 to WI-083 with their work-specs, every
   question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
   (production services get only their own secrets; paged lists without duplicates; name
   cursors that fit epic titles; board loads ordered around moves; every API response
   documented). The lower findings B06 to B16 are listed under [Follow-ups](#follow-ups).
-  The owner chose to do these before WT-06. WI-083 is done.
+  The owner chose to do these before WT-06; all five are merged.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -190,12 +204,13 @@ right after WT-04 and is done.
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
 | [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
-| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Approved    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Approved    |
-| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Approved    | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Approved    |
-| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Approved    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Approved    |
-| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Approved    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Approved    |
+| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Done        | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Done        |
+| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Done        | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Done        |
+| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Done        | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Done        |
+| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Done        | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Done        |
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
 | [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
+| [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
 
 ## Follow-ups
 
@@ -215,6 +230,10 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   request body, and log contents, access and retention are each a section of the guide.
 
 Other follow-ups:
+
+- **Answered by WI-084 (2026-11-19):** `tests/e2e/agents.spec.ts`, "a Manager has neither
+  the Agents link nor the page", counted every link whose name contains "Agents" (found in
+  WI-081). It now looks at the sidebar only.
 
 - Let end-to-end runs choose their port and database (`E2E_PORT`, already
   `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100
@@ -265,13 +284,10 @@ Other follow-ups:
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
 - Add Firefox and WebKit to the end-to-end tests once there is real UI to protect.
 - Return from TypeScript 6.0 to 7 once `typescript-eslint` supports it (see WS-002).
-- The People page can show an account twice: in one E2E run of WI-069 (2026-11-19),
-  `people.spec.ts` ("an Admin revokes an invitation…") found the invited account's row
-  twice after "Load more" (a strict-mode violation). Seen again in WI-070's E2E run
-  (2026-11-19); not reproduced when the spec ran alone. Cause found by the audit of
-  2026-11-19 (finding B02): an invitation submitted while the first page is loading is
-  appended by a handler that still sees no cursor, and "Load more" then returns it again.
-  WI-080 (proposed) fixes it.
+- **Answered by WI-080 (2026-11-19): the People page could show an account twice.** An
+  invitation finished while the first page loaded was appended by a handler that still saw
+  no cursor, and "Load more" returned it again (audit finding B02). Every paged list now
+  shows each item once (`usePagedList`), and `people.spec.ts` reproduces the race.
 
 Lower findings of the audit of 2026-11-19, each to become a work-item when the owner
 chooses. B01 to B05 are WI-079 to WI-083.
@@ -306,7 +322,11 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B15: the project frame applies project updates without a version check
   (`project-events.tsx`, `board.tsx`), and the board shows no "paused" banner while the
   browser retries the stream on its own (`use-project-events.ts`). One small item (WS-082,
-  question 4); the version check of `task.changed` in `use-board.ts` is in WI-082.
+  question 4); the version check of the task detail's changes in `use-board.ts` is done
+  (WI-082). Seen once in a full E2E run of WI-080: `projects.spec.ts:34` showed "Someone
+  else changed this project" after the Manager's own save; it passed on every rerun.
+- A card refresh already in flight when a drag starts can still change the board under
+  the drag; only the moved card is corrected after the move (WS-082, question 3).
 - B16: a local run of `pnpm test` fails when another PostgreSQL holds port 5432: the
   Compose file honours `OPANEL_DB_PORT` but `.env.test` always names 5432. Belongs with the
   `E2E_PORT` follow-up above.
@@ -321,16 +341,8 @@ Optimisations found by the same audit, none urgent:
   `comments.author_account_id`, `credentials.account_id`, `sessions.expires_at`; each task
   write runs the six-join task select two or three times.
 - Position keys grow by a character about every six moves into the same gap and are never
-  renumbered. A board cursor carries two positions and must fit the 512-character `cursor`
-  parameter, so after roughly 2,000 such moves "Load more" on that column fails with
-  `400` (WS-081, question 3).
+  renumbered. A board cursor carries two positions and must fit the `cursor` parameter
+  (2048 characters since WI-081), so after several thousand such moves "Load more" on that
+  column fails with `400` (WS-081, question 3).
 - CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
   has no BuildKit cache.
-
-End-to-end locators found while fixing WI-084, none failing today:
-
-- `tests/e2e/people.spec.ts:144` (`link "People"`, on `/`) and
-  `tests/e2e/projects.spec.ts:133` (`link "Settings"`, on a project page) assert
-  `toHaveCount(0)` on the whole page, and Playwright matches `name` as a substring. They
-  would break like WI-084 did if test data ever named a project or task "People…" or
-  "…settings…". Scoping them needs a work-item.

@@ -91,18 +91,19 @@ export function thisRepository(): Repository {
 
   // The keys of the env schema, read from its source: the app does not export it.
   const envSource = read("src/server/env.ts");
-  const schema = envSource.slice(envSource.indexOf("const envSchema"));
-  const appVariables = [...schema.matchAll(/^ {2}([A-Z][A-Z0-9_]*): z/gm)].map(
+  const schema = envSource.slice(
+    envSource.indexOf("const envSchema"),
+    envSource.indexOf("export type Env ="),
+  );
+  const appVariables = [...schema.matchAll(/^ {2}([A-Z][A-Z0-9_]*):/gm)].map(
     (match) => match[1] ?? "",
   );
   const examples = read(".env.example") + read(".env.production.example");
-  const compose = read("compose.production.yaml");
+  // The example install is the short file and the services it includes (WS-079), which
+  // name every variable a service receives, the database's among them.
+  const compose = read("compose.production.yaml") + read("docker/production/services.yaml");
   const composeVariables = [...compose.matchAll(/\$\{([A-Z][A-Z0-9_]*)/g)].map(
     (match) => match[1] ?? "",
-  );
-  // Read by PostgreSQL's image and its init script, from the same env file as the app.
-  const databaseVariables = ["POSTGRES_PASSWORD", "OPANEL_APP_DB_PASSWORD"].filter((name) =>
-    examples.includes(`${name}=`),
   );
 
   return {
@@ -110,7 +111,6 @@ export function thisRepository(): Repository {
     knownVariables: new Set([
       ...appVariables.filter((name) => examples.includes(name)),
       ...composeVariables,
-      ...databaseVariables,
     ]),
     exists: (path) => existsSync(join(ROOT, path)),
   };

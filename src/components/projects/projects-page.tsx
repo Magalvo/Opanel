@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { Project, ProjectPage } from "@/lib/schemas/projects";
 import { cn } from "@/lib/utils";
 
@@ -34,23 +35,25 @@ export function ProjectsPage({
   canManageProjects,
 }: Readonly<{ view: ProjectsView; canManageProjects: boolean }>) {
   const archived = view === "archived";
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const list = usePagedList<Project>();
+  const { items: projects, nextCursor, loadingMore, show, invalidate } = list;
   const [phase, setPhase] = useState<Phase>("loading");
-  const [loadingMore, setLoadingMore] = useState(false);
   const [message, setMessage] = useState("");
 
   function showFirstPage(page: ProjectPage) {
-    setProjects(page.items);
-    setNextCursor(page.nextCursor);
+    show(page);
     setPhase("ready");
   }
 
   useEffect(() => {
     let cancelled = false;
+    // A page still loading for the other view is dropped (WS-080).
+    invalidate();
     listProjects(archived).then(
       (page) => {
-        if (!cancelled) showFirstPage(page);
+        if (cancelled) return;
+        show(page);
+        setPhase("ready");
       },
       () => {
         if (!cancelled) setPhase("error");
@@ -59,7 +62,7 @@ export function ProjectsPage({
     return () => {
       cancelled = true;
     };
-  }, [archived]);
+  }, [archived, show, invalidate]);
 
   function retry() {
     setPhase("loading");
@@ -69,16 +72,10 @@ export function ProjectsPage({
   }
 
   async function loadMore() {
-    if (nextCursor === null) return;
-    setLoadingMore(true);
     try {
-      const page = await listProjects(archived, nextCursor);
-      setProjects((current) => [...current, ...page.items]);
-      setNextCursor(page.nextCursor);
+      await list.loadMore((cursor) => listProjects(archived, cursor));
     } catch {
       setMessage("Could not load more projects. Try again.");
-    } finally {
-      setLoadingMore(false);
     }
   }
 

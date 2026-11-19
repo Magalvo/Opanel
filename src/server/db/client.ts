@@ -1,7 +1,7 @@
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { getEnv, migrationDatabaseUrl } from "@/server/env";
+import { getEnv, getMigrationEnv, migrationDatabaseUrl } from "@/server/env";
 
 import * as schema from "./schema";
 
@@ -42,7 +42,7 @@ export async function closeDb(): Promise<void> {
  */
 export function getMigrationDb(): Database {
   store.__opanelMigrationDb ??= drizzle({
-    client: postgres(migrationDatabaseUrl(getEnv()), { onnotice: () => undefined }),
+    client: postgres(migrationDatabaseUrl(getMigrationEnv()), { onnotice: () => undefined }),
     schema,
   });
   return store.__opanelMigrationDb;

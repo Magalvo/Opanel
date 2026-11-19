@@ -2,7 +2,7 @@ import { act, render, renderHook, screen, waitFor } from "@testing-library/react
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { bodyOf, calls, fetchMock, installFetch, on, problem } from "@/components/fake-api";
+import { bodyOf, calls, fetchMock, installFetch, on, problem, urlOf } from "@/components/fake-api";
 import { ProjectEventsProvider } from "@/components/projects/project-events";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { ProjectEvent } from "@/lib/schemas/events";
@@ -529,4 +529,320 @@ describe("useBoard: events during a drag or a move (WS-048 section 5)", () => {
       expect(loads()).toBe(2);
     });
   });
+});
+
+/**
+ * Makes the next request for `key` ("GET /api/v1/...") wait until the test answers it;
+ * later requests for it answer from `on()` (WS-082).
+ */
+function deferNext(key: string): (response: () => Response) => Promise<void> {
+  let release: (response: Response) => void = () => undefined;
+  const pending = new Promise<Response>((resolve) => {
+    release = resolve;
+  });
+  const previous = fetchMock.getMockImplementation();
+  let used = false;
+  fetchMock.mockImplementation((input, init) => {
+    if (!used && `${init?.method ?? "GET"} ${urlOf(input)}` === key) {
+      used = true;
+      return pending;
+    }
+    return previous?.(input, init) ?? Promise.reject(new Error("no fetch"));
+  });
+  return async (response) => {
+    await act(async () => {
+      release(response());
+      await settle();
+    });
+  };
+}
+
+/** Lets pending promises and zero timers run. */
+async function settle() {
+  for (let round = 0; round < 5; round++) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
+
+/** Every card is in the column its own `columnId` names. */
+function consistent(board: Readonly<Record<string, readonly { columnId: string }[]>>): boolean {
+  return Object.entries(board).every(([columnId, items]) =>
+    items.every((item) => item.columnId === columnId),
+  );
+}
+
+const MOVE_T2 = `POST /api/v1/tasks/${t2.id}/move`;
+const t2Moved = { ...t2, columnId: doing.id, version: 5 };
+
+/** Starts a move of OPA-2 to the top of "In progress" whose answer the test releases. */
+function pendingMove(result: { current: ReturnType<typeof useBoard> }) {
+  const answer = deferNext(MOVE_T2);
+  let drop: Promise<void> = Promise.resolve();
+  act(() => {
+    drop = result.current.drop(t2.id, doing.id, 0);
+  });
+  return async (response: () => Response) => {
+    await answer(response);
+    await act(() => drop);
+  };
+}
+
+describe("useBoard: loads around drags and moves (WS-082)", () => {
+  const triggers = {
+    reconnect: async () => {
+      const mounted = await renderBoard();
+      return {
+        ...mounted,
+        trigger: () => {
+          act(() => {
+            FakeSource.latest().drop();
+            FakeSource.latest().open();
+          });
+        },
+      };
+    },
+    "first open after the fallback load": async () => {
+      const mounted = mount(10);
+      await waitFor(() => {
+        expect(mounted.result.current.phase).toBe("ready");
+      });
+      return {
+        ...mounted,
+        trigger: () => {
+          act(() => {
+            FakeSource.latest().open();
+          });
+        },
+      };
+    },
+  };
+
+  it.each(Object.keys(triggers) as (keyof typeof triggers)[])(
+    "a %s during a move loads nothing until the move ends, then loads once (test 1)",
+    async (name) => {
+      const { result, trigger } = await triggers[name]();
+      const answer = pendingMove(result);
+
+      trigger();
+      await act(settle);
+      expect(loads()).toBe(1);
+
+      on(TASKS, page([t1, t2Moved, t3]));
+      await answer(json(full(t2Moved)));
+
+      await waitFor(() => {
+        expect(loads()).toBe(2);
+      });
+      await act(settle);
+      expect(loads()).toBe(2);
+      expect(keys(result.current.board, doing.id)).toEqual(["OPA-2", "OPA-3"]);
+      expect(consistent(result.current.board)).toBe(true);
+    },
+  );
+
+  it.each(Object.keys(triggers) as (keyof typeof triggers)[])(
+    "a %s answered with the board before the move never leaves a card in the wrong column (test 2)",
+    async (name) => {
+      const { result, trigger } = await triggers[name]();
+      const answer = pendingMove(result);
+
+      trigger();
+      await act(settle);
+      on(TASKS, page([t1, t2Moved, t3]));
+      await answer(json(full(t2Moved)));
+      await act(settle);
+
+      expect(consistent(result.current.board)).toBe(true);
+      expect(keys(result.current.board, doing.id)).toEqual(["OPA-2", "OPA-3"]);
+    },
+  );
+
+  it("drops a load that was in flight when a drag started, and loads once after it (test 3)", async () => {
+    const { result } = await renderBoard();
+    const answer = deferNext(TASKS);
+
+    send("column.changed", doing.id, 2);
+    act(() => {
+      result.current.hold(true);
+    });
+    await answer(page([t1]));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+    expect(loads()).toBe(2);
+
+    on(TASKS, page([t1, t2]));
+    act(() => {
+      result.current.hold(false);
+    });
+
+    await waitFor(() => {
+      expect(keys(result.current.board, doing.id)).toEqual([]);
+    });
+    expect(loads()).toBe(3);
+  });
+
+  it("runs one load at a time: a burst during a load costs one more (test 4)", async () => {
+    const { result } = await renderBoard();
+    const answer = deferNext(TASKS);
+
+    send("column.changed", doing.id, 2);
+    send("column.changed", doing.id, 3);
+    send("column.changed", doing.id, 4);
+    expect(loads()).toBe(2);
+
+    on(TASKS, page([t1, t2]));
+    await answer(page([t1, t2, t3]));
+    await act(settle);
+
+    expect(loads()).toBe(3);
+    expect(keys(result.current.board, doing.id)).toEqual([]);
+  });
+
+  it("applies only the last load, whichever lands last (test 5)", async () => {
+    const answer = deferNext(TASKS);
+    const { result } = mount(10);
+    await waitFor(() => {
+      expect(loads()).toBe(1);
+    });
+
+    on(TASKS, page([t1, t2]));
+    act(() => {
+      FakeSource.latest().open();
+    });
+    // The open's reload has had every chance to start and land before the first load does.
+    await act(settle);
+    await answer(page([t1, t2, t3]));
+    await act(settle);
+
+    expect(result.current.phase).toBe("ready");
+    expect(keys(result.current.board, doing.id)).toEqual([]);
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+  });
+
+  it("does not report the error of a load that a newer one replaces (test 6)", async () => {
+    const answer = deferNext(TASKS);
+    const { result } = mount();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    await waitFor(() => {
+      expect(loads()).toBe(1);
+    });
+
+    send("column.changed", doing.id, 2);
+    await answer(problem(500, "internal_error"));
+    await act(settle);
+
+    expect(result.current.phase).toBe("ready");
+    expect(keys(result.current.board, doing.id)).toEqual(["OPA-3"]);
+  });
+});
+
+describe("useBoard: events during a load (WS-082)", () => {
+  it.each([
+    ["holds the version", { ...t1, version: 2 }, []],
+    ["is older", t1, [`/api/v1/tasks/${t1.id}`]],
+  ])(
+    "holds an event until the load lands, then applies the version rule: the snapshot %s (test 7)",
+    async (_, inSnapshot, expected) => {
+      on(`GET /api/v1/tasks/${t1.id}`, json(full({ ...t1, title: "Renamed", version: 2 })));
+      const { result } = await renderBoard();
+      const answer = deferNext(TASKS);
+
+      send("column.changed", doing.id, 2);
+      send("task.updated", t1.id, 2);
+      expect(taskGets()).toEqual([]);
+
+      await answer(page([inSnapshot, t2, t3]));
+      await act(settle);
+
+      expect(taskGets()).toEqual(expected);
+      expect(result.current.board[todo.id]?.[0]).toMatchObject({ version: 2 });
+    },
+  );
+
+  it("does not lose an event that arrives during the first load (test 8)", async () => {
+    const created = task(4, todo.id);
+    on(`GET /api/v1/tasks/${created.id}`, json(full(created)));
+    on(COLUMN_TASKS(todo.id), page([t1, t2, created]));
+    const answer = deferNext(TASKS);
+    const { result } = mount();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    await waitFor(() => {
+      expect(loads()).toBe(1);
+    });
+
+    send("task.created", created.id, 1);
+    // Anything the event starts has had every chance to finish before the snapshot lands.
+    await act(settle);
+    await answer(page([t1, t2, t3]));
+
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2", "OPA-4"]);
+    });
+  });
+});
+
+describe("useBoard: the board stays consistent (WS-082)", () => {
+  it("puts a move's answer in the column it names, even after a refresh put the card back (test 9)", async () => {
+    const t2v5 = { ...t2, version: 5 };
+    const t2v6 = { ...t2, columnId: doing.id, version: 6 };
+    on(COLUMN_TASKS(todo.id), page([t1, t2v5]));
+    on(COLUMN_TASKS(doing.id), page([t2v6, t3]));
+    const { result } = await renderBoard();
+    const refreshed = deferNext(`GET /api/v1/tasks/${t2.id}`);
+    send("task.updated", t2.id, 5);
+
+    const answer = pendingMove(result);
+    await refreshed(json(full(t2v5)));
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+    await answer(json(full(t2v6)));
+    await act(settle);
+
+    expect(keys(result.current.board, doing.id)).toEqual(["OPA-2", "OPA-3"]);
+    expect(result.current.board[doing.id]?.[0]).toMatchObject({ version: 6 });
+    expect(consistent(result.current.board)).toBe(true);
+  });
+
+  it("shows a task once when its event put it on the board before the answer (test 10)", async () => {
+    const created = task(4, todo.id);
+    on(`GET /api/v1/tasks/${created.id}`, json(full(created)));
+    on(COLUMN_TASKS(todo.id), page([t1, t2, created]));
+    const { result } = await renderBoard();
+    send("task.created", created.id, 1);
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2", "OPA-4"]);
+    });
+
+    act(() => {
+      result.current.added(full(created));
+    });
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2", "OPA-4"]);
+
+    act(() => {
+      result.current.added(full({ ...created, title: "Newer", version: 2 }));
+    });
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2", "OPA-4"]);
+    expect(result.current.board[todo.id]?.[2]).toMatchObject({ title: "Newer", version: 2 });
+  });
+
+  it.each([3, 4])(
+    "ignores a change from the task detail with version %i when the board holds 4 (test 11)",
+    async (version) => {
+      const { result } = await renderBoard();
+      const before = result.current.board;
+
+      act(() => {
+        window.dispatchEvent(
+          new CustomEvent("opanel:task-changed", {
+            detail: full({ ...t2, title: "Renamed", version }),
+          }),
+        );
+      });
+
+      expect(result.current.board).toEqual(before);
+    },
+  );
 });

@@ -90,3 +90,37 @@ describe("epic endpoints", () => {
     expect(statuses.map((response) => response.status)).toEqual([403, 403, 401, 401]);
   });
 });
+
+describe("epic list paging (WS-081)", () => {
+  it("pages across titles of 200 characters, ASCII and CJK, each epic once and in order", async () => {
+    const manager = await cookieFor("manager");
+    await createProject(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const titles = ["a", `b${"x".repeat(199)}`, `b${"名".repeat(199)}`, "c"];
+    for (const title of titles) {
+      const created = await create(
+        apiRequest("POST", "/api/v1/projects/OPA/epics", { cookie: manager, body: { title } }),
+        project,
+      );
+      expect(created.status).toBe(201);
+    }
+
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const query: string = cursor === null ? "" : `&cursor=${cursor}`;
+      const response = await list(
+        apiRequest("GET", `/api/v1/projects/OPA/epics?limit=1${query}`, { cookie: manager }),
+        project,
+      );
+      expect(response.status).toBe(200);
+      const page = epicPageSchema.parse(await response.json());
+      seen.push(...page.items.map((item) => item.title));
+      cursor = page.nextCursor;
+    } while (cursor !== null && seen.length <= titles.length);
+
+    expect(seen).toEqual(titles);
+  });
+});

@@ -165,6 +165,25 @@ describe("AgentsPage (WS-077 test 3)", () => {
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
   });
 
+  it("shows an agent that comes back with a later page once (WS-080)", async () => {
+    on("GET /api/v1/agents?limit=50", () =>
+      Response.json({ items: [agent()], nextCursor: "next" }),
+    );
+    on("GET /api/v1/agents?limit=50&cursor=next", () =>
+      Response.json({
+        items: [agent(), agent({ id: ONE, name: "Worker", role: "worker_agent" })],
+        nextCursor: null,
+      }),
+    );
+    render(<AgentsPage />);
+    const table = await screen.findByRole("table");
+
+    await userEvent.click(screen.getByRole("button", { name: "Load more" }));
+
+    expect(await within(table).findByRole("link", { name: "Worker" })).toBeInTheDocument();
+    expect(within(table).getAllByRole("link", { name: "QA Bot" })).toHaveLength(1);
+  });
+
   it("offers to create the first agent when there is none", async () => {
     on("GET /api/v1/agents", () => Response.json({ items: [], nextCursor: null }));
     render(<AgentsPage />);

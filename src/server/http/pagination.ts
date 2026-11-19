@@ -48,8 +48,14 @@ export interface NameCursor {
   id: string;
 }
 
+/**
+ * The longest name a name cursor carries: an epic title (WS-081). A test checks every name
+ * schema paged by a name cursor against it, so the two cannot drift apart.
+ */
+export const NAME_CURSOR_MAX_LENGTH = 200;
+
 const nameCursorSchema = z.strictObject({
-  n: z.string().max(100),
+  n: z.string().max(NAME_CURSOR_MAX_LENGTH),
   i: z.uuid(),
 });
 

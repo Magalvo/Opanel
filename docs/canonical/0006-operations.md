@@ -44,7 +44,8 @@ implements it.
   and the operator commands (`migrate`, Admin recovery, maintenance).
 - `compose.production.yaml` is an **example**, not the only supported setup: the app, a
   one-shot `migrate` service, and PostgreSQL with a named volume. `compose.yaml` stays the
-  development and CI file.
+  development and CI file. The operator fills in one env file; each service receives only
+  its own variables from it (section 5, amended by WS-079).
 - One app process (doc 0002: the event hub lives in memory). Scaling out is out of scope
   for v1 and is refused in the docs, not silently allowed.
 - Configuration stays the validated environment of `src/server/env.ts`; the image adds no
@@ -80,6 +81,10 @@ WI-041).
   protect the audit log from the application (a bug or a compromised app process), not
   from the database owner. A compromised app process can read and change application data
   through the API's own rules, but cannot rewrite history, drop tables or disable triggers.
+- Each service of the example install gets only its own variables. The app's environment
+  holds no owner credential (`MIGRATION_DATABASE_URL`, `POSTGRES_PASSWORD`); the database's
+  holds no app secret; `migrate` holds only the owner's connection (amended by WS-079,
+  2026-11-19).
 
 ## 6. Migrations and upgrades
 
