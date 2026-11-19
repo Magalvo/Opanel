@@ -53,8 +53,9 @@ async function problemOf(response: Response): Promise<z.infer<typeof problemSche
 async function throughRoute(
   request: Request,
   action: (request: Request) => Promise<unknown>,
+  contract: EndpointContract = publicThing,
 ): Promise<Response> {
-  const handler = route(publicThing, async (incoming: Request) => json(await action(incoming)), {
+  const handler = route(contract, async (incoming: Request) => json(await action(incoming)), {
     logError: () => undefined,
     appUrl: APP_URL,
   });
@@ -317,6 +318,58 @@ describe("route with a public contract", () => {
     const handler = route(publicThing, () => noContent(), options);
 
     expect(handler.contract).toBe(publicThing);
+  });
+});
+
+describe("route and the query string (WS-083)", () => {
+  const options = { appUrl: APP_URL, logError: () => undefined };
+
+  it("answers 400 naming each parameter of a query the contract does not declare", async () => {
+    const handler = vi.fn(() => noContent());
+
+    const response = await route(
+      publicThing,
+      handler,
+      options,
+    )(new Request(`${URL_BASE}?x=1&y=2&x=3`), undefined);
+
+    expect(response.status).toBe(400);
+    const problem = await problemOf(response);
+    expect(problem.code).toBe("invalid_request");
+    expect(problem.detail).toBe("The query string is not valid.");
+    expect(problem.errors).toEqual([
+      { path: "x", message: "Unknown field" },
+      { path: "y", message: "Unknown field" },
+    ]);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("lets a request with no query, or an empty one, reach the handler", async () => {
+    for (const url of [URL_BASE, `${URL_BASE}?`]) {
+      const handler = vi.fn(() => noContent());
+
+      const response = await route(publicThing, handler, options)(new Request(url), undefined);
+
+      expect(response.status, url).toBe(204);
+      expect(handler).toHaveBeenCalledOnce();
+    }
+  });
+
+  it("leaves the query of a contract that declares one to its handler", async () => {
+    const listThings = {
+      ...publicThing,
+      request: { query: z.strictObject({ limit: z.string().optional() }) },
+    } satisfies EndpointContract;
+    const handler = vi.fn(() => noContent());
+
+    const response = await route(
+      listThings,
+      handler,
+      options,
+    )(new Request(`${URL_BASE}?limit=5&other=1`), undefined);
+
+    expect(response.status).toBe(204);
+    expect(handler).toHaveBeenCalledOnce();
   });
 });
 
@@ -611,25 +664,37 @@ describe("readQuery", () => {
     return new Request(`${URL_BASE}${query}`);
   }
 
+  // An operation that declares its query, so route() leaves it to readQuery (WS-083).
+  const listThings = {
+    ...publicThing,
+    request: { query: querySchema },
+  } satisfies EndpointContract;
+
   it("returns typed values and applies defaults", async () => {
-    const response = await throughRoute(withQuery("?cursor=abc"), (request) =>
-      Promise.resolve(readQuery(request, querySchema)),
+    const response = await throughRoute(
+      withQuery("?cursor=abc"),
+      (request) => Promise.resolve(readQuery(request, querySchema)),
+      listThings,
     );
 
     expect(await response.json()).toEqual({ limit: 50, cursor: "abc" });
   });
 
   it("gives a repeated parameter as a list", async () => {
-    const response = await throughRoute(withQuery("?label=a&label=b&limit=10"), (request) =>
-      Promise.resolve(readQuery(request, querySchema)),
+    const response = await throughRoute(
+      withQuery("?label=a&label=b&limit=10"),
+      (request) => Promise.resolve(readQuery(request, querySchema)),
+      listThings,
     );
 
     expect(await response.json()).toEqual({ limit: 10, label: ["a", "b"] });
   });
 
   it("rejects invalid and unknown parameters with their names", async () => {
-    const response = await throughRoute(withQuery("?limit=500&page=2"), (request) =>
-      Promise.resolve(readQuery(request, querySchema)),
+    const response = await throughRoute(
+      withQuery("?limit=500&page=2"),
+      (request) => Promise.resolve(readQuery(request, querySchema)),
+      listThings,
     );
 
     expect(response.status).toBe(400);

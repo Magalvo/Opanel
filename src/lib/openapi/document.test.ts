@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { healthResponseSchema } from "@/lib/schemas/health";
+import { problemSchema } from "@/lib/schemas/problem";
+import { taskSchema } from "@/lib/schemas/tasks";
 import { SESSION_COOKIE_NAMES } from "@/lib/session-cookie";
 
 import packageJson from "../../../package.json";
@@ -27,7 +29,18 @@ const responseSchema = z.object({
   description: z.string().min(1),
   // Absent on a no-content response such as the 204 of sign-out.
   // JSON for successes, problem+json for errors.
-  content: z.record(z.string(), z.object({ schema: z.object({ $ref: z.string() }) })).optional(),
+  // A schema is a reference, or (a version conflict with other conflicts, WS-083) anyOf them.
+  content: z
+    .record(
+      z.string(),
+      z.object({
+        schema: z.object({
+          $ref: z.string().optional(),
+          anyOf: z.array(z.object({ $ref: z.string() })).optional(),
+        }),
+      }),
+    )
+    .optional(),
 });
 
 const documentSchema = z.object({
@@ -72,9 +85,10 @@ describe("buildOpenApiDocument", () => {
     const operation = parsedDocument().paths["/api/v1/health"]?.get;
 
     expect(operation).toBeDefined();
-    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(["200", "503"]);
-    for (const response of Object.values(operation?.responses ?? {})) {
-      expect(response.content?.["application/json"]?.schema.$ref).toBe(
+    // And the 400 of a query string, which it does not take (WS-083).
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(["200", "400", "503"]);
+    for (const response of [operation?.responses["200"], operation?.responses["503"]]) {
+      expect(response?.content?.["application/json"]?.schema.$ref).toBe(
         "#/components/schemas/HealthResponse",
       );
     }
@@ -141,7 +155,7 @@ describe("buildOpenApiDocument", () => {
     const conflict =
       parsedDocument().paths["/api/v1/projects/{projectId}"]?.patch?.responses["409"];
 
-    expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+    expect(conflict?.content?.["application/problem+json"]?.schema.anyOf?.[0]?.$ref).toBe(
       "#/components/schemas/ProjectVersionConflict",
     );
   });
@@ -153,7 +167,7 @@ describe("buildOpenApiDocument", () => {
       paths["/api/v1/columns/{columnId}"]?.patch?.responses["409"],
       paths["/api/v1/columns/{columnId}/move"]?.post?.responses["409"],
     ]) {
-      expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+      expect(conflict?.content?.["application/problem+json"]?.schema.anyOf?.[0]?.$ref).toBe(
         "#/components/schemas/ColumnVersionConflict",
       );
     }
@@ -162,7 +176,7 @@ describe("buildOpenApiDocument", () => {
   it("documents the version conflict of PATCH /api/v1/tasks/{taskId} (WS-030)", () => {
     const conflict = parsedDocument().paths["/api/v1/tasks/{taskId}"]?.patch?.responses["409"];
 
-    expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+    expect(conflict?.content?.["application/problem+json"]?.schema.anyOf?.[0]?.$ref).toBe(
       "#/components/schemas/TaskVersionConflict",
     );
   });
@@ -170,7 +184,7 @@ describe("buildOpenApiDocument", () => {
   it("documents the version conflict of POST /api/v1/tasks/{taskId}/move (WS-031)", () => {
     const conflict = parsedDocument().paths["/api/v1/tasks/{taskId}/move"]?.post?.responses["409"];
 
-    expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+    expect(conflict?.content?.["application/problem+json"]?.schema.anyOf?.[0]?.$ref).toBe(
       "#/components/schemas/TaskVersionConflict",
     );
   });
@@ -178,7 +192,7 @@ describe("buildOpenApiDocument", () => {
   it("documents the version conflict of PATCH /api/v1/epics/{epicId} (WS-033)", () => {
     const conflict = parsedDocument().paths["/api/v1/epics/{epicId}"]?.patch?.responses["409"];
 
-    expect(conflict?.content?.["application/problem+json"]?.schema.$ref).toBe(
+    expect(conflict?.content?.["application/problem+json"]?.schema.anyOf?.[0]?.$ref).toBe(
       "#/components/schemas/EpicVersionConflict",
     );
   });
@@ -193,8 +207,10 @@ describe("buildOpenApiDocument", () => {
     expect(Object.keys(operation?.responses["429"]?.content ?? {})).toEqual([
       "application/problem+json",
     ]);
+    // And the 400 of a path that names no project (WS-083).
     expect(Object.keys(operation?.responses ?? {}).sort()).toEqual([
       "200",
+      "400",
       "401",
       "403",
       "404",
@@ -263,6 +279,118 @@ describe("buildOpenApiDocument", () => {
       required: Object.keys(shape),
       additionalProperties: false,
     });
+  });
+
+  it("documents the token's 429 on every operation a token may call, and nowhere else (WS-083)", () => {
+    const { paths } = parsedDocument();
+    let counted = 0;
+
+    for (const [path, item] of Object.entries(paths)) {
+      for (const [method, operation] of Object.entries(item)) {
+        const where = `${method} ${path}`;
+        const byToken = JSON.stringify(operation.security ?? []).includes("bearerAuth");
+        // Sign-in and the other public operations have their own `rate_limited`, by email or
+        // address; the token's is its own sentence.
+        const limited = operation.responses["429"]?.description ?? "";
+        expect(limited.includes("The API token made too many requests"), where).toBe(byToken);
+        if (byToken) counted += 1;
+      }
+    }
+    expect(counted).toBeGreaterThan(40);
+  });
+
+  it("declares Retry-After, whole seconds of at least 1, on every 429 (WS-083)", () => {
+    const { paths } = z
+      .object({
+        paths: z.record(
+          z.string(),
+          z.record(
+            z.string(),
+            z.object({ responses: z.record(z.string(), z.record(z.string(), z.unknown())) }),
+          ),
+        ),
+      })
+      .parse(documentAsJson());
+    let counted = 0;
+
+    for (const [path, item] of Object.entries(paths)) {
+      for (const [method, operation] of Object.entries(item)) {
+        const limited = operation.responses["429"];
+        if (limited === undefined) continue;
+        counted += 1;
+        expect(limited.headers, `${method} ${path}`).toMatchObject({
+          "Retry-After": { schema: { type: "integer", minimum: 1 } },
+        });
+      }
+    }
+    expect(paths["/api/v1/auth/sign-in"]?.post?.responses["429"]).toBeDefined();
+    expect(counted).toBeGreaterThan(40);
+  });
+
+  it("documents the 400 of an invalid project on the event stream (WS-083)", () => {
+    const invalid =
+      parsedDocument().paths["/api/v1/projects/{projectId}/events"]?.get?.responses["400"];
+
+    expect(invalid?.content?.["application/problem+json"]?.schema.$ref).toBe(
+      "#/components/schemas/Problem",
+    );
+  });
+
+  it.each([
+    ["/api/v1/projects/{projectId}", "patch", "Project", ["project_archived"]],
+    ["/api/v1/columns/{columnId}", "patch", "Column", ["project_archived", "last_done_column"]],
+    ["/api/v1/columns/{columnId}/move", "post", "Column", ["project_archived"]],
+    ["/api/v1/tasks/{taskId}", "patch", "Task", ["project_archived", "account_inactive"]],
+    ["/api/v1/tasks/{taskId}/move", "post", "Task", ["project_archived"]],
+    ["/api/v1/epics/{epicId}", "patch", "Epic", ["project_archived"]],
+  ])("documents every 409 of %s %s (WS-083)", (path, method, entity, codes) => {
+    const conflict = z
+      .object({
+        description: z.string(),
+        content: z.object({
+          "application/problem+json": z.object({
+            schema: z.object({ anyOf: z.array(z.unknown()) }),
+          }),
+        }),
+      })
+      .parse(
+        z
+          .object({
+            paths: z.record(
+              z.string(),
+              z.record(z.string(), z.object({ responses: z.record(z.string(), z.unknown()) })),
+            ),
+          })
+          .parse(documentAsJson()).paths[path]?.[method]?.responses["409"],
+      );
+
+    expect(conflict.content["application/problem+json"].schema.anyOf).toEqual([
+      { $ref: `#/components/schemas/${entity}VersionConflict` },
+      { $ref: "#/components/schemas/Problem" },
+    ]);
+    for (const code of ["version_conflict", ...codes]) {
+      expect(conflict.description).toContain(`\`${code}\``);
+    }
+  });
+
+  it("accepts both a version conflict and a project_archived body as the task PATCH's 409 (WS-083)", () => {
+    const base = {
+      type: "about:blank",
+      title: "Conflict",
+      status: 409,
+      detail: "A conflict.",
+      requestId: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+    };
+    const archived = { ...base, code: "project_archived" };
+    // The two schemas the anyOf of the 409 names: the version conflict and Problem.
+    const versionConflict = problemSchema.extend({
+      code: z.literal("version_conflict"),
+      current: taskSchema,
+    });
+
+    expect(problemSchema.safeParse(archived).success).toBe(true);
+    expect(versionConflict.safeParse(archived).success).toBe(false);
+    expect(problemSchema.safeParse({ ...base, code: "version_conflict" }).success).toBe(true);
   });
 
   it("is valid according to the official OpenAPI 3.1 schema", async () => {
@@ -364,7 +492,7 @@ describe("buildOpenApiDocument", () => {
     it("adds 401 and 403 to operations that need credentials", () => {
       const { responses } = operation(createThing.path, "post");
 
-      expect(Object.keys(responses).sort()).toEqual(["201", "400", "401", "403"]);
+      expect(Object.keys(responses).sort()).toEqual(["201", "400", "401", "403", "429"]);
       expect(Object.keys(responses["401"]?.content ?? {})).toEqual(["application/problem+json"]);
       // A description written in the contract wins over the generic one.
       expect(responses["403"]?.description).toBe("The actor may not create things here.");
@@ -375,7 +503,7 @@ describe("buildOpenApiDocument", () => {
 
       expect(responses["204"]?.description).toBe("Ended.");
       expect(responses["204"]?.content).toBeUndefined();
-      expect(Object.keys(responses).sort()).toEqual(["204", "401", "403"]);
+      expect(Object.keys(responses).sort()).toEqual(["204", "401", "403", "429"]);
     });
 
     it("accepts a session or a token on the protected one and nothing on the public one", () => {
@@ -395,7 +523,7 @@ describe("buildOpenApiDocument", () => {
         request: { params: z.strictObject({ thingId: z.uuid() }) },
         responses: {
           200: { description: "Updated.", schema: thingSchema },
-          409: versionConflictResponse(thingSchema),
+          409: versionConflictResponse(thingSchema, []),
         },
       } satisfies EndpointContract;
       const document = z
@@ -425,7 +553,7 @@ describe("buildOpenApiDocument", () => {
         path: "/api/v1/anonymous",
         summary: "Update",
         access: { kind: "authenticated" },
-        responses: { 409: versionConflictResponse(anonymous) },
+        responses: { 409: versionConflictResponse(anonymous, []) },
       } satisfies EndpointContract;
 
       expect(() => buildOpenApiDocument([contract])).toThrow(/id/);
@@ -446,6 +574,100 @@ describe("buildOpenApiDocument", () => {
       expect(paths[endSession.path]?.post?.["x-opanel-permission"]).toBeUndefined();
       expect(paths[endSession.path]?.post?.description).toBeUndefined();
       expect(paths[publicThing.path]?.get?.["x-opanel-permission"]).toBeUndefined();
+    });
+
+    it("adds 429 rate_limited where a token is accepted, not on public or session-only operations (WS-083)", () => {
+      const sessionThing = {
+        method: "post",
+        path: "/api/v1/things/mine",
+        summary: "My thing",
+        access: { kind: "session" },
+        responses: { 204: { description: "Done.", noContent: true } },
+      } satisfies EndpointContract;
+      const paths = z
+        .object({ paths: z.record(z.string(), z.record(z.string(), anyOperationSchema)) })
+        .parse(
+          JSON.parse(
+            JSON.stringify(
+              buildOpenApiDocument([createThing, publicThing, endSession, sessionThing]),
+            ),
+          ),
+        ).paths;
+
+      for (const [path, method] of [
+        [createThing.path, "post"],
+        [endSession.path, "post"],
+      ] as const) {
+        const limited = paths[path]?.[method]?.responses["429"];
+        expect(limited?.description, `${method} ${path}`).toContain("`rate_limited`");
+        expect(limited?.content?.["application/problem+json"]?.schema.$ref).toBe(
+          "#/components/schemas/Problem",
+        );
+      }
+      expect(paths[publicThing.path]?.get?.responses["429"]).toBeUndefined();
+      expect(paths[sessionThing.path]?.post?.responses["429"]).toBeUndefined();
+    });
+
+    it("keeps an operation's own 429 and adds the token's to it (WS-083)", () => {
+      const streamThing = {
+        method: "get",
+        path: "/api/v1/things/stream",
+        summary: "A stream",
+        access: { kind: "authenticated" },
+        responses: {
+          200: { description: "Things.", noContent: true },
+          429: { description: "Too many streams (code `too_many_streams`).", problem: true },
+        },
+      } satisfies EndpointContract;
+      const paths = z
+        .object({ paths: z.record(z.string(), z.record(z.string(), anyOperationSchema)) })
+        .parse(JSON.parse(JSON.stringify(buildOpenApiDocument([streamThing])))).paths;
+      const limited = paths[streamThing.path]?.get?.responses["429"];
+
+      expect(limited?.description).toContain("Too many streams (code `too_many_streams`).");
+      expect(limited?.description).toContain("`rate_limited`");
+    });
+
+    it("documents a version conflict and the other conflicts as anyOf, naming each code (WS-083)", () => {
+      function conflictOf(codes: readonly ("project_archived" | "last_done_column")[]) {
+        const updateThing = {
+          method: "patch",
+          path: "/api/v1/things/{thingId}",
+          summary: "Update a thing",
+          access: { kind: "permission", permission: "tasks:write" },
+          responses: { 409: versionConflictResponse(thingSchema, codes) },
+        } satisfies EndpointContract;
+        const document = z
+          .object({ paths: z.record(z.string(), z.record(z.string(), z.unknown())) })
+          .parse(JSON.parse(JSON.stringify(buildOpenApiDocument([updateThing]))));
+        return z
+          .object({
+            responses: z.object({
+              "409": z.object({
+                description: z.string(),
+                content: z.object({
+                  "application/problem+json": z.object({ schema: z.unknown() }),
+                }),
+              }),
+            }),
+          })
+          .parse(document.paths["/api/v1/things/{thingId}"]?.patch).responses["409"];
+      }
+
+      const both = conflictOf(["project_archived", "last_done_column"]);
+      expect(both.content["application/problem+json"].schema).toEqual({
+        anyOf: [
+          { $ref: "#/components/schemas/TestThingVersionConflict" },
+          { $ref: "#/components/schemas/Problem" },
+        ],
+      });
+      expect(both.description).toContain("`project_archived`");
+      expect(both.description).toContain("`last_done_column`");
+
+      const alone = conflictOf([]);
+      expect(alone.content["application/problem+json"].schema).toEqual({
+        $ref: "#/components/schemas/TestThingVersionConflict",
+      });
     });
 
     it("adds neither to public operations", () => {

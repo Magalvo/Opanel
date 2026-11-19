@@ -236,6 +236,25 @@ describe("route() with an API token (WS-072)", () => {
     expect(bySession.status).toBe(204);
   });
 
+  it("checks the access before an undeclared query: 401 first, then 400 (WS-083)", async () => {
+    const handler = vi.fn(() => noContent());
+
+    const anonymous = await route(ownThing, handler)(
+      apiRequest("GET", "/api/v1/own-thing?x=1"),
+      undefined,
+    );
+    expect(anonymous.status).toBe(401);
+
+    const cookie = await signedIn("viewer");
+    const signedInWithQuery = await route(ownThing, handler)(
+      apiRequest("GET", "/api/v1/own-thing?x=1", { cookie }),
+      undefined,
+    );
+    expect(signedInWithQuery.status).toBe(400);
+    expect(await codeOf(signedInWithQuery)).toBe("invalid_request");
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it("answers 429 with Retry-After above the token's rate, and counts tokens only", async () => {
     const token = await agentToken();
     const tokenRateLimiter = createTokenRateLimiter({ limit: 3 });
