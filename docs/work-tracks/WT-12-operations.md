@@ -45,7 +45,7 @@ Doc 0006 section 11.
 | [WI-065](../work-items/WI-065-recover-admin.md)    | D: `recover-admin` operator command                                                      | Done   | WI-062         |
 | [WI-066](../work-items/WI-066-maintenance.md)      | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Done   | WI-062         |
 | [WI-067](../work-items/WI-067-https-and-proxy.md)  | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Done   | WI-062         |
-| WI-068                                             | G: backup and restore rehearsal in CI                                                    | Draft  | WI-063, WI-064 |
+| [WI-068](../work-items/WI-068-backup-rehearsal.md) | G: backup and restore rehearsal in CI                                                    | Done   | WI-063, WI-064 |
 | WI-069                                             | H: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-068  |
 
 ## Exit criteria
@@ -56,7 +56,8 @@ Doc 0006 section 11.
       table, or update or delete `audit_log` and `task_events` rows.
 - [ ] Upgrading from the previous release by the guide keeps all data; the app refuses to
       start on a schema it does not match, naming both versions.
-- [ ] CI restores a backup into a new database and the app serves the seeded data.
+- [x] CI restores a backup into a new database and the app serves the seeded data
+      (WI-068).
 - [ ] `recover-admin` issues a working reset link for a named Admin, audited with
       `via: "operator"`, and refuses any other account.
 - [ ] `maintenance` removes expired sessions and old links, and nothing else.

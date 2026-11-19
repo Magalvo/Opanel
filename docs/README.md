@@ -9,10 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-067 (HSTS on `https:` installs, and the reverse proxy, tested,
-  WT-12 item F), on 2026-11-18, on the branch `claude/wi-067-https-and-proxy`.
-- **Next:** draft WI-068 (WT-12 item G: the backup and restore rehearsal in CI) and
-  WS-068 as `Proposed`, and stop for the owner's approval.
+- **Last finished:** WI-068 (backup and restore, rehearsed in CI, WT-12 item G), on
+  2026-11-19, on the branch `claude/wi-068-backup-rehearsal`.
+- **Next:** draft WI-069 (WT-12 item H: `docs/operations.md`, which closes WT-12) and
+  WS-069 as `Proposed`, and stop for the owner's approval. WS-068 question 4 leaves it to
+  record the upgrade criterion and a follow-up to rehearse a real upgrade after the first
+  tagged release.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -163,6 +165,7 @@ outlined above and comes right after WT-04.
 | [WI-065](work-items/WI-065-recover-admin.md)                    | `recover-admin`: an operator command to get back in              | Done        | [WS-065](work-specs/WS-065-recover-admin.md)                    | Done        |
 | [WI-066](work-items/WI-066-maintenance.md)                      | `maintenance`: remove what has expired                           | Done        | [WS-066](work-specs/WS-066-maintenance.md)                      | Done        |
 | [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested         | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
+| [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                              | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
 
 ## Follow-ups
 
