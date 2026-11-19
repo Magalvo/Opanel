@@ -11,9 +11,10 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-071 (agent accounts in the data model, and the agent `Actor`,
   WT-05 item A), on 2026-11-19, on the branch `claude/wi-071-agent-data-model`.
-- **Next:** draft WI-072 (WT-05 item B: issuing and verifying tokens, `authenticate()`
-  accepting bearer tokens, `last_used_at`, the per-token rate limit) and WS-072 as
-  `Proposed`, and stop for the owner's approval.
+- **Next:** the owner reviews three WT-05 items drafted in parallel as `Proposed` on
+  2026-11-19, each on its own branch: WI-072/WS-072 (item B, API tokens and
+  `authenticate()`, `claude/wi-072-api-tokens`), WI-073 (item D, project restrictions) and
+  WI-074 (item G, the "Agent" badge). Items C and E follow B; F follows C; H comes last.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -171,6 +172,7 @@ right after WT-04 and is done.
 | [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
 | [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                       | Done        | [WS-070](work-specs/WS-070-operations-guide.md)                 | Done        |
 | [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`          | Done        | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Done        |
+| [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Proposed    | [WS-072](work-specs/WS-072-api-tokens.md)                       | Proposed    |
 
 ## Follow-ups
 
