@@ -216,10 +216,9 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 
 Other follow-ups:
 
-- `tests/e2e/agents.spec.ts`, "a Manager has neither the Agents link nor the page", counts
-  every link whose name contains "Agents", so it fails once projects named "Agents …"
-  (created by the same spec) are on the first page of `/projects` (found in WI-081; fails
-  without that item's changes too). Scope it to the Main navigation, with `exact: true`.
+- **Answered by WI-084 (2026-11-19):** `tests/e2e/agents.spec.ts`, "a Manager has neither
+  the Agents link nor the page", counted every link whose name contains "Agents" (found in
+  WI-081). It now looks at the sidebar only.
 
 - Let end-to-end runs choose their port and database (`E2E_PORT`, already
   `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100
