@@ -66,7 +66,7 @@ admin(
     await page.goto("/agents");
     await page
       .getByRole("navigation", { name: "Main" })
-      .getByRole("link", { name: "Agents" })
+      .getByRole("link", { name: "Agents", exact: true })
       .waitFor();
     await page.getByRole("button", { name: "New agent" }).click();
     const form = page.getByRole("dialog");
@@ -146,7 +146,12 @@ base("a Manager has neither the Agents link nor the page", async ({ page }) => {
   await expect(
     page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Projects" }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Agents" })).toHaveCount(0);
+  // Only the sidebar: the projects list shows this spec's `Agents <KEY>` projects (WI-084).
+  await expect(
+    page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "Agents", exact: true }),
+  ).toHaveCount(0);
 
   const response = await page.goto("/agents");
   expect(response?.status()).toBe(404);
