@@ -1,6 +1,6 @@
 # WS-077 — The Agents page
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 5 as proposed)
 - Work-item: [WI-077](../work-items/WI-077-agents-page.md)
 - Canonical docs: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (decision 13,
   the page; decisions 1, 4, 7, 11); [WS-075](WS-075-agents-admin-api.md) (the API);

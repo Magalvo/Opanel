@@ -1,6 +1,6 @@
 # WI-077 — The Agents page
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item F)
 - Depends on: WI-075 (done: the Admin API for agents and tokens)
 - Work-spec: [WS-077](../work-specs/WS-077-agents-page.md)
