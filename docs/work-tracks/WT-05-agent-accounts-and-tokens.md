@@ -1,7 +1,7 @@
 # WT-05 — Agent accounts and API tokens
 
-- Status: Proposed (drafted on 2026-11-19; the owner decides the design decisions and the
-  questions below)
+- Status: Approved (by the owner on 2026-11-19: decisions 1 to 14 and questions 1 to 6 as
+  proposed)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4:
   identity, scopes, tokens; amended by this track, see decision 1),
   [0003](../canonical/0003-task-management.md) (section 3: only Admins manage agents),
