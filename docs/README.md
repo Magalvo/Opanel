@@ -15,6 +15,12 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
   and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
   it.
+- **Proposed on 2026-11-19, awaiting the owner:** WI-079 to WI-083 with their work-specs,
+  the fixes for findings B01 to B05 of the audit of 2026-11-19 (production services get
+  only their own secrets; paged lists without duplicates; name cursors that fit epic
+  titles; board loads ordered around moves; every API response documented). The lower
+  findings B06 to B16 are listed under [Follow-ups](#follow-ups). The owner decides
+  whether these come before WT-06.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -179,6 +185,11 @@ right after WT-04 and is done.
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
 | [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
+| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Proposed    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Proposed    |
+| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Proposed    | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Proposed    |
+| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Proposed    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Proposed    |
+| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Proposed    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Proposed    |
+| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Proposed    | [WS-083](work-specs/WS-083-documented-responses.md)             | Proposed    |
 
 ## Follow-ups
 
@@ -211,8 +222,6 @@ Other follow-ups:
 - Give WS-009, WS-010 and WS-012 the "Implementation record" and "Deviations" sections that
   every other finished work-spec has (audit of 2026-11-13). Format only.
 
-- Weigh moving authentication, permission and origin checks into the `route()` wrapper at
-  the start of WT-03 (see WS-023, question 1). Done in WI-025.
 - Make `pnpm typecheck` independent of a stale `.next` directory (for example by
   generating route types first). Until then see the note in `CONTRIBUTING.md`.
 - The activity timeline (WT-08) returns each event's actor as `AccountRef` and renders it
@@ -228,30 +237,24 @@ Other follow-ups:
   answer `project_archived`, and a column `PATCH` answers `last_done_column`; those bodies
   do not match the documented schema. Needs its own work-item: `versionConflictResponse`
   should document "a version conflict, or another problem" for projects, columns, tasks
-  and epics.
+  and epics. Folded into WI-083 (proposed), which also covers the task `PATCH`'s
+  `account_inactive`.
 - The project settings dialogs (Add column, Edit column) have no `DialogTrigger`, so on
   close Radix moves the focus to the page body instead of the button that opened them
   (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
   explicitly, see WS-037 "Deviations"). Needs its own work-item.
-- The audit of 2026-11-14 proposed three security items that exist only on unmerged
-  branches: WI-042 (log errors without their message), WI-043 (refuse the first-run setup
-  before hashing once the install has accounts) and WI-044 (bound the JSON request body,
-  `413 payload_too_large`). On 2026-11-16 the owner decided to redo them on `main` before
-  WT-04. All three are done.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
   in WS-038, question 6), `claude/wi-044-request-body-limit` (WS-044, question 5) and
   `claude/wi-042-safe-error-logging` (WS-042, question 4) and
-  `claude/wi-043-setup-refuses-before-hashing` (WS-043, question 5).
+  `claude/wi-043-setup-refuses-before-hashing` and
+  `claude/wi-043-setup-refuses-before-hashing-v2` (WS-043, question 5).
 - Upgrade drizzle-kit to 1.0 once it is stable (it drops the deprecated `@esbuild-kit`
   packages), then delete the esbuild override in `pnpm-workspace.yaml` (WS-053,
   question 2).
 - `pnpm audit` without `--prod` reports GHSA-g3hv-75wg-m249 (`minimatch`, a denial of
   service, under `eslint`), a development dependency (found in WI-053). Decide whether
   development advisories are audited too.
-- ESLint lints `.claude/worktrees/` (other sessions' worktrees), so `pnpm lint` can crash
-  or report another branch's files while one is open (found in WI-053). Candidate: add it
-  to `globalIgnores` in `eslint.config.mjs`, and check Prettier and Vitest likewise.
 - Create the first Admin through a command run on the server instead of the public setup
   page, a candidate for the production deployment track (WS-055, question 3). It belongs
   with the last-Admin recovery command above.
@@ -263,5 +266,62 @@ Other follow-ups:
 - The People page can show an account twice: in one E2E run of WI-069 (2026-11-19),
   `people.spec.ts` ("an Admin revokes an invitation…") found the invited account's row
   twice after "Load more" (a strict-mode violation). Seen again in WI-070's E2E run
-  (2026-11-19); not reproduced when the spec ran alone; check whether the
-  invited account added to the list is also loaded again with the next page.
+  (2026-11-19); not reproduced when the spec ran alone. Cause found by the audit of
+  2026-11-19 (finding B02): an invitation submitted while the first page is loading is
+  appended by a handler that still sees no cursor, and "Load more" then returns it again.
+  WI-080 (proposed) fixes it.
+
+Lower findings of the audit of 2026-11-19, each to become a work-item when the owner
+chooses. B01 to B05 are WI-079 to WI-083.
+
+- B06: the event stream's heartbeat check refreshes the session (Better Auth extends a
+  session older than `updateAge` on each `getSession`), so an open board tab keeps its
+  session from expiring. Pass `disableRefresh` on the heartbeat's check
+  (`src/server/http/event-stream.ts`, `src/server/auth/authenticate.ts`).
+- B07: failed bearer-token attempts are not rate limited (the per-token limiter runs after
+  authentication), and the example Caddyfile adds no limit, although WS-072 hands
+  unauthenticated limiting to the proxy. Add a per-IP limit for failed token
+  authentication, or a limit in the example proxy and `docs/operations.md`.
+- B08 (owner decision): an Admin can issue a reset link for another, active Admin and sign
+  in as them. It is audited (`account.reset_link_created` with the issuer as actor).
+  Decide whether the API should refuse Admin targets, leaving `recover-admin` as the way.
+- B09: `postgres:18-alpine` is a floating tag in `compose.production.yaml` and
+  `compose.yaml`, while the Node and Caddy images are pinned by digest. Pin it in the
+  production file, and say how to upgrade it in `docs/operations.md`.
+- B10: `engines.node` is `>=22` but CI, `.nvmrc` and the image use 22, and Node 25 no
+  longer bundles corepack, which the `Dockerfile` uses. Narrow it to `^22` until the
+  Node 24 upgrade above.
+- B11: fixed waits in tests: `settle()` in `tests/e2e/board.spec.ts` waits 200 ms, and
+  `scripts/smoke-production.sh` uses `sleep 1` with second-precision `logs --since`. Wait
+  on a condition instead. CI also retries end-to-end tests once without reporting flaky
+  ones (`playwright.config.ts`).
+- B12: `eslint.config.mjs` does not ignore `playwright-report/`, `test-results/` and
+  `blob-report/`.
+- B13: migration `0014_runtime_role.sql` relies on PostgreSQL 15 or later not granting
+  `CREATE` on `public` to `PUBLIC`. Revoke it explicitly, or name 15 as the minimum.
+- B14: `docs/agents.md` omits `409 account_inactive` and `429 too_many_streams` (10
+  streams per account); doc 0004 section 4 lists no WT-03 error codes, and section 5's
+  example uses `GET /api/v1/tasks`, which does not exist. Folded into WI-083.
+- B15: the project frame applies project updates without a version check
+  (`project-events.tsx`, `board.tsx`), and the board shows no "paused" banner while the
+  browser retries the stream on its own (`use-project-events.ts`). One small item (WS-082,
+  question 4); the version check of `task.changed` in `use-board.ts` is in WI-082.
+- B16: a local run of `pnpm test` fails when another PostgreSQL holds port 5432: the
+  Compose file honours `OPANEL_DB_PORT` but `.env.test` always names 5432. Belongs with the
+  `E2E_PORT` follow-up above.
+
+Optimisations found by the same audit, none urgent:
+
+- Board: nothing is memoised and the React Compiler is off, so every cross-column
+  `onDragOver` re-renders every card; the first load is a waterfall (project, then the
+  stream, then columns and task pages in turn); `react-markdown` loads eagerly.
+- Database: `listTasks` orders across a join and cannot use an index; no index on
+  `tasks.reporter_account_id`, `tasks.deleted_by`, `task_events.actor_account_id`,
+  `comments.author_account_id`, `credentials.account_id`, `sessions.expires_at`; each task
+  write runs the six-join task select two or three times.
+- Position keys grow by a character about every six moves into the same gap and are never
+  renumbered. A board cursor carries two positions and must fit the 512-character `cursor`
+  parameter, so after roughly 2,000 such moves "Load more" on that column fails with
+  `400` (WS-081, question 3).
+- CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
+  has no BuildKit cache.
