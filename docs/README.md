@@ -175,6 +175,7 @@ right after WT-04 and is done.
 | [WI-073](work-items/WI-073-project-restrictions.md)             | Project restrictions enforced in every service                   | Done        | [WS-073](work-specs/WS-073-project-restrictions.md)             | Done        |
 | [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Done        | [WS-074](work-specs/WS-074-agent-badge.md)                      | Done        |
 | [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                        | Done        | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Done        |
+| [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Proposed    | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Proposed    |
 
 ## Follow-ups
 
