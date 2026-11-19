@@ -11,9 +11,9 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-077 (the Agents page, WT-05 item F), on 2026-11-19, on the branch
   `claude/wi-077-agents-page`. WT-05 items A to G are done.
-- **Next:** draft WI-078 (WT-05 item H: the end-to-end agent flow and `docs/agents.md`, the
-  guide for agent authors), which closes WT-05, as `Proposed`, and stop for the owner's
-  approval.
+- **Next:** the owner reviews WI-078/WS-078 (WT-05 item H: the agent flow end to end and
+  `docs/agents.md`), drafted as `Proposed` on 2026-11-19 on
+  `claude/wi-078-agent-flow-and-guide`. It closes WT-05; WT-06 follows.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -177,6 +177,7 @@ right after WT-04 and is done.
 | [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                        | Done        | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Done        |
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
+| [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Proposed    | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Proposed    |
 
 ## Follow-ups
 
