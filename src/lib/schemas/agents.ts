@@ -24,7 +24,7 @@ export function scopesOfRole(role: AgentRole): readonly AgentScope[] {
   return ROLE_SCOPES[role];
 }
 
-const agentNameSchema = z.string().trim().min(1).max(80);
+export const agentNameSchema = z.string().trim().min(1).max(80);
 const descriptionSchema = z.string().trim().min(1).max(500).nullable();
 const scopesSchema = z
   .array(agentScopeSchema)

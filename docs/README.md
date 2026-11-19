@@ -9,19 +9,21 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item H),
-  on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent accounts
-  and API tokens) is done.
-- **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
-  and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
-  it.
+- **Last finished:** WI-081 (name cursors fit the longest name they carry, audit of
+  2026-11-19, finding B03; the `cursor` parameter now takes up to 2048 characters), on
+  2026-11-19, on the branch `claude/wi-081-name-cursor-length`.
+- **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
+  H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
+  accounts and API tokens) is done.
+- **Next:** the rest of WI-079 to WI-083, then draft WT-06 (bug reports and automated
+  triage, canonical doc 0001 sections 5 and 6) as `Proposed`, and stop for the owner's
+  approval. WT-11 (the MCP server) follows it.
 - **Approved on 2026-11-19, in progress:** WI-079 to WI-083 with their work-specs, every
-  question as proposed,
-  the fixes for findings B01 to B05 of the audit of 2026-11-19 (production services get
-  only their own secrets; paged lists without duplicates; name cursors that fit epic
-  titles; board loads ordered around moves; every API response documented). The lower
-  findings B06 to B16 are listed under [Follow-ups](#follow-ups). The owner chose to do
-  these before WT-06.
+  question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
+  (production services get only their own secrets; paged lists without duplicates; name
+  cursors that fit epic titles; board loads ordered around moves; every API response
+  documented). The lower findings B06 to B16 are listed under [Follow-ups](#follow-ups).
+  The owner chose to do these before WT-06. WI-081 is done.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -188,7 +190,7 @@ right after WT-04 and is done.
 | [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
 | [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Approved    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Approved    |
 | [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Approved    | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Approved    |
-| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Approved    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Approved    |
+| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Done        | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Done        |
 | [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Approved    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Approved    |
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Approved    | [WS-083](work-specs/WS-083-documented-responses.md)             | Approved    |
 
@@ -210,6 +212,11 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   request body, and log contents, access and retention are each a section of the guide.
 
 Other follow-ups:
+
+- `tests/e2e/agents.spec.ts`, "a Manager has neither the Agents link nor the page", counts
+  every link whose name contains "Agents", so it fails once projects named "Agents …"
+  (created by the same spec) are on the first page of `/projects` (found in WI-081; fails
+  without that item's changes too). Scope it to the Main navigation, with `exact: true`.
 
 - Let end-to-end runs choose their port and database (`E2E_PORT`, already
   `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100
@@ -321,8 +328,8 @@ Optimisations found by the same audit, none urgent:
   `comments.author_account_id`, `credentials.account_id`, `sessions.expires_at`; each task
   write runs the six-join task select two or three times.
 - Position keys grow by a character about every six moves into the same gap and are never
-  renumbered. A board cursor carries two positions and must fit the 512-character `cursor`
-  parameter, so after roughly 2,000 such moves "Load more" on that column fails with
-  `400` (WS-081, question 3).
+  renumbered. A board cursor carries two positions and must fit the `cursor` parameter
+  (2048 characters since WI-081), so after several thousand such moves "Load more" on that
+  column fails with `400` (WS-081, question 3).
 - CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
   has no BuildKit cache.

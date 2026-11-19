@@ -1,6 +1,6 @@
 # WS-081 — Name cursors fit the longest name they carry
 
-- Status: Approved (by the owner on 2026-11-19, every question as proposed)
+- Status: Done (2026-11-19; approved by the owner the same day, questions 1 to 3 as proposed)
 - Work-item: [WI-081](../work-items/WI-081-name-cursor-length.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 5 (pagination);
   audit of 2026-11-19, finding B03
@@ -88,4 +88,29 @@ For the owner:
 
 ## Deviations from the approved spec
 
-None yet.
+1. **Test 4 lives in a new `describe` of the epics route test**, with titles of 200
+   characters in total (`b` followed by 199 characters, so `b…` sorts between `a` and
+   `c`), rather than `b` plus 200 characters, which an epic title refuses.
+
+## Implementation record
+
+- Red: the two 200-character round trips and the 2048 bound failed (`400`, and Zod's
+  "expected string to have <=512 characters"); the drift test failed with
+  `NAME_CURSOR_MAX_LENGTH` and `agentNameSchema` not exported; the route test got `400` on
+  the cursor after the first long title.
+- Green: 21 of 21 in the three files. The 101-character refusal moved to 201 (test 1).
+- `pnpm openapi:generate`: 8 lines change, each the `maxLength` of a `cursor` parameter,
+  512 to 2048 (test 6).
+- `docs/work-specs/WS-018-account-management-api.md` still says the cursor may have up to
+  512 characters; it is the record of that item and stays as written.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1551 of 1551;
+  - `pnpm test:e2e --retries=0` 86 of 87. The failure is
+    `agents.spec.ts` "a Manager has neither the Agents link nor the page", which also fails
+    without this item's changes: its unscoped `getByRole("link", { name: "Agents" })`
+    matches projects named "Agents …" that the same spec creates, once they are on the
+    first page of `/projects`. Listed under Follow-ups. In one other run
+    `board.spec.ts:208` (keyboard move) and `live-pages.spec.ts:125` failed once and
+    passed on the next run;
+  - Linux, Node 22.23.5, pnpm 10, Compose PostgreSQL 18 on port 5432.
