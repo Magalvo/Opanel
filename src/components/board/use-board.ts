@@ -27,6 +27,11 @@ function isMounted(ref: { readonly current: boolean }): boolean {
   return ref.current;
 }
 
+/** Whether another load was asked for, read through a function for the same reason. */
+function askedAgain(loader: { readonly again: boolean }): boolean {
+  return loader.again;
+}
+
 function summaryOf(task: Task): TaskSummary {
   const { description: _description, ...summary } = task;
   return summary;
@@ -49,7 +54,11 @@ function moveFailure(failure: unknown, key: string): string {
  *
  * It is live (WS-048): it listens to the project's events, loads first once that stream is
  * open, applies other people's changes, and reloads after a reconnect. Events that arrive
- * during a drag (`hold`) or while a move is saved wait until it is settled.
+ * during a drag (`hold`), while a move is saved or while the board loads wait until it is
+ * settled.
+ *
+ * Loads are ordered (WS-082): one at a time, only the latest applied, and none applied over
+ * a drag or a move. A reload asked for during either waits until it ends.
  */
 export function useBoard({
   projectKey,
@@ -70,13 +79,25 @@ export function useBoard({
   const current = useRef<Board>(board);
   const mounted = useRef(true);
   const loadStarted = useRef(false);
-  // Events waiting for a drag or a move to end, and whether too many arrived.
+  // Events waiting for a drag, a move or a load to end, whether too many arrived, and
+  // whether a reload waits for the drag or the move to end (WS-082).
   const held = useRef({
     dragging: false,
     moving: false,
     queue: [] as ProjectEvent[],
     overflow: false,
+    reload: false,
   });
+  // The board's loads (WS-082): whether one runs, whether another was asked for meanwhile,
+  // the generation whose result may be applied, and the running loop.
+  const loader = useRef({
+    running: false,
+    again: false,
+    generation: 0,
+    promise: null as Promise<void> | null,
+  });
+  // `flush`, for the load loop, which is declared before it.
+  const flushHeld = useRef<() => void>(() => undefined);
   // Tasks being fetched, and those to fetch again once that ends.
   const fetching = useRef(new Set<string>());
   const again = useRef(new Set<string>());
@@ -101,19 +122,73 @@ export function useBoard({
     return { columns: loadedColumns.items, board: groupByColumn(loadedColumns.items, tasks) };
   }, [projectKey]);
 
-  /** Loads the whole board again. The current board stays shown while it loads. */
-  const reload = useCallback(async () => {
+  /**
+   * Loads the whole board, one load at a time (WS-082). Asked for while one runs, it loads
+   * once more after it, and only that last result (or error) is applied. A result whose
+   * generation was superseded by a drag or a move is dropped. The current board stays shown
+   * while it loads.
+   */
+  const load = useCallback((): Promise<void> => {
     loadStarted.current = true;
-    try {
-      const loaded = await fetchBoard();
-      if (!isMounted(mounted)) return;
-      setColumns(loaded.columns);
-      setBoard(loaded.board);
-      setPhase("ready");
-    } catch {
-      if (isMounted(mounted)) setPhase("error");
+    const state = loader.current;
+    if (state.running) {
+      state.again = true;
+      return state.promise ?? Promise.resolve();
     }
+    state.running = true;
+    const run = async () => {
+      try {
+        do {
+          state.again = false;
+          const generation = ++state.generation;
+          let loaded: Awaited<ReturnType<typeof fetchBoard>> | null = null;
+          try {
+            loaded = await fetchBoard();
+          } catch {
+            loaded = null;
+          }
+          if (!isMounted(mounted)) return;
+          if (generation !== state.generation || askedAgain(state)) continue;
+          if (loaded === null) {
+            setPhase("error");
+          } else {
+            setColumns(loaded.columns);
+            setBoard(loaded.board);
+            setPhase("ready");
+          }
+        } while (askedAgain(state));
+      } finally {
+        state.running = false;
+        state.promise = null;
+        if (isMounted(mounted)) flushHeld.current();
+      }
+    };
+    state.promise = run();
+    return state.promise;
   }, [fetchBoard, setBoard]);
+
+  /** Loads the whole board again, once any drag or move has ended (WS-082). */
+  const reload = useCallback((): Promise<void> => {
+    const state = held.current;
+    if (state.dragging || state.moving) {
+      state.reload = true;
+      return Promise.resolve();
+    }
+    return load();
+  }, [load]);
+
+  /**
+   * A drag or a move begins: a load in flight may predate it, so its result is dropped and
+   * the board reloads once the drag or the move has ended (WS-082).
+   */
+  const supersede = useCallback(() => {
+    const state = loader.current;
+    state.generation++;
+    if (state.running) {
+      state.again = false;
+      held.current.reload = true;
+    }
+  }, []);
 
   // The first load: when the stream opens, or after `fallbackMs` without it.
   useEffect(() => {
@@ -124,6 +199,26 @@ export function useBoard({
       clearTimeout(timer);
     };
   }, [fallbackMs, reload]);
+
+  /**
+   * Shows a task in the column its `columnId` names, unless the board holds as new a
+   * version: in place when it is there, otherwise taken out of wherever it is and that
+   * column read again (WS-048 section 4, WS-082).
+   */
+  const placeTask = useCallback(
+    async (task: TaskSummary) => {
+      if (!isNewer(heldVersion(current.current, task.id), task.version)) return;
+      const inPlace = replaceInPlace(current.current, task);
+      if (inPlace !== null) {
+        setBoard(inPlace);
+        return;
+      }
+      const tasks = await listColumnTasks(projectKey, task.columnId);
+      if (!isMounted(mounted)) return;
+      setBoard(replaceColumn(removeTask(current.current, task.id), task.columnId, tasks));
+    },
+    [projectKey, setBoard],
+  );
 
   /** Reads a task again and puts it where it now is (WS-048 section 4). */
   const refreshOnce = useCallback(
@@ -141,17 +236,9 @@ export function useBoard({
         setBoard(removeTask(current.current, taskId));
         return;
       }
-      if (!isNewer(heldVersion(current.current, taskId), task.version)) return;
-      const inPlace = replaceInPlace(current.current, task);
-      if (inPlace !== null) {
-        setBoard(inPlace);
-        return;
-      }
-      const tasks = await listColumnTasks(projectKey, task.columnId);
-      if (!isMounted(mounted)) return;
-      setBoard(replaceColumn(removeTask(current.current, taskId), task.columnId, tasks));
+      await placeTask(task);
     },
-    [projectKey, setBoard],
+    [placeTask, setBoard],
   );
 
   /**
@@ -206,27 +293,40 @@ export function useBoard({
     [refreshTask, reload, setBoard],
   );
 
-  /** Applies the held events once neither a drag nor a move is in progress. */
+  /**
+   * Applies the held events once no drag, move or load is in progress. A reload asked for
+   * meanwhile, too many events or a column change loads the whole board instead.
+   */
   const flush = useCallback(() => {
     const state = held.current;
-    if (state.dragging || state.moving) return;
+    if (state.dragging || state.moving || loader.current.running) return;
     const queue = state.queue;
-    const overflow = state.overflow;
+    const whole =
+      state.overflow || state.reload || queue.some((event) => event.type === "column.changed");
     state.queue = [];
     state.overflow = false;
-    if (overflow) {
+    state.reload = false;
+    if (whole) {
       void reload();
       return;
     }
     for (const event of queue) apply(event);
   }, [apply, reload]);
 
+  useEffect(() => {
+    flushHeld.current = flush;
+  }, [flush]);
+
   const onEvent = useCallback(
     (event: ProjectEvent) => {
       const state = held.current;
       if (!state.dragging && !state.moving) {
-        apply(event);
-        return;
+        // A column change during a load asks for one more load; other events wait for the
+        // snapshot, and then meet it through the version rule (WS-082).
+        if (event.type === "column.changed" || !loader.current.running) {
+          apply(event);
+          return;
+        }
       }
       if (state.overflow) return;
       if (state.queue.length >= MAX_HELD) {
@@ -258,10 +358,11 @@ export function useBoard({
   /** Holds incoming events while a card is dragged (WS-048 section 5). */
   const hold = useCallback(
     (on: boolean) => {
+      if (on) supersede();
       held.current.dragging = on;
       if (!on) flush();
     },
-    [flush],
+    [flush, supersede],
   );
 
   // Changes made in the task detail, over the board (WS-038 section 4).
@@ -272,6 +373,8 @@ export function useBoard({
           const latest = current.current;
           const place = placeOf(latest, task.id);
           if (place === null) return;
+          // The version rule, as for events (WS-082).
+          if (!isNewer(heldVersion(latest, task.id), task.version)) return;
           const summary = summaryOf(task);
           const from = latest[place.columnId] ?? [];
           if (place.columnId === task.columnId) {
@@ -294,11 +397,21 @@ export function useBoard({
     [setBoard],
   );
 
-  /** Shows a task the API created at the end of its column. */
+  /**
+   * Shows a task the API created at the end of its column. Its event may have put it on
+   * the board first: then it is replaced only by a newer version (WS-082).
+   */
   const added = useCallback(
     (task: Task) => {
       const before = current.current;
-      setBoard({ ...before, [task.columnId]: [...(before[task.columnId] ?? []), summaryOf(task)] });
+      const summary = summaryOf(task);
+      if (placeOf(before, task.id) !== null) {
+        if (!isNewer(heldVersion(before, task.id), task.version)) return;
+        const inPlace = replaceInPlace(before, summary);
+        if (inPlace !== null) setBoard(inPlace);
+        return;
+      }
+      setBoard({ ...before, [task.columnId]: [...(before[task.columnId] ?? []), summary] });
     },
     [setBoard],
   );
@@ -313,20 +426,21 @@ export function useBoard({
       const key = from === null ? "" : (before[from.columnId]?.[from.index]?.key ?? "");
       if (request === null) return;
 
+      supersede();
       setBoard(after);
       setMoving(true);
       held.current.moving = true;
       try {
         const moved = summaryOf(await moveTask(taskId, request));
-        const latest = current.current;
-        const place = placeOf(latest, taskId);
-        if (place !== null) {
-          const tasks = [...(latest[place.columnId] ?? [])];
-          tasks[place.index] = moved;
-          setBoard({ ...latest, [place.columnId]: tasks });
+        try {
+          // In its own column, whatever the board did meanwhile (WS-082).
+          await placeTask(moved);
+        } catch {
+          held.current.reload = true;
         }
       } catch (failure) {
-        await reload();
+        // This move owns the hold: its reload lands before the announcement.
+        await load();
         announce(moveFailure(failure, key));
         if (failure instanceof ApiFailure && failure.code === "project_archived") onArchived();
       } finally {
@@ -335,7 +449,7 @@ export function useBoard({
         flush();
       }
     },
-    [announce, flush, onArchived, reload, setBoard],
+    [announce, flush, load, onArchived, placeTask, setBoard, supersede],
   );
 
   return { phase, columns, board, moving, live, reload, added, drop, hold };
