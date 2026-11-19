@@ -286,3 +286,8 @@ Risks:
     item; those two files with `agent-badge.spec.ts` then passed 15 of 15. Both new E2E
     tests passed in the full run too;
   - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+- Rebased on `main` at `aaf1a03` (WI-072 and WI-073 merged): only the work-item tables of
+  `docs/README.md` and WT-05 conflicted; `tasks.ts` and `comments.ts` merged on their own;
+  `pnpm openapi:generate` left `docs/api/openapi.json` unchanged. Gate again on 2026-11-19,
+  same databases: typecheck, lint and Prettier pass; Vitest 1474 of 1474;
+  `pnpm test:e2e --retries=0` 81 of 81.
