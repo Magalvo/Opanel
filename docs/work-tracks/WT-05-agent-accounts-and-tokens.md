@@ -176,7 +176,7 @@ Numbers are given in order when each item starts; each gets its work-spec then.
 | [WI-073](../work-items/WI-073-project-restrictions.md) D | Project restrictions enforced in every service, with the coverage test                                       | Done   | A          |
 | E                                                        | `GET /me` for agents; the other authentication-only operations refuse them                                   | Draft  | B          |
 | F                                                        | The Agents page                                                                                              | Draft  | C          |
-| G                                                        | Agents where humans see them: the "Agent" badge on reporter, author and history                              | Draft  | A          |
+| [WI-074](../work-items/WI-074-agent-badge.md) G          | Agents where humans see them: the "Agent" badge on reporter, author and history                              | Done   | A          |
 | H                                                        | End-to-end agent flow and the guide for agent authors (`docs/agents.md`)                                     | Draft  | C, D, E, F |
 
 ## Exit criteria

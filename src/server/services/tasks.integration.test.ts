@@ -1,7 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createTestAccount, testActor } from "@/server/auth/testing";
+import { AGENT_SCOPES } from "@/lib/schemas/permissions";
+import { agentActor } from "@/server/auth/actor";
+import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts, taskEvents, tasks } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
@@ -128,6 +130,39 @@ describe("createTask", () => {
     const viewer = testActor(await createTestAccount({ email: "v@example.com", role: "viewer" }));
 
     expect((await failure(createTask(viewer, "OPA", { title: "X" }))).status).toBe(403);
+  });
+});
+
+/** A worker agent with every agent scope and all projects, as its `Actor` (WS-074). */
+async function workerAgent(name = "QA Bot") {
+  const account = await createTestAgent({
+    name,
+    role: "worker_agent",
+    scopes: [...AGENT_SCOPES],
+  });
+  const actor = agentActor({
+    accountId: account.id,
+    role: "worker_agent",
+    scopes: AGENT_SCOPES,
+    projectIds: null,
+  });
+  return { account, actor };
+}
+
+describe("the reporter's kind (WS-074)", () => {
+  it("is human for a person's task and agent for an agent's, in every response", async () => {
+    const { actor, member } = await setup();
+    const agent = await workerAgent();
+
+    const human = await createTask(actor, "OPA", { title: "By Mia" });
+    const created = await createTask(agent.actor, "OPA", { title: "By the bot" });
+
+    expect(human.reporter).toEqual({ id: member.id, name: "Mia", kind: "human" });
+    const bot = { id: agent.account.id, name: "QA Bot", kind: "agent" };
+    expect(created.reporter).toEqual(bot);
+    expect((await getTask(actor, created.key)).reporter).toEqual(bot);
+    const listed = (await listTasks(actor, "OPA", { limit: 50 })).items;
+    expect(listed.map((task) => task.reporter.kind)).toEqual(["human", "agent"]);
   });
 });
 
@@ -290,6 +325,24 @@ describe("assignment", () => {
     expect(team.errors?.map((field) => field.path)).toEqual(["assigneeTeamId"]);
     expect(person.errors?.map((field) => field.path)).toEqual(["assigneeAccountId"]);
     expect(inactive.code).toBe("account_inactive");
+  });
+
+  it("never assigns an agent: 400 on assigneeAccountId, on create and on update (WS-074)", async () => {
+    const { actor } = await setup();
+    const agent = await workerAgent();
+    await createTask(actor, "OPA", { title: "T" });
+
+    const created = await failure(
+      createTask(actor, "OPA", { title: "X", assigneeAccountId: agent.account.id }),
+    );
+    const updated = await failure(
+      updateTask(actor, "OPA-1", { assigneeAccountId: agent.account.id, version: 1 }),
+    );
+
+    for (const error of [created, updated]) {
+      expect(error.status).toBe(400);
+      expect(error.errors?.map((field) => field.path)).toEqual(["assigneeAccountId"]);
+    }
   });
 
   it("keeps a person deactivated after assignment, shown inactive, through an edit of the title", async () => {

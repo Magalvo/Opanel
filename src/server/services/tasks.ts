@@ -1,6 +1,7 @@
 import { type SQL, sql } from "drizzle-orm";
 
 import { positionBetween } from "@/lib/position";
+import type { AccountKind } from "@/lib/schemas/account-ref";
 import type {
   CreateTaskRequest,
   MoveTaskRequest,
@@ -45,7 +46,7 @@ const TASK_SELECT = sql`
     e.title as epic_title,
     tm.name as team_name,
     a.name as assignee_name, a.disabled_at is null as assignee_active,
-    r.id as reporter_id, r.name as reporter_name,
+    r.id as reporter_id, r.name as reporter_name, r.kind as reporter_kind,
     t.version, c.position as column_position, t.position,
     to_char(t.deleted_at at time zone 'utc', ${ISO_MS}) as deleted_at,
     to_char(t.created_at at time zone 'utc', ${ISO_MS}) as created_at,
@@ -76,6 +77,7 @@ interface TaskRow extends Record<string, unknown> {
   assignee_active: boolean | null;
   reporter_id: string;
   reporter_name: string;
+  reporter_kind: AccountKind;
   version: number;
   column_position: string;
   position: string;
@@ -106,7 +108,7 @@ function toSummary(row: TaskRow): TaskSummary {
             active: row.assignee_active ?? false,
           },
     epic: row.epic_id === null ? null : { id: row.epic_id, title: row.epic_title ?? "" },
-    reporter: { id: row.reporter_id, name: row.reporter_name },
+    reporter: { id: row.reporter_id, name: row.reporter_name, kind: row.reporter_kind },
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

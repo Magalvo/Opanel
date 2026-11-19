@@ -193,6 +193,25 @@ describe("buildOpenApiDocument", () => {
     ]);
   });
 
+  it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
+    const { schemas } = parsedDocument().components;
+
+    expect(schemas.AccountRef).toMatchObject({
+      type: "object",
+      properties: { kind: { $ref: "#/components/schemas/AccountKind" } },
+      required: ["id", "name", "kind"],
+      additionalProperties: false,
+    });
+    expect(schemas.AccountKind).toMatchObject({ type: "string", enum: ["human", "agent"] });
+    expect(schemas.CommentAuthor).toBeUndefined();
+    for (const name of ["Task", "TaskSummary"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: { reporter: { $ref: "#/components/schemas/AccountRef" } },
+      });
+    }
+    expect(JSON.stringify(schemas.Comment)).toContain('"#/components/schemas/AccountRef"');
+  });
+
   it("derives the health schema from the Zod schema", () => {
     const component = parsedDocument().components.schemas.HealthResponse;
     const { shape } = healthResponseSchema;

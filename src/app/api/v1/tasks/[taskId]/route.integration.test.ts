@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
+import { AGENT_SCOPES } from "@/lib/schemas/permissions";
 import { problemSchema } from "@/lib/schemas/problem";
 import { taskPageSchema, taskSchema } from "@/lib/schemas/tasks";
-import { apiRequest, createTestAccount, signInCookie } from "@/server/auth/testing";
+import { agentActor } from "@/server/auth/actor";
+import {
+  apiRequest,
+  createTestAccount,
+  createTestAgent,
+  signInCookie,
+} from "@/server/auth/testing";
+import { createTask } from "@/server/services/tasks";
 
 import { GET as list, POST as create } from "../../projects/[projectId]/tasks/route";
 import { POST as projectsPost } from "../../projects/route";
@@ -28,6 +36,41 @@ const conflictSchema = problemSchema.extend({
 });
 
 describe("task endpoints", () => {
+  it("returns the reporter's kind: agent for an agent's task (WS-074)", async () => {
+    const manager = await cookieFor("manager");
+    await projectsPost(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const agent = await createTestAgent({
+      name: "QA Bot",
+      role: "worker_agent",
+      scopes: [...AGENT_SCOPES],
+    });
+    await createTask(
+      agentActor({
+        accountId: agent.id,
+        role: "worker_agent",
+        scopes: AGENT_SCOPES,
+        projectIds: null,
+      }),
+      "OPA",
+      { title: "Found by the bot" },
+    );
+
+    const read = await GET(
+      apiRequest("GET", "/api/v1/tasks/OPA-1", { cookie: manager }),
+      task("OPA-1"),
+    );
+
+    expect(read.status).toBe(200);
+    expect(taskSchema.parse(await read.json()).reporter).toEqual({
+      id: agent.id,
+      name: "QA Bot",
+      kind: "agent",
+    });
+  });
+
   it("create, list, read by key, update and conflict", async () => {
     const manager = await cookieFor("manager");
     await projectsPost(

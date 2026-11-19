@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createTestAccount, testActor } from "@/server/auth/testing";
+import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { accounts } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
@@ -47,6 +47,16 @@ describe("listPeople", () => {
       active: true,
     });
     expect(page.nextCursor).toBeNull();
+  });
+
+  it("never finds an agent by name, as the assignee picker searches (WS-074)", async () => {
+    const actor = await viewer();
+    await createTestAccount({ name: "Quinn", email: "quinn@example.com" });
+    await createTestAgent({ name: "QA Bot" });
+
+    const page = await listPeople(actor, { limit: 50, q: "Q" });
+
+    expect(page.items.map((person) => person.name)).toEqual(["Quinn"]);
   });
 
   it("orders names ignoring case, the same on every install whatever its collation", async () => {

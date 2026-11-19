@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 
+import { AccountName } from "@/components/account-name";
 import { TYPE_LABELS } from "@/components/board/task-card";
 import { Markdown } from "@/components/markdown";
 import { MarkdownEditor } from "@/components/markdown-editor";
@@ -139,7 +140,9 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
               {task.assignee === null ? "No one" : personLabel(task.assignee)}
             </Row>
             <Row term="Epic">{task.epic?.title ?? "No epic"}</Row>
-            <Row term="Reporter">{task.reporter.name}</Row>
+            <Row term="Reporter">
+              <AccountName account={task.reporter} />
+            </Row>
             <Row term="Created">{formatTime(task.createdAt)}</Row>
             <Row term="Updated">{formatTime(task.updatedAt)}</Row>
           </dl>
@@ -373,7 +376,9 @@ function DetailsForm({
         }}
       />
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-        <Row term="Reporter">{task.reporter.name}</Row>
+        <Row term="Reporter">
+          <AccountName account={task.reporter} />
+        </Row>
         <Row term="Created">{formatTime(task.createdAt)}</Row>
         <Row term="Updated">{formatTime(task.updatedAt)}</Row>
       </dl>

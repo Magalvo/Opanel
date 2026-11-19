@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 
+import type { AccountKind } from "@/lib/schemas/account-ref";
 import type {
   Comment,
   CommentKind,
@@ -21,7 +22,8 @@ const ISO_MS = sql`'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
 const ISO_US = sql`'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`;
 
 const COMMENT_SELECT = sql`
-  select c.id, c.task_id, c.kind, c.author_account_id, a.name as author_name, c.body,
+  select c.id, c.task_id, c.kind, c.author_account_id, a.name as author_name, a.kind as author_kind,
+    c.body,
     to_char(c.created_at at time zone 'utc', ${ISO_MS}) as created_at,
     to_char(c.created_at at time zone 'utc', ${ISO_US}) as cursor_time
   from comments c
@@ -33,6 +35,7 @@ interface CommentRow extends Record<string, unknown> {
   kind: CommentKind;
   author_account_id: string | null;
   author_name: string | null;
+  author_kind: AccountKind | null;
   body: string;
   created_at: string;
   cursor_time: string;
@@ -46,7 +49,11 @@ function toComment(row: CommentRow): Comment {
     author:
       row.author_account_id === null
         ? null
-        : { id: row.author_account_id, name: row.author_name ?? "" },
+        : {
+            id: row.author_account_id,
+            name: row.author_name ?? "",
+            kind: row.author_kind ?? "human",
+          },
     body: row.body,
     createdAt: row.created_at,
   };
