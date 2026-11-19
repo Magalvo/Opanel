@@ -21,6 +21,7 @@ export default async function AppLayout({ children }: Readonly<{ children: React
       defaultSidebarOpen={defaultSidebarOpen}
       account={summarize(account)}
       canManageAccounts={can(actor, "accounts:manage")}
+      canManageAgents={can(actor, "agents:manage")}
     >
       {children}
     </AppShell>

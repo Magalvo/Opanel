@@ -16,6 +16,8 @@ interface AppShellProps {
   account: AccountSummary;
   /** Whether to show the People page in the navigation (`accounts:manage`). */
   canManageAccounts: boolean;
+  /** Whether to show the Agents page in the navigation (`agents:manage`, WS-077). */
+  canManageAgents: boolean;
 }
 
 /** The frame around every signed-in page: sidebar, top bar and the main region. */
@@ -24,11 +26,12 @@ export function AppShell({
   defaultSidebarOpen,
   account,
   canManageAccounts,
+  canManageAgents,
 }: Readonly<AppShellProps>) {
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={defaultSidebarOpen}>
-        <AppSidebar canManageAccounts={canManageAccounts} />
+        <AppSidebar canManageAccounts={canManageAccounts} canManageAgents={canManageAgents} />
         <div className="flex min-h-svh min-w-0 flex-1 flex-col bg-background">
           <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-3">
             <SidebarTrigger />

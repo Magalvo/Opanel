@@ -1,4 +1,4 @@
-import { FolderKanbanIcon, UsersIcon, UsersRoundIcon } from "lucide-react";
+import { BotIcon, FolderKanbanIcon, UsersIcon, UsersRoundIcon } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -10,7 +10,10 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export function AppSidebar({ canManageAccounts }: Readonly<{ canManageAccounts: boolean }>) {
+export function AppSidebar({
+  canManageAccounts,
+  canManageAgents,
+}: Readonly<{ canManageAccounts: boolean; canManageAgents: boolean }>) {
   return (
     <Sidebar>
       <SidebarHeader>
@@ -53,6 +56,16 @@ export function AppSidebar({ canManageAccounts }: Readonly<{ canManageAccounts: 
                   <Link href="/people">
                     <UsersIcon aria-hidden="true" />
                     People
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {canManageAgents && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/agents">
+                    <BotIcon aria-hidden="true" />
+                    Agents
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

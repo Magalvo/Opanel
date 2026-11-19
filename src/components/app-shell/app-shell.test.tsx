@@ -15,9 +15,14 @@ const account = {
   role: "admin",
 };
 
-function renderShell(canManageAccounts = false) {
+function renderShell(canManageAccounts = false, canManageAgents = false) {
   return render(
-    <AppShell defaultSidebarOpen account={account} canManageAccounts={canManageAccounts}>
+    <AppShell
+      defaultSidebarOpen
+      account={account}
+      canManageAccounts={canManageAccounts}
+      canManageAgents={canManageAgents}
+    >
       <p>page content</p>
     </AppShell>,
   );
@@ -101,6 +106,27 @@ describe("AppShell", () => {
     renderShell(false);
 
     expect(screen.queryByRole("link", { name: "People" })).not.toBeInTheDocument();
+  });
+
+  it("shows an Agents link to /agents after People, only with agents:manage (WS-077)", () => {
+    renderShell(true, true);
+
+    const navigation = screen.getByRole("navigation", { name: "Main" });
+    expect(within(navigation).getByRole("link", { name: "Agents" })).toHaveAttribute(
+      "href",
+      "/agents",
+    );
+    expect(
+      within(navigation)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Projects", "Teams", "People", "Agents"]);
+  });
+
+  it("shows no Agents link without agents:manage, even with accounts:manage (WS-077)", () => {
+    renderShell(true, false);
+
+    expect(screen.queryByRole("link", { name: "Agents" })).not.toBeInTheDocument();
   });
 
   it("shows the brand as a link to the home page", () => {

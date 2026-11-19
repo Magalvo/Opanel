@@ -1,6 +1,6 @@
 # WS-077 — The Agents page
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 5 as proposed)
 - Work-item: [WI-077](../work-items/WI-077-agents-page.md)
 - Canonical docs: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (decision 13,
   the page; decisions 1, 4, 7, 11); [WS-075](WS-075-agents-admin-api.md) (the API);
@@ -168,3 +168,41 @@ Risks:
 - The end-to-end tests change the database through the UI, with their own Admin
   (WS-052's isolation). Port 3100 is still shared, so E2E runs take turns (the Follow-up
   about `E2E_PORT`).
+
+## Deviations from the approved spec
+
+1. **The role and the expiry are radio groups, not selects.** With two roles, each with a
+   line of explanation, and four expiries, one of them with a warning, the options read
+   better side by side. Native radios are also simpler to use from the keyboard and with
+   a screen reader than a popup list.
+2. **"Disable agent" uses the `outline` button, not `destructive`.** axe found the shared
+   `destructive` style below WCAG AA contrast in light mode, which is the open Follow-up
+   in `docs/README.md` about that style. The confirmation dialog still says what
+   disabling does. The Follow-up stays open for the style itself.
+3. **The component tests are one file**, `src/components/agents/agents.test.tsx`, with one
+   `describe` per component and a shared fake API.
+4. **Typed routes:** `pnpm typecheck` needs the route types to know `/agents`. Locally,
+   `next typegen` regenerates them (the note in `CONTRIBUTING.md` about stale `.next`
+   applies). A fresh clone and CI generate them as before.
+
+## Implementation record
+
+- Red:
+  - the sidebar test failed on the missing "Agents" link;
+  - the two page tests could not import their components;
+  - the component tests could not import the components.
+- Green:
+  - the two server pages and the `canManageAgents` prop;
+  - `components/ui/checkbox.tsx` (shadcn/ui, from `radix-ui` 1.8.1, no new dependency);
+  - the list, the form, the agent's page and the token dialog, with their API client and
+    labels.
+  - Component tests 12 of 12, sidebar tests 16 of 16, page tests 10 of 10.
+- E2E: `agents.spec.ts` (3 tests) and the accessibility test (light and dark). The first
+  run found the contrast problem of deviation 2; after the fix, every test passes.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1534 of 1534;
+  - `pnpm test:e2e` 85 of 86 with `--retries=0`: `live-board.spec.ts` "a deleted task
+    disappears from the other board, and comes back when restored" failed once, in a
+    file this item does not touch, and `live-board.spec.ts` alone then passed 8 of 8.
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.
