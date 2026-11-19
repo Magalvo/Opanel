@@ -202,6 +202,33 @@ describe("buildOpenApiDocument", () => {
     ]);
   });
 
+  it("describes Me as one of HumanMe and AgentMe; PATCH /me answers HumanMe (WS-076)", () => {
+    const { paths, components } = parsedDocument();
+    const json = (status: string, method: "get" | "patch") =>
+      paths["/api/v1/me"]?.[method]?.responses[status]?.content?.["application/json"]?.schema.$ref;
+
+    expect(json("200", "get")).toBe("#/components/schemas/Me");
+    expect(json("200", "patch")).toBe("#/components/schemas/HumanMe");
+    expect(components.schemas.Me).toMatchObject({
+      oneOf: [{ $ref: "#/components/schemas/HumanMe" }, { $ref: "#/components/schemas/AgentMe" }],
+      discriminator: {
+        propertyName: "kind",
+        mapping: {
+          human: "#/components/schemas/HumanMe",
+          agent: "#/components/schemas/AgentMe",
+        },
+      },
+    });
+    expect(components.schemas.AgentMe).toMatchObject({
+      properties: { kind: { const: "agent" } },
+      required: expect.not.arrayContaining(["email"]) as unknown,
+    });
+    expect(JSON.stringify(components.schemas.AgentMe)).not.toContain('"email"');
+    expect(components.schemas.HumanMe).toMatchObject({
+      properties: { kind: { const: "human" }, projectIds: { type: "null" } },
+    });
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

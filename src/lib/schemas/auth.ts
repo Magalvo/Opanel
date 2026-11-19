@@ -5,7 +5,12 @@ import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
 import { accountKindSchema } from "./account-ref";
 import { accountNameSchema } from "./accounts";
-import { permissionSchema } from "./permissions";
+import {
+  agentRoleSchema,
+  agentScopeSchema,
+  humanRoleSchema,
+  permissionSchema,
+} from "./permissions";
 
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;
@@ -75,14 +80,41 @@ export const setupResponseSchema = z
   .strictObject({ ...accountSummarySchema.shape, signedIn: signedInField })
   .meta({ id: "SetupResponse" });
 
-/** Body of `GET /api/v1/me`: the caller's account and what its role allows. */
-export const meResponseSchema = z
+const projectIdsDescription =
+  "The projects the caller may reach, or null for all of them (WT-05 decision 7).";
+
+/** `GET /api/v1/me` for a person, and `PATCH /api/v1/me`: the account and its role's permissions. */
+export const humanMeSchema = z
   .strictObject({
-    ...accountSummarySchema.shape,
+    id: z.uuid(),
+    kind: z.literal("human"),
+    name: z.string(),
+    email: z.string(),
+    role: humanRoleSchema,
     permissions: z.array(permissionSchema),
+    projectIds: z.null().meta({ description: projectIdsDescription }),
   })
+  .meta({ id: "HumanMe" });
+
+/** `GET /api/v1/me` for an agent: its role, its scopes and its projects (WS-076). No email. */
+export const agentMeSchema = z
+  .strictObject({
+    id: z.uuid(),
+    kind: z.literal("agent"),
+    name: z.string(),
+    role: agentRoleSchema,
+    permissions: z.array(agentScopeSchema),
+    projectIds: z.array(z.uuid()).nullable().meta({ description: projectIdsDescription }),
+  })
+  .meta({ id: "AgentMe" });
+
+/** Body of `GET /api/v1/me`: a person or an agent, told apart by `kind` (WS-076). */
+export const meResponseSchema = z
+  .discriminatedUnion("kind", [humanMeSchema, agentMeSchema])
   .meta({ id: "Me" });
 
+export type HumanMe = z.infer<typeof humanMeSchema>;
+export type AgentMe = z.infer<typeof agentMeSchema>;
 export type MeResponse = z.infer<typeof meResponseSchema>;
 
 export const signInContract = {
@@ -146,7 +178,9 @@ export const meContract = {
   path: "/api/v1/me",
   summary: "The signed-in account",
   description:
-    "Returns the caller's account and permissions. Needs a session or an API token, no permission.",
+    "Returns the caller's account, permissions and project restriction. A person gets " +
+    '`kind: "human"` and an email; an agent gets `kind: "agent"`, its agent role and scopes, ' +
+    "and `projectIds` (null for all projects). Needs a session or an API token, no permission.",
   access: { kind: "authenticated" },
   responses: { 200: { description: "The caller.", schema: meResponseSchema } },
 } satisfies EndpointContract;
@@ -225,7 +259,7 @@ export const updateMeContract = {
   access: { kind: "session" },
   request: { body: updateMeRequestSchema },
   responses: {
-    200: { description: "The name was changed.", schema: meResponseSchema },
+    200: { description: "The name was changed.", schema: humanMeSchema },
     400: { description: "The body is not valid.", problem: true },
     403: { description: "The request does not come from the app's own origin.", problem: true },
     413: PAYLOAD_TOO_LARGE,

@@ -6,7 +6,9 @@ import {
   acceptLinkRequestSchema,
   acceptLinkResponseSchema,
   accountSummarySchema,
+  agentMeSchema,
   changePasswordRequestSchema,
+  humanMeSchema,
   meResponseSchema,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -84,12 +86,71 @@ describe("account response schemas", () => {
 
   it("describe the account and, for me, its permissions", () => {
     expect(accountSummarySchema.parse(account)).toEqual(account);
-    expect(meResponseSchema.parse({ ...account, permissions: ["tasks:read"] }).permissions).toEqual(
-      ["tasks:read"],
-    );
-    expect(meResponseSchema.safeParse({ ...account, permissions: ["tasks:fly"] }).success).toBe(
-      false,
-    );
+    const me = { ...account, permissions: ["tasks:read"], projectIds: null };
+    expect(meResponseSchema.parse(me).permissions).toEqual(["tasks:read"]);
+    expect(meResponseSchema.safeParse({ ...me, permissions: ["tasks:fly"] }).success).toBe(false);
+  });
+});
+
+describe("meResponseSchema (WS-076)", () => {
+  const human = {
+    id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+    kind: "human",
+    name: "Ada",
+    email: "ada@example.com",
+    role: "member",
+    permissions: ["tasks:read", "tasks:write"],
+    projectIds: null,
+  };
+  const agent = {
+    id: "1a2b3c4d-3a52-4d7b-9a51-0c1f1c2d3e4f",
+    kind: "agent",
+    name: "QA Bot",
+    role: "qa_agent",
+    permissions: ["projects:read", "reports:write"],
+    projectIds: null,
+  };
+  const projectId = "2b3c4d5e-3a52-4d7b-9a51-0c1f1c2d3e4f";
+
+  it("parses a person as HumanMe and an agent as AgentMe, told apart by kind", () => {
+    expect(meResponseSchema.parse(human)).toEqual(human);
+    expect(humanMeSchema.parse(human)).toEqual(human);
+    expect(meResponseSchema.parse(agent)).toEqual(agent);
+    expect(agentMeSchema.parse(agent)).toEqual(agent);
+    const restricted = { ...agent, projectIds: [projectId] };
+    expect(meResponseSchema.parse(restricted)).toEqual(restricted);
+  });
+
+  it("refuses a person without an email, with a project list or with an agent role", () => {
+    const { email: _email, ...noEmail } = human;
+    for (const body of [
+      noEmail,
+      { ...human, email: null },
+      { ...human, projectIds: [] },
+      { ...human, projectIds: [projectId] },
+      { ...human, role: "qa_agent" },
+    ]) {
+      expect(meResponseSchema.safeParse(body).success).toBe(false);
+    }
+  });
+
+  it("refuses an agent with an email, a human role or a permission no agent may hold", () => {
+    for (const body of [
+      { ...agent, email: null },
+      { ...agent, email: "bot@example.com" },
+      { ...agent, role: "admin" },
+      { ...agent, permissions: ["accounts:manage"] },
+      { ...agent, permissions: ["tasks:delete_any"] },
+      { ...agent, projectIds: ["not-a-uuid"] },
+    ]) {
+      expect(meResponseSchema.safeParse(body).success).toBe(false);
+    }
+  });
+
+  it("refuses an unknown or missing kind", () => {
+    const { kind: _kind, ...noKind } = agent;
+    expect(meResponseSchema.safeParse({ ...agent, kind: "robot" }).success).toBe(false);
+    expect(meResponseSchema.safeParse(noKind).success).toBe(false);
   });
 });
 

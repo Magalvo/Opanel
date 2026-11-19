@@ -191,7 +191,7 @@
     "/api/v1/me": {
       "get": {
         "summary": "The signed-in account",
-        "description": "Returns the caller's account and permissions. Needs a session or an API token, no permission.",
+        "description": "Returns the caller's account, permissions and project restriction. A person gets `kind: \"human\"` and an email; an agent gets `kind: \"agent\"`, its agent role and scopes, and `projectIds` (null for all projects). Needs a session or an API token, no permission.",
         "security": [
           {
             "sessionCookie": []
@@ -257,7 +257,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Me"
+                  "$ref": "#/components/schemas/HumanMe"
                 }
               }
             }
@@ -6039,6 +6039,24 @@
         "description": "An error, as RFC 9457 problem details (`application/problem+json`)."
       },
       "Me": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/HumanMe"
+          },
+          {
+            "$ref": "#/components/schemas/AgentMe"
+          }
+        ],
+        "type": "object",
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "human": "#/components/schemas/HumanMe",
+            "agent": "#/components/schemas/AgentMe"
+          }
+        }
+      },
+      "HumanMe": {
         "type": "object",
         "properties": {
           "id": {
@@ -6047,19 +6065,23 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "kind": {
-            "$ref": "#/components/schemas/AccountKind"
+            "type": "string",
+            "const": "human"
           },
           "name": {
             "type": "string"
           },
           "email": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "role": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "viewer",
+              "member",
+              "manager",
+              "admin"
+            ]
           },
           "permissions": {
             "type": "array",
@@ -6084,6 +6106,10 @@
                 "organization:manage"
               ]
             }
+          },
+          "projectIds": {
+            "type": "null",
+            "description": "The projects the caller may reach, or null for all of them (WT-05 decision 7)."
           }
         },
         "required": [
@@ -6092,7 +6118,70 @@
           "name",
           "email",
           "role",
-          "permissions"
+          "permissions",
+          "projectIds"
+        ],
+        "additionalProperties": false
+      },
+      "AgentMe": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "kind": {
+            "type": "string",
+            "const": "agent"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "qa_agent",
+              "worker_agent"
+            ]
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "projects:read",
+                "tasks:read",
+                "reports:write",
+                "comments:write",
+                "tasks:write"
+              ]
+            }
+          },
+          "projectIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The projects the caller may reach, or null for all of them (WT-05 decision 7)."
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "role",
+          "permissions",
+          "projectIds"
         ],
         "additionalProperties": false
       },
