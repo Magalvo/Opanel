@@ -195,6 +195,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
@@ -584,6 +587,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -657,6 +663,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -751,6 +760,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -867,6 +879,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -953,6 +968,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1032,6 +1050,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1118,6 +1139,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1191,6 +1215,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -1285,6 +1312,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1359,6 +1389,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1473,6 +1506,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1552,6 +1588,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1668,6 +1707,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1747,6 +1789,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -1833,6 +1878,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "requestBody": {
@@ -1927,6 +1975,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2011,6 +2062,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2137,6 +2191,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2223,6 +2280,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2309,6 +2369,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2393,6 +2456,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2519,6 +2585,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2633,6 +2702,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2712,6 +2784,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2828,6 +2903,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -2955,6 +3033,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3081,6 +3162,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3165,6 +3249,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3289,6 +3376,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3378,6 +3468,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3504,6 +3597,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3600,6 +3696,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3717,6 +3816,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3843,6 +3945,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -3917,6 +4022,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -4033,6 +4141,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -4136,6 +4247,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -4262,6 +4376,9 @@
         "security": [
           {
             "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "parameters": [
@@ -4329,6 +4446,653 @@
           },
           "429": {
             "description": "The account has too many open streams (code `too_many_streams`); `Retry-After` says when to try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agents": {
+      "get": {
+        "summary": "List agents",
+        "description": "Lists agent accounts, ordered by name, with keyset pagination.\n\nRequires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of agents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query string is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an agent",
+        "description": "Creates an agent account with a role, scopes within that role, and the projects it may reach. It has no token yet.\n\nRequires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAgentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The agent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body is not valid, or names an unknown project.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another agent has this name (code `agent_name_taken`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agents/{agentId}": {
+      "get": {
+        "summary": "Read an agent",
+        "description": "Requires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agentId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The agent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The path is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no such agent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change an agent",
+        "description": "Changes an agent's name, description, role, scopes or projects, or disables or re-enables it. A disabled agent's tokens stop working at once. A role change without `scopes` keeps the scopes the new role allows.\n\nRequires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agentId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAgentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The agent after the change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The path or the body is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no such agent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another agent has this name (code `agent_name_taken`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agents/{agentId}/tokens": {
+      "get": {
+        "summary": "List an agent's tokens",
+        "description": "Every token of the agent, newest first, revoked and expired ones included.\n\nRequires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agentId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The tokens. Never their secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiTokenList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The path is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no such agent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a token for an agent",
+        "description": "Creates an API token, shown only in this response. An agent holds at most 10 usable tokens.\n\nRequires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agentId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The token and its details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApiToken"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The path or the body is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no such agent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The agent already has 10 usable tokens (code `too_many_tokens`), or is disabled (code `agent_disabled`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is larger than 512 KiB (code `payload_too_large`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The body is not JSON.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agents/{agentId}/tokens/{tokenId}": {
+      "delete": {
+        "summary": "Revoke a token",
+        "description": "The token stops working at once. Revoking it again changes nothing.\n\nRequires the `agents:manage` permission.",
+        "x-opanel-permission": "agents:manage",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agentId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "tokenId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The token is revoked."
+          },
+          "400": {
+            "description": "The path is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The agent has no such token.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4943,6 +5707,170 @@
         ],
         "additionalProperties": false
       },
+      "CreateAgentRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "qa_agent",
+              "worker_agent"
+            ]
+          },
+          "scopes": {
+            "description": "Default: every scope of the role.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "projects:read",
+                "tasks:read",
+                "reports:write",
+                "comments:write",
+                "tasks:write"
+              ]
+            }
+          },
+          "projectIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The projects the agent may reach, or `null` for all of them."
+          }
+        },
+        "required": [
+          "name",
+          "role",
+          "projectIds"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateAgentRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "qa_agent",
+              "worker_agent"
+            ]
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "projects:read",
+                "tasks:read",
+                "reports:write",
+                "comments:write",
+                "tasks:write"
+              ]
+            },
+            "description": "The agent's permissions: a subset of its role's scopes."
+          },
+          "projectIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The projects the agent may reach, or `null` for all of them."
+          },
+          "active": {
+            "description": "`false` disables the agent, `true` re-enables it.",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateApiTokenRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "expiresInDays": {
+            "default": 90,
+            "description": "30, 90 (the default) or 365 days, or `null` for no expiry.",
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 30
+              },
+              {
+                "type": "number",
+                "const": 90
+              },
+              {
+                "type": "number",
+                "const": 365
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -5057,7 +5985,10 @@
               "project_archived",
               "last_done_column",
               "team_in_use",
-              "column_not_empty"
+              "column_not_empty",
+              "agent_name_taken",
+              "too_many_tokens",
+              "agent_disabled"
             ],
             "description": "Stable, machine-readable error code. This is what clients branch on."
           },
@@ -6961,6 +7892,229 @@
           }
         ],
         "type": "object"
+      },
+      "AgentPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "Agent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "qa_agent",
+              "worker_agent"
+            ]
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "projects:read",
+                "tasks:read",
+                "reports:write",
+                "comments:write",
+                "tasks:write"
+              ]
+            }
+          },
+          "projectIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "lastSeenAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "role",
+          "scopes",
+          "projectIds",
+          "status",
+          "createdAt",
+          "lastSeenAt"
+        ],
+        "additionalProperties": false
+      },
+      "ApiTokenList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiToken"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "ApiToken": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "expired",
+              "revoked"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "createdAt",
+          "expiresAt",
+          "lastUsedAt",
+          "revokedAt",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "CreatedApiToken": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The token, `opk_…`. Shown only in this response."
+          },
+          "apiToken": {
+            "$ref": "#/components/schemas/ApiToken"
+          }
+        },
+        "required": [
+          "token",
+          "apiToken"
+        ],
+        "additionalProperties": false
       }
     },
     "securitySchemes": {
@@ -6969,6 +8123,11 @@
         "in": "cookie",
         "name": "opanel.session_token",
         "description": "The session cookie set by `POST /api/v1/auth/sign-in`. When Opanel is served over https the cookie is named `__Secure-opanel.session_token`."
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An agent's API token, `opk_…`, created by an Admin (canonical doc 0001 section 4). It reaches what the agent's scopes and projects allow."
       }
     }
   }

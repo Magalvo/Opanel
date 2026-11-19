@@ -154,6 +154,23 @@ export function teamNameTaken(detail = "Another team already has this name."): A
   return new ApiError({ status: 409, title: "Conflict", code: "team_name_taken", detail });
 }
 
+/** `409` (WS-075): another agent has this name, ignoring case. */
+export function agentNameTaken(detail = "Another agent already has this name."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "agent_name_taken", detail });
+}
+
+/** `409` (WS-075): the agent already holds 10 usable tokens (WT-05 decision 4). */
+export function tooManyTokens(
+  detail = "This agent already has 10 usable tokens. Revoke one first.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "too_many_tokens", detail });
+}
+
+/** `409` (WS-075): a disabled agent gets no new token. */
+export function agentDisabled(detail = "This agent is disabled. Re-enable it first."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "agent_disabled", detail });
+}
+
 /** `409` with the specific code of WS-026: the account is deactivated. */
 export function accountInactive(detail = "This person is deactivated."): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "account_inactive", detail });

@@ -35,6 +35,12 @@ export const AUDIT_ACTIONS = [
   "epic.updated",
   "epic.closed",
   "epic.reopened",
+  "agent.created",
+  "agent.updated",
+  "agent.disabled",
+  "agent.reenabled",
+  "agent.token_created",
+  "agent.token_revoked",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
