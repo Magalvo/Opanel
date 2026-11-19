@@ -4,6 +4,11 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 
 import { FakeSource } from "@/hooks/fake-event-source";
+import { loadEnvFiles } from "@/server/env-files";
+
+// The committed .env.test, as the integration tests load it: every API response reads
+// APP_URL (WS-067), and nothing here connects to the database it names.
+loadEnvFiles();
 
 afterEach(() => {
   cleanup();

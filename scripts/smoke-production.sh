@@ -67,6 +67,12 @@ for _ in $(seq 1 30); do
 done
 [[ "$health" == "healthy" ]] || fail "the container's health check says ${health}"
 
+echo "== an http: install sends no Strict-Transport-Security (WS-067)"
+for path in /sign-in /api/v1/health; do
+  hsts="$(curl -s -D - -o /dev/null "${URL}${path}" | tr -d '' | grep -i '^strict-transport-security' || true)"
+  [[ -z "$hsts" ]] || fail "${path} sent ${hsts}"
+done
+
 echo "== the first-run setup needs the setup token"
 code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "${URL}/api/v1/setup" \
   -H "Content-Type: application/json" -H "Origin: ${URL}" \

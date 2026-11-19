@@ -36,3 +36,12 @@ export function createNonce(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   return btoa(String.fromCharCode(...bytes));
 }
+
+/**
+ * `Strict-Transport-Security` for an install served over HTTPS (WS-067): one year, without
+ * `includeSubDomains` or `preload`, which only the operator can decide. `APP_URL` is the
+ * operator's statement of the public address, so it decides; null for an `http:` one.
+ */
+export function strictTransportSecurity(appUrl: string): string | null {
+  return new URL(appUrl).protocol === "https:" ? "max-age=31536000" : null;
+}

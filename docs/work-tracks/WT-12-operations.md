@@ -44,7 +44,7 @@ Doc 0006 section 11.
 | [WI-064](../work-items/WI-064-schema-check.md)     | C: schema version check at start-up                                                      | Done   | WI-062         |
 | [WI-065](../work-items/WI-065-recover-admin.md)    | D: `recover-admin` operator command                                                      | Done   | WI-062         |
 | [WI-066](../work-items/WI-066-maintenance.md)      | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Done   | WI-062         |
-| WI-067                                             | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Draft  | WI-062         |
+| [WI-067](../work-items/WI-067-https-and-proxy.md)  | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Done   | WI-062         |
 | WI-068                                             | G: backup and restore rehearsal in CI                                                    | Draft  | WI-063, WI-064 |
 | WI-069                                             | H: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-068  |
 

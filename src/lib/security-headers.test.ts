@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { contentSecurityPolicy, createNonce } from "./security-headers";
+import { contentSecurityPolicy, createNonce, strictTransportSecurity } from "./security-headers";
 
 /** The policy as a map from directive name to its values. */
 function directives(policy: string): Map<string, string[]> {
@@ -70,5 +70,15 @@ describe("createNonce", () => {
       expect(nonce).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
       expect(nonce.length).toBeGreaterThanOrEqual(22);
     }
+  });
+});
+
+describe("strictTransportSecurity (WS-067 section 2)", () => {
+  it("is one year for an https: APP_URL", () => {
+    expect(strictTransportSecurity("https://opanel.example.com")).toBe("max-age=31536000");
+  });
+
+  it("is absent for an http: APP_URL", () => {
+    expect(strictTransportSecurity("http://localhost:3000")).toBeNull();
   });
 });

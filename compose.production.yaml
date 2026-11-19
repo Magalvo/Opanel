@@ -49,5 +49,27 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  # An example HTTPS reverse proxy (WS-067), started only with `--profile proxy`. Leave it
+  # out if you run your own; docker/production/Caddyfile shows what it must do. OPANEL_SITE
+  # comes from the shell or a `.env` file beside this one, never from the app's env file:
+  # the proxy faces the internet and sees none of the app's secrets.
+  proxy:
+    image: caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+    profiles: ["proxy"]
+    restart: unless-stopped
+    environment:
+      OPANEL_SITE: ${OPANEL_SITE:-localhost}
+      OPANEL_CADDY_TLS: ${OPANEL_CADDY_TLS:-}
+    ports:
+      - "${OPANEL_HTTP_PORT:-80}:80"
+      - "${OPANEL_HTTPS_PORT:-443}:${OPANEL_HTTPS_PORT:-443}"
+    volumes:
+      - ./docker/production/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      app:
+        condition: service_started
+
 volumes:
   db-data:
+  caddy-data:

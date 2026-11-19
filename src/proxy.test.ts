@@ -1,7 +1,13 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 
-import { config, proxy } from "./proxy";
+import { config, handleProxy } from "./proxy";
+
+const HTTP_APP = "http://localhost:3000";
+
+function proxy(request: NextRequest) {
+  return handleProxy(request, HTTP_APP);
+}
 
 function page(path: string, cookie?: string): NextRequest {
   return new NextRequest(`http://localhost:3000${path}`, {
@@ -117,5 +123,23 @@ describe("proxy matcher", () => {
     for (const path of ["/api/v1/health", "/api/v1/tasks/OPA-1", "/api/v1/auth/sign-in"]) {
       expect(matcher.test(path), path).toBe(false);
     }
+  });
+});
+
+describe("proxy: Strict-Transport-Security (WS-067)", () => {
+  it("is on a page and on a redirect when APP_URL is https:", () => {
+    const signedIn = handleProxy(
+      page("/", "opanel.session_token=abc"),
+      "https://opanel.example.com",
+    );
+    const redirected = handleProxy(page("/projects"), "https://opanel.example.com");
+
+    expect(signedIn.headers.get("Strict-Transport-Security")).toBe("max-age=31536000");
+    expect(redirected.headers.get("Strict-Transport-Security")).toBe("max-age=31536000");
+  });
+
+  it("is not there when APP_URL is http:", () => {
+    expect(proxy(page("/sign-in")).headers.get("Strict-Transport-Security")).toBeNull();
+    expect(proxy(page("/projects")).headers.get("Strict-Transport-Security")).toBeNull();
   });
 });

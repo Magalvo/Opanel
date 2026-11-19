@@ -9,11 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-066 (`maintenance`: remove what has expired, WT-12 item E), on
-  2026-11-18, on the branch `claude/wi-066-maintenance`.
-- **Next:** draft WI-067 (WT-12 item F: `Strict-Transport-Security` on `https:` installs,
-  and the reverse-proxy requirements) and WS-067 as `Proposed`, and stop for the owner's
-  approval.
+- **Last finished:** WI-067 (HSTS on `https:` installs, and the reverse proxy, tested,
+  WT-12 item F), on 2026-11-18, on the branch `claude/wi-067-https-and-proxy`.
+- **Next:** draft WI-068 (WT-12 item G: the backup and restore rehearsal in CI) and
+  WS-068 as `Proposed`, and stop for the owner's approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -163,6 +162,7 @@ outlined above and comes right after WT-04.
 | [WI-064](work-items/WI-064-schema-check.md)                     | The app refuses to start on a schema it does not match           | Done        | [WS-064](work-specs/WS-064-schema-check.md)                     | Done        |
 | [WI-065](work-items/WI-065-recover-admin.md)                    | `recover-admin`: an operator command to get back in              | Done        | [WS-065](work-specs/WS-065-recover-admin.md)                    | Done        |
 | [WI-066](work-items/WI-066-maintenance.md)                      | `maintenance`: remove what has expired                           | Done        | [WS-066](work-specs/WS-066-maintenance.md)                      | Done        |
+| [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested         | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
 
 ## Follow-ups
 
@@ -181,7 +181,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 - **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
   the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
   its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
-  https are documented for operators. `Strict-Transport-Security` waits for it too (see WI-041).
+  https are documented for operators. `Strict-Transport-Security` is done (WI-067: sent on
+  `https:` installs, with a tested example proxy).
   The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
   ones itself (WI-044). It also decides log access and retention, and whether the logs
   of Better Auth and Next.js can hold request data (WS-042, question 2: not examined).
