@@ -11,8 +11,9 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-070 (the operations guide, `docs/operations.md`, WT-12 item I),
   on 2026-11-19, on the branch `claude/wi-070-operations-guide`. WT-12 is done.
-- **Next:** draft WT-05 (agent accounts and API tokens) as `Proposed`, and stop for the
-  owner's approval.
+- **Next:** the owner reviews WT-05 (agent accounts and API tokens), drafted as
+  `Proposed` on 2026-11-19 with 14 design decisions, an amendment to doc 0001 (decision 1)
+  and six open questions. Once approved, item A gets its work-item and work-spec.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -70,18 +71,18 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                  | Title                                                   | Status   |
-| ------------------------------------------------------ | ------------------------------------------------------- | -------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
-| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Done     |
-| [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
-| [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations                    | Done     |
+| Track                                                   | Title                                                   | Status   |
+| ------------------------------------------------------- | ------------------------------------------------------- | -------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     | Done     |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer | Done     |
+| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      | Done     |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    | Done     |
+| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved |
+| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done     |
+| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Proposed |
 
 Planned next, not yet drafted:
 
-- WT-05 Agent accounts and API tokens
 - WT-06 Bug reports and automated triage
 - WT-07 Backlog, priority, due dates, labels
 - WT-08 Search, filters, list view, activity timeline
