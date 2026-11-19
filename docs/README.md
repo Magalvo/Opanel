@@ -174,6 +174,7 @@ right after WT-04 and is done.
 | [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`          | Done        | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Done        |
 | [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Done        | [WS-072](work-specs/WS-072-api-tokens.md)                       | Done        |
 | [WI-073](work-items/WI-073-project-restrictions.md)             | Project restrictions enforced in every service                   | Done        | [WS-073](work-specs/WS-073-project-restrictions.md)             | Done        |
+| [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Proposed    | [WS-074](work-specs/WS-074-agent-badge.md)                      | Proposed    |
 
 ## Follow-ups
 
