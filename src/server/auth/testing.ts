@@ -2,11 +2,13 @@ import { eq, sql } from "drizzle-orm";
 
 import type { AgentRole, AgentScope, HumanRole } from "@/lib/schemas/permissions";
 import { getDb } from "@/server/db/client";
-import { accounts, agentProjects, agentScopes, credentials } from "@/server/db/schema";
+import { accounts, agentProjects, agentScopes, apiTokens, credentials } from "@/server/db/schema";
 import { lockAccount } from "@/server/services/account-tokens";
 
 import { type Actor, humanActor } from "./actor";
+import { generateApiToken } from "./api-token";
 import { getAuth } from "./auth";
+import { authenticate, type SessionAuthenticated } from "./authenticate";
 import { hashPassword } from "./password";
 
 export const TEST_PASSWORD = "correct horse battery staple";
@@ -78,6 +80,44 @@ export async function createTestAgent(
       .values(projectIds.map((projectId) => ({ accountId: account.id, projectId })));
   }
   return account;
+}
+
+/** Stores an API token for an agent and returns it, as an Admin would get it (WS-072). */
+export async function createTestToken(
+  agentId: string,
+  overrides: { name?: string; expiresAt?: Date | null; revokedAt?: Date | null } = {},
+): Promise<{ token: string; id: string }> {
+  const { token, publicId, secretHash } = generateApiToken();
+  const [row] = await getDb()
+    .insert(apiTokens)
+    .values({
+      accountId: agentId,
+      publicId,
+      secretHash,
+      name: overrides.name ?? "Test token",
+      expiresAt: overrides.expiresAt ?? null,
+      revokedAt: overrides.revokedAt ?? null,
+    })
+    .returning({ id: apiTokens.id });
+  if (!row) throw new Error("no token");
+  return { token, id: row.id };
+}
+
+/** A request with an API token, as an agent sends it: no cookie, no `Origin`. */
+export function bearerRequest(path: string, token: string, init: RequestInit = {}): Request {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  if (init.body !== undefined && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  return new Request(`${APP_ORIGIN}${path}`, { ...init, headers });
+}
+
+/** `authenticate()` for a request that must be a person's session (it has a `sessionId`). */
+export async function authenticateSession(request: Request): Promise<SessionAuthenticated> {
+  const auth = await authenticate(request);
+  if (auth.via !== "session") throw new Error("expected a session");
+  return auth;
 }
 
 /** Turns Set-Cookie headers into the value of a Cookie request header. */

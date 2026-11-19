@@ -9,12 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-071 (agent accounts in the data model, and the agent `Actor`,
-  WT-05 item A), on 2026-11-19, on the branch `claude/wi-071-agent-data-model`.
-- **Next:** the owner reviews three WT-05 items drafted in parallel as `Proposed` on
-  2026-11-19, each on its own branch: WI-072/WS-072 (item B, API tokens and
-  `authenticate()`, `claude/wi-072-api-tokens`), WI-073 (item D, project restrictions) and
-  WI-074 (item G, the "Agent" badge). Items C and E follow B; F follows C; H comes last.
+- **Last finished:** WI-072 (API tokens, and `authenticate()` accepting them, WT-05 item
+  B), on 2026-11-19, on the branch `claude/wi-072-api-tokens`. Done in parallel on their
+  own branches: WI-073 (item D, project restrictions) and WI-074 (item G, the "Agent"
+  badge); merge D before G, which then rebases.
+- **Next:** draft WI-075 (item C, the Admin API for agents and tokens) and WI-076 (item E,
+  `GET /me` for agents), which can run in parallel once B is on `main`.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -172,7 +172,7 @@ right after WT-04 and is done.
 | [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
 | [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                       | Done        | [WS-070](work-specs/WS-070-operations-guide.md)                 | Done        |
 | [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`          | Done        | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Done        |
-| [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Proposed    | [WS-072](work-specs/WS-072-api-tokens.md)                       | Proposed    |
+| [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Done        | [WS-072](work-specs/WS-072-api-tokens.md)                       | Done        |
 
 ## Follow-ups
 
@@ -192,6 +192,10 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   request body, and log contents, access and retention are each a section of the guide.
 
 Other follow-ups:
+
+- Let end-to-end runs choose their port and database (`E2E_PORT`, already
+  `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100
+  is fixed and a second run tests the first one's server (found in WI-072).
 
 - Rehearse a real upgrade, by `docs/operations.md`, from the first tagged release to the
   next, and add it to the image workflow (WS-068 question 4, WS-070). Until then WT-12's

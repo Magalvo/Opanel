@@ -1,6 +1,6 @@
 # WS-072 — API tokens: issuing, verifying, and `authenticate()` accepting them
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 4 as proposed)
 - Work-item: [WI-072](../work-items/WI-072-api-tokens.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (section 4: agent
   tokens); [0004](../canonical/0004-api-conventions.md) (section 4: `401` says nothing;
@@ -242,3 +242,50 @@ Risks:
   `src/server/http/event-stream.ts` callers and services. This item changes neither the
   services nor `event-stream.ts`, so the expected overlap is `docs/README.md` and the
   WT-05 table only.
+
+## Deviations from the approved spec
+
+1. **`authenticate(request, options)`** takes an optional `{ db, recordTokenUse, logError }`
+   for the tests of criteria 3 and 7. A database that throws on any use shows that a
+   malformed header makes no query, and a failing `recordTokenUse` shows that the request
+   still succeeds. Production callers pass nothing.
+2. **`authenticateSession(request)`**, a test helper, narrows to `SessionAuthenticated`. Two
+   test files (`profile`, `sign-in`) read `sessionId` from `authenticate()` and now use it.
+   The hand-built caller in `event-stream.integration.test.ts` gains `via: "session"`.
+3. **`GET /me`'s description** says "a session or an API token". Its body is unchanged,
+   and the agent fields are item E.
+4. **The rate limit is checked before the `session` refusal**, so a token over its limit
+   gets `429` on every operation.
+5. **Test 11 (the stream with a token) passed at once**, as section 7 predicted: the
+   heartbeat already re-runs `authenticate()`. It is kept as a regression test.
+6. **Found while testing:** an agent row whose stored scopes include one its role lacks
+   makes `agentActor` throw, so that agent's requests answer `500`, not `401`. The database
+   cannot hold such a row through the API once item C validates scopes. An integration
+   test had made one by mistake (`tasks:write` on a `qa_agent`) and was corrected.
+7. **Private test databases.** The parallel sessions share the PostgreSQL on port 5433,
+   and runs on the same `opanel_test` reset each other's data. This item's gate ran on
+   `opanel_wi072_test` and `opanel_wi072_e2e_test`. Playwright's fixed port 3100 cannot be
+   shared, so E2E runs must take turns (a Follow-up in `docs/README.md`).
+
+## Implementation record
+
+- Red, unit: `api-token.test.ts` and `token-rate-limit.test.ts` failed to import their
+  modules. Green: 10 of 10.
+- Red, integration: `authenticate.integration.test.ts` failed 7 tests:
+  `createTestToken is not a function`, and the session test expecting `via: "session"`.
+  `route-access.integration.test.ts`: the `session` access kind and the limiter option
+  did not exist.
+- Green: `authenticate()` with tokens and `recordUse`; the `session` access kind in
+  `contract.ts`, `route.ts` (refusal, rate limit) and `document.ts` ("Not available to API
+  tokens."); three contracts moved to `session`; the split list in `routes.test.ts`;
+  `docs/api/openapi.json` regenerated (four description lines).
+- Docs: doc 0004 section 7 (one sentence), `docs/operations.md` ("Health and outages":
+  the per-token limit).
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1370 of 1370;
+  - `pnpm test:e2e` 79 of 79 with `--retries=0`;
+  - both run alone. Two earlier runs, made while the WI-073 and WI-074 sessions were
+    building and testing, failed only on load timeouts and on port 3100. Playwright's
+    port is fixed, and the other session's server was answering.
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

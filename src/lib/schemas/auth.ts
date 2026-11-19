@@ -115,7 +115,7 @@ export const signOutContract = {
   path: "/api/v1/auth/sign-out",
   summary: "Sign out",
   description: "Ends the current session and clears its cookie. Needs a session, no permission.",
-  access: { kind: "authenticated" },
+  access: { kind: "session" },
   responses: { 204: { description: "Signed out.", noContent: true } },
 } satisfies EndpointContract;
 
@@ -144,7 +144,8 @@ export const meContract = {
   method: "get",
   path: "/api/v1/me",
   summary: "The signed-in account",
-  description: "Returns the caller's account and permissions. Needs a session, no permission.",
+  description:
+    "Returns the caller's account and permissions. Needs a session or an API token, no permission.",
   access: { kind: "authenticated" },
   responses: { 200: { description: "The caller.", schema: meResponseSchema } },
 } satisfies EndpointContract;
@@ -220,7 +221,7 @@ export const updateMeContract = {
   description:
     "Changes the caller's name and returns the caller as `GET /api/v1/me` does. Needs a " +
     "session, no permission. Must come from the app's own origin.",
-  access: { kind: "authenticated" },
+  access: { kind: "session" },
   request: { body: updateMeRequestSchema },
   responses: {
     200: { description: "The name was changed.", schema: meResponseSchema },
@@ -240,7 +241,7 @@ export const changePasswordContract = {
     "session of the account; the session that made the request stays signed in. A wrong " +
     "current password is a 400 with a field error on `currentPassword`. Limited per account. " +
     "Needs a session, no permission. Must come from the app's own origin.",
-  access: { kind: "authenticated" },
+  access: { kind: "session" },
   request: { body: changePasswordRequestSchema },
   responses: {
     204: { description: "The password was changed.", noContent: true },

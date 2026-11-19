@@ -288,6 +288,10 @@ monitoring at it through the proxy: `https://opanel.example.com/api/v1/health`.
 While the database is down, every other request answers `500` with no detail. The app
 keeps running and recovers by itself when the database returns.
 
+Requests made with an agent's API token are limited to 600 a minute per token, counted in
+the app process; above that they answer `429` with `Retry-After` (WS-072). Restarting the
+app resets the counts.
+
 ## Storage
 
 Three tables grow with use and are kept for the life of the install: `audit_log` (every

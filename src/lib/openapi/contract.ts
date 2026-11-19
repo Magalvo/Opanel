@@ -68,6 +68,11 @@ export type Access =
   | { kind: "public" }
   /** Any signed-in account; for operations on the caller's own session or account only. */
   | { kind: "authenticated" }
+  /**
+   * A person's own signed-in session: an API token is refused with `403` (WS-072). For the
+   * operations on the caller's own profile, password or session.
+   */
+  | { kind: "session" }
   /** A signed-in account holding this one permission from the catalogue. */
   | { kind: "permission"; permission: Permission };
 
