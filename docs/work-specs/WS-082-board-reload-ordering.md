@@ -1,6 +1,6 @@
 # WS-082 — The board applies only the latest load, never during a move
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, every question as proposed)
 - Work-item: [WI-082](../work-items/WI-082-board-reload-ordering.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4 (server is
   authoritative, own echo, reconnects); WS-048 sections 3 to 5; audit of 2026-11-19,

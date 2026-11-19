@@ -1,6 +1,6 @@
 # WS-083 — Every response the API sends is documented
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, every question as proposed)
 - Work-item: [WI-083](../work-items/WI-083-documented-responses.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3 to 6;
   audit of 2026-11-19, findings B05 and B14

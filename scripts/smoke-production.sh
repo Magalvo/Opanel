@@ -67,9 +67,30 @@ for _ in $(seq 1 30); do
 done
 [[ "$health" == "healthy" ]] || fail "the container's health check says ${health}"
 
+echo "== each service holds only its own secrets (WS-079)"
+# Reads variable names only, never a value, so the CI log holds no secret.
+env_names() { docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$1" | cut -d= -f1; }
+check_env() {
+  local service="$1" container="$2"
+  shift 2
+  local names forbidden
+  names="$(env_names "$container")"
+  for forbidden in "$@"; do
+    if grep -qx "$forbidden" <<<"$names"; then
+      fail "the ${service} container holds ${forbidden}"
+    fi
+  done
+}
+check_env app "$app" MIGRATION_DATABASE_URL POSTGRES_PASSWORD OPANEL_APP_DB_PASSWORD
+check_env db "$(compose ps -q db)" BETTER_AUTH_SECRET SETUP_TOKEN APP_URL DATABASE_URL \
+  MIGRATION_DATABASE_URL
+check_env migrate "$(compose ps -aq migrate)" BETTER_AUTH_SECRET SETUP_TOKEN DATABASE_URL \
+  POSTGRES_PASSWORD OPANEL_APP_DB_PASSWORD
+
 echo "== an http: install sends no Strict-Transport-Security (WS-067)"
 for path in /sign-in /api/v1/health; do
-  hsts="$(curl -s -D - -o /dev/null "${URL}${path}" | tr -d '' | grep -i '^strict-transport-security' || true)"
+  hsts="$(curl -s -D - -o /dev/null "${URL}${path}" | tr -d '
+' | grep -i '^strict-transport-security' || true)"
   [[ -z "$hsts" ]] || fail "${path} sent ${hsts}"
 done
 

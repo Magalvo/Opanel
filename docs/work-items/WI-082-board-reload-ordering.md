@@ -1,6 +1,6 @@
 # WI-082 — The board applies only the latest load, never during a move
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B04)
 - Depends on: none
 - Work-spec: [WS-082](../work-specs/WS-082-board-reload-ordering.md)

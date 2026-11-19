@@ -1,6 +1,6 @@
 # WI-081 — Name cursors fit the longest name they carry
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B03)
 - Depends on: none
 - Work-spec: [WS-081](../work-specs/WS-081-name-cursor-length.md)

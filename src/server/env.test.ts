@@ -5,6 +5,7 @@ import {
   EnvValidationError,
   migrationDatabaseUrl,
   parseEnv,
+  parseMigrationEnv,
   parseNodeEnv,
   productionWarnings,
 } from "./env";
@@ -207,6 +208,76 @@ describe("MIGRATION_DATABASE_URL (WS-063)", () => {
 
     expect(error.variables).toEqual(["MIGRATION_DATABASE_URL"]);
     expect(error.message).toContain("postgres:// or postgresql:// URL");
+    expect(error.message).not.toContain("marker-secret");
+  });
+});
+
+describe("parseMigrationEnv (WS-079)", () => {
+  const owner = "postgres://owner:pw@db:5432/opanel";
+
+  function captureMigrationError(source: Record<string, string | undefined>): EnvValidationError {
+    try {
+      parseMigrationEnv(source);
+    } catch (error) {
+      if (error instanceof EnvValidationError) {
+        return error;
+      }
+      throw error;
+    }
+    throw new Error("expected parseMigrationEnv to throw");
+  }
+
+  it("needs only the owner's connection: no BETTER_AUTH_SECRET, APP_URL or DATABASE_URL", () => {
+    const env = parseMigrationEnv({ MIGRATION_DATABASE_URL: owner });
+
+    expect(migrationDatabaseUrl(env)).toBe(owner);
+  });
+
+  it("ignores the app's settings, even invalid ones", () => {
+    const env = parseMigrationEnv({
+      MIGRATION_DATABASE_URL: owner,
+      BETTER_AUTH_SECRET: "short",
+      APP_URL: "not a url",
+    });
+
+    expect(migrationDatabaseUrl(env)).toBe(owner);
+  });
+
+  it("falls back to DATABASE_URL, and treats an empty MIGRATION_DATABASE_URL as not set", () => {
+    expect(migrationDatabaseUrl(parseMigrationEnv({ DATABASE_URL: validUrl }))).toBe(validUrl);
+    expect(
+      migrationDatabaseUrl(
+        parseMigrationEnv({ DATABASE_URL: validUrl, MIGRATION_DATABASE_URL: "" }),
+      ),
+    ).toBe(validUrl);
+  });
+
+  it("validates NODE_ENV like the app", () => {
+    expect(parseMigrationEnv({ DATABASE_URL: validUrl }).NODE_ENV).toBe("development");
+    expect(
+      captureMigrationError({ DATABASE_URL: validUrl, NODE_ENV: "staging" }).variables,
+    ).toEqual(["NODE_ENV"]);
+  });
+
+  it("with neither connection, names MIGRATION_DATABASE_URL", () => {
+    const error = captureMigrationError({ BETTER_AUTH_SECRET: validSecret, APP_URL: validAppUrl });
+
+    expect(error.variables).toEqual(["MIGRATION_DATABASE_URL"]);
+    expect(error.message).toContain("MIGRATION_DATABASE_URL");
+  });
+
+  it("rejects a non-postgres MIGRATION_DATABASE_URL, naming it but never its value", () => {
+    const error = captureMigrationError({ MIGRATION_DATABASE_URL: "mysql://marker-secret@db" });
+
+    expect(error.variables).toEqual(["MIGRATION_DATABASE_URL"]);
+    expect(error.message).toContain("postgres:// or postgresql:// URL");
+    expect(error.message).not.toContain("marker-secret");
+  });
+
+  it("rejects a non-postgres DATABASE_URL it would fall back to, never printing it", () => {
+    const error = captureMigrationError({ DATABASE_URL: "mysql://marker-secret@db" });
+
+    expect(error.variables).toEqual(["DATABASE_URL"]);
     expect(error.message).not.toContain("marker-secret");
   });
 });

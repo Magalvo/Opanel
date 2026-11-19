@@ -1,6 +1,6 @@
 # WS-079 — Each production service gets only the secrets it needs
 
-- Status: Proposed
+- Status: Done (2026-11-19; approved by the owner the same day, questions 1 to 4 as proposed)
 - Work-item: [WI-079](../work-items/WI-079-production-secrets-split.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) sections 3 and 5;
   [WS-062](WS-062-production-image.md), [WS-063](WS-063-database-roles.md); audit of
@@ -169,8 +169,37 @@ For the owner:
 
 ## Deviations from the approved spec
 
-None yet.
+1. **`scripts/doc-checks.ts` reads the env schema's keys by a looser pattern.** Section 3
+   factors `NODE_ENV` and the optional postgres URL into shared schemas, so their keys no
+   longer read `NAME: z`; the pattern is now `NAME:`, bounded by the end of `envSchema`.
+   The known variables are the same 15 before and after.
+2. **A `DATABASE_URL` that `migrate` would fall back to, but that is not a postgres URL,
+   is named as `DATABASE_URL`**, not `MIGRATION_DATABASE_URL` (test 3): the error names
+   the variable that is wrong.
+3. **The example env file also shows `# OPANEL_SITE=`, commented out**, since the proxy's
+   name may now live there (section 5).
 
 ## Implementation record
 
-Not started.
+- Red, test 1: `smoke-production.sh` failed at the new step with "the app container holds
+  MIGRATION_DATABASE_URL" before the Compose change. Red, tests 2 and 3: 7 new cases of
+  `env.test.ts` failed, `parseMigrationEnv` not being a function.
+- Green: all 55 cases of `env.test.ts`, including the WS-063 ones (test 4), with
+  `migrationDatabaseUrl` taking the narrower `MigrationEnv`.
+- Compose, hard rule 13, on the installed Docker Compose v5.7.1: `docker compose config`
+  gave `app` only `APP_URL`, `BETTER_AUTH_SECRET`, `CLIENT_IP_HEADER`, `DATABASE_URL`,
+  `SETUP_TOKEN`; `db` only `POSTGRES_*` and `OPANEL_APP_DB_PASSWORD`; `migrate` only
+  `MIGRATION_DATABASE_URL`; the proxy took `OPANEL_SITE` from a `.env` beside the file and
+  from the env file named by `OPANEL_ENV_FILE`. A missing env file still stops Compose
+  with the file's name.
+- Tests 5 and 6: `smoke-production.sh` (every step), `smoke-proxy.sh` and
+  `rehearse-backup.sh` pass. In this cloud sandbox the image was built beforehand with the
+  sandbox's proxy certificate added in a scratch copy of the `Dockerfile`, and the scripts
+  ran with `up -d --no-build`; the repository's `Dockerfile` is unchanged. The image
+  workflow builds it as usual.
+- Test 7: the guide's tests pass, 34 of 34 in `scripts/`.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1553 of 1553;
+  - `pnpm test:e2e` 87 of 87;
+  - Linux, Node 22.23.5, pnpm 10, Compose PostgreSQL 18 on port 5432.

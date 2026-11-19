@@ -1,6 +1,6 @@
 # WI-083 — Every response the API sends is documented
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B05)
 - Depends on: none
 - Work-spec: [WS-083](../work-specs/WS-083-documented-responses.md)
