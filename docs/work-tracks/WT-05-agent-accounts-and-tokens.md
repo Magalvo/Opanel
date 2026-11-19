@@ -171,7 +171,7 @@ Numbers are given in order when each item starts; each gets its work-spec then.
 | Item                                                 | Title                                                                                                        | Status | Depends on |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------ | ---------- |
 | [WI-071](../work-items/WI-071-agent-data-model.md) A | Data model: agent rows, roles and scopes, project restrictions, `api_tokens`; the agent `Actor`; doc 0001    | Done   | WT-04      |
-| B                                                    | Token issuing and verification; `authenticate()` accepts bearer tokens; `last_used_at`; per-token rate limit | Draft  | A          |
+| [WI-072](../work-items/WI-072-api-tokens.md) B       | Token issuing and verification; `authenticate()` accepts bearer tokens; `last_used_at`; per-token rate limit | Done   | A          |
 | C                                                    | Admin API for agents and tokens, audited; the bearer scheme in the OpenAPI document                          | Draft  | B          |
 | D                                                    | Project restrictions enforced in every service, with the coverage test                                       | Draft  | A          |
 | E                                                    | `GET /me` for agents; the other authentication-only operations refuse them                                   | Draft  | B          |

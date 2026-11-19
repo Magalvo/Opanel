@@ -5,8 +5,15 @@ import { getDb } from "@/server/db/client";
 import { sessions } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
+import { generateApiToken } from "./api-token";
 import { authenticate } from "./authenticate";
-import { createTestAccount, setDisabled, signInCookie } from "./testing";
+import {
+  createTestAccount,
+  createTestAgent,
+  createTestToken,
+  setDisabled,
+  signInCookie,
+} from "./testing";
 
 function request(headers: Record<string, string>): Request {
   return new Request("http://localhost:3000/api/v1/me", { headers });
@@ -50,7 +57,10 @@ describe("authenticate", () => {
     const result = await authenticate(request({ Cookie: cookie }));
 
     expect(rows).toHaveLength(2);
-    expect(result.sessionId).toBe(rows.find((row) => row.token === token)?.id);
+    expect(result).toMatchObject({
+      via: "session",
+      sessionId: rows.find((row) => row.token === token)?.id,
+    });
   });
 
   it("answers 401 with no cookie, a garbage cookie, a deleted session or an expired one", async () => {
@@ -80,12 +90,146 @@ describe("authenticate", () => {
     expect(await status(authenticate(request({ Cookie: cookie })))).toBe(401);
   });
 
-  it("answers 401 to any Authorization header, ignoring a valid cookie", async () => {
+  it("answers 401 to a malformed Authorization header, ignoring a valid cookie", async () => {
     await createTestAccount();
     const cookie = await signInCookie();
 
     expect(
       await status(authenticate(request({ Cookie: cookie, Authorization: "Bearer opk_x_y" }))),
     ).toBe(401);
+  });
+});
+
+describe("authenticate with an API token (WS-072)", () => {
+  const bearer = (token: string) => request({ Authorization: `Bearer ${token}` });
+
+  it("turns a valid token into its agent's actor, scopes and restriction", async () => {
+    const agent = await createTestAgent({
+      role: "worker_agent",
+      scopes: ["tasks:read", "tasks:write"],
+      projectIds: null,
+    });
+    const { token, id } = await createTestToken(agent.id);
+
+    const result = await authenticate(bearer(token));
+
+    expect(result.via).toBe("token");
+    expect(result.actor).toMatchObject({
+      kind: "agent",
+      accountId: agent.id,
+      role: "worker_agent",
+    });
+    expect(result.actor.permissions).toEqual(new Set(["tasks:read", "tasks:write"]));
+    expect(result.actor.projectIds).toBeNull();
+    expect(result.account.id).toBe(agent.id);
+    expect(result.via === "token" ? result.tokenId : undefined).toBe(id);
+    expect([...result.headers]).toEqual([]);
+  });
+
+  it("judges by the token alone when a session cookie is sent too", async () => {
+    await createTestAccount();
+    const cookie = await signInCookie();
+    const agent = await createTestAgent();
+    const { token } = await createTestToken(agent.id);
+
+    const result = await authenticate(
+      request({ Cookie: cookie, Authorization: `Bearer ${token}` }),
+    );
+
+    expect(result.actor.accountId).toBe(agent.id);
+  });
+
+  it("refuses a malformed header without touching the database", async () => {
+    const db = new Proxy(
+      {},
+      {
+        get() {
+          throw new Error("the database was used");
+        },
+      },
+    );
+    for (const header of ["Bearer nope", "Basic abc", `Bearer opk_${"a".repeat(12)}_xyz`]) {
+      expect(
+        await status(authenticate(request({ Authorization: header }), { db: db as never })),
+      ).toBe(401);
+    }
+  });
+
+  it("answers the same 401 to an unknown, wrong, expired or revoked token, or a disabled agent", async () => {
+    const agent = await createTestAgent();
+    const valid = await createTestToken(agent.id);
+    const unknown = generateApiToken().token;
+    const wrongSecret = `${valid.token.slice(0, 17)}${"0".repeat(64)}`;
+    const expired = await createTestToken(agent.id, { expiresAt: new Date(Date.now() - 1000) });
+    const revoked = await createTestToken(agent.id, { revokedAt: new Date() });
+
+    const details = new Set<string>();
+    for (const token of [unknown, wrongSecret, expired.token, revoked.token]) {
+      try {
+        await authenticate(bearer(token));
+        expect.unreachable(token);
+      } catch (error) {
+        expect((error as ApiError).status).toBe(401);
+        details.add((error as ApiError).detail);
+      }
+    }
+    expect(details.size).toBe(1);
+
+    expect(await status(authenticate(bearer(valid.token)))).toBe(200);
+    await setDisabled(agent.id, true);
+    expect(await status(authenticate(bearer(valid.token)))).toBe(401);
+  });
+
+  it("accepts a token whose expiry is still ahead", async () => {
+    const agent = await createTestAgent();
+    const { token } = await createTestToken(agent.id, {
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    expect(await status(authenticate(bearer(token)))).toBe(200);
+  });
+});
+
+describe("recording a token's use (WS-072 section 5)", () => {
+  async function lastUse(tokenId: string, accountId: string) {
+    const [row] = await getDb().$client<{ used: number | null; seen: number | null }[]>`
+      select extract(epoch from t.last_used_at)::float8 as used,
+        extract(epoch from a.last_seen_at)::float8 as seen
+      from api_tokens t join accounts a on a.id = t.account_id
+      where t.id = ${tokenId} and a.id = ${accountId}`;
+    return row;
+  }
+
+  it("writes last_used_at and last_seen_at on first use, and not again within a minute", async () => {
+    const agent = await createTestAgent();
+    const { token, id } = await createTestToken(agent.id);
+    const bearer = request({ Authorization: `Bearer ${token}` });
+
+    await authenticate(bearer);
+    const first = await lastUse(id, agent.id);
+    expect(first?.used).toEqual(expect.any(Number));
+    expect(first?.seen).toEqual(expect.any(Number));
+
+    await authenticate(request({ Authorization: `Bearer ${token}` }));
+    expect(await lastUse(id, agent.id)).toEqual(first);
+
+    await getDb()
+      .$client`update api_tokens set last_used_at = now() - interval '2 minutes' where id = ${id}`;
+    await authenticate(request({ Authorization: `Bearer ${token}` }));
+    expect((await lastUse(id, agent.id))?.used).toBeGreaterThan(first?.used ?? 0);
+  });
+
+  it("logs a failure to record and still authenticates", async () => {
+    const agent = await createTestAgent();
+    const { token } = await createTestToken(agent.id);
+    const logged: string[] = [];
+
+    const result = await authenticate(request({ Authorization: `Bearer ${token}` }), {
+      recordTokenUse: () => Promise.reject(new Error(`secret ${token}`)),
+      logError: (line) => logged.push(line),
+    });
+
+    expect(result.actor.accountId).toBe(agent.id);
+    expect(logged).toHaveLength(1);
+    expect(logged[0]).not.toContain(token);
   });
 });

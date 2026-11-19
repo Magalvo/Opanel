@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { authenticate } from "@/server/auth/authenticate";
 import {
   APP_ORIGIN,
+  authenticateSession,
   createTestAccount,
   failAuditFor,
   signInCookie,
@@ -35,7 +35,7 @@ async function failure(promise: Promise<unknown>): Promise<ApiError> {
 async function signedIn(role: "viewer" | "member" | "admin" = "member") {
   const account = await createTestAccount({ role });
   const cookie = await signInCookie();
-  const { sessionId } = await authenticate(
+  const { sessionId } = await authenticateSession(
     new Request(`${APP_ORIGIN}/api/v1/me`, { headers: { Cookie: cookie } }),
   );
   return { account, actor: testActor(account), sessionId, cookie };

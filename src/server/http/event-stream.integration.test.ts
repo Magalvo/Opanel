@@ -4,13 +4,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Authenticated } from "@/server/auth/authenticate";
 import {
   apiRequest,
+  bearerRequest,
   createTestAccount,
+  createTestAgent,
+  createTestToken,
   setDisabled,
   signInCookie,
   testActor,
 } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
-import { sessions } from "@/server/db/schema";
+import { apiTokens, sessions } from "@/server/db/schema";
 import { closeEventHub, type EventHub } from "@/server/services/event-hub";
 import { publishEvent } from "@/server/services/events";
 import { createProject } from "@/server/services/projects";
@@ -75,6 +78,7 @@ describe("openEventStream (WS-047)", () => {
     const { member, project, request } = await setup();
     const withoutRead = (): Promise<Authenticated> =>
       Promise.resolve({
+        via: "session",
         actor: {
           kind: "human",
           accountId: member.id,
@@ -168,5 +172,40 @@ describe("openEventStream (WS-047)", () => {
       }),
     ).rejects.toThrow("database down");
     await stream({ request, projectId: project.id, account: member.id, maxStreamsPerAccount: 1 });
+  });
+});
+
+describe("openEventStream with an API token (WS-072)", () => {
+  async function agentStream() {
+    const manager = await createTestAccount({ email: "manager@example.com", role: "manager" });
+    const project = await createProject(testActor(manager), { key: "ONE", name: "One" });
+    const agent = await createTestAgent({ scopes: ["tasks:read"] });
+    const { token, id } = await createTestToken(agent.id);
+    const reader = await stream({
+      request: bearerRequest("/api/v1/projects/ONE/events", token),
+      projectId: project.id,
+      account: agent.id,
+      heartbeatMs: 50,
+    });
+    await reader.next();
+    return { agent, tokenId: id, reader };
+  }
+
+  it("sends heartbeats, and ends at the next one after the token is revoked", async () => {
+    const { tokenId, reader } = await agentStream();
+
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+    await getDb().update(apiTokens).set({ revokedAt: new Date() }).where(eq(apiTokens.id, tokenId));
+
+    await reader.closed();
+  });
+
+  it("ends at the next heartbeat after the agent is disabled", async () => {
+    const { agent, reader } = await agentStream();
+
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+    await setDisabled(agent.id, true);
+
+    await reader.closed();
   });
 });

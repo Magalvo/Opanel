@@ -87,6 +87,7 @@ function toOperation(contract: EndpointContract): Operation {
   const description = [
     contract.description,
     permission === undefined ? undefined : `Requires the \`${permission}\` permission.`,
+    contract.access.kind === "session" ? "Not available to API tokens." : undefined,
   ]
     .filter((part) => part !== undefined)
     .join("\n\n");

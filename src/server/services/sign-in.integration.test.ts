@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 
-import { authenticate } from "@/server/auth/authenticate";
 import { hashPassword } from "@/server/auth/password";
 import {
   APP_ORIGIN,
+  authenticateSession,
   cookieHeaderFrom,
   createTestAccount,
   failAuditFor,
@@ -467,7 +467,7 @@ describe("a session and its audit entry stand or fall together (WS-058)", () => 
   it("signIn: a session made before a password change is ended by that change", async () => {
     const account = await createTestAccount();
     const first = await signIn(input);
-    const current = await authenticate(
+    const current = await authenticateSession(
       new Request(`${APP_ORIGIN}/api/v1/me`, {
         headers: { Cookie: cookieHeaderFrom(first.headers) },
       }),
@@ -483,7 +483,7 @@ describe("a session and its audit entry stand or fall together (WS-058)", () => 
     const left = await sessionsOf(account.id);
     expect(left.map((row) => row.id)).toEqual([current.sessionId]);
     await expect(
-      authenticate(
+      authenticateSession(
         new Request(`${APP_ORIGIN}/api/v1/me`, {
           headers: { Cookie: cookieHeaderFrom(other.headers) },
         }),
@@ -496,7 +496,7 @@ describe("a session and its audit entry stand or fall together (WS-058)", () => 
     const signedIn = await signIn(input);
     const cookie = cookieHeaderFrom(signedIn.headers);
     const request = () => new Request(`${APP_ORIGIN}/api/v1/me`, { headers: { Cookie: cookie } });
-    const { sessionId } = await authenticate(request());
+    const { sessionId } = await authenticateSession(request());
     const restore = await failAuditFor("auth.sign_out");
 
     try {
@@ -508,14 +508,14 @@ describe("a session and its audit entry stand or fall together (WS-058)", () => 
     }
 
     expect(await sessionsOf(account.id)).toHaveLength(1);
-    expect((await authenticate(request())).sessionId).toBe(sessionId);
+    expect((await authenticateSession(request())).sessionId).toBe(sessionId);
   });
 
   it("signOut: deletes the session row, audits it, and clears the cookie", async () => {
     const account = await createTestAccount();
     const signedIn = await signIn(input);
     const cookie = cookieHeaderFrom(signedIn.headers);
-    const { sessionId } = await authenticate(
+    const { sessionId } = await authenticateSession(
       new Request(`${APP_ORIGIN}/api/v1/me`, { headers: { Cookie: cookie } }),
     );
 

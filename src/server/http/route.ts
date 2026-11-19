@@ -4,15 +4,22 @@ import type { EndpointContract } from "@/lib/openapi/contract";
 import { type FieldError, type Problem, PROBLEM_CONTENT_TYPE } from "@/lib/schemas/problem";
 import { strictTransportSecurity } from "@/lib/security-headers";
 import { requirePermission } from "@/server/auth/actor";
-import { authenticate, type Authenticated } from "@/server/auth/authenticate";
+import {
+  authenticate,
+  type Authenticated,
+  type SessionAuthenticated,
+} from "@/server/auth/authenticate";
 import { assertSameOrigin } from "@/server/auth/origin";
+import { getTokenRateLimiter, type TokenRateLimiter } from "@/server/auth/token-rate-limit";
 import { getEnv } from "@/server/env";
 
 import {
   ApiError,
+  forbidden,
   internalError,
   invalidRequest,
   payloadTooLarge,
+  rateLimited,
   unsupportedMediaType,
 } from "./errors";
 import { describeError } from "./safe-error";
@@ -27,7 +34,9 @@ export type AuthFor<Contract extends EndpointContract> = Contract["access"] exte
   kind: "public";
 }
   ? undefined
-  : Authenticated;
+  : Contract["access"] extends { kind: "session" }
+    ? SessionAuthenticated
+    : Authenticated;
 
 export type ContractHandler<Contract extends EndpointContract, Context> = (
   request: Request,
@@ -42,6 +51,8 @@ export interface ContractRoute<Context> {
 }
 
 export interface RouteOptions {
+  /** Counts requests per API token (WS-072). Defaults to the process's limiter. */
+  tokenRateLimiter?: TokenRateLimiter;
   /** Receives a description of an unexpected failure. Never part of the response. */
   logError?: (message: string) => void;
   /** The app's own origin, for the same-origin check. Defaults to `APP_URL`, read per request. */
@@ -128,7 +139,7 @@ function withSharedBehaviour<Context>(
 export function route<const Contract extends EndpointContract, Context = unknown>(
   contract: Contract,
   handler: ContractHandler<Contract, Context>,
-  { logError = console.error, appUrl }: RouteOptions = {},
+  { logError = console.error, appUrl, tokenRateLimiter }: RouteOptions = {},
 ): ContractRoute<Context> {
   const wrapped = withSharedBehaviour<Context>(
     async (request, context) => {
@@ -142,6 +153,12 @@ export function route<const Contract extends EndpointContract, Context = unknown
       }
 
       const auth = await authenticate(request);
+      if (auth.via === "token") {
+        // Per token, after authentication (WT-05 decision 8, WS-072 question 3).
+        const decision = (tokenRateLimiter ?? getTokenRateLimiter()).hit(auth.tokenId);
+        if (!decision.allowed) throw rateLimited(decision.retryAfterSeconds);
+        if (contract.access.kind === "session") throw forbidden();
+      }
       if (contract.access.kind === "permission") {
         requirePermission(auth.actor, contract.access.permission);
       }

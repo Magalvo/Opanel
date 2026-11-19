@@ -33,6 +33,16 @@ const AUTHENTICATION_ONLY_OPERATIONS = [
 ];
 
 /**
+ * Of those, the ones on the caller's own session, profile or password, which an API token
+ * may not call (WS-072 section 4): every one but `GET /me`.
+ */
+const SESSION_ONLY_OPERATIONS = [
+  "POST /api/v1/auth/sign-out",
+  "PATCH /api/v1/me",
+  "POST /api/v1/me/password",
+];
+
+/**
  * Operations a work-spec declared public (AGENTS.md rule 6): health (WS-005), the OpenAPI
  * document (WS-006), sign-in (WS-015), first-run setup (WS-016) and accepting a one-time
  * link (WS-019). Making another operation public is a decision for a work-spec.
@@ -175,12 +185,20 @@ describe("API routes and OpenAPI contracts", () => {
     });
 
     it("declares exactly the authentication-only operations of WS-015 and WS-021", () => {
-      const authenticated = contracts
-        .filter((contract) => contract.access.kind === "authenticated")
+      const authenticationOnly = contracts
+        .filter(
+          (contract) =>
+            contract.access.kind === "authenticated" || contract.access.kind === "session",
+        )
+        .map(operationOf)
+        .sort();
+      const sessionOnly = contracts
+        .filter((contract) => contract.access.kind === "session")
         .map(operationOf)
         .sort();
 
-      expect(authenticated).toEqual([...AUTHENTICATION_ONLY_OPERATIONS].sort());
+      expect(authenticationOnly).toEqual([...AUTHENTICATION_ONLY_OPERATIONS].sort());
+      expect(sessionOnly).toEqual([...SESSION_ONLY_OPERATIONS].sort());
     });
 
     it("declares exactly the public operations approved by their work-specs", () => {

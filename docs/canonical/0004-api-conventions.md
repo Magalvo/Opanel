@@ -196,7 +196,9 @@ and version = $expected`; no row means `404` if the entity is gone, otherwise th
   caller's own session or account and so need no permission from the catalogue:
   `GET /api/v1/me`, `POST /api/v1/auth/sign-out` (WS-015), `PATCH /api/v1/me` and
   `POST /api/v1/me/password` (WS-021). The list is enforced by a test (WS-023); adding to
-  it is a work-spec decision.
+  it is a work-spec decision. Of these, only `GET /api/v1/me` accepts an API token; the
+  other three act on a person's own session, profile or password and answer `403` to a
+  token (access `session`, WS-072).
 - **Where this is declared (WS-025).** Each operation's contract states its `access`:
   `public`, `authenticated` or `permission` with one permission name. The `route()`
   wrapper enforces it before the handler runs (origin, then authentication, then

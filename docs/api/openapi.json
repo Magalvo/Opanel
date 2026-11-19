@@ -155,7 +155,7 @@
     "/api/v1/auth/sign-out": {
       "post": {
         "summary": "Sign out",
-        "description": "Ends the current session and clears its cookie. Needs a session, no permission.",
+        "description": "Ends the current session and clears its cookie. Needs a session, no permission.\n\nNot available to API tokens.",
         "security": [
           {
             "sessionCookie": []
@@ -191,7 +191,7 @@
     "/api/v1/me": {
       "get": {
         "summary": "The signed-in account",
-        "description": "Returns the caller's account and permissions. Needs a session, no permission.",
+        "description": "Returns the caller's account and permissions. Needs a session or an API token, no permission.",
         "security": [
           {
             "sessionCookie": []
@@ -232,7 +232,7 @@
       },
       "patch": {
         "summary": "Change one's own name",
-        "description": "Changes the caller's name and returns the caller as `GET /api/v1/me` does. Needs a session, no permission. Must come from the app's own origin.",
+        "description": "Changes the caller's name and returns the caller as `GET /api/v1/me` does. Needs a session, no permission. Must come from the app's own origin.\n\nNot available to API tokens.",
         "security": [
           {
             "sessionCookie": []
@@ -315,7 +315,7 @@
     "/api/v1/me/password": {
       "post": {
         "summary": "Change one's own password",
-        "description": "Replaces the caller's password after checking the current one, and ends every other session of the account; the session that made the request stays signed in. A wrong current password is a 400 with a field error on `currentPassword`. Limited per account. Needs a session, no permission. Must come from the app's own origin.",
+        "description": "Replaces the caller's password after checking the current one, and ends every other session of the account; the session that made the request stays signed in. A wrong current password is a 400 with a field error on `currentPassword`. Limited per account. Needs a session, no permission. Must come from the app's own origin.\n\nNot available to API tokens.",
         "security": [
           {
             "sessionCookie": []

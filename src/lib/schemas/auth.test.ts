@@ -94,15 +94,13 @@ describe("account response schemas", () => {
 });
 
 describe("auth contracts", () => {
-  it("document sign-in as public and sign-out and me as authenticated", () => {
+  it("document sign-in as public, sign-out as session-only and me as authenticated (WS-072)", () => {
     const byOperation = new Map(
       contracts.map((contract) => [`${contract.method} ${contract.path}`, contract]),
     );
 
     expect(byOperation.get("post /api/v1/auth/sign-in")?.access).toEqual({ kind: "public" });
-    expect(byOperation.get("post /api/v1/auth/sign-out")?.access).toEqual({
-      kind: "authenticated",
-    });
+    expect(byOperation.get("post /api/v1/auth/sign-out")?.access).toEqual({ kind: "session" });
     expect(byOperation.get("get /api/v1/me")?.access).toEqual({ kind: "authenticated" });
   });
 });
@@ -279,18 +277,18 @@ describe("changePasswordRequestSchema", () => {
 });
 
 describe("own profile contracts", () => {
-  it("document renaming oneself and changing one's password as authenticated", () => {
+  it("document renaming oneself and changing one's password as session-only (WS-072)", () => {
     const byOperation = new Map(
       contracts.map((contract) => [`${contract.method} ${contract.path}`, contract]),
     );
     const rename = byOperation.get("patch /api/v1/me");
     const password = byOperation.get("post /api/v1/me/password");
 
-    expect(rename?.access).toEqual({ kind: "authenticated" });
+    expect(rename?.access).toEqual({ kind: "session" });
     expect(Object.keys(rename?.responses ?? {})).toEqual(
       expect.arrayContaining(["200", "400", "403", "415"]),
     );
-    expect(password?.access).toEqual({ kind: "authenticated" });
+    expect(password?.access).toEqual({ kind: "session" });
     expect(Object.keys(password?.responses ?? {})).toEqual(
       expect.arrayContaining(["204", "400", "403", "415", "429"]),
     );
