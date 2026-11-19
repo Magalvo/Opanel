@@ -21,6 +21,9 @@ Updated at the end of every work-item, so that a new session can start from here
   titles; board loads ordered around moves; every API response documented). The lower
   findings B06 to B16 are listed under [Follow-ups](#follow-ups). The owner decides
   whether these come before WT-06.
+- **Proposed on 2026-11-19, awaiting the owner:** WI-084 with WS-084, a test-only fix: the
+  end-to-end check that a Manager has no Agents link matched project links named
+  `Agents <KEY>` and failed 3 of 3 with `--repeat-each=3`.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -190,6 +193,7 @@ right after WT-04 and is done.
 | [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Proposed    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Proposed    |
 | [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Proposed    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Proposed    |
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Proposed    | [WS-083](work-specs/WS-083-documented-responses.md)             | Proposed    |
+| [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Proposed    | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Proposed    |
 
 ## Follow-ups
 
