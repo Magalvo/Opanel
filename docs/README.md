@@ -11,10 +11,9 @@ Updated at the end of every work-item, so that a new session can start from here
 
 - **Last finished:** WI-069 (no request data in the logs when a query fails, WT-12 item
   H), on 2026-11-19, on the branch `claude/wi-069-safe-logs`.
-- **Next:** draft WI-070 (WT-12 item I: `docs/operations.md`, which closes WT-12) and
-  WS-070 as `Proposed`, and stop for the owner's approval. It records the upgrade
-  criterion and a follow-up to rehearse a real upgrade after the first tagged release
-  (WS-068, question 4).
+- **Next:** the owner reviews WI-070 and WS-070 (WT-12 item I: `docs/operations.md`,
+  which closes WT-12), drafted as `Proposed` on 2026-11-19, with six open questions. No
+  code until WS-070 is `Approved`.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -167,6 +166,7 @@ outlined above and comes right after WT-04.
 | [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested         | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
 | [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                              | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
 | [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
+| [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                       | Proposed    | [WS-070](work-specs/WS-070-operations-guide.md)                 | Proposed    |
 
 ## Follow-ups
 

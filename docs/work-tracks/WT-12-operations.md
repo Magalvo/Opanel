@@ -37,17 +37,17 @@ Doc 0006 section 11.
 
 ## Work-items (outline)
 
-| Item                                               | Title                                                                                    | Status | Depends on     |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ | -------------- |
-| [WI-062](../work-items/WI-062-production-image.md) | A: production image and example Compose file; `migrate` as a one-shot command            | Done   | WT-04          |
-| [WI-063](../work-items/WI-063-database-roles.md)   | B: database roles: owner and runtime, grants in migrations, the runtime role in CI       | Done   | WI-062         |
-| [WI-064](../work-items/WI-064-schema-check.md)     | C: schema version check at start-up                                                      | Done   | WI-062         |
-| [WI-065](../work-items/WI-065-recover-admin.md)    | D: `recover-admin` operator command                                                      | Done   | WI-062         |
-| [WI-066](../work-items/WI-066-maintenance.md)      | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Done   | WI-062         |
-| [WI-067](../work-items/WI-067-https-and-proxy.md)  | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Done   | WI-062         |
-| [WI-068](../work-items/WI-068-backup-rehearsal.md) | G: backup and restore rehearsal in CI                                                    | Done   | WI-063, WI-064 |
-| [WI-069](../work-items/WI-069-safe-logs.md)        | H: no request data in the logs when a query fails (found while drafting item I)          | Done   | WI-062         |
-| WI-070                                             | I: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-069  |
+| Item                                               | Title                                                                                    | Status   | Depends on     |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------- | -------------- |
+| [WI-062](../work-items/WI-062-production-image.md) | A: production image and example Compose file; `migrate` as a one-shot command            | Done     | WT-04          |
+| [WI-063](../work-items/WI-063-database-roles.md)   | B: database roles: owner and runtime, grants in migrations, the runtime role in CI       | Done     | WI-062         |
+| [WI-064](../work-items/WI-064-schema-check.md)     | C: schema version check at start-up                                                      | Done     | WI-062         |
+| [WI-065](../work-items/WI-065-recover-admin.md)    | D: `recover-admin` operator command                                                      | Done     | WI-062         |
+| [WI-066](../work-items/WI-066-maintenance.md)      | E: `maintenance` command: expired sessions, old links, rate limits; measured index check | Done     | WI-062         |
+| [WI-067](../work-items/WI-067-https-and-proxy.md)  | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Done     | WI-062         |
+| [WI-068](../work-items/WI-068-backup-rehearsal.md) | G: backup and restore rehearsal in CI                                                    | Done     | WI-063, WI-064 |
+| [WI-069](../work-items/WI-069-safe-logs.md)        | H: no request data in the logs when a query fails (found while drafting item I)          | Done     | WI-062         |
+| [WI-070](../work-items/WI-070-operations-guide.md) | I: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Proposed | WI-062–WI-069  |
 
 ## Exit criteria
 
