@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { accountNameSchema } from "@/lib/schemas/accounts";
+import { agentNameSchema } from "@/lib/schemas/agents";
+import { epicTitleSchema } from "@/lib/schemas/epics";
+import { projectNameSchema } from "@/lib/schemas/projects";
+import { teamNameSchema } from "@/lib/schemas/teams";
+
 import { ApiError } from "./errors";
 import {
   decodeBoardCursor,
@@ -8,6 +14,7 @@ import {
   encodeBoardCursor,
   encodeCursor,
   encodeNameCursor,
+  NAME_CURSOR_MAX_LENGTH,
 } from "./pagination";
 
 const cursor = {
@@ -116,12 +123,36 @@ describe("name cursors (WS-026)", () => {
     expect(decodeNameCursor(encodeNameCursor(odd))).toEqual(odd);
   });
 
+  it.each([
+    ["ASCII", "x"],
+    ["CJK", "名"],
+  ])("round-trip a 200-character %s name, the longest an epic title may be (WS-081)", (_, char) => {
+    const long = { name: char.repeat(200), id: nameCursor.id };
+
+    expect(decodeNameCursor(encodeNameCursor(long))).toEqual(long);
+  });
+
+  it("bound the name by the longest name a paged list carries (WS-081)", () => {
+    const names = {
+      accountNameSchema,
+      agentNameSchema,
+      projectNameSchema,
+      teamNameSchema,
+      epicTitleSchema,
+    };
+    for (const [name, schema] of Object.entries(names)) {
+      expect(schema.maxLength, name).toBeTypeOf("number");
+      expect(schema.maxLength ?? Infinity, name).toBeLessThanOrEqual(NAME_CURSOR_MAX_LENGTH);
+    }
+    expect(NAME_CURSOR_MAX_LENGTH).toBe(200);
+  });
+
   it("are opaque URL-safe text", () => {
     expect(encodeNameCursor(nameCursor)).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 
   it("refuse a creation-time cursor, garbage or a wrong shape with a 400 naming cursor", () => {
-    const tooLong = Buffer.from(JSON.stringify({ n: "x".repeat(101), i: nameCursor.id })).toString(
+    const tooLong = Buffer.from(JSON.stringify({ n: "x".repeat(201), i: nameCursor.id })).toString(
       "base64url",
     );
     for (const value of [encodeCursor(cursor), "not a cursor!", "e30", tooLong]) {

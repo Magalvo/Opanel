@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { ManagedAccount } from "@/lib/schemas/accounts";
 
 import { ApiFailure, createLink, listAccounts, revokeInvitation, updateAccount } from "./api";
@@ -71,17 +72,16 @@ function confirmationText(
 /** The Admin "People" page (WS-020): a client of the account management API. */
 export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: string }>) {
   const router = useRouter();
-  const [people, setPeople] = useState<ManagedAccount[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const list = usePagedList<ManagedAccount>();
+  const { items: people, nextCursor, loadingMore } = list;
   const [phase, setPhase] = useState<Phase>("loading");
-  const [loadingMore, setLoadingMore] = useState(false);
   const [message, setMessage] = useState("");
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [shownLink, setShownLink] = useState<ShownLink | null>(null);
 
+  const { show } = list;
   function showFirstPage(page: Awaited<ReturnType<typeof listAccounts>>) {
-    setPeople(page.items);
-    setNextCursor(page.nextCursor);
+    show(page);
     setPhase("ready");
   }
 
@@ -89,7 +89,9 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
     let cancelled = false;
     listAccounts().then(
       (page) => {
-        if (!cancelled) showFirstPage(page);
+        if (cancelled) return;
+        show(page);
+        setPhase("ready");
       },
       () => {
         if (!cancelled) setPhase("error");
@@ -98,7 +100,7 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [show]);
 
   function retry() {
     setPhase("loading");
@@ -108,21 +110,17 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
   }
 
   async function loadMore() {
-    if (nextCursor === null) return;
-    setLoadingMore(true);
     try {
-      const page = await listAccounts(nextCursor);
-      setPeople((current) => [...current, ...page.items]);
-      setNextCursor(page.nextCursor);
+      await list.loadMore((cursor) => listAccounts(cursor));
     } catch {
       setMessage("Could not load more people. Try again.");
-    } finally {
-      setLoadingMore(false);
     }
   }
 
   function replace(updated: ManagedAccount) {
-    setPeople((current) => current.map((person) => (person.id === updated.id ? updated : person)));
+    list.update((current) =>
+      current.map((person) => (person.id === updated.id ? updated : person)),
+    );
   }
 
   /** The Admin's own session has ended if they changed their own role or deactivated themselves. */
@@ -178,7 +176,7 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
   async function revoke(person: ManagedAccount) {
     try {
       await revokeInvitation(person.id);
-      setPeople((current) => current.filter((other) => other.id !== person.id));
+      list.update((current) => current.filter((other) => other.id !== person.id));
       setMessage(`The invitation of ${person.name} was revoked.`);
     } catch (error) {
       if (error instanceof ApiFailure && error.status === 409) {
@@ -192,8 +190,10 @@ export function PeoplePage({ currentAccountId }: Readonly<{ currentAccountId: st
   }
 
   function invited({ account, link }: Invited) {
-    if (nextCursor === null) {
-      setPeople((current) => [...current, account]);
+    // Read from the list as it is now: the dialog calls the handler of the render in which
+    // it was submitted (WS-080).
+    if (list.isFullyLoaded()) {
+      list.add(account);
       setMessage(`Invited ${account.name}.`);
     } else {
       setMessage(`Invited ${account.name}. They appear at the end of the list.`);

@@ -1,6 +1,6 @@
 # WI-081 — Name cursors fit the longest name they carry
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B03)
 - Depends on: none
 - Work-spec: [WS-081](../work-specs/WS-081-name-cursor-length.md)
@@ -23,18 +23,18 @@ Five lists use name cursors: agents, epics, people, projects and teams.
 
 ## Acceptance criteria
 
-- [ ] A name cursor holding a 200-character name round-trips; 201 characters is a `400`
+- [x] A name cursor holding a 200-character name round-trips; 201 characters is a `400`
       with `{ path: "cursor", message: "Invalid cursor." }`.
-- [ ] A test fails if any name schema paged by a name cursor allows a longer name than the
+- [x] A test fails if any name schema paged by a name cursor allows a longer name than the
       cursor bound.
-- [ ] The longest name cursor the API can produce (200 characters, each escaped by JSON)
+- [x] The longest name cursor the API can produce (200 characters, each escaped by JSON)
       passes the `cursor` query parameter's length bound.
-- [ ] `GET /api/v1/projects/{projectId}/epics` pages across an epic with a 200-character
+- [x] `GET /api/v1/projects/{projectId}/epics` pages across an epic with a 200-character
       title, and a 200-character CJK one, with no repeat and no gap.
-- [ ] Shorter names and existing cursors keep working; paging order is unchanged.
-- [ ] The only contract change is the widened `maxLength` of `cursor` in the OpenAPI
+- [x] Shorter names and existing cursors keep working; paging order is unchanged.
+- [x] The only contract change is the widened `maxLength` of `cursor` in the OpenAPI
       document (owner question 1).
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

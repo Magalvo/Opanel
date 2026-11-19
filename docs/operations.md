@@ -39,7 +39,10 @@ but cannot drop or alter tables, `TRUNCATE`, or change the audit log or the task
 ## Install
 
 1. Copy the env file and fill it in. It holds every secret of the install and is ignored
-   by git:
+   by git. Compose hands each service only its own variables (WS-079): the app gets no
+   owner credential, `migrate` only `MIGRATION_DATABASE_URL`, and the database none of the
+   app's secrets. The list is in
+   [`docker/production/services.yaml`](../docker/production/services.yaml):
 
    ```bash
    cp .env.production.example .env.production
@@ -94,9 +97,9 @@ the proxy need not add it.
 
 [`docker/production/Caddyfile`](../docker/production/Caddyfile) does all four, and obtains
 and renews the certificate. Set `OPANEL_SITE` to your public name (for example
-`opanel.example.com`) in the shell or in a `.env` file next to `compose.production.yaml`
-(not in `.env.production`: the proxy faces the internet and sees none of the app's
-secrets), set `APP_URL=https://opanel.example.com` and `CLIENT_IP_HEADER=x-forwarded-for`
+`opanel.example.com`) in the shell, in a `.env` file next to `compose.production.yaml`, or
+in `.env.production` (the proxy faces the internet and receives only `OPANEL_SITE` and
+`OPANEL_CADDY_TLS`, none of the app's secrets), set `APP_URL=https://opanel.example.com` and `CLIENT_IP_HEADER=x-forwarded-for`
 in `.env.production`, and start with the profile:
 
 ```bash
@@ -175,6 +178,12 @@ offline for the length of the migration.
    ```bash
    curl -fsS http://127.0.0.1:3000/api/v1/health
    ```
+
+Upgrading from a version before WS-079, where every service read the whole env file: the
+env file stays as it is. Step 3's `up -d` recreates `db`, `migrate` and `app` with only
+their own variables, and keeps the data volume. If you edited `compose.production.yaml`,
+the services now live in `docker/production/services.yaml`: carry your changes over to it,
+and add any variable a service needs to that service's `environment:`.
 
 Each migration runs in a transaction: a failed `migrate` leaves the schema as it was, and
 prints the error class and code, never the connection string. Migrations only go forward.
