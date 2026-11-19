@@ -9,11 +9,12 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-077 (the Agents page, WT-05 item F), on 2026-11-19, on the branch
-  `claude/wi-077-agents-page`. WT-05 items A to G are done.
-- **Next:** draft WI-078 (WT-05 item H: the end-to-end agent flow and `docs/agents.md`, the
-  guide for agent authors), which closes WT-05, as `Proposed`, and stop for the owner's
-  approval.
+- **Last finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item H),
+  on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent accounts
+  and API tokens) is done.
+- **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
+  and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
+  it.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -74,19 +75,19 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                   | Title                                                   | Status      |
-| ------------------------------------------------------- | ------------------------------------------------------- | ----------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     | Done        |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer | Done        |
-| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      | Done        |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    | Done        |
-| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved    |
-| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done        |
-| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | In progress |
+| Track                                                   | Title                                                   | Status   |
+| ------------------------------------------------------- | ------------------------------------------------------- | -------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     | Done     |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer | Done     |
+| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      | Done     |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    | Done     |
+| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved |
+| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done     |
+| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Done     |
 
 Planned next, not yet drafted:
 
-- WT-06 Bug reports and automated triage
+- WT-06 Bug reports and automated triage (next)
 - WT-07 Backlog, priority, due dates, labels
 - WT-08 Search, filters, list view, activity timeline
 - WT-09 Sub-tasks and task links
@@ -177,6 +178,7 @@ right after WT-04 and is done.
 | [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                        | Done        | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Done        |
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
+| [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
 
 ## Follow-ups
 

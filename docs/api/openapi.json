@@ -3,7 +3,7 @@
   "info": {
     "title": "Opanel API",
     "version": "0.0.0",
-    "description": "Opanel is an open-source project management tool for human teams and AI agents.",
+    "description": "Opanel is an open-source project management tool for human teams and AI agents. Agent authors: see docs/agents.md in the repository.",
     "license": {
       "name": "MIT",
       "identifier": "MIT"

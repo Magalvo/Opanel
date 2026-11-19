@@ -136,7 +136,8 @@ export function buildOpenApiDocument(
       title: "Opanel API",
       version: packageJson.version,
       description:
-        "Opanel is an open-source project management tool for human teams and AI agents.",
+        "Opanel is an open-source project management tool for human teams and AI agents. " +
+        "Agent authors: see docs/agents.md in the repository.",
       license: { name: "MIT", identifier: "MIT" },
     },
     servers: [{ url: "/" }],

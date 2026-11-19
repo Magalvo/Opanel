@@ -1,7 +1,7 @@
 # WT-05 — Agent accounts and API tokens
 
-- Status: In progress (approved by the owner on 2026-11-19: decisions 1 to 14 and
-  questions 1 to 6 as proposed; item A done on 2026-11-19)
+- Status: Done (approved by the owner on 2026-11-19: decisions 1 to 14 and questions 1 to 6
+  as proposed; finished on 2026-11-19 with WI-078). Items A to H are WI-071 to WI-078.
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4:
   identity, scopes, tokens; amended by this track, see decision 1),
   [0003](../canonical/0003-task-management.md) (section 3: only Admins manage agents),
@@ -177,27 +177,35 @@ Numbers are given in order when each item starts; each gets its work-spec then.
 | [WI-076](../work-items/WI-076-me-for-agents.md) E        | `GET /me` for agents; the other authentication-only operations refuse them                                   | Done   | B          |
 | [WI-077](../work-items/WI-077-agents-page.md) F          | The Agents page                                                                                              | Done   | C          |
 | [WI-074](../work-items/WI-074-agent-badge.md) G          | Agents where humans see them: the "Agent" badge on reporter, author and history                              | Done   | A          |
-| H                                                        | End-to-end agent flow and the guide for agent authors (`docs/agents.md`)                                     | Draft  | C, D, E, F |
+| [WI-078](../work-items/WI-078-agent-flow-and-guide.md) H | End-to-end agent flow and the guide for agent authors (`docs/agents.md`)                                     | Done   | C, D, E, F |
 
 ## Exit criteria
 
-- [ ] An Admin creates an agent and a token from the Agents page; the token is shown once
-      and works at once with `Authorization: Bearer`.
-- [ ] A token reaches exactly its agent's scopes: an endpoint needing another permission
+- [x] An Admin creates an agent and a token from the Agents page; the token is shown once
+      and works at once with `Authorization: Bearer` (WI-077, `agents.spec.ts`; WI-078,
+      `agent-flow.spec.ts`).
+- [x] A token reaches exactly its agent's scopes: an endpoint needing another permission
       answers `403`; an unknown, malformed, expired or revoked token, or one of a disabled
-      agent, answers the same `401`.
-- [ ] A restricted agent reads and writes only its projects: other projects are missing
-      from lists and answer `403` everywhere else; the coverage test passes.
-- [ ] No agent can hold a `*:manage` or delete permission; a test tries each through the
-      API and the database.
-- [ ] Every action of an agent is attributed to it in the task history or the audit log;
-      every Admin action on agents and tokens is audited, never with the token.
-- [ ] An agent's events stream closes within one heartbeat of its token's revocation or
-      the agent being disabled.
-- [ ] Above 600 requests a minute a token gets `429` with `Retry-After`.
-- [ ] `GET /me` with a token returns what WT-11 needs; the OpenAPI document declares the
-      bearer scheme.
-- [ ] The full quality gate passes; an end-to-end test drives the whole flow.
+      agent, answers the same `401` (WI-072, `authenticate.integration.test.ts`,
+      `route-access.integration.test.ts`; WI-078, `agent-flow.spec.ts`).
+- [x] A restricted agent reads and writes only its projects: other projects are missing
+      from lists and answer `403` everywhere else; the coverage test passes (WI-073,
+      `project-access.integration.test.ts`; WI-078, `agent-flow.spec.ts`).
+- [x] No agent can hold a `*:manage` or delete permission; a test tries each through the
+      API and the database (WI-071, `agents.integration.test.ts` of the schema; WI-078,
+      `agents/permissions.integration.test.ts`).
+- [x] Every action of an agent is attributed to it in the task history or the audit log;
+      every Admin action on agents and tokens is audited, never with the token (WI-074;
+      WI-075, `agents-admin.integration.test.ts`; WI-078, the comment route test and
+      `agent-flow.spec.ts`).
+- [x] An agent's events stream closes within one heartbeat of its token's revocation or
+      the agent being disabled (WI-072, `event-stream.integration.test.ts`).
+- [x] Above 600 requests a minute a token gets `429` with `Retry-After` (WI-072,
+      `token-rate-limit.test.ts` and `route-access.integration.test.ts`).
+- [x] `GET /me` with a token returns what WT-11 needs; the OpenAPI document declares the
+      bearer scheme (WI-076; WI-075).
+- [x] The full quality gate passes; an end-to-end test drives the whole flow (WI-078,
+      `agent-flow.spec.ts`).
 
 ## Risks and open questions
 
