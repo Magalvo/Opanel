@@ -175,7 +175,7 @@ Numbers are given in order when each item starts; each gets its work-spec then.
 | [WI-075](../work-items/WI-075-agents-admin-api.md) C     | Admin API for agents and tokens, audited; the bearer scheme in the OpenAPI document                          | Done   | B          |
 | [WI-073](../work-items/WI-073-project-restrictions.md) D | Project restrictions enforced in every service, with the coverage test                                       | Done   | A          |
 | [WI-076](../work-items/WI-076-me-for-agents.md) E        | `GET /me` for agents; the other authentication-only operations refuse them                                   | Done   | B          |
-| F                                                        | The Agents page                                                                                              | Draft  | C          |
+| [WI-077](../work-items/WI-077-agents-page.md) F          | The Agents page                                                                                              | Done   | C          |
 | [WI-074](../work-items/WI-074-agent-badge.md) G          | Agents where humans see them: the "Agent" badge on reporter, author and history                              | Done   | A          |
 | H                                                        | End-to-end agent flow and the guide for agent authors (`docs/agents.md`)                                     | Draft  | C, D, E, F |
 

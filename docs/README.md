@@ -9,11 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-075 (the Admin API for agents and their tokens, WT-05 item C), on
-  2026-11-19, on the branch `claude/wi-075-agents-admin-api`. Merged on `main` before it:
-  WI-072 (item B), WI-073 (item D), WI-074 (item G).
-- **Next:** WI-076 (item E, `GET /me` for agents) waits for the owner's approval of WS-076
-  on its branch; then draft item F (the Agents page, on this API) and, last, item H.
+- **Last finished:** WI-077 (the Agents page, WT-05 item F), on 2026-11-19, on the branch
+  `claude/wi-077-agents-page`. WT-05 items A to G are done.
+- **Next:** draft WI-078 (WT-05 item H: the end-to-end agent flow and `docs/agents.md`, the
+  guide for agent authors), which closes WT-05, as `Proposed`, and stop for the owner's
+  approval.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -176,6 +176,7 @@ right after WT-04 and is done.
 | [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Done        | [WS-074](work-specs/WS-074-agent-badge.md)                      | Done        |
 | [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                        | Done        | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Done        |
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
+| [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
 
 ## Follow-ups
 
@@ -218,7 +219,8 @@ Other follow-ups:
 - Add a browsable API documentation page once there are real endpoints (see WS-006).
 - Give the shared `destructive` button style enough contrast in light mode: red text on its
   pale red background is 4:1, below the 4.5:1 of WCAG AA (found by axe in WI-035). It
-  affects the confirmation buttons of the People and Teams pages.
+  affects the confirmation buttons of the People and Teams pages; the Agents page avoids it
+  (WS-077, deviation 2).
 - Document every `409` of the operations that check `version` (WS-036, question 4). Their
   documented `409` schema requires `code: "version_conflict"` and `current`, but they also
   answer `project_archived`, and a column `PATCH` answers `last_done_column`; those bodies
