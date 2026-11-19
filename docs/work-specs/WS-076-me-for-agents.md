@@ -243,3 +243,6 @@ Risks:
   - Vitest 1481 of 1481;
   - `pnpm test:e2e --retries=0` 81 of 81;
   - Windows, Node 24, pnpm 10.28.0.
+- Gate again after the rebase on `main` at `f487cc5` (WI-075 merged): `openapi.json`
+  regenerated with no change; typecheck, lint and Prettier pass; Vitest 1510 of 1510;
+  `pnpm test:e2e --retries=0` 81 of 81.
