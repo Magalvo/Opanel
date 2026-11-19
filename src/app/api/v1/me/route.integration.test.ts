@@ -102,6 +102,21 @@ describe("GET /api/v1/me", () => {
   });
 });
 
+describe("GET /api/v1/me and the query string (WS-083)", () => {
+  it("refuses a query parameter it does not take, for a token too", async () => {
+    const agent = await createTestAgent({ name: "Curious", scopes: ["tasks:read"] });
+    const { token } = await createTestToken(agent.id);
+
+    const response = await GET(bearerRequest("/api/v1/me?x=1", token), undefined);
+
+    expect(response.status).toBe(400);
+    expect(problemSchema.parse(await response.json())).toMatchObject({
+      code: "invalid_request",
+      errors: [{ path: "x", message: "Unknown field" }],
+    });
+  });
+});
+
 describe("PATCH /api/v1/me", () => {
   it("renames a Viewer, with no permission needed, and answers 200 with the Me body", async () => {
     const account = await createTestAccount({ role: "viewer" });

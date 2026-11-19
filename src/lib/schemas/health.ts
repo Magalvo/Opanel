@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EndpointContract } from "@/lib/openapi/contract";
+import { UNKNOWN_QUERY } from "@/lib/openapi/responses";
 
 /** Body of `GET /api/v1/health`. Deliberately minimal: the endpoint is public. */
 export const healthResponseSchema = z
@@ -22,6 +23,7 @@ export const healthContract = {
   description: "Reports whether the service can reach its database. Requires no credentials.",
   access: { kind: "public" },
   responses: {
+    400: UNKNOWN_QUERY,
     200: {
       description: "The service and its database are available.",
       schema: healthResponseSchema,

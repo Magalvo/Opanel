@@ -1,6 +1,6 @@
 # WS-083 — Every response the API sends is documented
 
-- Status: Approved (by the owner on 2026-11-19, every question as proposed)
+- Status: Done (2026-11-19; approved by the owner the same day, questions 1 to 5 as proposed: option A)
 - Work-item: [WI-083](../work-items/WI-083-documented-responses.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) sections 3 to 6;
   audit of 2026-11-19, findings B05 and B14
@@ -188,4 +188,38 @@ For the owner:
 
 ## Deviations from the approved spec
 
-None yet.
+1. **Test 3 looks for the token's own sentence** ("The API token made too many requests"),
+   not for `rate_limited`: sign-in and the other public password operations already
+   document a `rate_limited` of their own, by email or address.
+2. **Test 8 checks the `anyOf` and the schemas it names with Zod**, not a JSON Schema
+   validator: `ajv` is only a transitive dependency, and adding one needs a canonical doc
+   change. The test parses a `project_archived` body with `problemSchema` (accepted) and
+   with the version-conflict schema (refused), which is what the `anyOf` offers.
+3. **Existing tests adapted, none removed:** the five WS-028 to WS-033 conflict tests read
+   the version conflict as the first entry of the `anyOf`; the health test's response keys
+   gain `400`; the event stream's gain `400`; the fake contracts' key lists gain `429`; the
+   three `readQuery` tests run through a contract that declares its query.
+4. **`UNKNOWN_QUERY`** joins `BAD_PATH` and `PAYLOAD_TOO_LARGE` in `responses.ts`, the
+   `400` of the four operations that had none (health, the OpenAPI document, sign-out,
+   `GET /me`).
+5. **Doc 0004 section 4's specific codes are a table inside the rule** that introduces
+   them, next to a new rule on `Retry-After` and documented `409`s; section 3 says the
+   query check runs in `route()` after the access checks.
+
+## Implementation record
+
+- Red: 22 cases failed on their assertions (no `429` on token operations, no
+  `Retry-After`, no `400` on the event stream, single `$ref` conflicts, no query check in
+  `route()`, four contracts without `400`, no table in doc 0004); the two integration
+  tests (events `400`, `GET /me?x=1`) were written with them.
+- Green: Vitest 1567 of 1567. The first-party callers that send a query (components,
+  `tests/e2e/`) all call the eight lists that declare one; there is no `mcp/` yet.
+- `pnpm openapi:generate`: 46 of 54 operations gain the token's `429`; all 50 `429`s
+  declare `Retry-After` (integer, at least 1); the six versioned writes document `anyOf`
+  their version conflict and `Problem`, naming each other code; the event stream gains
+  `400`; four operations gain `400` for an unknown query.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1567 of 1567;
+  - `pnpm test:e2e --retries=0` 87 of 87;
+  - Linux, Node 22.23.5, pnpm 10, Compose PostgreSQL 18 on port 5432.

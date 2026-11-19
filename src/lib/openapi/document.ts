@@ -23,6 +23,17 @@ const CREDENTIAL_RESPONSES: Readonly<Record<number, ResponseContract>> = {
 };
 
 /**
+ * The per-token rate limit, which `route()` applies before any other check to every
+ * operation a token may call (WS-072, documented by WS-083).
+ */
+const TOKEN_RATE_LIMITED = "The API token made too many requests (code `rate_limited`).";
+
+/** Every `429` says how long to wait (WS-083). */
+const RETRY_AFTER = z.object({
+  "Retry-After": z.int().min(1).meta({ description: "Whole seconds to wait before trying again." }),
+});
+
+/**
  * How a person's browser authenticates (canonical doc 0004, section 7), and how an agent
  * does: its API token, as a bearer token (WS-072, declared by WS-075).
  */
@@ -49,7 +60,12 @@ function versionConflictSchema(entity: z.ZodType): z.ZodType {
   return schema;
 }
 
-function toResponse(response: ResponseContract): Responses[StatusCode] {
+function toResponse(response: ResponseContract, status: string): Responses[StatusCode] {
+  const documented = toBody(response);
+  return status === "429" ? { ...documented, headers: RETRY_AFTER } : documented;
+}
+
+function toBody(response: ResponseContract): Responses[StatusCode] {
   if ("noContent" in response) {
     return { description: response.description };
   }
@@ -60,9 +76,15 @@ function toResponse(response: ResponseContract): Responses[StatusCode] {
     };
   }
   if ("conflictOf" in response) {
+    const conflict = versionConflictSchema(response.conflictOf);
+    // anyOf, not oneOf: a version conflict is a Problem too (WS-083).
     return {
       description: response.description,
-      content: { [PROBLEM_CONTENT_TYPE]: { schema: versionConflictSchema(response.conflictOf) } },
+      content: {
+        [PROBLEM_CONTENT_TYPE]: {
+          schema: response.otherCodes.length === 0 ? conflict : z.union([conflict, problemSchema]),
+        },
+      },
     };
   }
   return {
@@ -74,12 +96,22 @@ function toResponse(response: ResponseContract): Responses[StatusCode] {
   };
 }
 
+/** The token's `429`, added to an operation's own `429` when it has one. */
+function withTokenLimit(own: ResponseContract | undefined): ResponseContract {
+  if (own === undefined) return { description: TOKEN_RATE_LIMITED, problem: true };
+  return { ...own, description: `${own.description} ${TOKEN_RATE_LIMITED}` };
+}
+
 function toOperation(contract: EndpointContract): Operation {
   const isPublic = contract.access.kind === "public";
-  const all = isPublic ? contract.responses : { ...CREDENTIAL_RESPONSES, ...contract.responses };
+  const byToken = !isPublic && contract.access.kind !== "session";
+  const all: Record<number, ResponseContract> = isPublic
+    ? { ...contract.responses }
+    : { ...CREDENTIAL_RESPONSES, ...contract.responses };
+  if (byToken) all[429] = withTokenLimit(contract.responses[429]);
   const responses: Responses = {};
   for (const [status, response] of Object.entries(all)) {
-    responses[status as StatusCode] = toResponse(response);
+    responses[status as StatusCode] = toResponse(response, status);
   }
 
   const { params, query, body } = contract.request ?? {};
@@ -101,9 +133,9 @@ function toOperation(contract: EndpointContract): Operation {
     // Either credential, except on the `session` operations, which refuse a token (WS-072).
     security: isPublic
       ? []
-      : contract.access.kind === "session"
-        ? [{ [SESSION_COOKIE_SCHEME]: [] }]
-        : [{ [SESSION_COOKIE_SCHEME]: [] }, { [BEARER_SCHEME]: [] }],
+      : byToken
+        ? [{ [SESSION_COOKIE_SCHEME]: [] }, { [BEARER_SCHEME]: [] }]
+        : [{ [SESSION_COOKIE_SCHEME]: [] }],
     ...(params === undefined && query === undefined
       ? {}
       : {

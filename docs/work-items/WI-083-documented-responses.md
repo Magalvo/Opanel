@@ -1,6 +1,6 @@
 # WI-083 — Every response the API sends is documented
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B05)
 - Depends on: none
 - Work-spec: [WS-083](../work-specs/WS-083-documented-responses.md)
@@ -30,24 +30,24 @@ The docs that describe the contract are corrected with it (finding B14): doc 000
 
 ## Acceptance criteria
 
-- [ ] Every operation that accepts an API token documents `429` with code `rate_limited`;
+- [x] Every operation that accepts an API token documents `429` with code `rate_limited`;
       public and session-only operations do not gain it. An operation that already
       documents its own `429` (the event stream) keeps its text and gains the token one.
-- [ ] Every `429` in the document declares the `Retry-After` header (integer seconds).
-- [ ] `GET /api/v1/projects/{projectId}/events` documents `400` for an invalid path, and
+- [x] Every `429` in the document declares the `Retry-After` header (integer seconds).
+- [x] `GET /api/v1/projects/{projectId}/events` documents `400` for an invalid path, and
       answers it to a malformed project reference.
-- [ ] The `409` of `PATCH` project, column, task and epic, and of `POST` column move and
+- [x] The `409` of `PATCH` project, column, task and epic, and of `POST` column move and
       task move, documents the version conflict and each other code it can answer; a body
       with `project_archived` validates against it.
-- [ ] Unknown query parameters: either `route()` answers `400` naming each one on every
+- [x] Unknown query parameters: either `route()` answers `400` naming each one on every
       operation whose contract declares no query (question 1, option A), or doc 0004
       section 3 says that only operations taking query parameters check them (option B).
-- [ ] Doc 0004 section 4 lists every specific error code with its status and work-spec;
+- [x] Doc 0004 section 4 lists every specific error code with its status and work-spec;
       section 5's example names a real endpoint and lists every list ordered by name;
       section 6 states which `POST` operations return `200`.
-- [ ] `docs/agents.md` lists `409 account_inactive` and `429 too_many_streams`, and "Live
+- [x] `docs/agents.md` lists `409 account_inactive` and `429 too_many_streams`, and "Live
       updates" states the limit of 10 streams per account and app process.
-- [ ] `docs/api/openapi.json` is regenerated; the full quality gate passes.
+- [x] `docs/api/openapi.json` is regenerated; the full quality gate passes.
 
 ## Notes
 

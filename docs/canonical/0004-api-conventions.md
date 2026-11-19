@@ -44,7 +44,8 @@ Agreed with the owner in WS-005: this doc is written at the start of WT-02.
   envelope. This matches the bug report responses already defined in doc 0001.
 - Request bodies and query strings are validated with strict Zod schemas: an unknown field
   or query parameter is an error, not ignored. A typo in a field name therefore fails
-  loudly instead of silently doing nothing.
+  loudly instead of silently doing nothing. An operation that takes no query parameter
+  refuses any, in `route()`, after its access checks (WS-083).
 - Responses may gain new fields in v1 at any time. Clients must ignore fields they do not
   know.
 - Every response carries `Cache-Control: no-store`.
@@ -115,17 +116,34 @@ Base codes:
 Rules:
 
 - Clients branch on `code` and `status`, never on `title` or `detail`.
-- A work-spec may introduce a more specific code for a status (for example
-  `version_conflict` for `409`, or `last_admin` for the `409` of a change that would leave no
-  active Admin, WS-018, or `invalid_link` for the `404` of a one-time link that cannot be
-  used, WS-019, or `invalid_setup_token` for the `403` of a first-run setup whose
-  configured token is missing or wrong, WS-050, or `setup_token_not_configured` for the
-  `403` of a first-run setup on a production server with no token configured, WS-055, or
-  `too_many_streams` for the `429` of an
-  account that holds too many event streams, WS-047, or `server_busy` for the `429` of a
-  request that needs a password hash while the hashing queue is full, WS-056, or, for the `409`
-  of the agents API, `agent_name_taken`, `too_many_tokens` and `agent_disabled`, WS-075) and extra fields that belong to it (doc 0002 returns the
-  current entity with a version conflict, as `current`). Codes are never renamed or reused.
+- A work-spec may introduce a more specific code for a status, and extra fields that
+  belong to it (doc 0002 returns the current entity with a version conflict, as
+  `current`). Codes are never renamed or reused. The specific codes so far (a test keeps
+  this table and the base one equal to `PROBLEM_CODES`, WS-083):
+
+  | Status | `code`                       | Meaning                                                         | Work-spec |
+  | ------ | ---------------------------- | --------------------------------------------------------------- | --------- |
+  | `403`  | `invalid_setup_token`        | The first-run setup's token is missing or wrong                 | WS-050    |
+  | `403`  | `setup_token_not_configured` | A production server has no setup token configured               | WS-055    |
+  | `404`  | `invalid_link`               | A one-time link that cannot be used                             | WS-019    |
+  | `409`  | `last_admin`                 | The change would leave no active Admin                          | WS-018    |
+  | `409`  | `team_name_taken`            | Another team has that name                                      | WS-026    |
+  | `409`  | `account_inactive`           | The person to assign or add is deactivated                      | WS-026    |
+  | `409`  | `version_conflict`           | The entity changed since the `version` sent; `current` holds it | WS-027    |
+  | `409`  | `project_key_taken`          | Another project has that key                                    | WS-028    |
+  | `409`  | `project_archived`           | The project is archived, so read-only                           | WS-028    |
+  | `409`  | `last_done_column`           | The change would leave the project without a Done column        | WS-029    |
+  | `409`  | `team_in_use`                | A task is assigned to the team                                  | WS-030    |
+  | `409`  | `column_not_empty`           | The column still holds tasks                                    | WS-030    |
+  | `409`  | `agent_name_taken`           | Another agent has that name                                     | WS-075    |
+  | `409`  | `too_many_tokens`            | The agent already holds 10 usable tokens                        | WS-075    |
+  | `409`  | `agent_disabled`             | The agent is disabled                                           | WS-075    |
+  | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process          | WS-047    |
+  | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full       | WS-056    |
+
+- Every `429` carries `Retry-After`, in whole seconds. Every operation an API token may call
+  documents the token's `429 rate_limited`, and a versioned write documents each other
+  `409` it can answer next to `version_conflict` (WS-083).
 - Error bodies never contain stack traces, SQL, file paths, secrets or the rejected value
   of a secret field (`AGENTS.md` hard rule 7). The unexpected error itself is logged
   server-side with the request id, its class name and, when present, the database or
@@ -141,7 +159,7 @@ Rules:
 Every endpoint that returns a collection is paginated the same way:
 
 ```
-GET /api/v1/tasks?limit=50&cursor=eyJ...
+GET /api/v1/projects?limit=50&cursor=eyJ...
 ```
 
 ```jsonc
@@ -158,8 +176,9 @@ GET /api/v1/tasks?limit=50&cursor=eyJ...
   agents write to continuously. There are no page numbers and no total count.
 - A cursor carries the last row's sort key and its id. By default the sort key is the
   creation time **with microsecond precision, as text**; a `Date` would truncate to
-  milliseconds and repeat a row. Lists ordered by name (people, teams; WS-026) carry the
-  name and order by `lower(name)` under the `"C"` collation, so the order is the same on
+  milliseconds and repeat a row. Lists ordered by name (people, teams, projects and agents
+  by name, epics by title; WS-026) carry the name and order by `lower(name)` under the
+  `"C"` collation, so the order is the same on
   every install whatever its database collation. A tampered cursor, or one from a list
   with another sort key, is a `400` with the field error `cursor`.
 - Each endpoint has one documented default order. Where sorting is offered it is
@@ -172,8 +191,10 @@ may be returned as a full `items` array with `nextCursor: null`; the work-spec s
 
 ## 6. Writes
 
-- `POST` creates and returns `201` with the resource. `PATCH` partially updates and
-  returns `200` with the resource. `DELETE` returns `204`. `PUT` is not used in v1.
+- A `POST` that creates returns `201` with the resource. A `POST` that acts on an existing
+  resource (archive, unarchive, move, restore, adding a team member) returns `200` with it
+  (WS-083). `PATCH` partially updates and returns `200` with the resource. `DELETE`
+  returns `204`. `PUT` is not used in v1.
 - `PATCH` bodies: a field that is absent is left unchanged; a nullable field sent as
   `null` is cleared.
 - Entities with optimistic concurrency (doc 0002) expose an integer `version`. An update

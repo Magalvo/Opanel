@@ -9,7 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-082 (the board applies only the latest load, never during a move,
+- **Last finished:** WI-083 (every response the API sends is documented, audit of
+  2026-11-19, findings B05 and B14; an operation that takes no query now refuses one), on
+  2026-11-19, on the branch `claude/wi-083-documented-responses`.
+- **Also finished:** WI-082 (the board applies only the latest load, never during a move,
   audit of 2026-11-19, finding B04 and the board's part of B15), on 2026-11-19, on the
   branch `claude/wi-082-board-reload-ordering`.
 - **Also finished:** WI-081 (name cursors fit the longest name they carry, audit of
@@ -28,15 +31,15 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** WI-083, then draft WT-06 (bug reports and automated triage,
-  canonical doc 0001 sections 5 and 6) as `Proposed`, and stop for the owner's approval.
-  WT-11 (the MCP server) follows it.
-- **Approved on 2026-11-19, in progress:** WI-079 to WI-083 with their work-specs, every
+- **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
+  and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
+  it.
+- **Approved and done on 2026-11-19:** WI-079 to WI-083 with their work-specs, every
   question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
   (production services get only their own secrets; paged lists without duplicates; name
   cursors that fit epic titles; board loads ordered around moves; every API response
   documented). The lower findings B06 to B16 are listed under [Follow-ups](#follow-ups).
-  The owner chose to do these before WT-06. WI-079, WI-080, WI-081 and WI-082 are done.
+  The owner chose to do these before WT-06; all five are merged.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -205,7 +208,7 @@ right after WT-04 and is done.
 | [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Done        | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Done        |
 | [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Done        | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Done        |
 | [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Done        | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Done        |
-| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Approved    | [WS-083](work-specs/WS-083-documented-responses.md)             | Approved    |
+| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
 | [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
 | [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
 
@@ -254,13 +257,9 @@ Other follow-ups:
   pale red background is 4:1, below the 4.5:1 of WCAG AA (found by axe in WI-035). It
   affects the confirmation buttons of the People and Teams pages; the Agents page avoids it
   (WS-077, deviation 2).
-- Document every `409` of the operations that check `version` (WS-036, question 4). Their
-  documented `409` schema requires `code: "version_conflict"` and `current`, but they also
-  answer `project_archived`, and a column `PATCH` answers `last_done_column`; those bodies
-  do not match the documented schema. Needs its own work-item: `versionConflictResponse`
-  should document "a version conflict, or another problem" for projects, columns, tasks
-  and epics. Folded into WI-083 (proposed), which also covers the task `PATCH`'s
-  `account_inactive`.
+- **Answered by WI-083 (2026-11-19): document every `409` of the operations that check
+  `version`** (WS-036, question 4). The six versioned writes document `anyOf` their
+  version conflict and `Problem`, and name each other code they answer.
 - The project settings dialogs (Add column, Edit column) have no `DialogTrigger`, so on
   close Radix moves the focus to the page body instead of the button that opened them
   (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
@@ -318,9 +317,8 @@ chooses. B01 to B05 are WI-079 to WI-083.
   `blob-report/`.
 - B13: migration `0014_runtime_role.sql` relies on PostgreSQL 15 or later not granting
   `CREATE` on `public` to `PUBLIC`. Revoke it explicitly, or name 15 as the minimum.
-- B14: `docs/agents.md` omits `409 account_inactive` and `429 too_many_streams` (10
-  streams per account); doc 0004 section 4 lists no WT-03 error codes, and section 5's
-  example uses `GET /api/v1/tasks`, which does not exist. Folded into WI-083.
+- B14: answered by WI-083 (2026-11-19): `docs/agents.md` lists `409 account_inactive` and
+  `429 too_many_streams`, and doc 0004 sections 4 to 6 are corrected.
 - B15: the project frame applies project updates without a version check
   (`project-events.tsx`, `board.tsx`), and the board shows no "paused" banner while the
   browser retries the stream on its own (`use-project-events.ts`). One small item (WS-082,

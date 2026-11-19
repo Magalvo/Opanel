@@ -65,6 +65,18 @@ describe("GET /api/v1/projects/{projectId}/events (WS-047)", () => {
     expect(problemSchema.parse(await unknown.json()).code).toBe("not_found");
   });
 
+  it("answers 400 to a project reference that is neither a uuid nor a key (WS-083)", async () => {
+    await setup();
+    const cookie = await signInCookie("mia@example.com");
+
+    const response = await GET(streamRequest("not%20a%20key", cookie), {
+      params: Promise.resolve({ projectId: "not a key" }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(problemSchema.parse(await response.json()).code).toBe("invalid_request");
+  });
+
   it("opens for a Viewer, as text/event-stream that nothing may compress or buffer", async () => {
     await setup();
     const cookie = await signInCookie("vic@example.com");

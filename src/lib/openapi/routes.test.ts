@@ -218,4 +218,12 @@ describe("API routes and OpenAPI contracts", () => {
     expect(unpaired).toEqual([]);
     expect(contracts.filter((contract) => 413 in contract.responses).length).toBeGreaterThan(0);
   });
+
+  it("documents 400 on every operation that takes no query, which refuses one (WS-083)", () => {
+    const missing = contracts
+      .filter((contract) => contract.request?.query === undefined && !(400 in contract.responses))
+      .map(operationOf);
+
+    expect(missing).toEqual([]);
+  });
 });
