@@ -2,6 +2,11 @@ import { z } from "zod";
 
 export const DEFAULT_PAGE_LIMIT = 50;
 export const MAX_PAGE_LIMIT = 100;
+/**
+ * The longest `cursor` a list accepts: room for every cursor the API hands out, the longest
+ * being a name cursor of 200 characters that JSON escapes, 1668 characters (WS-081).
+ */
+export const MAX_CURSOR_LENGTH = 2048;
 
 /**
  * Query parameters of every list endpoint (canonical doc 0004 section 5). Strict: an
@@ -9,7 +14,7 @@ export const MAX_PAGE_LIMIT = 100;
  */
 export const paginationQuerySchema = z.strictObject({
   limit: z.coerce.number().int().min(1).max(MAX_PAGE_LIMIT).default(DEFAULT_PAGE_LIMIT),
-  cursor: z.string().min(1).max(512).optional(),
+  cursor: z.string().min(1).max(MAX_CURSOR_LENGTH).optional(),
 });
 
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
