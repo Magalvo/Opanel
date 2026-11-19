@@ -8,7 +8,7 @@ import type {
   ProjectQuery,
   UpdateProjectRequest,
 } from "@/lib/schemas/projects";
-import { type Actor, requirePermission } from "@/server/auth/actor";
+import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { columns, projects } from "@/server/db/schema";
 import { notFound, projectArchived, projectKeyTaken, versionConflict } from "@/server/http/errors";
@@ -82,7 +82,8 @@ async function findProject(
 /**
  * For every write inside a project (WS-028 section 5): resolves the project by id or key,
  * locks its row until the transaction ends, so it cannot be archived in between, and refuses
- * an unknown (`404`) or archived (`409 project_archived`) project.
+ * an unknown (`404`), unreachable (`403`, WS-073) or archived (`409 project_archived`)
+ * project, in that order.
  *
  * `shared` (the default, `for share`) lets writes run side by side. `exclusive` (`for no key
  * update`) makes writes that change the project's structure, such as its columns, run one at
@@ -91,43 +92,66 @@ async function findProject(
  */
 export async function lockWritableProject(
   executor: Executor,
+  actor: Actor,
   ref: string,
   mode: "shared" | "exclusive" = "shared",
 ): Promise<{ id: string; key: string }> {
   const lock = mode === "exclusive" ? sql`for no key update` : sql`for share`;
   const project = await findProject(executor, ref, lock);
   if (!project) throw projectNotFound();
+  requireProjectAccess(actor, project.id);
   if (project.archivedAt !== null) throw projectArchived();
   return { id: project.id, key: project.key };
 }
 
-/** The project's id and key, or undefined; for services that read inside a project. */
+/**
+ * The project's id and key, or undefined; for services that read inside a project. Refuses
+ * a project the actor cannot reach (`403`, WS-073).
+ */
 export async function findProjectRef(
   executor: Executor,
+  actor: Actor,
   ref: string,
 ): Promise<{ id: string; key: string } | undefined> {
   const project = await findProject(executor, ref);
-  return project === undefined ? undefined : { id: project.id, key: project.key };
+  if (project === undefined) return undefined;
+  requireProjectAccess(actor, project.id);
+  return { id: project.id, key: project.key };
 }
 
 /**
  * Takes the next task number of a writable project (WT-03 decision 3, WS-030 section 3).
  * The update locks the project's row until the transaction ends, so task creations in one
- * project run one at a time. Refuses an unknown (`404`) or archived (`409`) project.
+ * project run one at a time. Refuses an unknown (`404`), unreachable (`403`, WS-073) or
+ * archived (`409`) project. Call it inside a transaction only: a refusal after the claim
+ * relies on the rollback to give the number back.
  */
 export async function claimTaskNumber(
   executor: Executor,
+  actor: Actor,
   ref: string,
 ): Promise<{ id: string; key: string; number: number }> {
   const [claimed] = await executor.execute<{ id: string; key: string; number: number }>(sql`
     update projects p set next_task_number = p.next_task_number + 1
     where ${matches(ref)} and p.archived_at is null
     returning p.id, p.key, p.next_task_number - 1 as number`);
-  if (claimed) return claimed;
+  if (claimed) {
+    requireProjectAccess(actor, claimed.id);
+    return claimed;
+  }
 
   const project = await findProject(executor, ref);
   if (!project) throw projectNotFound();
+  requireProjectAccess(actor, project.id);
   throw projectArchived();
+}
+
+/** The projects a restricted agent may list; nothing for anyone else (WS-073 section 4). */
+function reachableBy(actor: Actor): SQL {
+  if (actor.projectIds === null) return sql``;
+  if (actor.projectIds.size === 0) return sql`and false`;
+  const ids = [...actor.projectIds].map((id) => sql`${id}::uuid`);
+  return sql`and p.id in (${sql.join(ids, sql`, `)})`;
 }
 
 export async function listProjects(
@@ -149,7 +173,7 @@ export async function listProjects(
 
   const rows = await db.execute<ProjectRow>(sql`
     select ${PROJECT_COLUMNS} from projects p
-    where ${archived} ${after}
+    where ${archived} ${reachableBy(actor)} ${after}
     order by lower(p.name) collate "C", p.id
     limit ${query.limit + 1}`);
 
@@ -170,6 +194,7 @@ export async function getProject(
   requirePermission(actor, "projects:read");
   const project = await findProject(db, ref);
   if (!project) throw projectNotFound();
+  requireProjectAccess(actor, project.id);
   return project;
 }
 
@@ -228,6 +253,7 @@ export async function updateProject(
   return db.transaction(async (tx) => {
     const before = await findProject(tx, ref);
     if (!before) throw projectNotFound();
+    requireProjectAccess(actor, before.id);
 
     const name = input.name ?? before.name;
     const description = input.description ?? before.description;
@@ -292,6 +318,7 @@ async function setArchived(
     // `for update` waits for writes in flight, which hold `for share` (lockWritableProject).
     const project = await findProject(tx, ref, sql`for update`);
     if (!project) throw projectNotFound();
+    requireProjectAccess(actor, project.id);
     if ((project.archivedAt !== null) === archived) return project;
 
     const [updated] = await tx.execute<ProjectRow>(sql`

@@ -3,7 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
-- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) decisions 1, 7 and 11 (scopes, project restrictions, no deletion; applied 2026-11-19 by WI-071)
+- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) decisions 1, 7 and 11 (scopes, project restrictions, no deletion; applied 2026-11-19 by WI-071; the order of refusals for a restricted agent, 2026-11-19 by WI-073)
 
 ## 1. Context
 
@@ -102,6 +102,10 @@ or the listed ones, even when the list is empty (`all_projects`, WI-071).
 - Sent as `Authorization: Bearer <token>`. Comparison is constant-time.
 - Rejected with `401` when unknown, expired, revoked, or the agent is disabled; `403`
   when the scope or project restriction does not allow the call.
+- An agent restricted to projects gets `403` for another project and for anything inside
+  it, after an unknown id's `404` and before any other refusal (such as an archived
+  project's `409`), so it learns nothing of that project's state; lists of projects leave
+  the others out (WS-073).
 - Token-authenticated requests are rate limited per token.
 
 ### Humans: session cookie

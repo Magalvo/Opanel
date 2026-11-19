@@ -88,13 +88,14 @@ async function lockColumns(executor: Executor, projectId: string): Promise<Colum
 /** The column, its project locked as writable, and all of the project's columns locked. */
 async function lockForColumn(
   executor: Executor,
+  actor: Actor,
   columnId: string,
 ): Promise<{ column: ColumnRow; all: ColumnRow[] }> {
   const [owner] = await executor.execute<{ project_id: string }>(
     sql`select project_id from columns where id = ${columnId}`,
   );
   if (!owner) throw columnNotFound();
-  await lockWritableProject(executor, owner.project_id, "exclusive");
+  await lockWritableProject(executor, actor, owner.project_id, "exclusive");
   const all = await lockColumns(executor, owner.project_id);
   const column = all.find((row) => row.id === columnId);
   // Deleted between the first read and the lock.
@@ -130,7 +131,7 @@ export async function createColumn(
   requirePermission(actor, "projects:manage");
 
   return db.transaction(async (tx) => {
-    const project = await lockWritableProject(tx, projectRef, "exclusive");
+    const project = await lockWritableProject(tx, actor, projectRef, "exclusive");
     const all = await lockColumns(tx, project.id);
 
     let after: ColumnRow | null;
@@ -221,7 +222,7 @@ export async function updateColumn(
   requirePermission(actor, "projects:manage");
 
   return db.transaction(async (tx) => {
-    const { column, all } = await lockForColumn(tx, columnId);
+    const { column, all } = await lockForColumn(tx, actor, columnId);
     if (column.version !== input.version) throw versionConflict(toColumn(column));
 
     const name = input.name ?? column.name;
@@ -256,7 +257,7 @@ export async function moveColumn(
   requirePermission(actor, "projects:manage");
 
   return db.transaction(async (tx) => {
-    const { column, all } = await lockForColumn(tx, columnId);
+    const { column, all } = await lockForColumn(tx, actor, columnId);
     if (input.afterColumnId === column.id) throw invalidAnchor();
     if (column.version !== input.version) throw versionConflict(toColumn(column));
 
@@ -353,7 +354,7 @@ async function moveDeletedTasksOut(
 
 async function deleteColumnRow(actor: Actor, columnId: string, db: Database): Promise<void> {
   await db.transaction(async (tx) => {
-    const { column, all } = await lockForColumn(tx, columnId);
+    const { column, all } = await lockForColumn(tx, actor, columnId);
     if (isLastDone(column, all)) throw lastDoneColumn();
 
     const [live] = await tx.execute(

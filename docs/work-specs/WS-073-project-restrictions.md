@@ -1,6 +1,6 @@
 # WS-073 — Project restrictions enforced in every service, with the coverage test
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 5 as proposed)
 - Work-item: [WI-073](../work-items/WI-073-project-restrictions.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4:
   an agent restricted to projects gets `403` elsewhere);
@@ -275,3 +275,41 @@ Risks:
 - **A future read that finds a row by id** (as `getTask` does) without a resolver must call
   the helper itself; the coverage test is what catches a forgotten one, which is why
   every project-scoped export must have a behavioural entry.
+
+## Deviations from the approved spec
+
+1. **The projects-list filter is `p.id in (…)`, or `and false` for an empty list**, not
+   `p.id = any(${ids}::uuid[])` (section 4). Drizzle's `sql` template sends a JavaScript
+   array as one parameter per element, which PostgreSQL refuses as an array literal
+   (`malformed array literal`). The result is the same: one bound parameter per project id,
+   and an empty page for an agent restricted to no project.
+2. **Test 7 (real agents) is in `project-access.integration.test.ts`**, next to the
+   coverage test, rather than in `projects.integration.test.ts`: it spans tasks, comments
+   and projects, and reuses that file's two-project fixture. Test 6 (the list filter) is in
+   `projects.integration.test.ts`, as planned.
+
+## Implementation record
+
+- Red (commit `9140130`): 59 tests failed for the right reasons: `canAccessProject` and
+  `requireProjectAccess` did not exist; every project-scoped function answered with
+  success, `404` (the resolvers received the actor as their `ref`) or `409
+project_archived` instead of `403`; `listProjects` returned every project; the stream
+  test timed out because the stream stayed open. The classification test already passed:
+  the reviewed lists matched the 73 exported service functions on `main`.
+- Green: the helper in `actor.ts`; `lockWritableProject`, `findProjectRef` and
+  `claimTaskNumber` take the actor; explicit checks in `getProject`, `updateProject`,
+  `setArchived`, `getTask`, `getEpic`, `listComments`; the list filter; the heartbeat
+  condition. The four touched test files: 117 of 117. No other caller of the resolvers
+  existed (`tsc` found none), and no existing test changed apart from the resolver
+  argument in `projects.integration.test.ts`.
+- Doc 0001 section 4 gains the sentence on the order of refusals (question 5); its header
+  names WI-073.
+- Gate on 2026-11-19 (private databases `opanel_wi073_test` and `opanel_wi073_e2e_test`
+  on port 5433, so as not to collide with the sessions running items B and G):
+  - typecheck, lint and Prettier pass;
+  - Vitest 1430 of 1434 in the full run: 4 tests each failed on `Test timed out in
+5000ms` while other sessions loaded the machine (`people-page`, `sign-in-form`, the
+    `audit_log` index test, and the event stream's unchanged 64 KiB case); those four
+    files run alone: 41 of 41;
+  - `pnpm test:e2e` 79 of 79;
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

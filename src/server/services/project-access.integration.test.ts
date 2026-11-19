@@ -163,9 +163,9 @@ async function exportedServiceFunctions(): Promise<string[]> {
     const exports = z
       .record(z.string(), z.unknown())
       .parse(await import(path.join(SERVICES_ROOT, file)));
-    const module = path.basename(file, ".ts");
+    const moduleName = path.basename(file, ".ts");
     for (const [name, value] of Object.entries(exports)) {
-      if (typeof value === "function") names.push(`${module}.${name}`);
+      if (typeof value === "function") names.push(`${moduleName}.${name}`);
     }
   }
   return names.sort();

@@ -81,6 +81,20 @@ export function requirePermission(actor: Actor, permission: Permission): void {
   if (!can(actor, permission)) throw forbidden();
 }
 
+/** Whether the actor may reach the project (WT-05 decision 7). Humans always may. */
+export function canAccessProject(actor: Actor, projectId: string): boolean {
+  return actor.projectIds === null || actor.projectIds.has(projectId);
+}
+
+/**
+ * Throws the `forbidden` API error unless the actor may reach the project (WS-073). Call it
+ * once the project is resolved, with its id; the detail names neither the project nor the
+ * actor's list.
+ */
+export function requireProjectAccess(actor: Actor, projectId: string): void {
+  if (!canAccessProject(actor, projectId)) throw forbidden();
+}
+
 /** Members delete only tasks they reported; Managers and Admins any (doc 0003 section 3). */
 export function canDeleteTask(actor: Actor, task: { reporterId: string }): boolean {
   if (can(actor, "tasks:delete_any")) return true;

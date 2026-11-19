@@ -11,7 +11,12 @@ import type {
   TaskType,
   UpdateTaskRequest,
 } from "@/lib/schemas/tasks";
-import { type Actor, canDeleteTask, requirePermission } from "@/server/auth/actor";
+import {
+  type Actor,
+  canDeleteTask,
+  requirePermission,
+  requireProjectAccess,
+} from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { tasks } from "@/server/db/schema";
 import {
@@ -192,6 +197,7 @@ export async function getTask(actor: Actor, ref: string, db: Database = getDb())
   requirePermission(actor, "tasks:read");
   const row = await findTask(db, ref);
   if (!row) throw taskNotFound();
+  requireProjectAccess(actor, row.project_id);
   return toTask(row);
 }
 
@@ -205,7 +211,7 @@ export async function listTasks(
   // Only Managers and Admins see deleted tasks (WT-03 decision 11).
   const deleted = query.deleted === "true";
   if (deleted) requirePermission(actor, "tasks:delete_any");
-  const project = await findProjectRef(db, projectRef);
+  const project = await findProjectRef(db, actor, projectRef);
   if (!project) throw notFound("There is no such project.");
 
   let inColumn = sql``;
@@ -282,7 +288,7 @@ export async function createTask(
 
   return db.transaction(async (tx) => {
     // Locks the project: creations in it run one at a time (WS-030 section 3).
-    const project = await claimTaskNumber(tx, projectRef);
+    const project = await claimTaskNumber(tx, actor, projectRef);
 
     // Locks the column: creations and moves into it run one at a time (WS-031 section 3).
     const [column] = await tx.execute<{ id: string }>(
@@ -359,7 +365,7 @@ export async function updateTask(
   return db.transaction(async (tx) => {
     const found = await findTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, found.project_id);
+    await lockWritableProject(tx, actor, found.project_id);
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
     if (before.version !== input.version) throw versionConflict(toTask(before));
@@ -436,7 +442,7 @@ export async function moveTask(
   return db.transaction(async (tx) => {
     const found = await findTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, found.project_id);
+    await lockWritableProject(tx, actor, found.project_id);
 
     const [column] = await tx.execute(sql`
       select id from columns where id = ${input.columnId} and project_id = ${found.project_id}
@@ -523,7 +529,7 @@ export async function deleteTask(actor: Actor, ref: string, db: Database = getDb
   await db.transaction(async (tx) => {
     const found = await findTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, found.project_id);
+    await lockWritableProject(tx, actor, found.project_id);
     const task = await findTask(tx, found.id, sql`for update of t`);
     if (!task) throw taskNotFound();
     if (!canDeleteTask(actor, { reporterId: task.reporter_id })) throw forbidden();
@@ -550,7 +556,7 @@ export async function restoreTask(
   return db.transaction(async (tx) => {
     const found = await findAnyTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, found.project_id);
+    await lockWritableProject(tx, actor, found.project_id);
     const task = await findAnyTask(tx, found.id, sql`for update of t`);
     if (!task) throw taskNotFound();
     if (task.deleted_at === null) return toTask(task);
