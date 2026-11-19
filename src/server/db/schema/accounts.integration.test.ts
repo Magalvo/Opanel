@@ -73,7 +73,12 @@ describe("accounts, credentials and sessions tables", () => {
   });
 
   it("accepts an agent without an email and with an agent role", async () => {
-    const agent = await insertHuman({ kind: "agent", email: null, role: "qa_agent" });
+    const agent = await insertHuman({
+      kind: "agent",
+      email: null,
+      role: "qa_agent",
+      allProjects: true,
+    });
 
     expect(agent.kind).toBe("agent");
   });
@@ -86,8 +91,20 @@ describe("accounts, credentials and sessions tables", () => {
     await insertHuman({ email: "same@example.com" });
     await expect(insertHuman({ email: "same@example.com" })).rejects.toThrow();
 
-    await insertHuman({ kind: "agent", email: null, role: "qa_agent", name: "a" });
-    await insertHuman({ kind: "agent", email: null, role: "qa_agent", name: "b" });
+    await insertHuman({
+      kind: "agent",
+      email: null,
+      role: "qa_agent",
+      allProjects: true,
+      name: "a",
+    });
+    await insertHuman({
+      kind: "agent",
+      email: null,
+      role: "qa_agent",
+      allProjects: true,
+      name: "b",
+    });
   });
 
   it("deletes credentials and sessions with their account", async () => {

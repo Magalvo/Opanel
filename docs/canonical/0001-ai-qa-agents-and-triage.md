@@ -3,7 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
-- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13)
+- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) decisions 1, 7 and 11 (scopes, project restrictions, no deletion; applied 2026-11-19 by WI-071)
 
 ## 1. Context
 
@@ -53,11 +53,13 @@ This keeps assignment, comments and the audit log uniform: an actor is always an
 
 - **Human account**: email, password hash, role (`admin` | `manager` | `member` |
   `viewer`; permissions are defined in doc 0003).
-- **Agent account**: unique name, description, role, set of scopes, owning human
-  (the admin who created it), `disabled_at`, `last_seen_at`. No email, no password.
+- **Agent account**: unique name (among agents, in any letter case), description, role,
+  set of scopes, project restriction, owning human (the admin who created it),
+  `disabled_at`, `last_seen_at`. No email, no password.
 
-Agents are created, disabled and deleted only by human admins. An agent can never create
-accounts or tokens.
+Agents are created, disabled and re-enabled only by human admins. They are not deleted in
+v1: tasks, their history and the audit log keep pointing at them (WT-05 decision 11). An
+agent can never create accounts or tokens.
 
 ### Roles and scopes
 
@@ -74,12 +76,18 @@ roles built from them, is `src/lib/schemas/permissions.ts` and `src/server/auth/
 | `comments:write` | Comment on tasks                                |
 | `tasks:write`    | Create and edit tasks directly                  |
 
+An agent's role is the preset its scopes start from. An Admin may remove scopes from an
+agent, never add one its role does not include, and endpoints check the stored scopes
+(WT-05 decision 1). No agent can hold a `*:manage` or delete permission: the database
+refuses any scope outside the table above (WI-071).
+
 Initial agent roles:
 
 - `qa_agent`: `projects:read`, `tasks:read`, `reports:write`, `comments:write`.
 - `worker_agent` (reserved for later, e.g. agents that fix tickets): adds `tasks:write`.
 
-An agent can additionally be restricted to specific projects.
+An agent can additionally be restricted to specific projects: it has either all projects
+or the listed ones, even when the list is empty (`all_projects`, WI-071).
 
 ## 4. Authentication
 
@@ -181,14 +189,17 @@ routing rules. Routing rules and teams are managed by Managers and Admins.
 Not a final schema; work-specs define columns and migrations.
 
 ```
-accounts(id, kind, name, email?, role, disabled_at, last_seen_at, created_by?, ...)
+accounts(id, kind, name, email?, role, description?, all_projects?, disabled_at,
+         last_seen_at, created_by?, ...)            description and all_projects: agents only
 credentials(id, account_id, provider_id, provider_account_id, password_hash?, ...)
 verification(id, identifier, value, expires_at, ...)   unused in v1, required by Better Auth
 rate_limits(key, count, window_started_at)             sign-in limiter counters
 account_tokens(id, account_id, kind, token_hash, expires_at, used_at?, created_by, ...)
                                                        one-time invitation and reset links, hash only
 agent_scopes(account_id, scope)            agent_projects(account_id, project_id)
-api_tokens(id, account_id, public_id, secret_hash, expires_at?, revoked_at?, last_used_at)
+                                           both for agent accounts only (WI-071)
+api_tokens(id, account_id, public_id, secret_hash, name, created_by?, created_at,
+           expires_at?, revoked_at?, last_used_at?)
 sessions(id, account_id, token, expires_at, ...)
 teams(id, name)                             team_members(team_id, account_id)
 projects(id, key, name, fallback_team_id)

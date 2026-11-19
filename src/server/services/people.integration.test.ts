@@ -24,7 +24,9 @@ async function invited(name: string) {
 }
 
 async function agent(name: string) {
-  await getDb().insert(accounts).values({ kind: "agent", name, role: "qa_agent" });
+  await getDb()
+    .insert(accounts)
+    .values({ kind: "agent", name, role: "qa_agent", allProjects: true });
 }
 
 describe("listPeople", () => {

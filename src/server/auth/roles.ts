@@ -1,4 +1,10 @@
-import { type HumanRole, humanRoleSchema, type Permission } from "@/lib/schemas/permissions";
+import {
+  type AgentRole,
+  agentRoleSchema,
+  type HumanRole,
+  humanRoleSchema,
+  type Permission,
+} from "@/lib/schemas/permissions";
 
 type PermissionSet = ReadonlySet<Permission>;
 
@@ -40,4 +46,27 @@ export const HUMAN_ROLE_PERMISSIONS: Readonly<Record<HumanRole, PermissionSet>> 
 /** Throws for anything that is not a human role: a bad stored value never gets a default. */
 export function permissionsForRole(role: unknown): PermissionSet {
   return HUMAN_ROLE_PERMISSIONS[humanRoleSchema.parse(role)];
+}
+
+const qaAgent: PermissionSet = new Set<Permission>([
+  "projects:read",
+  "tasks:read",
+  "reports:write",
+  "comments:write",
+]);
+
+const workerAgent: PermissionSet = new Set<Permission>([...qaAgent, "tasks:write"]);
+
+/**
+ * The scopes each agent role starts with (doc 0001 section 3). An agent holds these or a
+ * subset of them, never more (WT-05 decision 1).
+ */
+export const AGENT_ROLE_SCOPES: Readonly<Record<AgentRole, PermissionSet>> = {
+  qa_agent: qaAgent,
+  worker_agent: workerAgent,
+};
+
+/** Throws for anything that is not an agent role, like `permissionsForRole`. */
+export function scopesForAgentRole(role: unknown): PermissionSet {
+  return AGENT_ROLE_SCOPES[agentRoleSchema.parse(role)];
 }

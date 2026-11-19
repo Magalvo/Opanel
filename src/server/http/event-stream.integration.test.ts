@@ -75,7 +75,13 @@ describe("openEventStream (WS-047)", () => {
     const { member, project, request } = await setup();
     const withoutRead = (): Promise<Authenticated> =>
       Promise.resolve({
-        actor: { kind: "human", accountId: member.id, role: "viewer", permissions: new Set() },
+        actor: {
+          kind: "human",
+          accountId: member.id,
+          role: "viewer",
+          permissions: new Set(),
+          projectIds: null,
+        },
         account: member,
         sessionId: "none",
         headers: new Headers(),

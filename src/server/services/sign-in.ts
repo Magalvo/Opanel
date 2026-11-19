@@ -2,6 +2,7 @@ import { isAPIError } from "better-auth/api";
 import { and, eq } from "drizzle-orm";
 
 import type { AccountSummary } from "@/lib/schemas/auth";
+import type { HumanRole } from "@/lib/schemas/permissions";
 import { type Actor, humanActor } from "@/server/auth/actor";
 import { getAuth } from "@/server/auth/auth";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
@@ -239,7 +240,7 @@ export async function signIn(
     throw unauthenticated(INVALID_CREDENTIALS);
   }
 
-  const actor = humanActor({ accountId: account.id, role: account.role as Actor["role"] });
+  const actor = humanActor({ accountId: account.id, role: account.role as HumanRole });
   let completed: boolean;
   try {
     completed = await db.transaction(async (tx) => {

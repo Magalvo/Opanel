@@ -7,7 +7,12 @@ import {
   PERMISSIONS,
 } from "@/lib/schemas/permissions";
 
-import { HUMAN_ROLE_PERMISSIONS, permissionsForRole } from "./roles";
+import {
+  AGENT_ROLE_SCOPES,
+  HUMAN_ROLE_PERMISSIONS,
+  permissionsForRole,
+  scopesForAgentRole,
+} from "./roles";
 
 // The table of canonical doc 0003 section 3, written out literally on purpose.
 const viewer: Permission[] = ["projects:read", "tasks:read"];
@@ -73,5 +78,20 @@ describe("permissionsForRole", () => {
   it("throws for an unknown role instead of defaulting", () => {
     expect(() => permissionsForRole("root")).toThrow();
     expect(() => permissionsForRole(undefined)).toThrow();
+  });
+});
+
+describe("scopesForAgentRole (WS-071)", () => {
+  it("gives qa_agent the four scopes of doc 0001, and worker_agent those and tasks:write", () => {
+    const qa: Permission[] = ["projects:read", "tasks:read", "reports:write", "comments:write"];
+    expect([...scopesForAgentRole("qa_agent")].sort()).toEqual([...qa].sort());
+    expect([...scopesForAgentRole("worker_agent")].sort()).toEqual([...qa, "tasks:write"].sort());
+    expect(AGENT_ROLE_SCOPES.qa_agent).toBe(scopesForAgentRole("qa_agent"));
+  });
+
+  it("throws for a human role or an unknown value", () => {
+    expect(() => scopesForAgentRole("admin")).toThrow();
+    expect(() => scopesForAgentRole("root")).toThrow();
+    expect(() => scopesForAgentRole(undefined)).toThrow();
   });
 });
