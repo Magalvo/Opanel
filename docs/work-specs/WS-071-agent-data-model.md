@@ -1,6 +1,6 @@
 # WS-071 — Agent accounts in the data model, and the agent `Actor`
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 5 as proposed)
 - Work-item: [WI-071](../work-items/WI-071-agent-data-model.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3, 4
   and 7; amended here); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md)

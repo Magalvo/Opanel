@@ -1,6 +1,6 @@
 # WI-071 — Agent accounts in the data model, and the agent `Actor`
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item A)
 - Depends on: WT-04 (done)
 - Work-spec: [WS-071](../work-specs/WS-071-agent-data-model.md)
