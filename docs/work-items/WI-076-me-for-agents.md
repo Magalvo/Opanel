@@ -1,6 +1,6 @@
 # WI-076 — `GET /me` for agents
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item E,
   decision 9)
 - Depends on: WI-072 (done)

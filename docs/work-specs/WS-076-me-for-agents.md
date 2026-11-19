@@ -1,6 +1,6 @@
 # WS-076 — `GET /me` for agents
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as recommended)
 - Work-item: [WI-076](../work-items/WI-076-me-for-agents.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (section 3: the MCP server reads
   `GET /me` at start); [0004](../canonical/0004-api-conventions.md) (section 7:
