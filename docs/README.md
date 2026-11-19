@@ -12,6 +12,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Last finished:** WI-083 (every response the API sends is documented, audit of
   2026-11-19, findings B05 and B14; an operation that takes no query now refuses one), on
   2026-11-19, on the branch `claude/wi-083-documented-responses`.
+- **Also finished:** WI-084 (the Manager's Agents-link check looks only at the sidebar, a
+  test-only fix), on 2026-11-19, on the branch `claude/blissful-franklin-u14sjv`.
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
@@ -193,6 +195,7 @@ right after WT-04 and is done.
 | [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Approved    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Approved    |
 | [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Approved    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Approved    |
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
+| [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
 
 ## Follow-ups
 
@@ -323,3 +326,11 @@ Optimisations found by the same audit, none urgent:
   `400` (WS-081, question 3).
 - CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
   has no BuildKit cache.
+
+End-to-end locators found while fixing WI-084, none failing today:
+
+- `tests/e2e/people.spec.ts:144` (`link "People"`, on `/`) and
+  `tests/e2e/projects.spec.ts:133` (`link "Settings"`, on a project page) assert
+  `toHaveCount(0)` on the whole page, and Playwright matches `name` as a substring. They
+  would break like WI-084 did if test data ever named a project or task "People…" or
+  "…settings…". Scoping them needs a work-item.
