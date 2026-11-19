@@ -130,7 +130,7 @@ running and recovers when the database returns (the connection pool reconnects).
 Opanel logs to standard output only; collection and retention are the operator's. The
 operations guide states what Opanel's own logs may contain (no secrets, no error messages
 of database errors, WS-042) and what Next.js and Better Auth may add, after the check that
-WS-042 left open.
+WS-042 left open (done in WI-069).
 
 ## 11. Out of scope for v1
 

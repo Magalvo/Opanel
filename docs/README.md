@@ -9,12 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-069 (no request data in the logs when a query fails, WT-12 item
-  H), on 2026-11-19, on the branch `claude/wi-069-safe-logs`.
-- **Next:** draft WI-070 (WT-12 item I: `docs/operations.md`, which closes WT-12) and
-  WS-070 as `Proposed`, and stop for the owner's approval. It records the upgrade
-  criterion and a follow-up to rehearse a real upgrade after the first tagged release
-  (WS-068, question 4).
+- **Last finished:** WI-070 (the operations guide, `docs/operations.md`, WT-12 item I),
+  on 2026-11-19, on the branch `claude/wi-070-operations-guide`. WT-12 is done.
+- **Next:** draft WT-05 (agent accounts and API tokens) as `Proposed`, and stop for the
+  owner's approval.
 - **Approved on 2026-11-16:** WT-04 (real-time board sync), including its amendment to
   canonical doc 0002 (two new event types, `projectId` and `taskId` in events), which
   WI-045 writes into the doc.
@@ -72,14 +70,14 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                  | Title                                                   | Status      |
-| ------------------------------------------------------ | ------------------------------------------------------- | ----------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done        |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done        |
-| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done        |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Done        |
-| [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved    |
-| [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations (outline)          | In progress |
+| Track                                                  | Title                                                   | Status   |
+| ------------------------------------------------------ | ------------------------------------------------------- | -------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)      | Project boilerplate                                     | Done     |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md) | Accounts, human sign-in, roles and the permission layer | Done     |
+| [WT-03](work-tracks/WT-03-board-core.md)               | Board core: projects, teams, columns, epics, tasks      | Done     |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)      | Real-time board sync                                    | Done     |
+| [WT-11](work-tracks/WT-11-mcp-server.md)               | MCP server (outline)                                    | Approved |
+| [WT-12](work-tracks/WT-12-operations.md)               | Production deployment and operations                    | Done     |
 
 Planned next, not yet drafted:
 
@@ -91,8 +89,8 @@ Planned next, not yet drafted:
 - WT-10 Sprints and story points
 
 WT-07 to WT-10 come from canonical doc 0003. WT-11, the MCP server (doc 0005), is outlined
-above and comes after WT-06. WT-12, production deployment and operations (doc 0006), is
-outlined above and comes right after WT-04.
+above and comes after WT-06. WT-12, production deployment and operations (doc 0006), came
+right after WT-04 and is done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
@@ -167,6 +165,7 @@ outlined above and comes right after WT-04.
 | [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested         | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
 | [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                              | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
 | [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
+| [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                       | Done        | [WS-070](work-specs/WS-070-operations-guide.md)                 | Done        |
 
 ## Follow-ups
 
@@ -174,26 +173,23 @@ Deferred decisions that need a work-item before they are acted on.
 
 Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 
-- **Planned in WT-12 (doc 0006), approved on 2026-11-18:** WT-12 as a whole answers the gap
-  on production deployment below; it stays listed until WT-12 closes it.
 - **Answered by WI-065 (2026-11-18): no way back in if the only Admin lost their
   password.** An operator on the server runs `recover-admin --email <admin email>`, which
-  prints a one-time link for that Admin (README, "Running in production").
+  prints a one-time link for that Admin (`docs/operations.md`, "Recovering the last Admin").
 - **An email can be neither corrected nor freed** once its invitation was accepted. An
   invitation that was never accepted can now be revoked, which frees its email (WI-024).
   Changing the email of an account that has signed in remains undecided.
-- **No work-track covers production deployment.** WT-01 excluded the app's Dockerfile and
-  the reverse proxy, and no later track picks them up, although Opanel is self-hosted and
-  its first usable release is the end of WT-04. It also decides how `CLIENT_IP_HEADER` and
-  https are documented for operators. `Strict-Transport-Security` is done (WI-067: sent on
-  `https:` installs, with a tested example proxy).
-  The reverse proxy must accept JSON bodies of at least 512 KiB and should refuse larger
-  ones itself (WI-044). It also decides log access and retention, and whether the logs
-  of Better Auth and Next.js can hold request data (WS-042, question 2): examined on
-  2026-11-19, they could (a session token, when a query failed); fixed by WI-069. Log
-  access and retention stay for the operations guide (WI-070).
+- **Answered by WT-12 (2026-11-19): no work-track covered production deployment.** The
+  image, the example install and `docs/operations.md` (WI-062 to WI-070) answer it: the
+  reverse proxy, HTTPS and `Strict-Transport-Security`, `CLIENT_IP_HEADER`, the 512 KiB
+  request body, and log contents, access and retention are each a section of the guide.
 
 Other follow-ups:
+
+- Rehearse a real upgrade, by `docs/operations.md`, from the first tagged release to the
+  next, and add it to the image workflow (WS-068 question 4, WS-070). Until then WT-12's
+  upgrade criterion rests on each migration being tested against the earlier ones and on
+  the schema check.
 
 - Give WS-009, WS-010 and WS-012 the "Implementation record" and "Deviations" sections that
   every other finished work-spec has (audit of 2026-11-13). Format only.
@@ -246,5 +242,6 @@ Other follow-ups:
 - Return from TypeScript 6.0 to 7 once `typescript-eslint` supports it (see WS-002).
 - The People page can show an account twice: in one E2E run of WI-069 (2026-11-19),
   `people.spec.ts` ("an Admin revokes an invitation…") found the invited account's row
-  twice after "Load more" (a strict-mode violation). Not seen before; check whether the
+  twice after "Load more" (a strict-mode violation). Seen again in WI-070's E2E run
+  (2026-11-19); not reproduced when the spec ran alone; check whether the
   invited account added to the list is also loaded again with the next page.

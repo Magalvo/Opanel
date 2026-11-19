@@ -1,8 +1,8 @@
 # WT-12 — Production deployment and operations
 
-- Status: In progress (outline approved by the owner on 2026-11-18 with doc 0006; started
-  on 2026-11-18, after WT-04). Items A to I are WI-062 to WI-070 (item H added on 2026-11-19); each gets its files and
-  work-spec just before it starts.
+- Status: Done (outline approved by the owner on 2026-11-18 with doc 0006; started on
+  2026-11-18, after WT-04; finished on 2026-11-19 with WI-070). Items A to I are WI-062 to
+  WI-070 (item H added on 2026-11-19).
 - Canonical docs: [0006](../canonical/0006-operations.md) (the design),
   [0002](../canonical/0002-realtime-sync.md) (one process, SSE),
   [0004](../canonical/0004-api-conventions.md) (health, setup token); audit of
@@ -47,22 +47,32 @@ Doc 0006 section 11.
 | [WI-067](../work-items/WI-067-https-and-proxy.md)  | F: `Strict-Transport-Security` on `https:` installs; the reverse-proxy requirements      | Done   | WI-062         |
 | [WI-068](../work-items/WI-068-backup-rehearsal.md) | G: backup and restore rehearsal in CI                                                    | Done   | WI-063, WI-064 |
 | [WI-069](../work-items/WI-069-safe-logs.md)        | H: no request data in the logs when a query fails (found while drafting item I)          | Done   | WI-062         |
-| WI-070                                             | I: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Draft  | WI-062–WI-069  |
+| [WI-070](../work-items/WI-070-operations-guide.md) | I: `docs/operations.md`, and closing the Follow-ups of `docs/README.md` it answers       | Done   | WI-062–WI-069  |
 
 ## Exit criteria
 
-- [ ] A fresh install from `compose.production.yaml` and the guide reaches the first-run
-      setup over HTTPS, and only with the setup token.
-- [ ] The app connects as the runtime role; a test shows it cannot `TRUNCATE`, alter a
-      table, or update or delete `audit_log` and `task_events` rows.
-- [ ] Upgrading from the previous release by the guide keeps all data; the app refuses to
-      start on a schema it does not match, naming both versions.
+- [x] A fresh install from `compose.production.yaml` and the guide reaches the first-run
+      setup over HTTPS, and only with the setup token (`smoke-production.sh`: setup
+      refused without the token; `smoke-proxy.sh`: setup with it, over HTTPS; WI-070:
+      the guide).
+- [x] The app connects as the runtime role; a test shows it cannot `TRUNCATE`, alter a
+      table, or update or delete `audit_log` and `task_events` rows (WI-063,
+      `runtime-role.integration.test.ts`; again after a restore, WI-068).
+- [x] Upgrading from the previous release by the guide keeps all data; the app refuses to
+      start on a schema it does not match, naming both versions. Covered by today's
+      checks, as decided in WS-068 question 4: each migration is tested against a database
+      built by the earlier ones (WI-063), and the refusal by WI-064 and the smoke test.
+      There is no release yet; a Follow-up of `docs/README.md` asks to rehearse a real
+      upgrade after the first tagged release.
 - [x] CI restores a backup into a new database and the app serves the seeded data
       (WI-068).
-- [ ] `recover-admin` issues a working reset link for a named Admin, audited with
-      `via: "operator"`, and refuses any other account.
-- [ ] `maintenance` removes expired sessions and old links, and nothing else.
-- [ ] The full quality gate passes; the new CI jobs pass.
+- [x] `recover-admin` issues a working reset link for a named Admin, audited with
+      `via: "operator"`, and refuses any other account (WI-065,
+      `operator-reset-link.integration.test.ts`, `smoke-production.sh`).
+- [x] `maintenance` removes expired sessions and old links, and nothing else (WI-066,
+      `maintenance.integration.test.ts`).
+- [x] The full quality gate passes; the new CI jobs pass (each item; the image workflow
+      runs the three scripts).
 
 ## Risks and open questions
 

@@ -1,5 +1,6 @@
 # An example production install of Opanel (WS-062, canonical doc 0006). Not for local
-# development or CI: that is compose.yaml.
+# development or CI: that is compose.yaml. The operations guide, docs/operations.md, explains
+# installing, upgrading, backing up and restoring it.
 #
 #   cp .env.production.example .env.production   # then fill it in
 #   docker compose -f compose.production.yaml up -d --build
@@ -8,15 +9,25 @@
 # proxy in front of it. `migrate` runs once, before the app starts, and exits.
 name: opanel
 
+# Every service keeps at most five files of 10 MB of logs (WS-070): Docker's default keeps
+# them without limit.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
 x-app: &app
   build: .
   image: opanel-app:local
   env_file: ${OPANEL_ENV_FILE:-.env.production}
+  logging: *logging
 
 services:
   db:
     image: postgres:18-alpine
     restart: unless-stopped
+    logging: *logging
     environment:
       POSTGRES_USER: opanel
       POSTGRES_DB: opanel
@@ -57,6 +68,7 @@ services:
     image: caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
     profiles: ["proxy"]
     restart: unless-stopped
+    logging: *logging
     environment:
       OPANEL_SITE: ${OPANEL_SITE:-localhost}
       OPANEL_CADDY_TLS: ${OPANEL_CADDY_TLS:-}
