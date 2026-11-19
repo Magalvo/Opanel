@@ -1,6 +1,6 @@
 # WS-070 — The operations guide, `docs/operations.md`
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 6 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 6 as proposed)
 - Work-item: [WI-070](../work-items/WI-070-operations-guide.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) (the whole doc; section 4: the
   proxy; section 6: upgrades; section 8: backup, retention, storage; section 10: logs);
@@ -198,3 +198,42 @@ Risks:
   and the guide says they are not rehearsed.
 - The heading check of the test makes reordering the guide a two-file change; that is
   intended.
+
+## Deviations from the approved spec
+
+1. **Test 2 is a set of unit cases, not a temporary copy of the guide.** The checks are a
+   pure function, `guideProblems(guide, repository)`, tested in the same file against small
+   guides naming `dist/nope.mjs`, unknown variables, a missing file and a broken link. The
+   real guide was also mutated once the same way, by hand: the test named all four
+   problems, and the change was reverted.
+2. **The env schema's keys are read from the source of `src/server/env.ts`.** The schema is
+   not exported, and exporting it only for this test would change application code in a
+   docs item. A variable counts as known when it is a key of the schema and an env example
+   describes it, when `compose.production.yaml` reads it (`${NAME`), or when it is one of
+   the two database passwords of `.env.production.example`.
+3. **A fourth guide check: the README links to the guide** (criterion 5).
+
+## Implementation record
+
+- Red: `scripts/operations-guide.test.ts` before the guide existed: 4 failed (the file,
+  its sections, its names, the README link), 5 passed (the checker's own cases).
+- Green: `docs/operations.md`, the README's production section cut to a summary and a
+  link, pointers in `compose.production.yaml` and `.env.production.example`, log rotation
+  (`x-logging`) on the four services, one line in doc 0006 section 10. The test passes,
+  9 of 9.
+- Manual, on a temporary example install (project `opanel-wi070`, removed afterwards):
+  health `{"status":"ok","database":"up"}`; the storage query lists the 16 tables with
+  their sizes, `audit_log`, `task_events` and `comments` among them; `docker inspect`
+  shows `json-file` with `max-file:5 max-size:10m` on `db` and `app`.
+- The guide's example-install commands compared line by line with the scripts: each is
+  the scripts' own, without `-p`; the nginx settings and the upgrade from a release are
+  marked as not rehearsed; `git checkout`, `build` and the cron line are the guide's own.
+- Smoke, locally with the log rotation: `smoke-production.sh`, `smoke-proxy.sh` and
+  `rehearse-backup.sh` all pass.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1321 of 1321;
+  - `pnpm test:e2e` 78 of 79 with `--retries=0`: the failure is the known Follow-up of
+    `people.spec.ts` (an invited account's row twice after "Load more", a strict-mode
+    violation), unrelated to this item; `people.spec.ts` alone then passed 6 of 6;
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

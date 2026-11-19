@@ -53,48 +53,13 @@ If port 5432 is already in use on your machine, see
 
 The repository builds a production image (`Dockerfile`), and `compose.production.yaml` is
 an example install: PostgreSQL, a one-shot `migrate` service, then the app on
-`127.0.0.1:3000` for your HTTPS reverse proxy. Copy `.env.production.example` to
-`.env.production`, fill it in, and run
-`docker compose -f compose.production.yaml up -d --build`. The full operations guide comes
-with WT-12 (canonical doc 0006).
+`127.0.0.1:3000` for your HTTPS reverse proxy, with an example one (Caddy). Opanel must run
+as exactly one long-lived Node.js process, not on serverless or edge hosting: open boards
+keep a Server-Sent Events stream.
 
-If the only Admin loses their password, an operator on the server issues them a one-time
-link, printed once; send it to the Admin and do not keep it (WS-065):
-
-```bash
-docker compose -f compose.production.yaml run --rm app node dist/recover-admin.mjs --email admin@example.com
-```
-
-No HTTPS proxy of your own? Start the example one, Caddy with
-`docker/production/Caddyfile`: set `OPANEL_SITE` to your public name (for example
-`opanel.example.com`) in the shell or in a `.env` file next to `compose.production.yaml`,
-`APP_URL` in `.env.production` to the same with `https://`, and
-`CLIENT_IP_HEADER=x-forwarded-for`, then add `--profile proxy` to the `up` command. Caddy
-obtains the certificate, redirects HTTP to HTTPS and passes the events stream through
-unbuffered; Opanel then sends `Strict-Transport-Security` (WS-067).
-
-Schedule the maintenance command daily (cron, a systemd timer): it deletes expired
-sessions, links used or expired more than 30 days ago and ended rate-limit counters, and
-never touches the audit log or the task history (WS-066):
-
-```bash
-docker compose -f compose.production.yaml run --rm app node dist/maintenance.mjs
-```
-
-Back up with the database server's own `pg_dump`, as the owner, while the app runs; keep
-the env file with the backups, since it holds the passwords and the session secret. CI
-restores such a backup into a new install every week (`scripts/rehearse-backup.sh`,
-WS-068):
-
-```bash
-docker compose -f compose.production.yaml exec -T db pg_dump -U opanel -d opanel --format=custom >opanel-backup.dump
-```
-
-Opanel must run as a long-lived Node.js server (`pnpm build`, then `pnpm start`), not on
-serverless or edge hosting: open boards keep a Server-Sent Events stream to
-`/api/v1/projects/{projectId}/events`. A reverse proxy in front of it must not buffer that
-path (Opanel sends `X-Accel-Buffering: no`, which nginx honours) and must let a response
-stay open far longer than the 25-second heartbeat.
+The [operations guide](docs/operations.md) covers installing, the reverse proxy and HTTPS,
+upgrading, backing up and restoring, recovering the last Admin, maintenance, storage and
+logs. CI rehearses its commands on every change to the image.
 
 ## Commands
 
