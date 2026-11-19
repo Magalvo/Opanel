@@ -13,8 +13,9 @@ Updated at the end of every work-item, so that a new session can start from here
   B), on 2026-11-19, on the branch `claude/wi-072-api-tokens`. Done in parallel on their
   own branches: WI-073 (item D, project restrictions) and WI-074 (item G, the "Agent"
   badge); merge D before G, which then rebases.
-- **Next:** draft WI-075 (item C, the Admin API for agents and tokens) and WI-076 (item E,
-  `GET /me` for agents), which can run in parallel once B is on `main`.
+- **Next:** the owner reviews WI-075/WS-075 (WT-05 item C, the Admin API for agents and
+  tokens, on `claude/wi-075-agents-admin-api`) and WI-076 (item E, `GET /me` for agents),
+  drafted in parallel as `Proposed` on 2026-11-19. F follows C; H comes last.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -175,6 +176,7 @@ right after WT-04 and is done.
 | [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Done        | [WS-072](work-specs/WS-072-api-tokens.md)                       | Done        |
 | [WI-073](work-items/WI-073-project-restrictions.md)             | Project restrictions enforced in every service                   | Done        | [WS-073](work-specs/WS-073-project-restrictions.md)             | Done        |
 | [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Done        | [WS-074](work-specs/WS-074-agent-badge.md)                      | Done        |
+| [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                        | Proposed    | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Proposed    |
 
 ## Follow-ups
 
