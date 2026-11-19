@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { TeamPage as TeamListPage, TeamSummary } from "@/lib/schemas/teams";
 
 import { createTeam, listTeams } from "./api";
@@ -24,15 +25,13 @@ type Phase = "loading" | "error" | "ready";
 /** The list of teams (WS-035). Managers and Admins also create teams here. */
 export function TeamsPage({ canManageTeams }: Readonly<{ canManageTeams: boolean }>) {
   const router = useRouter();
-  const [teams, setTeams] = useState<TeamSummary[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const list = usePagedList<TeamSummary>();
+  const { items: teams, nextCursor, loadingMore, show } = list;
   const [phase, setPhase] = useState<Phase>("loading");
-  const [loadingMore, setLoadingMore] = useState(false);
   const [message, setMessage] = useState("");
 
   function showFirstPage(page: TeamListPage) {
-    setTeams(page.items);
-    setNextCursor(page.nextCursor);
+    show(page);
     setPhase("ready");
   }
 
@@ -40,7 +39,9 @@ export function TeamsPage({ canManageTeams }: Readonly<{ canManageTeams: boolean
     let cancelled = false;
     listTeams().then(
       (page) => {
-        if (!cancelled) showFirstPage(page);
+        if (cancelled) return;
+        show(page);
+        setPhase("ready");
       },
       () => {
         if (!cancelled) setPhase("error");
@@ -49,7 +50,7 @@ export function TeamsPage({ canManageTeams }: Readonly<{ canManageTeams: boolean
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [show]);
 
   function retry() {
     setPhase("loading");
@@ -59,16 +60,10 @@ export function TeamsPage({ canManageTeams }: Readonly<{ canManageTeams: boolean
   }
 
   async function loadMore() {
-    if (nextCursor === null) return;
-    setLoadingMore(true);
     try {
-      const page = await listTeams(nextCursor);
-      setTeams((current) => [...current, ...page.items]);
-      setNextCursor(page.nextCursor);
+      await list.loadMore((cursor) => listTeams(cursor));
     } catch {
       setMessage("Could not load more teams. Try again.");
-    } finally {
-      setLoadingMore(false);
     }
   }
 

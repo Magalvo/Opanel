@@ -9,19 +9,20 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item H),
-  on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent accounts
-  and API tokens) is done.
-- **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
-  and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
-  it.
+- **Last finished:** WI-080 (paged lists never show a row twice, audit of 2026-11-19,
+  finding B02), on 2026-11-19, on the branch `claude/wi-080-lists-without-duplicates`.
+- **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
+  H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
+  accounts and API tokens) is done.
+- **Next:** WI-081 to WI-083, then draft WT-06 (bug reports and automated triage,
+  canonical doc 0001 sections 5 and 6) as `Proposed`, and stop for the owner's approval.
+  WT-11 (the MCP server) follows it.
 - **Approved on 2026-11-19, in progress:** WI-079 to WI-083 with their work-specs, every
-  question as proposed,
-  the fixes for findings B01 to B05 of the audit of 2026-11-19 (production services get
-  only their own secrets; paged lists without duplicates; name cursors that fit epic
-  titles; board loads ordered around moves; every API response documented). The lower
-  findings B06 to B16 are listed under [Follow-ups](#follow-ups). The owner chose to do
-  these before WT-06.
+  question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
+  (production services get only their own secrets; paged lists without duplicates; name
+  cursors that fit epic titles; board loads ordered around moves; every API response
+  documented). The lower findings B06 to B16 are listed under [Follow-ups](#follow-ups).
+  The owner chose to do these before WT-06. WI-080 is done.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -187,7 +188,7 @@ right after WT-04 and is done.
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
 | [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
 | [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Approved    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Approved    |
-| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Approved    | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Approved    |
+| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Done        | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Done        |
 | [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Approved    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Approved    |
 | [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Approved    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Approved    |
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Approved    | [WS-083](work-specs/WS-083-documented-responses.md)             | Approved    |
@@ -264,13 +265,10 @@ Other follow-ups:
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
 - Add Firefox and WebKit to the end-to-end tests once there is real UI to protect.
 - Return from TypeScript 6.0 to 7 once `typescript-eslint` supports it (see WS-002).
-- The People page can show an account twice: in one E2E run of WI-069 (2026-11-19),
-  `people.spec.ts` ("an Admin revokes an invitation…") found the invited account's row
-  twice after "Load more" (a strict-mode violation). Seen again in WI-070's E2E run
-  (2026-11-19); not reproduced when the spec ran alone. Cause found by the audit of
-  2026-11-19 (finding B02): an invitation submitted while the first page is loading is
-  appended by a handler that still sees no cursor, and "Load more" then returns it again.
-  WI-080 (proposed) fixes it.
+- **Answered by WI-080 (2026-11-19): the People page could show an account twice.** An
+  invitation finished while the first page loaded was appended by a handler that still saw
+  no cursor, and "Load more" returned it again (audit finding B02). Every paged list now
+  shows each item once (`usePagedList`), and `people.spec.ts` reproduces the race.
 
 Lower findings of the audit of 2026-11-19, each to become a work-item when the owner
 chooses. B01 to B05 are WI-079 to WI-083.
@@ -306,7 +304,9 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B15: the project frame applies project updates without a version check
   (`project-events.tsx`, `board.tsx`), and the board shows no "paused" banner while the
   browser retries the stream on its own (`use-project-events.ts`). One small item (WS-082,
-  question 4); the version check of `task.changed` in `use-board.ts` is in WI-082.
+  question 4); the version check of `task.changed` in `use-board.ts` is in WI-082. Seen
+  once in a full E2E run of WI-080: `projects.spec.ts:34` showed "Someone else changed
+  this project" after the Manager's own save; it passed on every rerun.
 - B16: a local run of `pnpm test` fails when another PostgreSQL holds port 5432: the
   Compose file honours `OPANEL_DB_PORT` but `.env.test` always names 5432. Belongs with the
   `E2E_PORT` follow-up above.
