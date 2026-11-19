@@ -1,7 +1,7 @@
 # WT-06 — Bug reports and automated triage
 
-- Status: Proposed (drafted on 2026-11-19; awaiting the owner's approval of decisions 1 to
-  16 and questions 1 to 8). Items get numbers from WI-086 when each starts.
+- Status: Approved (by the owner on 2026-11-19: decisions 1 to 16 and questions 1 to 8 as
+  recommended). Items get numbers from WI-086 when each starts.
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 5 and 6:
   the bug report contract and the triage pipeline; section 7: the data model sketch;
   amended by this track, see decisions 3, 6 and 9), [0003](../canonical/0003-task-management.md)
@@ -205,14 +205,14 @@ Letters until each item starts; numbers from WI-086 then, each with its work-spe
 
 | Item | Title                                                                                                                           | Status   | Depends on |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
-| A    | Data model: bug fields on `tasks`, `projects.triage_team_id`, `routing_rules`, append-only `bug_reports`, `task_links`          | Proposed | WT-05      |
-| B    | The triage settings API (`GET`/`PUT /projects/{projectId}/triage`), audited; `team_in_use` covers triage                        | Proposed | A          |
-| C    | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Proposed | A          |
-| D    | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Proposed | A, B, C    |
-| E    | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Proposed | D          |
-| F    | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Proposed | C, E       |
-| G    | The project's "Triage" settings section                                                                                         | Proposed | B          |
-| H    | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Proposed | D, E, F, G |
+| A    | Data model: bug fields on `tasks`, `projects.triage_team_id`, `routing_rules`, append-only `bug_reports`, `task_links`          | Approved | WT-05      |
+| B    | The triage settings API (`GET`/`PUT /projects/{projectId}/triage`), audited; `team_in_use` covers triage                        | Approved | A          |
+| C    | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Approved | A          |
+| D    | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Approved | A, B, C    |
+| E    | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Approved | D          |
+| F    | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Approved | C, E       |
+| G    | The project's "Triage" settings section                                                                                         | Approved | B          |
+| H    | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Approved | D, E, F, G |
 
 ## Exit criteria
 

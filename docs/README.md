@@ -31,9 +31,11 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** the owner reviews WT-06 (bug reports and automated triage), drafted on
-  2026-11-19 as `Proposed` with 16 decisions and 8 questions; then its item A gets
-  WI-086 and its work-spec. WT-11 (the MCP server) follows WT-06.
+- **Next:** the owner reviews WI-086 and WS-086 (WT-06 item A, the data model of bug
+  reports and triage), proposed on 2026-11-19. WT-11 (the MCP server) follows WT-06.
+- **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
+  and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
+  that its item H writes.
 - **Approved and done on 2026-11-19:** WI-079 to WI-083 with their work-specs, every
   question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
   (production services get only their own secrets; paged lists without duplicates; name
@@ -109,7 +111,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved |
 | [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done     |
 | [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Done     |
-| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Proposed |
+| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Approved |
 
 Planned next, not yet drafted:
 
@@ -211,6 +213,7 @@ right after WT-04 and is done.
 | [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
 | [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
 | [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
+| [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Proposed    | [WS-086](work-specs/WS-086-triage-data-model.md)                | Proposed    |
 
 ## Follow-ups
 
