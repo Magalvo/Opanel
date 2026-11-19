@@ -1,6 +1,8 @@
 // Drizzle schema entry point. Every table definition is exported from here.
 export { accountTokens } from "./account-tokens";
 export { accounts } from "./accounts";
+export { agentProjects, agentScopes } from "./agents";
+export { apiTokens } from "./api-tokens";
 export { auditLog } from "./audit-log";
 export { columns } from "./columns";
 export { comments } from "./comments";

@@ -92,7 +92,7 @@ describe("createFirstAdmin", () => {
   it("answers 404 when the only existing account is an agent", async () => {
     await getDb()
       .insert(accounts)
-      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" });
+      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent", allProjects: true });
 
     await expect(createFirstAdmin(input)).rejects.toMatchObject({ status: 404 });
   });
@@ -111,9 +111,13 @@ describe("createFirstAdmin", () => {
       [
         "only an agent",
         () =>
-          getDb()
-            .insert(accounts)
-            .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" }),
+          getDb().insert(accounts).values({
+            kind: "agent",
+            name: "bot",
+            email: null,
+            role: "qa_agent",
+            allProjects: true,
+          }),
       ],
     ])("with %s: 404, nothing hashed, nothing created", async (_case, existing) => {
       await existing();

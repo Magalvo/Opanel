@@ -1,5 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 
+import type { HumanRole } from "@/lib/schemas/permissions";
 import { type Actor, humanActor } from "@/server/auth/actor";
 import { hashPassword as defaultHashPassword } from "@/server/auth/password";
 import { type Database, getDb } from "@/server/db/client";
@@ -117,7 +118,7 @@ export async function acceptLink(
       throw invalidLink();
     }
     const { email } = account;
-    const actor: Actor = humanActor({ accountId: account.id, role: account.role as Actor["role"] });
+    const actor: Actor = humanActor({ accountId: account.id, role: account.role as HumanRole });
 
     await tx.update(accountTokens).set({ usedAt: new Date() }).where(eq(accountTokens.id, link.id));
     await tx

@@ -1,7 +1,7 @@
 # WT-05 — Agent accounts and API tokens
 
-- Status: Approved (by the owner on 2026-11-19: decisions 1 to 14 and questions 1 to 6 as
-  proposed)
+- Status: In progress (approved by the owner on 2026-11-19: decisions 1 to 14 and
+  questions 1 to 6 as proposed; item A done on 2026-11-19)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4:
   identity, scopes, tokens; amended by this track, see decision 1),
   [0003](../canonical/0003-task-management.md) (section 3: only Admins manage agents),
@@ -168,16 +168,16 @@ now() - interval '1 minute'`), outside the request's own transaction.
 
 Numbers are given in order when each item starts; each gets its work-spec then.
 
-| Item                                                 | Title                                                                                                        | Status   | Depends on |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ---------- |
-| [WI-071](../work-items/WI-071-agent-data-model.md) A | Data model: agent rows, roles and scopes, project restrictions, `api_tokens`; the agent `Actor`; doc 0001    | Proposed | WT-04      |
-| B                                                    | Token issuing and verification; `authenticate()` accepts bearer tokens; `last_used_at`; per-token rate limit | Draft    | A          |
-| C                                                    | Admin API for agents and tokens, audited; the bearer scheme in the OpenAPI document                          | Draft    | B          |
-| D                                                    | Project restrictions enforced in every service, with the coverage test                                       | Draft    | A          |
-| E                                                    | `GET /me` for agents; the other authentication-only operations refuse them                                   | Draft    | B          |
-| F                                                    | The Agents page                                                                                              | Draft    | C          |
-| G                                                    | Agents where humans see them: the "Agent" badge on reporter, author and history                              | Draft    | A          |
-| H                                                    | End-to-end agent flow and the guide for agent authors (`docs/agents.md`)                                     | Draft    | C, D, E, F |
+| Item                                                 | Title                                                                                                        | Status | Depends on |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------ | ---------- |
+| [WI-071](../work-items/WI-071-agent-data-model.md) A | Data model: agent rows, roles and scopes, project restrictions, `api_tokens`; the agent `Actor`; doc 0001    | Done   | WT-04      |
+| B                                                    | Token issuing and verification; `authenticate()` accepts bearer tokens; `last_used_at`; per-token rate limit | Draft  | A          |
+| C                                                    | Admin API for agents and tokens, audited; the bearer scheme in the OpenAPI document                          | Draft  | B          |
+| D                                                    | Project restrictions enforced in every service, with the coverage test                                       | Draft  | A          |
+| E                                                    | `GET /me` for agents; the other authentication-only operations refuse them                                   | Draft  | B          |
+| F                                                    | The Agents page                                                                                              | Draft  | C          |
+| G                                                    | Agents where humans see them: the "Agent" badge on reporter, author and history                              | Draft  | A          |
+| H                                                    | End-to-end agent flow and the guide for agent authors (`docs/agents.md`)                                     | Draft  | C, D, E, F |
 
 ## Exit criteria
 

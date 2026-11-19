@@ -1,7 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 
+import type { AgentRole, AgentScope, HumanRole } from "@/lib/schemas/permissions";
 import { getDb } from "@/server/db/client";
-import { accounts, credentials } from "@/server/db/schema";
+import { accounts, agentProjects, agentScopes, credentials } from "@/server/db/schema";
 import { lockAccount } from "@/server/services/account-tokens";
 
 import { type Actor, humanActor } from "./actor";
@@ -38,6 +39,44 @@ export async function createTestAccount(
     providerAccountId: account.id,
     passwordHash: await hashPassword(overrides.password ?? TEST_PASSWORD),
   });
+  return account;
+}
+
+/**
+ * Creates an agent account with its scopes and projects, directly in the test database
+ * (the API to create agents is WT-05 item C). `projectIds: null` means all projects.
+ */
+export async function createTestAgent(
+  overrides: {
+    name?: string;
+    role?: AgentRole;
+    scopes?: AgentScope[];
+    projectIds?: string[] | null;
+    disabled?: boolean;
+  } = {},
+) {
+  const db = getDb();
+  const projectIds = overrides.projectIds === undefined ? null : overrides.projectIds;
+  const [account] = await db
+    .insert(accounts)
+    .values({
+      kind: "agent",
+      name: overrides.name ?? "QA Bot",
+      role: overrides.role ?? "qa_agent",
+      allProjects: projectIds === null,
+      disabledAt: overrides.disabled ? new Date() : null,
+    })
+    .returning();
+  if (!account) throw new Error("no agent");
+  const scopes = overrides.scopes ?? ["projects:read", "tasks:read"];
+  if (scopes.length > 0) {
+    await db.insert(agentScopes).values(scopes.map((scope) => ({ accountId: account.id, scope })));
+  }
+  if (projectIds !== null && projectIds.length > 0) {
+    await db
+      .insert(agentProjects)
+      .values(projectIds.map((projectId) => ({ accountId: account.id, projectId })));
+  }
   return account;
 }
 
@@ -85,7 +124,7 @@ export function postRequest(path: string, body?: unknown, headers: Record<string
 
 /** The `Actor` of a test account, as `authenticate` would build it. */
 export function testActor(account: { id: string; role: string }): Actor {
-  return humanActor({ accountId: account.id, role: account.role as Actor["role"] });
+  return humanActor({ accountId: account.id, role: account.role as HumanRole });
 }
 
 /**

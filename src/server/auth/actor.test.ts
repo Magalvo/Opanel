@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { ApiError } from "@/server/http/errors";
 
-import { can, canDeleteTask, humanActor, requirePermission } from "./actor";
+import { agentActor, can, canDeleteTask, humanActor, requirePermission } from "./actor";
 import { permissionsForRole } from "./roles";
 
 describe("humanActor", () => {
@@ -73,5 +73,51 @@ describe("canDeleteTask", () => {
   it("lets managers and admins delete any task", () => {
     expect(canDeleteTask(humanActor({ accountId: "other", role: "manager" }), task)).toBe(true);
     expect(canDeleteTask(humanActor({ accountId: "other", role: "admin" }), task)).toBe(true);
+  });
+});
+
+describe("agentActor (WS-071)", () => {
+  it("has exactly its scopes as permissions, and its project restriction", () => {
+    const actor = agentActor({
+      accountId: "agent-1",
+      role: "qa_agent",
+      scopes: ["projects:read", "tasks:read"],
+      projectIds: ["p1", "p2"],
+    });
+    expect(actor.kind).toBe("agent");
+    expect(actor.accountId).toBe("agent-1");
+    expect(actor.role).toBe("qa_agent");
+    expect([...actor.permissions].sort()).toEqual(["projects:read", "tasks:read"]);
+    expect(actor.projectIds).toEqual(new Set(["p1", "p2"]));
+    expect(can(actor, "tasks:read")).toBe(true);
+    expect(can(actor, "comments:write")).toBe(false);
+    expect(() => {
+      requirePermission(actor, "reports:write");
+    }).toThrow(ApiError);
+  });
+
+  it("keeps null as all projects, and an empty list as no project", () => {
+    const all = agentActor({ accountId: "a", role: "qa_agent", scopes: [], projectIds: null });
+    const none = agentActor({ accountId: "a", role: "qa_agent", scopes: [], projectIds: [] });
+    expect(all.projectIds).toBeNull();
+    expect(none.projectIds).toEqual(new Set());
+  });
+
+  it("refuses a scope its role lacks, a non-agent scope, and a non-agent role", () => {
+    const base = { accountId: "a", projectIds: null };
+    expect(() => agentActor({ ...base, role: "qa_agent", scopes: ["tasks:write"] })).toThrow();
+    expect(() =>
+      agentActor({ ...base, role: "worker_agent", scopes: ["agents:manage"] }),
+    ).toThrow();
+    expect(() => agentActor({ ...base, role: "admin", scopes: [] })).toThrow();
+    expect(
+      agentActor({ ...base, role: "worker_agent", scopes: ["tasks:write"] }).permissions,
+    ).toEqual(new Set(["tasks:write"]));
+  });
+});
+
+describe("humanActor and project restrictions (WS-071)", () => {
+  it("carries no restriction", () => {
+    expect(humanActor({ accountId: "a", role: "member" }).projectIds).toBeNull();
   });
 });

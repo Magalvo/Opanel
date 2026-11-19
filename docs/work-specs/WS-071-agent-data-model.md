@@ -1,6 +1,6 @@
 # WS-071 — Agent accounts in the data model, and the agent `Actor`
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 5 as proposed)
 - Work-item: [WI-071](../work-items/WI-071-agent-data-model.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3, 4
   and 7; amended here); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md)
@@ -236,3 +236,41 @@ Risks:
 - The new checks on `accounts` must hold for every existing row: they do, since all rows
   are human with the new columns null; the migration is tested against a database built by
   the earlier ones (WS-063, WS-064).
+
+## Deviations from the approved spec
+
+1. **The unique index `accounts_id_kind_idx` is moved by hand** before the foreign keys in
+   `0016_agents.sql`: drizzle-kit generated the composite foreign keys first, which
+   PostgreSQL refuses without a unique index on `accounts (id, kind)`.
+2. **Agent rows in existing tests gain `allProjects: true`.** Ten fixtures (in six
+   test files) inserted agent rows to check that agents are not people, accounts or
+   team members; the new `accounts_agent_fields_check` requires the field. Their meaning
+   is unchanged: an agent with no project restriction. Likewise the actor built by hand in
+   `event-stream.integration.test.ts` gains `projectIds: null`, which the type now
+   requires.
+3. **`loadAgentActor` returns `disabledAt` as a `Date`** converted from the row's text,
+   as the spec says; the raw query returns timestamps as text, like the other services.
+4. **The test for a human's child rows names the foreign key** that refuses them
+   (`agent_scopes_account_fk` and the two others), not only the error code: more precise.
+
+## Implementation record
+
+- Red, unit: 9 tests failed (`AGENT_SCOPES`, `agentRoleSchema`, `scopesForAgentRole`,
+  `agentActor`, `humanActor`'s `projectIds`): none of them existed.
+- Green, unit: 35 of 35 in the three files.
+- Red, integration: `agents.integration.test.ts` (schema), 12 of 12 failed with
+  `column "all_projects" of relation "accounts" does not exist`;
+  `services/agents.integration.test.ts` could not import `loadAgentActor` or
+  `createTestAgent`.
+- Green, integration: the schema, migration `0016_agents` (generated, one statement moved),
+  `loadAgentActor`, `createTestAgent`; the two new files, the runtime-role test and the
+  schema-version test: 36 of 36.
+- Doc 0001: the header, section 3 (scopes as a subset of the role, project restriction,
+  no deletion) and section 7 (the columns and tables).
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1347 of 1347;
+  - `pnpm test:e2e` 78 of 79 with `--retries=0`: `board.spec.ts` "a card someone else
+    moved is refreshed" failed on `read ECONNRESET` from a local API request, not an
+    assertion; `board.spec.ts` alone then passed 8 of 8;
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

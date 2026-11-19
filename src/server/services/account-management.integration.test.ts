@@ -79,7 +79,7 @@ describe("listAccounts", () => {
       .values({ kind: "human", name: "Invited", email: "invited@example.com", role: "member" });
     await getDb()
       .insert(accounts)
-      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" });
+      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent", allProjects: true });
 
     const page = await listAccounts(actor, { limit: 50 });
 
@@ -425,7 +425,7 @@ describe("unknown ids and agents", () => {
     const { actor } = await admin();
     const [agent] = await getDb()
       .insert(accounts)
-      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" })
+      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent", allProjects: true })
       .returning();
     const ids = [crypto.randomUUID(), agent?.id ?? ""];
 

@@ -151,7 +151,7 @@ describe("team membership", () => {
     const team = await createTeam(actor, { name: "Frontend" });
     const [agentRow] = await getDb()
       .insert(accounts)
-      .values({ kind: "agent", name: "Bot", role: "qa_agent" })
+      .values({ kind: "agent", name: "Bot", role: "qa_agent", allProjects: true })
       .returning();
     const [invitedRow] = await getDb()
       .insert(accounts)

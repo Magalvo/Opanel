@@ -1,3 +1,4 @@
+import type { HumanRole } from "@/lib/schemas/permissions";
 import { getDb } from "@/server/db/client";
 import { unauthenticated } from "@/server/http/errors";
 import { type AccountRow, findAccountById } from "@/server/services/accounts";
@@ -41,7 +42,7 @@ export async function authenticate(request: Request): Promise<Authenticated> {
 
   // humanActor throws for a stored role that is not a human role: never a default.
   return {
-    actor: humanActor({ accountId: account.id, role: account.role as Actor["role"] }),
+    actor: humanActor({ accountId: account.id, role: account.role as HumanRole }),
     account,
     sessionId: response.session.id,
     headers,

@@ -1,6 +1,6 @@
 # WI-071 — Agent accounts in the data model, and the agent `Actor`
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item A)
 - Depends on: WT-04 (done)
 - Work-spec: [WS-071](../work-specs/WS-071-agent-data-model.md)
@@ -19,22 +19,22 @@ authenticating with a token is item B. Doc 0001 gets the amendment WT-05 approve
 
 ## Acceptance criteria
 
-- [ ] An agent row must have the role `qa_agent` or `worker_agent`, no email, and a name
+- [x] An agent row must have the role `qa_agent` or `worker_agent`, no email, and a name
       no other agent has in any letter case; a human may share an agent's name.
-- [ ] A scope row must be one of the five agent scopes of doc 0001 and belong to an
+- [x] A scope row must be one of the five agent scopes of doc 0001 and belong to an
       agent account; a project-restriction row and a token row must belong to an agent
       account. Each refusal is a database error, tested by writing such rows directly.
-- [ ] A token row stores a 12-character lowercase base32 `public_id` (unique) and the
+- [x] A token row stores a 12-character lowercase base32 `public_id` (unique) and the
       SHA-256 of its secret, never the secret.
-- [ ] An agent with "all projects" has no restriction; an agent restricted to a list of
+- [x] An agent with "all projects" has no restriction; an agent restricted to a list of
       projects is restricted even when that list is empty.
-- [ ] `agentActor` gives an agent exactly its stored scopes as permissions and refuses a
+- [x] `agentActor` gives an agent exactly its stored scopes as permissions and refuses a
       scope its role does not include; human actors are unchanged and carry no
       restriction.
-- [ ] `loadAgentActor` reads an agent's role, scopes and projects in one query, and
+- [x] `loadAgentActor` reads an agent's role, scopes and projects in one query, and
       returns nothing for a human or an unknown id.
-- [ ] The runtime role has the usual rights on the new tables (the WS-063 test).
-- [ ] Doc 0001 sections 3 and 7 carry the amendment; no API contract change. The full
+- [x] The runtime role has the usual rights on the new tables (the WS-063 test).
+- [x] Doc 0001 sections 3 and 7 carry the amendment; no API contract change. The full
       quality gate passes.
 
 ## Notes

@@ -61,7 +61,7 @@ describe("PATCH /api/v1/accounts/{accountId}", () => {
     const cookie = await adminCookie();
     const [agent] = await getDb()
       .insert(accounts)
-      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent" })
+      .values({ kind: "agent", name: "bot", email: null, role: "qa_agent", allProjects: true })
       .returning();
 
     for (const id of [crypto.randomUUID(), agent?.id ?? ""]) {
