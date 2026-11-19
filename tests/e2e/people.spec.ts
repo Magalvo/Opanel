@@ -77,6 +77,49 @@ admin(
 );
 
 admin(
+  "an invitation finished while the first page loads appears once, after every Load more (WS-080)",
+  async ({ page }) => {
+    // Holds the first page until the invitation is done, then asks for one account only, so
+    // that more pages remain however many accounts the run's database holds.
+    let invited: () => void = () => undefined;
+    const done = new Promise<void>((resolve) => {
+      invited = resolve;
+    });
+    let first = true;
+    await page.route(/\/api\/v1\/accounts\?limit=50$/, async (route) => {
+      if (!first || route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      first = false;
+      await done;
+      await route.continue({ url: route.request().url().replace("limit=50", "limit=1") });
+    });
+    await page.goto("/people");
+    await expect(page.getByText("Loading people…")).toBeVisible();
+    const email = `race-${crypto.randomUUID()}@example.com`;
+
+    await page.getByRole("button", { name: "Invite person" }).click();
+    const dialog = page.getByRole("dialog", { name: "Invite a person" });
+    await dialog.getByLabel("Name").fill("Race Condition");
+    await dialog.getByLabel("Email").fill(email);
+    await dialog.getByRole("button", { name: "Create invitation" }).click();
+    await page
+      .getByRole("dialog", { name: "Invitation link" })
+      .getByRole("button", { name: "Done" })
+      .click();
+    invited();
+
+    await expect(page.getByRole("status")).toContainText("They appear at the end of the list.");
+    // The first page holds one account, so more remain.
+    await expect(page.getByRole("button", { name: "Load more" })).toBeVisible();
+    await showEveryone(page);
+    await expect(page.getByRole("row", { name: new RegExp(email) })).toHaveCount(1);
+    await page.unrouteAll({ behavior: "wait" });
+  },
+);
+
+admin(
   "an Admin revokes an invitation sent to a mistyped email; the link stops working and the email can be invited again",
   async ({ page, browser }) => {
     await page.goto("/people");
