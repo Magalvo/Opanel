@@ -1,6 +1,6 @@
 # WS-080 — Paged lists never show a row twice
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, every question as proposed)
 - Work-item: [WI-080](../work-items/WI-080-lists-without-duplicates.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 5 (pagination);
   audit of 2026-11-19, finding B02

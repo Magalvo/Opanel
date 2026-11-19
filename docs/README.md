@@ -15,12 +15,13 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Next:** draft WT-06 (bug reports and automated triage, canonical doc 0001 sections 5
   and 6) as `Proposed`, and stop for the owner's approval. WT-11 (the MCP server) follows
   it.
-- **Proposed on 2026-11-19, awaiting the owner:** WI-079 to WI-083 with their work-specs,
+- **Approved on 2026-11-19, in progress:** WI-079 to WI-083 with their work-specs, every
+  question as proposed,
   the fixes for findings B01 to B05 of the audit of 2026-11-19 (production services get
   only their own secrets; paged lists without duplicates; name cursors that fit epic
   titles; board loads ordered around moves; every API response documented). The lower
-  findings B06 to B16 are listed under [Follow-ups](#follow-ups). The owner decides
-  whether these come before WT-06.
+  findings B06 to B16 are listed under [Follow-ups](#follow-ups). The owner chose to do
+  these before WT-06.
 - **Approved on 2026-11-19:** WT-05 (agent accounts and API tokens), decisions 1 to 14
   and questions 1 to 6 as proposed, including the amendment to doc 0001 that WI-071
   writes.
@@ -185,11 +186,11 @@ right after WT-04 and is done.
 | [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
 | [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
 | [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
-| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Proposed    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Proposed    |
-| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Proposed    | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Proposed    |
-| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Proposed    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Proposed    |
-| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Proposed    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Proposed    |
-| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Proposed    | [WS-083](work-specs/WS-083-documented-responses.md)             | Proposed    |
+| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Approved    | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Approved    |
+| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Approved    | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Approved    |
+| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Approved    | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Approved    |
+| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Approved    | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Approved    |
+| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Approved    | [WS-083](work-specs/WS-083-documented-responses.md)             | Approved    |
 
 ## Follow-ups
 

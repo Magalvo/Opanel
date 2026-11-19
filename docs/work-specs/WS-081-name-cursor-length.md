@@ -1,6 +1,6 @@
 # WS-081 — Name cursors fit the longest name they carry
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, every question as proposed)
 - Work-item: [WI-081](../work-items/WI-081-name-cursor-length.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 5 (pagination);
   audit of 2026-11-19, finding B03

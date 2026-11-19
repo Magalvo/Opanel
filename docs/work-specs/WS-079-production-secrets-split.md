@@ -1,6 +1,6 @@
 # WS-079 — Each production service gets only the secrets it needs
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, every question as proposed)
 - Work-item: [WI-079](../work-items/WI-079-production-secrets-split.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) sections 3 and 5;
   [WS-062](WS-062-production-image.md), [WS-063](WS-063-database-roles.md); audit of

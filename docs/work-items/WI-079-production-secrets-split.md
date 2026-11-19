@@ -1,6 +1,6 @@
 # WI-079 — Each production service gets only the secrets it needs
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: none: a hardening item from the audit of 2026-11-19 (finding B01)
 - Depends on: none
 - Work-spec: [WS-079](../work-specs/WS-079-production-secrets-split.md)
