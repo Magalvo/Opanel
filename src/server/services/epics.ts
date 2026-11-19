@@ -8,7 +8,7 @@ import type {
   EpicStatus,
   UpdateEpicRequest,
 } from "@/lib/schemas/epics";
-import { type Actor, requirePermission } from "@/server/auth/actor";
+import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { epics } from "@/server/db/schema";
 import { invalidRequest, notFound, versionConflict } from "@/server/http/errors";
@@ -83,7 +83,7 @@ export async function listEpics(
   db: Database = getDb(),
 ): Promise<EpicPage> {
   requirePermission(actor, "tasks:read");
-  const project = await findProjectRef(db, projectRef);
+  const project = await findProjectRef(db, actor, projectRef);
   if (!project) throw notFound("There is no such project.");
 
   const status = query.status ?? "open";
@@ -118,6 +118,7 @@ export async function getEpic(actor: Actor, epicId: string, db: Database = getDb
   requirePermission(actor, "tasks:read");
   const row = await findEpic(db, epicId);
   if (!row) throw epicNotFound();
+  requireProjectAccess(actor, row.project_id);
   return toEpic(row);
 }
 
@@ -146,7 +147,7 @@ export async function createEpic(
   requirePermission(actor, "epics:manage");
 
   return db.transaction(async (tx) => {
-    const project = await lockWritableProject(tx, projectRef);
+    const project = await lockWritableProject(tx, actor, projectRef);
     const [row] = await tx
       .insert(epics)
       .values({
@@ -196,7 +197,7 @@ export async function updateEpic(
       sql`select project_id from epics where id = ${epicId}`,
     );
     if (!owner) throw epicNotFound();
-    await lockWritableProject(tx, owner.project_id);
+    await lockWritableProject(tx, actor, owner.project_id);
     await tx.execute(sql`select 1 from epics where id = ${epicId} for update`);
     const before = await findEpic(tx, epicId);
     if (!before) throw epicNotFound();

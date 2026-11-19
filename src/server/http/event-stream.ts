@@ -1,5 +1,5 @@
 import type { ProjectEvent } from "@/lib/schemas/events";
-import { can } from "@/server/auth/actor";
+import { can, canAccessProject } from "@/server/auth/actor";
 import {
   authenticate as authenticateRequest,
   type Authenticated,
@@ -40,7 +40,8 @@ function frameOf(event: ProjectEvent): Uint8Array {
  * cap, subscribes to the hub, and only then answers, so every event committed after the
  * client has the response reaches it. The stream ends, and gives its place back exactly
  * once, when the client goes away, the reader falls 64 KiB behind, the hub resets, or a
- * heartbeat finds the credentials no longer valid or without `tasks:read`.
+ * heartbeat finds the credentials no longer valid, without `tasks:read`, or without the
+ * project (WS-073).
  */
 export async function openEventStream({
   request,
@@ -117,8 +118,11 @@ export async function openEventStream({
   timer.heartbeat = setInterval(() => {
     authenticate(request).then(
       ({ actor }) => {
-        if (can(actor, "tasks:read")) write(encoder.encode(": heartbeat\n\n"));
-        else finish();
+        if (can(actor, "tasks:read") && canAccessProject(actor, projectId)) {
+          write(encoder.encode(": heartbeat\n\n"));
+        } else {
+          finish();
+        }
       },
       (error: unknown) => {
         // An expired or revoked session is ordinary; anything else is worth a line.

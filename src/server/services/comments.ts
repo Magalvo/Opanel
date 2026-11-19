@@ -7,7 +7,7 @@ import type {
   CommentQuery,
   CreateCommentRequest,
 } from "@/lib/schemas/comments";
-import { type Actor, requirePermission } from "@/server/auth/actor";
+import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { notFound } from "@/server/http/errors";
 import { decodeCursor, encodeCursor } from "@/server/http/pagination";
@@ -68,6 +68,7 @@ export async function listComments(
   requirePermission(actor, "tasks:read");
   const task = await findLiveTask(db, taskRef);
   if (!task) throw taskNotFound();
+  requireProjectAccess(actor, task.projectId);
 
   const after =
     query.cursor === undefined
@@ -109,7 +110,7 @@ export async function createComment(
   return db.transaction(async (tx) => {
     const found = await findLiveTask(tx, taskRef);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, found.projectId);
+    await lockWritableProject(tx, actor, found.projectId);
     // Waits for a delete of the same task in flight (it takes `for update`), and then sees it.
     const task = await findLiveTask(tx, found.id, sql`for share of t`);
     if (!task) throw taskNotFound();
