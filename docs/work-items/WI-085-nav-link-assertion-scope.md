@@ -1,6 +1,6 @@
 # WI-085 — Absent-link assertions are scoped to their navigation
 
-- Status: Proposed
+- Status: Done (2026-11-19)
 - Work-track: none: a test fix, the same pattern as WI-084
 - Depends on: none
 - Work-spec: [WS-085](../work-specs/WS-085-nav-link-assertion-scope.md)
@@ -22,13 +22,13 @@ the shared end-to-end database.
 
 ## Acceptance criteria
 
-- [ ] `people.spec.ts` asserts the absence of "People" inside the `Main` navigation
+- [x] `people.spec.ts` asserts the absence of "People" inside the `Main` navigation
       (`app-sidebar.tsx`), with `exact: true`, after asserting that the same navigation is
       visible.
-- [ ] `projects.spec.ts` asserts the absence of "Settings" inside the `Project` navigation
+- [x] `projects.spec.ts` asserts the absence of "Settings" inside the `Project` navigation
       (`project-frame.tsx`), with `exact: true`, after asserting that the same navigation is
       visible.
-- [ ] Both specs pass with `--retries=0 --repeat-each=3`, and the full quality gate passes.
+- [x] Both specs pass with `--retries=0 --repeat-each=3`, and the full quality gate passes.
 
 ## Notes
 

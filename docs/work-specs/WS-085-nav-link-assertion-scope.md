@@ -1,6 +1,6 @@
 # WS-085 — Absent-link assertions are scoped to their navigation
 
-- Status: Proposed
+- Status: Done (2026-11-19)
 - Work-item: [WI-085](../work-items/WI-085-nav-link-assertion-scope.md)
 - Canonical docs: none (test-only); see WI-084 for the same fix on the Agents link
 
@@ -76,3 +76,27 @@ it, the new one passes against the same data.
    pushed branch as of 2026-11-19. This item takes the number after it so as not to collide.
    On completion it removes the README follow-up entry that names these two assertions, if
    that entry has landed by then; otherwise there is nothing to remove. Owner: confirm.
+
+## Implementation record
+
+- Red, with a throwaway probe spec (deleted, not committed): a Viewer's board holding a
+  task titled "Settings page" made the old assertion fail (expected 0, received 1, the
+  task card). On `/`, which shows no user data today, a link "People ops" injected into
+  `main` was matched by the old People locator. Green: the scoped, exact assertions passed
+  on the same pages.
+- `pnpm test:e2e tests/e2e/people.spec.ts tests/e2e/projects.spec.ts --retries=0
+--repeat-each=3`: 26 of 26.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1546 of 1546;
+  - `pnpm test:e2e` 87 of 87 with `--retries=0` on the second run. The first run failed
+    one test, `agents.spec.ts:136` ("a Manager has neither the Agents link nor the page"),
+    which found the projects "Agents …" that another spec creates: the WI-084 defect,
+    outside this item and left for it;
+  - Linux, Node, PostgreSQL 16 on port 5432 (no Docker in this session; the compose file's
+    roles and databases created by hand).
+
+## Deviations
+
+- Risk 1: WI-084 has still not landed on `main`, so there was no README follow-up entry
+  naming these two assertions to remove.
