@@ -1,6 +1,6 @@
 # WI-082 — The board applies only the latest load, never during a move
 
-- Status: Approved (2026-11-19)
+- Status: Done (2026-11-19)
 - Work-track: none: a fix from the audit of 2026-11-19 (finding B04)
 - Depends on: none
 - Work-spec: [WS-082](../work-specs/WS-082-board-reload-ordering.md)
@@ -23,26 +23,26 @@ own `columnId` names.
 
 ## Acceptance criteria
 
-- [ ] A reload asked for while a card is dragged or a move is saved (reconnect, late first
+- [x] A reload asked for while a card is dragged or a move is saved (reconnect, late first
       open, `column.changed`, failed refresh) does not fetch; the board reloads once after
       the drag and the move have ended.
-- [ ] A load already in flight when a drag or a move starts is not applied; the board
+- [x] A load already in flight when a drag or a move starts is not applied; the board
       reloads once after they end.
-- [ ] Loads never run in parallel. Reloads asked for during a load cause exactly one more
+- [x] Loads never run in parallel. Reloads asked for during a load cause exactly one more
       load after it, and only the last one is applied (also its error, if it fails).
-- [ ] Events that arrive while a load is in flight are held and applied after it lands,
+- [x] Events that arrive while a load is in flight are held and applied after it lands,
       with the version rule, so an event is neither lost nor overwritten by an older
       snapshot (this also covers the first load).
-- [ ] After a successful move the returned task is shown in the column its `columnId`
+- [x] After a successful move the returned task is shown in the column its `columnId`
       names: in place when the card is there, otherwise taken out of wherever it is and
       that column reloaded.
-- [ ] `added(task)` does not show a task twice: when the board already holds it (its event
+- [x] `added(task)` does not show a task twice: when the board already holds it (its event
       landed first), it is replaced only if the answer's version is newer.
-- [ ] A change from the task detail (`opanel:task-changed`) whose version is not newer than
+- [x] A change from the task detail (`opanel:task-changed`) whose version is not newer than
       the card's is ignored.
-- [ ] The failed-move reload, the 200-event overflow reload and every existing `useBoard`
+- [x] The failed-move reload, the 200-event overflow reload and every existing `useBoard`
       test keep their behavior.
-- [ ] No API change. The full quality gate passes.
+- [x] No API change. The full quality gate passes.
 
 ## Notes
 
