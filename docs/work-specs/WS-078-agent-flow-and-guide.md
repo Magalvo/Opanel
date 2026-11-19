@@ -1,6 +1,6 @@
 # WS-078 — The agent flow end to end, and the guide for agent authors
 
-- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-19, questions 1 to 4 as proposed)
 - Work-item: [WI-078](../work-items/WI-078-agent-flow-and-guide.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4);
   [0004](../canonical/0004-api-conventions.md) (the conventions the guide summarizes);
@@ -185,3 +185,30 @@ Risks:
 - **The end-to-end test reads the token from the dialog**, like a person copying it. If
   the dialog changes, the test changes with it. That is the same coupling as
   `agents.spec.ts`.
+
+## Deviations from the approved spec
+
+1. **The attribution test is in the comments route's test**
+   (`src/app/api/v1/tasks/[taskId]/comments/route.integration.test.ts`), not in
+   `comments.integration.test.ts`, because it goes through the route with a token.
+2. **The permissions test reads a field error by its field**, since Zod names the array
+   element (`scopes.0`). The refusal itself is the expected `400`.
+
+## Implementation record
+
+- Tests 1 and 2 (permissions, attribution) passed once written, as question 4 expected:
+  they prove behaviour that exists. The permissions test first failed on its own
+  assertion (deviation 2), not on the API.
+- Section 5: `guideProblems` and its helpers moved to `scripts/doc-checks.ts`; the
+  operations guide's 9 tests pass unchanged.
+- Red: `agents-guide.test.ts` failed 7 of 9 before `docs/agents.md` existed. Green:
+  9 of 9 with the guide, the README line and the OpenAPI description. A mutated copy
+  (an unknown endpoint, an unknown code, an unknown scope) failed on all three, then the
+  guide was restored.
+- `agent-flow.spec.ts` passed.
+- WT-05's exit criteria are ticked, and WT-05 is `Done`.
+- Gate on 2026-11-19:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1546 of 1546;
+  - `pnpm test:e2e` 87 of 87 with `--retries=0`;
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.

@@ -61,6 +61,9 @@ The [operations guide](docs/operations.md) covers installing, the reverse proxy 
 upgrading, backing up and restoring, recovering the last Admin, maintenance, storage and
 logs. CI rehearses its commands on every change to the image.
 
+Writing a program that uses Opanel's API with an agent token? The
+[agents guide](docs/agents.md) explains tokens, scopes, errors and limits.
+
 ## Commands
 
 The five commands marked **gate** are the quality gate: all of them must pass before a

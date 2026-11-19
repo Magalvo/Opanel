@@ -5,8 +5,10 @@ import { problemSchema } from "@/lib/schemas/problem";
 import { agentActor } from "@/server/auth/actor";
 import {
   apiRequest,
+  bearerRequest,
   createTestAccount,
   createTestAgent,
+  createTestToken,
   signInCookie,
 } from "@/server/auth/testing";
 import { createComment } from "@/server/services/comments";
@@ -162,5 +164,28 @@ describe("task comment endpoints", () => {
       expect(response.headers.get("content-type")).toContain("application/problem+json");
       problemSchema.parse(await response.json());
     }
+  });
+});
+
+describe("a comment made with an agent's token (WS-078)", () => {
+  it("is attributed to the agent", async () => {
+    await setup();
+    const agent = await createTestAgent({
+      name: "Flow bot",
+      scopes: ["projects:read", "tasks:read", "comments:write"],
+    });
+    const { token } = await createTestToken(agent.id);
+
+    const response = await POST(
+      bearerRequest("/api/v1/tasks/OPA-1/comments", token, {
+        method: "POST",
+        body: JSON.stringify({ body: "Seen by the bot" }),
+      }),
+      task("OPA-1"),
+    );
+
+    expect(response.status).toBe(201);
+    const comment = commentSchema.parse(await response.json());
+    expect(comment.author).toMatchObject({ id: agent.id, name: "Flow bot", kind: "agent" });
   });
 });
