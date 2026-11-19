@@ -1,6 +1,6 @@
 # WI-084 — The Manager's Agents-link check looks only at the sidebar
 
-- Status: Proposed
+- Status: Done
 - Work-track: none: a fix to the end-to-end suite (flaky test reported on 2026-11-19)
 - Depends on: none
 - Work-spec: [WS-084](../work-specs/WS-084-agents-link-assertion-scope.md)
@@ -28,13 +28,13 @@ longer affect the result. The product does not change.
 
 ## Acceptance criteria
 
-- [ ] The Manager test asserts that the Main navigation has no link named exactly "Agents",
+- [x] The Manager test asserts that the Main navigation has no link named exactly "Agents",
       and still asserts that `/agents` is a `404`.
-- [ ] `pnpm test:e2e tests/e2e/agents.spec.ts --retries=0 --repeat-each=3` passes, with
+- [x] `pnpm test:e2e tests/e2e/agents.spec.ts --retries=0 --repeat-each=3` passes, with
       `Agents <KEY>` projects on the first page of `/projects`.
-- [ ] No `getByRole("link", { name: "Agents" })` in `tests/e2e/` is left without a
+- [x] No `getByRole("link", { name: "Agents" })` in `tests/e2e/` is left without a
       Main-navigation scope and `exact: true`.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

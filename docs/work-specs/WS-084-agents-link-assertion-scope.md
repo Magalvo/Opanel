@@ -1,6 +1,6 @@
 # WS-084 — The Manager's Agents-link check looks only at the sidebar
 
-- Status: Proposed (must be `Approved` by the owner before any code is written)
+- Status: Done
 - Work-item: [WI-084](../work-items/WI-084-agents-link-assertion-scope.md)
 - Canonical docs: none (test-only change; [WS-077](WS-077-agents-page.md) test 10 is the test
   being fixed)
