@@ -1,6 +1,6 @@
 # WS-072 — API tokens: issuing, verifying, and `authenticate()` accepting them
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-19, questions 1 to 4 as proposed)
 - Work-item: [WI-072](../work-items/WI-072-api-tokens.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (section 4: agent
   tokens); [0004](../canonical/0004-api-conventions.md) (section 4: `401` says nothing;

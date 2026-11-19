@@ -1,6 +1,6 @@
 # WI-072 — API tokens: issuing, verifying, and `authenticate()` accepting them
 
-- Status: Proposed
+- Status: Approved (2026-11-19)
 - Work-track: [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) (item B)
 - Depends on: WI-071 (done)
 - Work-spec: [WS-072](../work-specs/WS-072-api-tokens.md)
