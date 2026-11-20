@@ -101,17 +101,39 @@ that carries between sessions. If it is not written down here, it was not decide
 | Work-spec     | `docs/work-specs/`  | Exactly how one work-item is implemented  | `WS-NNN-slug.md` |
 
 A work-spec shares its number with its work-item. Templates are the `_TEMPLATE.md` file in
-each directory. `docs/README.md` holds the index and the status of every doc.
+each directory. A doc's status is the `Status:` line at its top, and only there (an
+approval is recorded on that line). `docs/README.md` is the index: links and titles, what
+comes next, and follow-ups.
 
 Flow for any change:
 
 1. Read `AGENTS.md`, `docs/README.md`, and the canonical docs relevant to the task.
-2. Find or draft the work-item. If none exists, propose one; do not improvise scope.
+2. Find the work-item. If none exists, propose one; do not improvise scope. A new
+   work-item (or work-track, or canonical doc) first gets its number reserved on `main`
+   (below), and its branch starts from that commit.
 3. Draft the work-spec: files touched, data model changes, API contract, and the list of
    tests to write. Mark it `Proposed`.
 4. **Stop. The owner approves the work-spec** (status becomes `Approved`).
 5. Implement with TDD (section 5).
-6. Update doc statuses, and update canonical docs if behavior or architecture changed.
+6. Update the statuses of the work-item and work-spec, and update canonical docs if
+   behavior or architecture changed.
+
+**Index commits.** Only small docs-only commits pushed straight to `main` change
+`docs/README.md`; a work-item branch never edits it, so parallel branches never conflict
+there. There are three kinds:
+
+- **Reserve a number** (`docs: reserve WI-NNN (slug)`). `git fetch origin`; take one more
+  than the highest number on `origin/main` (index and file names); on a checkout of
+  `origin/main` add the doc from its template (title, `Status: Draft`) and its index row
+  (with the work-spec link, for a work-item); commit and push. If the push is refused
+  because `main` moved, fetch, rebase, take the number again and retry. A reserved number
+  is never reused or renamed; a dropped item becomes `Superseded`.
+- **Record a follow-up** (`docs: follow-up from WI-NNN`), also written in the work-spec.
+- **Move "Where the project stands"** (`docs: next is ...`), when a work-track is approved
+  or done, or what comes next changes.
+
+If `main` is ever protected, an index commit is a one-file pull request, merged at once.
+`scripts/docs-index.test.ts` checks the index against the docs.
 
 ## 5. TDD and guardrails
 
@@ -171,7 +193,8 @@ All five exist. `test` and `test:e2e` need the database: `docker compose up -d`.
 
 - Work-spec acceptance criteria are met, each covered by a test.
 - The full quality gate passes.
-- Work-item and work-spec statuses and `docs/README.md` are updated.
+- The work-item and work-spec `Status:` lines are updated (not `docs/README.md`: see the
+  index commits in section 4).
 - Canonical docs reflect any new decision.
 
 ## 8. Git conventions
@@ -180,3 +203,7 @@ All five exist. `test` and `test:e2e` need the database: `docker compose up -d`.
   referencing the work-item, e.g. `feat(triage): add bug report endpoint (WI-012)`.
 - Small commits that follow the Red, Green, Refactor steps are welcome.
 - `main` is always green.
+- Before a branch merges, it takes in `main` (rebase or merge), then: if it adds a
+  migration and `main` gained one meanwhile, it deletes its own migration and snapshot
+  and runs `pnpm db:generate` again; it runs `pnpm openapi:generate` if it changes the
+  API; and it runs the full quality gate again on the result.

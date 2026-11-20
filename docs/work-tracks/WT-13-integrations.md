@@ -44,9 +44,9 @@ account; Opanel works exactly the same with or without any of them.
 
 ## Work-items
 
-| Item                                            | Title                                                             | Status | Depends on |
-| ----------------------------------------------- | ----------------------------------------------------------------- | ------ | ---------- |
-| [WI-093](../work-items/WI-093-posthog-addon.md) | Optional PostHog add-on: error-tracking issues become bug reports | Done   | WI-089     |
+| Item                                            | Title                                                             | Depends on |
+| ----------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| [WI-093](../work-items/WI-093-posthog-addon.md) | Optional PostHog add-on: error-tracking issues become bug reports | WI-089     |
 
 ## Exit criteria
 

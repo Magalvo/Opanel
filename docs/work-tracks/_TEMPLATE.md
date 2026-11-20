@@ -13,8 +13,10 @@ What is true when this track is finished, in one or two sentences.
 
 ## Work-items
 
-| Item   | Title | Status | Depends on |
-| ------ | ----- | ------ | ---------- |
-| WI-NNN |       | Draft  |            |
+Statuses live in each work-item's own `Status:` line, not here (`AGENTS.md` section 4).
+
+| Item   | Title | Depends on |
+| ------ | ----- | ---------- |
+| WI-NNN |       |            |
 
 ## Exit criteria
