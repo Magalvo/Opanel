@@ -13,6 +13,7 @@ import { type ProjectEventInput, publishEvent } from "./events";
 import { type EventListener, listenForEvents } from "./events-testing";
 import { archiveProject, createProject, unarchiveProject, updateProject } from "./projects";
 import { createTask, deleteTask, moveTask, restoreTask, updateTask } from "./tasks";
+import { updateTriage } from "./triage";
 
 let listener: EventListener;
 
@@ -312,6 +313,24 @@ describe("each write sends its event (WT-04 decision 2)", () => {
     });
     expect(sent).toEqual([
       expect.objectContaining({ type: "epic.changed", version: epic?.version }),
+    ]);
+  });
+
+  it("projects: a triage change sends project.changed with the new version (WS-087)", async () => {
+    const { managerActor, project } = await setup();
+    let version = 0;
+
+    const sent = await eventsOf(async () => {
+      version = (await updateTriage(managerActor, "OPA", { version: project.version })).version;
+    });
+
+    expect(sent).toEqual([
+      expect.objectContaining({
+        type: "project.changed",
+        projectId: project.id,
+        entityId: project.id,
+        version,
+      }),
     ]);
   });
 

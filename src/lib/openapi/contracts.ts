@@ -67,6 +67,7 @@ import {
   removeTeamMemberContract,
   updateTeamContract,
 } from "@/lib/schemas/teams";
+import { getTriageContract, updateTriageContract } from "@/lib/schemas/triage";
 
 import type { EndpointContract } from "./contract";
 
@@ -100,6 +101,8 @@ export const contracts: readonly EndpointContract[] = [
   updateProjectContract,
   archiveProjectContract,
   unarchiveProjectContract,
+  getTriageContract,
+  updateTriageContract,
   listColumnsContract,
   createColumnContract,
   updateColumnContract,

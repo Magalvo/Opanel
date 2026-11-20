@@ -253,6 +253,26 @@ describe("deleteTeam and triage (WS-086)", () => {
   });
 });
 
+describe("deleteTeam names the projects whose triage uses the team (WS-087)", () => {
+  it("names OPA and WEB, and keeps the tasks message for a team with tasks", async () => {
+    const { actor } = await manager();
+    const team = await createTeam(actor, { name: "Backend" });
+    for (const key of ["WEB", "OPA"]) {
+      const [project] = await getDb().$client<{ id: string }[]>`
+        insert into projects (key, name) values (${key}, ${key}) returning id`;
+      await getDb().$client`insert into routing_rules (project_id, origin_layer, team_id)
+        values (${project?.id ?? ""}, 'api', ${team.id})`;
+    }
+
+    const error = await failure(deleteTeam(actor, team.id));
+
+    expect(error.code).toBe("team_in_use");
+    expect(error.detail).toBe(
+      "This team handles triage in OPA, WEB. Choose another team in their triage settings first.",
+    );
+  });
+});
+
 describe("reading teams", () => {
   it("lists teams by name with member counts, in pages that join up", async () => {
     const { actor } = await manager();

@@ -14,8 +14,8 @@ describe("auditActionSchema", () => {
     }
   });
 
-  it("includes the actions of WT-02 and of WS-026, WS-028, WS-029, WS-033 and WS-075", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(36);
+  it("includes the actions of WT-02 and of WS-026, WS-028, WS-029, WS-033, WS-075 and WS-087", () => {
+    expect(AUDIT_ACTIONS).toHaveLength(37);
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("agent."))).toEqual([
       "agent.created",
       "agent.updated",
@@ -39,6 +39,7 @@ describe("auditActionSchema", () => {
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("project."))).toEqual([
       "project.created",
       "project.updated",
+      "project.triage_updated",
       "project.archived",
       "project.unarchived",
     ]);

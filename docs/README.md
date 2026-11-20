@@ -9,7 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-086 (the data model of bug reports and triage, WT-06 item A;
+- **Last finished:** WI-087 (the triage settings API, WT-06 item B:
+  `GET`/`PATCH /projects/{projectId}/triage`), on 2026-11-20, on the branch
+  `claude/wi-087-triage-settings-api`.
+- **Also finished:** WI-086 (the data model of bug reports and triage, WT-06 item A;
   migrations 0017 and 0018), on 2026-11-19, on the branch
   `claude/wi-086-triage-data-model`.
 - **Also finished:** WI-083 (every response the API sends is documented, audit of
@@ -34,8 +37,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** propose WT-06 item B (the triage settings API) as a work-item and work-spec,
-  and stop for the owner's approval. WT-11 (the MCP server) follows WT-06.
+- **Next:** propose WT-06 item C (severity on tasks) as a work-item and work-spec, and
+  stop for the owner's approval. WT-11 (the MCP server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -217,6 +220,7 @@ right after WT-04 and is done.
 | [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
 | [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
 | [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Done        | [WS-086](work-specs/WS-086-triage-data-model.md)                | Done        |
+| [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                          | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
 
 ## Follow-ups
 

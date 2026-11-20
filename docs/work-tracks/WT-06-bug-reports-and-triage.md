@@ -203,16 +203,16 @@ outcome, assignedTeamId }` and the agent as actor, so the report is traceable ev
 
 Letters until each item starts; numbers from WI-086 then, each with its work-spec.
 
-| Item                                                  | Title                                                                                                                           | Status   | Depends on |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
-| [WI-086](../work-items/WI-086-triage-data-model.md) A | Data model: bug fields on `tasks`, `projects.triage_team_id`, `routing_rules`, append-only `bug_reports`, `task_links`          | Done     | WT-05      |
-| B                                                     | The triage settings API (`GET`/`PUT /projects/{projectId}/triage`), audited; `team_in_use` covers triage                        | Approved | A          |
-| C                                                     | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Approved | A          |
-| D                                                     | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Approved | A, B, C    |
-| E                                                     | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Approved | D          |
-| F                                                     | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Approved | C, E       |
-| G                                                     | The project's "Triage" settings section                                                                                         | Approved | B          |
-| H                                                     | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Approved | D, E, F, G |
+| Item                                                    | Title                                                                                                                           | Status   | Depends on |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
+| [WI-086](../work-items/WI-086-triage-data-model.md) A   | Data model: bug fields on `tasks`, `projects.triage_team_id`, `routing_rules`, append-only `bug_reports`, `task_links`          | Done     | WT-05      |
+| [WI-087](../work-items/WI-087-triage-settings-api.md) B | The triage settings API (`GET`/`PUT /projects/{projectId}/triage`), audited; `team_in_use` covers triage                        | Done     | A          |
+| C                                                       | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Approved | A          |
+| D                                                       | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Approved | A, B, C    |
+| E                                                       | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Approved | D          |
+| F                                                       | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Approved | C, E       |
+| G                                                       | The project's "Triage" settings section                                                                                         | Approved | B          |
+| H                                                       | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Approved | D, E, F, G |
 
 ## Exit criteria
 

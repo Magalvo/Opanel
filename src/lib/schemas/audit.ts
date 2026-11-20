@@ -25,6 +25,7 @@ export const AUDIT_ACTIONS = [
   "team.member_removed",
   "project.created",
   "project.updated",
+  "project.triage_updated",
   "project.archived",
   "project.unarchived",
   "column.created",

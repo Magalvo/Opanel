@@ -373,6 +373,22 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("describes the triage settings of a project (WS-087)", () => {
+    const { paths } = parsedDocument();
+    const triage = paths["/api/v1/projects/{projectId}/triage"];
+
+    expect(triage?.get?.responses["200"]?.content?.["application/json"]?.schema.$ref).toBe(
+      "#/components/schemas/TriageSettings",
+    );
+    expect(
+      triage?.patch?.responses["409"]?.content?.["application/problem+json"]?.schema.anyOf,
+    ).toEqual([
+      { $ref: "#/components/schemas/TriageSettingsVersionConflict" },
+      { $ref: "#/components/schemas/Problem" },
+    ]);
+    expect(triage?.patch?.responses["400"]).toBeDefined();
+  });
+
   it("accepts both a version conflict and a project_archived body as the task PATCH's 409 (WS-083)", () => {
     const base = {
       type: "about:blank",
