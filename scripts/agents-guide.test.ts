@@ -8,6 +8,11 @@ import { describe, expect, it } from "vitest";
 
 import { contracts } from "@/lib/openapi/contracts";
 import { buildOpenApiDocument } from "@/lib/openapi/document";
+import {
+  BUG_REPORT_OUTCOMES,
+  ORIGIN_LAYERS,
+  submitBugReportRequestSchema,
+} from "@/lib/schemas/bug-reports";
 import { AGENT_SCOPES } from "@/lib/schemas/permissions";
 import { PROBLEM_CODES } from "@/lib/schemas/problem";
 
@@ -31,6 +36,7 @@ const SECTIONS = [
   "Errors and limits",
   "Lists",
   "Live updates",
+  "Filing bug reports",
   "Rotating and revoking",
   "The contract",
   "What comes next",
@@ -108,6 +114,35 @@ describe("docs/agents.md (WS-078)", () => {
       /^[a-z]+:[a-z_]+$/.test(span),
     );
     expect(new Set(scopes)).toEqual(new Set(AGENT_SCOPES));
+  });
+
+  it("lists exactly the origin layers in its bug report section, each in a table row (WS-094)", () => {
+    const filing = section(guide(), "Filing bug reports");
+    const layers = codeSpans(filing).filter((span) =>
+      (ORIGIN_LAYERS as readonly string[]).includes(span),
+    );
+    expect(new Set(layers)).toEqual(new Set(ORIGIN_LAYERS));
+    for (const layer of ORIGIN_LAYERS) {
+      expect(filing).toMatch(new RegExp(`^\| \`${layer}\` +\|`, "m"));
+    }
+  });
+
+  it("names both outcomes of a bug report (WS-094)", () => {
+    const spans = codeSpans(section(guide(), "Filing bug reports"));
+    for (const outcome of BUG_REPORT_OUTCOMES) {
+      expect(spans).toContain(outcome);
+    }
+  });
+
+  it("has an example body the bug report endpoint accepts (WS-094)", () => {
+    const example = /^```json\r?\n([\s\S]*?)^```/m.exec(section(guide(), "Filing bug reports"));
+    expect(example).not.toBeNull();
+    const body: unknown = JSON.parse(example?.[1] ?? "");
+    expect(submitBugReportRequestSchema.safeParse(body).success).toBe(true);
+  });
+
+  it("promises nothing as not yet done (WS-094)", () => {
+    expect(guide()).not.toMatch(/not yet/i);
   });
 
   it("has no broken link or missing file", () => {
