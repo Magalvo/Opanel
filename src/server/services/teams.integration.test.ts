@@ -228,6 +228,31 @@ describe("deleteTeam", () => {
   });
 });
 
+describe("deleteTeam and triage (WS-086)", () => {
+  it.each([
+    ["the triage team of a project", "triage"],
+    ["named by a routing rule", "rule"],
+  ])("refuses to delete a team that is %s", async (_, use) => {
+    const { actor } = await manager();
+    const team = await createTeam(actor, { name: "Backend" });
+    const [project] = await getDb().$client<{ id: string }[]>`
+      insert into projects (key, name) values ('TRI', 'Triage') returning id`;
+    if (use === "triage") {
+      await getDb().$client`update projects set triage_team_id = ${team.id}
+        where id = ${project?.id ?? ""}`;
+    } else {
+      await getDb().$client`insert into routing_rules (project_id, origin_layer, team_id)
+        values (${project?.id ?? ""}, 'backend', ${team.id})`;
+    }
+
+    const error = await failure(deleteTeam(actor, team.id));
+
+    expect(error.status).toBe(409);
+    expect(error.code).toBe("team_in_use");
+    expect(await getDb().select().from(teams)).toHaveLength(1);
+  });
+});
+
 describe("reading teams", () => {
   it("lists teams by name with member counts, in pages that join up", async () => {
     const { actor } = await manager();

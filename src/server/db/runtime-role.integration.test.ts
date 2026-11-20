@@ -120,6 +120,7 @@ describe("every table carries the runtime role's rights (WS-063 section 2)", () 
     expect(wrong).toEqual([]);
     expect(rows.filter((row) => row.appendOnly).map((row) => row.table)).toEqual([
       "audit_log",
+      "bug_reports",
       "comments",
       "task_events",
     ]);
