@@ -348,7 +348,7 @@ describe("ProjectSettings: deleted tasks", () => {
   it("lists deleted tasks with key, title and time, and restores one", async () => {
     on(
       `POST /api/v1/tasks/${deleted.id}/restore`,
-      json({ ...deleted, description: "", deletedAt: null }),
+      json({ ...deleted, description: "", links: [], deletedAt: null }),
     );
     const user = await renderSettings();
     const tasks = section("Deleted tasks");

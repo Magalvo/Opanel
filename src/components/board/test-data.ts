@@ -63,7 +63,7 @@ export function task(
 
 /** The full task the API answers for a summary, with a description. */
 export function full(summary: TaskSummary, extra: Partial<Task> = {}): Task {
-  return { ...summary, description: "", ...extra };
+  return { ...summary, description: "", links: [], ...extra };
 }
 
 export const PROJECT = "GET /api/v1/projects/OPA";

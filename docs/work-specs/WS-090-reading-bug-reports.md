@@ -1,6 +1,7 @@
 # WS-090 — Reading the reports behind a task, and its regression links
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 5 as recommended)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 5 as
+  recommended)
 - Work-item: [WI-090](../work-items/WI-090-reading-bug-reports.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5 and 6;
   [0003](../canonical/0003-task-management.md) section 7 (links);
@@ -182,3 +183,46 @@ Risks:
   limits. Real reports are far smaller; item F asks for the default 10.
 - **Every `Task` answer gains one query** (`loadLinks`), on the primary key index of
   `task_links` and on `task_links_to_task_idx`. Lists are unaffected.
+
+## Deviations from the approved spec
+
+1. **The read side has its own schema file**, `src/lib/schemas/task-bug-reports.ts`, not
+   `bug-reports.ts`. `tasks.ts` imports `bug-reports.ts` (severity, link types), and the
+   contract needs `taskParamsSchema` from `tasks.ts`; one file for both would import in a
+   circle.
+2. **`createTask` answers `links: []` without a query**: a task just created has no links.
+   Every other `Task` answer goes through `withLinks`, which calls `loadLinks`.
+3. **`loadLinks` is not exported**, so the coverage test has no entry for it.
+4. **Two UI fixtures** gain `links: []`: the board's `full()` and the restore answer in
+   `project-settings.test.tsx`, which the full run caught (the UI parses a `Task` strictly).
+
+## Implementation record
+
+- Red:
+  - the schema tests failed to import `./task-bug-reports`, and `taskSchema` refused a
+    task with `links`;
+  - the six service tests failed (`listBugReports is not a function`, no `links`);
+  - the route test failed to import `./route`;
+  - the routes test and the committed-document test failed once the contract was
+    registered.
+- The OpenAPI case of test 9 passed when first run: the contract was registered with the
+  schemas, before the case was written. It checks `BugReportPage`, the maximum of 25 and
+  `Task.links`.
+- Green:
+  - schemas: 3 cases plus the `links` checks in `tasks.test.ts`;
+  - `listBugReports`: 3 cases, 12 reports sharing one time read in pages of 5;
+  - links: 3 cases;
+  - route: 1 case;
+  - the coverage test 92 of 92.
+- `pnpm openapi:generate` adds the operation, `BugReport`, `BugReportPage`, `TaskLink` and
+  `Task.links`; `AccountRef` moves earlier in the file, unchanged.
+- Doc 0004 section 5 gains the sentence of section 2 (question 1).
+- The first full run also failed once in `comments.integration.test.ts` ("lists oldest
+  first"), which this item does not touch. It passed three times alone and in the second
+  full run. Its comments came back out of creation order under load, which points at the
+  clock of Docker's VM on Windows; recorded here, not changed.
+- Gate on 2026-11-20:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1709 of 1709;
+  - `pnpm test:e2e --retries=0` 88 of 88;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18 on port 5433.

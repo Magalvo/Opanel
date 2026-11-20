@@ -4,7 +4,7 @@ import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { accountRefSchema } from "./account-ref";
-import { severitySchema } from "./bug-reports";
+import { severitySchema, TASK_LINK_TYPES } from "./bug-reports";
 import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
@@ -66,13 +66,34 @@ const taskFields = {
     .meta({ description: "Set only on deleted tasks, which only the deleted list shows." }),
 };
 
+/** A link from or to another task (doc 0003 section 7, WS-090). WT-09 adds types. */
+export const taskLinkSchema = z
+  .strictObject({
+    type: z.enum(TASK_LINK_TYPES),
+    direction: z.enum(["outgoing", "incoming"]).meta({
+      description:
+        "`outgoing`: this task is a regression of the other; `incoming`: the other is a " +
+        "regression of this one.",
+    }),
+    task: z.strictObject({ id: z.uuid(), key: z.string(), title: z.string() }),
+  })
+  .meta({ id: "TaskLink" });
+
+export type TaskLink = z.infer<typeof taskLinkSchema>;
+
 /** A task in a list: everything but the description. */
 export const taskSummarySchema = z.strictObject(taskFields).meta({ id: "TaskSummary" });
 
 export type TaskSummary = z.infer<typeof taskSummarySchema>;
 
 export const taskSchema = z
-  .strictObject({ ...taskFields, description: z.string().meta({ description: "Markdown." }) })
+  .strictObject({
+    ...taskFields,
+    description: z.string().meta({ description: "Markdown." }),
+    links: z.array(taskLinkSchema).meta({
+      description: "Links to tasks that are not deleted. Lists of tasks leave them out.",
+    }),
+  })
   .meta({ id: "Task" });
 
 export type Task = z.infer<typeof taskSchema>;
