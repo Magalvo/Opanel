@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import { positionsBetween } from "@/lib/position";
+import { generateApiToken } from "@/server/auth/api-token";
 import { hashPassword } from "@/server/auth/password";
 import * as schema from "@/server/db/schema";
 
@@ -181,6 +182,28 @@ export async function seedAgentWork(input: {
       await sql`update projects set next_task_number = ${project.next + 1} where id = ${project.id}`;
       return `${input.projectKey}-${String(project.next)}`;
     });
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Creates an API token for an agent from `seedAgent`, with the row `createApiToken` writes
+ * (WS-072), and returns the token, so a test files bug reports through the real API
+ * (WS-091).
+ */
+export async function seedAgentToken(agentId: string): Promise<string> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    const db = drizzle({ client, schema });
+    const generated = generateApiToken();
+    await db.insert(schema.apiTokens).values({
+      accountId: agentId,
+      publicId: generated.publicId,
+      secretHash: generated.secretHash,
+      name: "E2E",
+    });
+    return generated.token;
   } finally {
     await client.end();
   }

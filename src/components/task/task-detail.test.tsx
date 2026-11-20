@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  bugReport,
   column,
   doing,
   done,
@@ -878,5 +879,352 @@ describe("TaskDetail: live (WS-049 section 3)", () => {
 
     expect(await screen.findByRole("heading", { level: 2, name: "After the gap" })).toBeVisible();
     expect(await within(comments()).findByText("Missed")).toBeVisible();
+  });
+});
+
+describe("TaskDetail: bugs (WS-091)", () => {
+  const AT = "2026-11-20T10:00:00.000Z";
+  const REPORTS = "GET /api/v1/tasks/OPA-1/bug-reports";
+  const bug: Task = {
+    ...base,
+    type: "bug",
+    severity: "high",
+    fingerprint: "fp-login",
+    occurrences: 3,
+    lastReportedAt: AT,
+  };
+
+  function reports() {
+    return screen.getByRole("region", { name: "Reports" });
+  }
+
+  function send(type: ProjectEvent["type"], version: number) {
+    act(() => {
+      FakeSource.latest().send(type, {
+        id: crypto.randomUUID(),
+        type,
+        projectId: opa.id,
+        entity: "task",
+        entityId: base.id,
+        version,
+        actorAccountId: ada.id,
+        at: AT,
+      });
+    });
+  }
+
+  beforeEach(() => {
+    on(REPORTS, page([bugReport(3, base.id), bugReport(2, base.id), bugReport(1, base.id)]));
+  });
+
+  it("shows a bug's severity read-only", async () => {
+    await renderTask({ current: bug, canWriteTasks: false });
+    expect(within(details()).getByText("Severity").nextElementSibling).toHaveTextContent("High");
+    expect(within(details()).queryByLabelText("Severity")).toBeNull();
+  });
+
+  it("says None for a bug without severity", async () => {
+    await renderTask({ current: { ...bug, severity: null }, canWriteTasks: false });
+    expect(within(details()).getByText("Severity").nextElementSibling).toHaveTextContent("None");
+  });
+
+  it("shows no severity for a task that is not a bug", async () => {
+    await renderTask({ canWriteTasks: false });
+    expect(within(details()).queryByText("Severity")).toBeNull();
+  });
+
+  it("edits the severity of a bug, sending only it with the version", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...bug, severity: "critical", version: 4 }));
+    const user = await renderTask({ current: bug });
+    const select = within(details()).getByLabelText("Severity");
+    expect(select).toHaveValue("high");
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["No severity", "Low", "Medium", "High", "Critical"]);
+
+    await user.selectOptions(select, "Critical");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ severity: "critical", version: 3 });
+    expect(status()).toHaveTextContent("Saved.");
+  });
+
+  it("clears the severity with null", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...bug, severity: null, version: 4 }));
+    const user = await renderTask({ current: bug });
+
+    await user.selectOptions(within(details()).getByLabelText("Severity"), "No severity");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ severity: null, version: 3 });
+  });
+
+  it("shows the API's severity error under the select", async () => {
+    on(
+      "PATCH /api/v1/tasks/OPA-1",
+      problem(400, "invalid_request", [
+        { path: "severity", message: "Only a bug has a severity." },
+      ]),
+    );
+    const user = await renderTask({ current: bug });
+
+    await user.selectOptions(within(details()).getByLabelText("Severity"), "Low");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(within(details()).getByLabelText("Severity")).toHaveAccessibleDescription(
+      "Only a bug has a severity.",
+    );
+  });
+
+  it("offers severity once the type becomes Bug, and saves both in one PATCH", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...bug, severity: "medium", version: 4 }));
+    const user = await renderTask();
+    expect(within(details()).queryByLabelText("Severity")).toBeNull();
+
+    await user.selectOptions(within(details()).getByLabelText("Type"), "Bug");
+    expect(within(details()).getByLabelText("Severity")).toHaveValue("");
+    await user.selectOptions(within(details()).getByLabelText("Severity"), "Medium");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({
+      type: "bug",
+      severity: "medium",
+      version: 3,
+    });
+  });
+
+  it("hides severity when a bug becomes a task, and sends no severity", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...bug, type: "task", severity: null, version: 4 }));
+    const user = await renderTask({ current: bug });
+
+    await user.selectOptions(within(details()).getByLabelText("Severity"), "Low");
+    await user.selectOptions(within(details()).getByLabelText("Type"), "Task");
+    expect(within(details()).queryByLabelText("Severity")).toBeNull();
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ type: "task", version: 3 });
+  });
+
+  it("says how often and when the task was reported", async () => {
+    await renderTask({ current: bug, canWriteTasks: false });
+    expect(
+      screen.getByText(`Reported 3 times, last on ${new Date(AT).toLocaleString()}`),
+    ).toBeVisible();
+  });
+
+  it("says once for a single report", async () => {
+    await renderTask({ current: { ...bug, occurrences: 1 }, canWriteTasks: false });
+    expect(screen.getByText(`Reported once, on ${new Date(AT).toLocaleString()}`)).toBeVisible();
+  });
+
+  it("shows no reports, and asks for none, for a task never reported", async () => {
+    await renderTask({ current: { ...bug, occurrences: 0, lastReportedAt: null } });
+
+    expect(screen.queryByText(/^Reported/)).toBeNull();
+    expect(screen.queryByRole("region", { name: "Reports" })).toBeNull();
+    expect(calls("GET").filter(([url]) => url.includes("/bug-reports"))).toEqual([]);
+  });
+
+  it("links to the task it is a regression of and the ones that regressed it", async () => {
+    await renderTask({
+      current: {
+        ...bug,
+        links: [
+          {
+            type: "regression_of",
+            direction: "outgoing",
+            task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000007", key: "OPA-7", title: "Old login" },
+          },
+          {
+            type: "regression_of",
+            direction: "incoming",
+            task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000009", key: "OPA-9", title: "New login" },
+          },
+        ],
+      },
+      canWriteTasks: false,
+    });
+
+    const links = screen.getByRole("region", { name: "Links" });
+    expect(within(links).getByText("Regression of")).toBeVisible();
+    expect(within(links).getByText("Regressed by")).toBeVisible();
+    expect(within(links).getByRole("link", { name: "OPA-7 Old login" })).toHaveAttribute(
+      "href",
+      "/projects/OPA/tasks/OPA-7",
+    );
+    expect(within(links).getByRole("link", { name: "OPA-9 New login" })).toHaveAttribute(
+      "href",
+      "/projects/OPA/tasks/OPA-9",
+    );
+  });
+
+  it("shows no Links section without links", async () => {
+    await renderTask({ current: bug });
+    expect(screen.queryByRole("region", { name: "Links" })).toBeNull();
+  });
+
+  it("lists the reports, newest first, with the agent and every field", async () => {
+    on(
+      REPORTS,
+      page([
+        bugReport(2, base.id, {
+          outcome: "deduplicated",
+          originLayer: "api",
+          confidence: 0.8,
+          severity: "critical",
+          runId: "run-42",
+          createdAt: AT,
+        }),
+        bugReport(1, base.id, {
+          outcome: "created",
+          confidence: null,
+          runId: null,
+          title: "The first report",
+        }),
+      ]),
+    );
+    await renderTask({ current: bug, canWriteTasks: false });
+
+    expect(
+      calls("GET")
+        .map(([url]) => url)
+        .filter((url) => url.includes("/bug-reports")),
+    ).toEqual(["/api/v1/tasks/OPA-1/bug-reports"]);
+    const [newest, oldest] = within(reports()).getAllByRole("article");
+    if (newest === undefined || oldest === undefined) throw new Error("two reports expected");
+    const first = within(newest);
+    expect(newest).toHaveTextContent(/^QA Bot\s*Agent/);
+    expect(newest).toHaveTextContent(new Date(AT).toLocaleString());
+    expect(newest).toHaveTextContent("Repeat");
+    for (const [term, value] of [
+      ["Layer", "API"],
+      ["Confidence", "80%"],
+      ["Severity", "Critical"],
+      ["Run", "run-42"],
+      ["Fingerprint", "fp-login"],
+    ] as const) {
+      expect(first.getByText(term).nextElementSibling).toHaveTextContent(value);
+    }
+    const second = within(oldest);
+    expect(oldest).toHaveTextContent("New bug");
+    expect(oldest).toHaveTextContent("The first report");
+    expect(second.getByText("Confidence").nextElementSibling).toHaveTextContent("Not given");
+    expect(second.getByText("Run").nextElementSibling).toHaveTextContent("None");
+  });
+
+  it("shows the evidence as plain text, collapsed until opened", async () => {
+    on(
+      REPORTS,
+      page([
+        bugReport(1, base.id, {
+          summary: "A **bold** <b>claim</b>",
+          evidence: {
+            stepsToReproduce: ["Open the login", "Press [Sign in](http://evil.example)"],
+            expected: "Signed in",
+            actual: "A 500",
+            url: "https://app.example/login",
+            http: { method: "POST", path: "/api/login", status: 500, responseSnippet: "{}" },
+            consoleErrors: ["TypeError: x is undefined"],
+            diagnosis: "The API fails",
+          },
+        }),
+      ]),
+    );
+    const user = await renderTask({ current: bug, canWriteTasks: false });
+
+    const evidence = within(reports()).getByText("Evidence");
+    expect(evidence.closest("details")).not.toHaveAttribute("open");
+    await user.click(evidence);
+    expect(evidence.closest("details")).toHaveAttribute("open");
+
+    const report = within(within(reports()).getByRole("article"));
+    expect(report.getByText("A **bold** <b>claim</b>")).toBeInTheDocument();
+    expect(within(reports()).queryByRole("link")).toBeNull();
+    expect(within(reports()).queryByText("bold", { selector: "strong" })).toBeNull();
+    const steps = report.getByRole("list");
+    expect(
+      within(steps)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Open the login", "Press [Sign in](http://evil.example)"]);
+    for (const text of [
+      "Signed in",
+      "A 500",
+      "https://app.example/login",
+      "POST /api/login → 500",
+      "{}",
+      "TypeError: x is undefined",
+      "The API fails",
+    ]) {
+      expect(report.getByText(text)).toBeInTheDocument();
+    }
+  });
+
+  it("loads more reports, each once", async () => {
+    on(REPORTS, page([bugReport(3, base.id), bugReport(2, base.id)], "r1"));
+    on(`${REPORTS}?cursor=r1`, page([bugReport(2, base.id), bugReport(1, base.id)]));
+    const user = await renderTask({ current: bug, canWriteTasks: false });
+
+    await user.click(within(reports()).getByRole("button", { name: "Load more" }));
+
+    await waitFor(() => {
+      expect(within(reports()).getAllByRole("article")).toHaveLength(3);
+    });
+    expect(within(reports()).queryByRole("button", { name: "Load more" })).toBeNull();
+  });
+
+  it("says when more reports cannot be loaded", async () => {
+    on(REPORTS, page([bugReport(3, base.id)], "r1"));
+    on(`${REPORTS}?cursor=r1`, problem(500, "internal_error"));
+    const user = await renderTask({ current: bug, canWriteTasks: false });
+
+    await user.click(within(reports()).getByRole("button", { name: "Load more" }));
+
+    expect(await within(reports()).findByRole("alert")).toHaveTextContent(
+      "Could not load more reports.",
+    );
+  });
+
+  it("shows a new report and count when the task is reported again", async () => {
+    await renderTask({ current: bug });
+    act(() => {
+      FakeSource.latest().open();
+    });
+    const later = "2026-11-20T11:00:00.000Z";
+    on(TASK, json({ ...bug, occurrences: 4, lastReportedAt: later, version: 4 }));
+    on(
+      REPORTS,
+      page([
+        bugReport(4, base.id, { title: "The newest" }),
+        bugReport(3, base.id),
+        bugReport(2, base.id),
+        bugReport(1, base.id),
+      ]),
+    );
+
+    send("task.updated", 4);
+
+    expect(
+      await screen.findByText(`Reported 4 times, last on ${new Date(later).toLocaleString()}`),
+    ).toBeVisible();
+    expect(await within(reports()).findByText("The newest")).toBeVisible();
+    expect(within(reports()).getAllByRole("article")).toHaveLength(4);
+  });
+
+  it("reads the reports again after a reconnect", async () => {
+    await renderTask({ current: bug });
+    act(() => {
+      FakeSource.latest().open();
+    });
+    on(REPORTS, page([bugReport(4, base.id, { title: "Missed" }), bugReport(3, base.id)]));
+
+    act(() => {
+      FakeSource.latest().drop();
+      FakeSource.latest().open();
+    });
+
+    expect(await within(reports()).findByText("Missed")).toBeVisible();
   });
 });

@@ -210,7 +210,7 @@ Letters until each item starts; numbers from WI-086 then, each with its work-spe
 | [WI-088](../work-items/WI-088-task-severity.md) C       | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Done     | A          |
 | [WI-089](../work-items/WI-089-bug-report-pipeline.md) D | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Done     | A, B, C    |
 | [WI-090](../work-items/WI-090-reading-bug-reports.md) E | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Done     | D          |
-| F                                                       | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Approved | C, E       |
+| [WI-091](../work-items/WI-091-bugs-in-the-ui.md) F      | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Done     | C, E       |
 | [WI-092](../work-items/WI-092-triage-section.md) G      | The project's "Triage" settings section                                                                                         | Done     | B          |
 | H                                                       | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Approved | D, E, F, G |
 

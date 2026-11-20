@@ -9,7 +9,10 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-092 (the project's "Triage" settings section, WT-06 item G: the
+- **Last finished:** WI-091 (bugs in the UI, WT-06 item F: severity and report count on
+  the card; severity edit, "Reported N times", regression links and the Reports section in
+  the task detail), on 2026-11-20, on the branch `claude/wi-091-bugs-in-the-ui-fd9694`.
+- **Also finished:** WI-092 (the project's "Triage" settings section, WT-06 item G: the
   triage team and the team of each layer, read-only without `teams:manage`, live), on
   2026-11-20, on the branch `claude/wi-092-triage-settings-section-86a430`.
 - **Also finished:** WI-090 (reading the reports behind a task, and its regression links,
@@ -52,8 +55,8 @@ Updated at the end of every work-item, so that a new session can start from here
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
 - **Next:** WT-06 item H (the end-to-end triage flow, the guide's "Filing bug reports",
-  the amendments to docs 0001 and 0003) once item F is done. WT-11 (the MCP server)
-  follows WT-06.
+  and the amendments to docs 0001 and 0003): items A to G are done. WT-11 (the MCP
+  server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -239,6 +242,7 @@ right after WT-04 and is done.
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
 | [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
 | [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links      | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
+| [WI-091](work-items/WI-091-bugs-in-the-ui.md)                   | Bugs in the UI                                                   | Done        | [WS-091](work-specs/WS-091-bugs-in-the-ui.md)                   | Done        |
 | [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                          | Done        | [WS-092](work-specs/WS-092-triage-section.md)                   | Done        |
 
 ## Follow-ups
