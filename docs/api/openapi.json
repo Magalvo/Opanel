@@ -3324,6 +3324,136 @@
         }
       }
     },
+    "/api/v1/tasks/{taskId}/bug-reports": {
+      "get": {
+        "summary": "List the bug reports behind a task",
+        "description": "Newest first, with keyset pagination: 10 by default, 25 at most, since a report can be large. Each report is as the agent sent it.\n\nRequires the `tasks:read` permission.",
+        "x-opanel-permission": "tasks:read",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                }
+              ],
+              "description": "The task's id or its key, such as `OPA-12`."
+            },
+            "required": true,
+            "description": "The task's id or its key, such as `OPA-12`."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of reports.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BugReportPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The path or the query string is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no such task.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectId}/columns": {
       "get": {
         "summary": "List a project's columns",
@@ -8678,6 +8808,144 @@
         ],
         "additionalProperties": false
       },
+      "BugReportPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BugReport"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "BugReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "agent": {
+            "description": "The agent that sent the report.",
+            "$ref": "#/components/schemas/AccountRef"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "created",
+              "deduplicated"
+            ]
+          },
+          "originLayer": {
+            "$ref": "#/components/schemas/OriginLayer"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "runId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BugReportEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "agent",
+          "outcome",
+          "originLayer",
+          "confidence",
+          "severity",
+          "fingerprint",
+          "runId",
+          "title",
+          "summary",
+          "evidence",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "AccountRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "`agent` for an AI agent account.",
+            "$ref": "#/components/schemas/AccountKind"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
       "ColumnList": {
         "type": "object",
         "properties": {
@@ -9022,29 +9290,6 @@
         ],
         "additionalProperties": false
       },
-      "AccountRef": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "name": {
-            "type": "string"
-          },
-          "kind": {
-            "description": "`agent` for an AI agent account.",
-            "$ref": "#/components/schemas/AccountKind"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "kind"
-        ],
-        "additionalProperties": false
-      },
       "Task": {
         "type": "object",
         "properties": {
@@ -9179,6 +9424,13 @@
           "description": {
             "type": "string",
             "description": "Markdown."
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskLink"
+            },
+            "description": "Links to tasks that are not deleted. Lists of tasks leave them out."
           }
         },
         "required": [
@@ -9201,7 +9453,55 @@
           "createdAt",
           "updatedAt",
           "deletedAt",
-          "description"
+          "description",
+          "links"
+        ],
+        "additionalProperties": false
+      },
+      "TaskLink": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "regression_of"
+            ]
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "outgoing",
+              "incoming"
+            ],
+            "description": "`outgoing`: this task is a regression of the other; `incoming`: the other is a regression of this one."
+          },
+          "task": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "key": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "key",
+              "title"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "type",
+          "direction",
+          "task"
         ],
         "additionalProperties": false
       },

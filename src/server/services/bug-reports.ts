@@ -1,14 +1,17 @@
 import { sql } from "drizzle-orm";
 
 import { positionBetween } from "@/lib/position";
-import type {
-  BugReportAnswer,
-  OriginLayer,
-  SubmitBugReportRequest,
+import {
+  type BugReportAnswer,
+  type OriginLayer,
+  type SubmitBugReportRequest,
+  submitBugReportRequestSchema,
 } from "@/lib/schemas/bug-reports";
-import { type Actor, requirePermission } from "@/server/auth/actor";
+import type { BugReport, BugReportListQuery, BugReportPage } from "@/lib/schemas/task-bug-reports";
+import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { notFound, projectArchived } from "@/server/http/errors";
+import { decodeCursor, encodeCursor } from "@/server/http/pagination";
 
 import { recordAudit } from "./audit";
 import { codeSpan, renderBugDescription } from "./bug-report-description";
@@ -16,6 +19,7 @@ import { addSystemComment } from "./comments";
 import { publishEvent } from "./events";
 import { claimTaskNumber, findProjectRef, lockWritableProject } from "./projects";
 import { recordTaskEvent } from "./task-events";
+import { findLiveTask } from "./tasks";
 
 // The bug report endpoint's service: the triage pipeline of canonical doc 0001 section 6
 // (WT-06 decisions 3 and 6 to 14, WS-089 section 3).
@@ -302,5 +306,89 @@ async function createBug(
     taskId: task.id,
     outcome: "created",
     teamId: team?.id ?? null,
+  };
+}
+
+const ISO_MS = sql`'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
+const ISO_US = sql`'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`;
+
+interface BugReportRow extends Record<string, unknown> {
+  id: string;
+  task_id: string;
+  outcome: BugReport["outcome"];
+  origin_layer: BugReport["originLayer"];
+  confidence: number | null;
+  severity: BugReport["severity"];
+  fingerprint: string;
+  run_id: string | null;
+  payload: unknown;
+  agent_id: string;
+  agent_name: string;
+  created_at: string;
+  cursor_time: string;
+}
+
+function toBugReport(row: BugReportRow): BugReport {
+  // The validated body as stored (WS-089); the schema only gets looser within v1.
+  const sent = submitBugReportRequestSchema.parse(row.payload);
+  return {
+    id: row.id,
+    taskId: row.task_id,
+    agent: { id: row.agent_id, name: row.agent_name, kind: "agent" },
+    outcome: row.outcome,
+    originLayer: row.origin_layer,
+    confidence: row.confidence,
+    severity: row.severity,
+    fingerprint: row.fingerprint,
+    runId: row.run_id,
+    title: sent.title,
+    summary: sent.summary ?? null,
+    evidence: sent.evidence ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * The reports behind a task that is not deleted, newest first, with keyset pagination on
+ * the creation time to the microsecond and the id (WS-090 section 3).
+ */
+export async function listBugReports(
+  actor: Actor,
+  taskRef: string,
+  query: BugReportListQuery,
+  db: Database = getDb(),
+): Promise<BugReportPage> {
+  requirePermission(actor, "tasks:read");
+  const task = await findLiveTask(db, taskRef);
+  if (!task) throw notFound("There is no such task.");
+  requireProjectAccess(actor, task.projectId);
+
+  const before =
+    query.cursor === undefined
+      ? sql``
+      : (() => {
+          const cursor = decodeCursor(query.cursor);
+          return sql`and (r.created_at, r.id) < (${cursor.createdAt}::timestamptz, ${cursor.id}::uuid)`;
+        })();
+  const rows = await db.execute<BugReportRow>(sql`
+    select r.id, r.task_id, r.outcome, r.origin_layer,
+      round(r.confidence::numeric, 6)::float8 as confidence,
+      r.severity, r.fingerprint, r.run_id, r.payload,
+      a.id as agent_id, a.name as agent_name,
+      to_char(r.created_at at time zone 'utc', ${ISO_MS}) as created_at,
+      to_char(r.created_at at time zone 'utc', ${ISO_US}) as cursor_time
+    from bug_reports r join accounts a on a.id = r.agent_account_id
+    where r.task_id = ${task.id} ${before}
+    order by r.created_at desc, r.id desc
+    limit ${query.limit + 1}`);
+
+  const items = rows.slice(0, query.limit);
+  const last = items.at(-1);
+  return {
+    items: items.map(toBugReport),
+    nextCursor:
+      rows.length > query.limit && last
+        ? encodeCursor({ createdAt: last.cursor_time, id: last.id })
+        : null,
   };
 }

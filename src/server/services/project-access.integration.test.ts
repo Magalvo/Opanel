@@ -18,7 +18,7 @@ import { getDb } from "@/server/db/client";
 import { ApiError } from "@/server/http/errors";
 
 import { loadAgentActor } from "./agents";
-import { fileBugReport } from "./bug-reports";
+import { fileBugReport, listBugReports } from "./bug-reports";
 import { createColumn, deleteColumn, listColumns, moveColumn, updateColumn } from "./columns";
 import { createComment, listComments } from "./comments";
 import { createEpic, getEpic, listEpics, updateEpic } from "./epics";
@@ -106,6 +106,7 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
       originLayer: "unknown",
       severity: "medium",
     }),
+  "bug-reports.listBugReports": (actor, f) => listBugReports(actor, f.task.key, { limit: 10 }),
   "triage.getTriage": (actor, f) => getTriage(actor, f.project.key),
   "triage.updateTriage": (actor, f) =>
     updateTriage(actor, f.project.id, { triageTeamId: null, version: f.project.version }),

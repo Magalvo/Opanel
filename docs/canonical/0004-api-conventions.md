@@ -171,6 +171,8 @@ GET /api/v1/projects?limit=50&cursor=eyJ...
 
 - `limit`: default 50, maximum 100. Out of range is a `400`. Built in WS-018
   (`paginationQuerySchema`, `pageSchema`, `encodeCursor`, `decodeCursor`).
+  A list whose items can be large (the bug reports of a task: 10 by default, 25 at most)
+  may set a lower default and maximum; its work-spec and its contract say so (WS-090).
 - `cursor` is an opaque string taken from a previous `nextCursor`. Cursors are keyset
   based, so a list stays correct while rows are inserted, which matters on boards that
   agents write to continuously. There are no page numbers and no total count.

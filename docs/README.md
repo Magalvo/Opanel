@@ -9,7 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-089 (the bug report endpoint and the triage pipeline, WT-06 item
+- **Last finished:** WI-090 (reading the reports behind a task, and its regression links,
+  WT-06 item E: `GET /tasks/{taskId}/bug-reports`, 10 by default and 25 at most, and
+  `links` on `Task`; amends doc 0004 section 5), on 2026-11-20, on the branch
+  `claude/wi-090-reading-bug-reports`.
+- **Also finished:** WI-089 (the bug report endpoint and the triage pipeline, WT-06 item
   D: `POST /projects/{projectId}/bug-reports`, dedupe under an advisory lock, routing,
   regression links, system comments), on 2026-11-20, on the branch
   `claude/wi-089-bug-report-pipeline`.
@@ -44,9 +48,10 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** propose WT-06 item E (reading the reports behind a task, and the regression
-  link in the task's `GET`) or item G (the "Triage" settings section) as a work-item and
-  work-spec, and stop for the owner's approval. WT-11 (the MCP server) follows WT-06.
+- **Next:** propose WT-06 item F (bugs in the UI: severity and count on the card;
+  severity, reports and links in the task detail) or item G (the "Triage" settings
+  section) as a work-item and work-spec, and stop for the owner's approval. WT-11 (the MCP
+  server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -231,6 +236,7 @@ right after WT-04 and is done.
 | [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                          | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
 | [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
+| [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links      | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
 
 ## Follow-ups
 

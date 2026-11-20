@@ -50,6 +50,7 @@ import {
   unarchiveProjectContract,
   updateProjectContract,
 } from "@/lib/schemas/projects";
+import { listBugReportsContract } from "@/lib/schemas/task-bug-reports";
 import {
   createTaskContract,
   deleteTaskContract,
@@ -105,6 +106,7 @@ export const contracts: readonly EndpointContract[] = [
   getTriageContract,
   updateTriageContract,
   submitBugReportContract,
+  listBugReportsContract,
   listColumnsContract,
   createColumnContract,
   updateColumnContract,
