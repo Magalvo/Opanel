@@ -161,6 +161,7 @@ right after WT-04 and is done.
 | [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | —                                                               |
 | [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | [WS-096](work-specs/WS-096-parallel-merge-flow.md)              |
 | [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | —                                                               |
+| [WI-098](work-items/WI-098-keyboard-move-subpixel.md)           | A keyboard move works while the board is still animating          | [WS-098](work-specs/WS-098-keyboard-move-subpixel.md)           |
 
 ## Follow-ups
 
