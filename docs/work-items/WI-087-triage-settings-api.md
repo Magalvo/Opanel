@@ -1,6 +1,6 @@
 # WI-087 — The triage settings API
 
-- Status: Proposed
+- Status: Approved (2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item B)
 - Depends on: WI-086 (done)
 - Work-spec: [WS-087](../work-specs/WS-087-triage-settings-api.md)

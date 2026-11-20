@@ -1,6 +1,6 @@
 # WS-087 — The triage settings API
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 4 as recommended: PATCH)
 - Work-item: [WI-087](../work-items/WI-087-triage-settings-api.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 6 (routing);
   [0003](../canonical/0003-task-management.md) section 3 (Managers edit routing rules);
