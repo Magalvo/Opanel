@@ -67,6 +67,12 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
+- **Proposed on 2026-11-20, awaiting the owner:** WI-095 to WI-097 (Draft), from the
+  development-flow review of 2026-11-20: each worktree gets its own test databases and
+  ports (D01); work-item numbers are reserved up front, "Where the project stands" stops
+  listing every finished item, and branches regenerate migrations and OpenAPI after
+  taking in `main`, checked in CI (D02 to D04); a faster Vitest suite (D05 to D07). The
+  lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Approved and done on 2026-11-19:** WI-079 to WI-083 with their work-specs, every
   question as proposed, the fixes for findings B01 to B05 of the audit of 2026-11-19
   (production services get only their own secrets; paged lists without duplicates; name
@@ -254,6 +260,9 @@ right after WT-04 and is done.
 | [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                           | Done        | [WS-092](work-specs/WS-092-triage-section.md)                   | Done        |
 | [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-093](work-specs/WS-093-posthog-addon.md)                    | Done        |
 | [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | Done        | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            | Done        |
+| [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | Draft       | —                                                               | —           |
+| [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | Draft       | —                                                               | —           |
+| [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | Draft       | —                                                               | —           |
 
 ## Follow-ups
 
@@ -293,7 +302,23 @@ Other follow-ups:
 
 - Let end-to-end runs choose their port and database (`E2E_PORT`, already
   `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100
-  is fixed and a second run tests the first one's server (found in WI-072).
+  is fixed and a second run tests the first one's server (found in WI-072). To be answered by
+  WI-095.
+
+- Lower findings of the development-flow review of 2026-11-20, each needing a work-item:
+  - D08: most service SQL is raw `sql` strings (185 calls against 64 query-builder
+    calls) with hand-written row types, so a renamed column passes `tsc` and fails only
+    in integration tests. Prefer the Drizzle builder, or `${table.column}`, in new code.
+  - D09: `AGENTS.md` section 3 says only services import the DB client, but
+    `src/server/auth/auth.ts`, `src/server/auth/authenticate.ts` and the health route do.
+    Write the exception down or move the code (hard rule 11).
+  - D10: shared helpers copied across files: `ISO_MS` in 9 services; `failure`,
+    `withCookie` and `cookieFor` in 8 to 18 integration test files.
+  - D11: deleting a column moves its tasks with two queries per task
+    (`columns.ts:338-350`); a token request makes five sequential queries, repeated on
+    every SSE heartbeat (`authenticate.ts:99-130`).
+  - D12: `pnpm lint` takes about 120 s locally (measure the type-aware rules with
+    `TIMING=1`, try `--cache`), and each end-to-end run does a full `next build`.
 
 - Rehearse a real upgrade, by `docs/operations.md`, from the first tagged release to the
   next, and add it to the image workflow (WS-068 question 4, WS-070). Until then WT-12's
