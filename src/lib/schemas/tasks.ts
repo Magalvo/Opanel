@@ -4,6 +4,7 @@ import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { accountRefSchema } from "./account-ref";
+import { severitySchema } from "./bug-reports";
 import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
@@ -47,6 +48,15 @@ const taskFields = {
   assignee: personSchema.nullable(),
   epic: epicRefSchema.nullable(),
   reporter: accountRefSchema,
+  // The bug fields (WT-06 decision 1, WS-088): only the triage pipeline writes the last three.
+  severity: severitySchema.nullable().meta({ description: "Bugs only." }),
+  fingerprint: z.string().nullable().meta({
+    description: "Set by the triage pipeline from the agent's report; read-only.",
+  }),
+  occurrences: z.int().min(0).meta({
+    description: "How many bug reports this task stands for; read-only.",
+  }),
+  lastReportedAt: z.iso.datetime().nullable().meta({ description: "Read-only." }),
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -85,6 +95,9 @@ export const taskListQuerySchema = paginationQuerySchema.extend({
 
 export type TaskListQuery = z.infer<typeof taskListQuerySchema>;
 
+/** The message of a severity sent for a task that is not a bug (WS-088). */
+export const ONLY_BUGS = "Only a bug has a severity.";
+
 export const createTaskRequestSchema = z
   .strictObject({
     title: taskTitleSchema,
@@ -97,6 +110,11 @@ export const createTaskRequestSchema = z
     assigneeTeamId: z.uuid().optional(),
     assigneeAccountId: z.uuid().optional(),
     epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
+    severity: severitySchema.optional().meta({ description: 'Only with `type: "bug"`.' }),
+  })
+  .refine((body) => body.severity === undefined || body.type === "bug", {
+    message: ONLY_BUGS,
+    path: ["severity"],
   })
   .meta({ id: "CreateTaskRequest" });
 
@@ -114,6 +132,9 @@ export const updateTaskRequestSchema = z
       .nullable()
       .optional()
       .meta({ description: "An epic of the project; `null` takes the task out of its epic." }),
+    severity: severitySchema.nullable().optional().meta({
+      description: "Bugs only; `null` clears it. A task that stops being a bug loses it.",
+    }),
     version: versionSchema,
   })
   .refine(
@@ -123,7 +144,8 @@ export const updateTaskRequestSchema = z
       body.type !== undefined ||
       body.assigneeTeamId !== undefined ||
       body.assigneeAccountId !== undefined ||
-      body.epicId !== undefined,
+      body.epicId !== undefined ||
+      body.severity !== undefined,
     { message: "Send at least one field to change." },
   )
   .meta({ id: "UpdateTaskRequest" });

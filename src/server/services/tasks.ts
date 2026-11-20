@@ -2,15 +2,17 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { positionBetween } from "@/lib/position";
 import type { AccountKind } from "@/lib/schemas/account-ref";
-import type {
-  CreateTaskRequest,
-  MoveTaskRequest,
-  Task,
-  TaskListQuery,
-  TaskPage,
-  TaskSummary,
-  TaskType,
-  UpdateTaskRequest,
+import type { Severity } from "@/lib/schemas/bug-reports";
+import {
+  type CreateTaskRequest,
+  type MoveTaskRequest,
+  ONLY_BUGS,
+  type Task,
+  type TaskListQuery,
+  type TaskPage,
+  type TaskSummary,
+  type TaskType,
+  type UpdateTaskRequest,
 } from "@/lib/schemas/tasks";
 import {
   type Actor,
@@ -47,6 +49,8 @@ const TASK_SELECT = sql`
     tm.name as team_name,
     a.name as assignee_name, a.disabled_at is null as assignee_active,
     r.id as reporter_id, r.name as reporter_name, r.kind as reporter_kind,
+    t.severity, t.fingerprint, t.occurrences,
+    to_char(t.last_reported_at at time zone 'utc', ${ISO_MS}) as last_reported_at,
     t.version, c.position as column_position, t.position,
     to_char(t.deleted_at at time zone 'utc', ${ISO_MS}) as deleted_at,
     to_char(t.created_at at time zone 'utc', ${ISO_MS}) as created_at,
@@ -78,6 +82,10 @@ interface TaskRow extends Record<string, unknown> {
   reporter_id: string;
   reporter_name: string;
   reporter_kind: AccountKind;
+  severity: Severity | null;
+  fingerprint: string | null;
+  occurrences: number;
+  last_reported_at: string | null;
   version: number;
   column_position: string;
   position: string;
@@ -109,6 +117,10 @@ function toSummary(row: TaskRow): TaskSummary {
           },
     epic: row.epic_id === null ? null : { id: row.epic_id, title: row.epic_title ?? "" },
     reporter: { id: row.reporter_id, name: row.reporter_name, kind: row.reporter_kind },
+    severity: row.severity,
+    fingerprint: row.fingerprint,
+    occurrences: row.occurrences,
+    lastReportedAt: row.last_reported_at,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -326,6 +338,7 @@ export async function createTask(
         assigneeTeamId: input.assigneeTeamId ?? null,
         assigneeAccountId: input.assigneeAccountId ?? null,
         epicId: input.epicId ?? null,
+        severity: input.severity ?? null,
         reporterAccountId: actor.accountId,
       })
       .returning({ id: tasks.id });
@@ -336,7 +349,13 @@ export async function createTask(
       taskId: row.id,
       actor,
       type: "created",
-      newValue: { key, type, title: input.title, columnId: column.id },
+      newValue: {
+        key,
+        type,
+        title: input.title,
+        columnId: column.id,
+        ...(input.severity === undefined ? {} : { severity: input.severity }),
+      },
     });
 
     const created = await findTask(tx, row.id);
@@ -351,6 +370,7 @@ const EDITABLE = [
   ["title", "title"],
   ["description", "description"],
   ["type", "type"],
+  ["severity", "severity"],
   ["assigneeTeamId", "assignee_team_id"],
   ["assigneeAccountId", "assignee_account_id"],
   ["epicId", "epic_id"],
@@ -372,10 +392,17 @@ export async function updateTask(
     if (!before) throw taskNotFound();
     if (before.version !== input.version) throw versionConflict(toTask(before));
 
+    const type = input.type ?? before.type;
+    // Only bugs have a severity; a task that stops being a bug loses it (WS-088).
+    if (type !== "bug" && input.severity !== undefined && input.severity !== null) {
+      throw fieldError("severity", ONLY_BUGS);
+    }
     const after = {
       title: input.title ?? before.title,
       description: input.description ?? before.description,
-      type: input.type ?? before.type,
+      type,
+      severity:
+        type !== "bug" ? null : input.severity === undefined ? before.severity : input.severity,
       assigneeTeamId:
         input.assigneeTeamId === undefined ? before.assignee_team_id : input.assigneeTeamId,
       assigneeAccountId:
@@ -400,6 +427,7 @@ export async function updateTask(
     await tx.execute(sql`
       update tasks set
         title = ${after.title}, description = ${after.description}, type = ${after.type},
+        severity = ${after.severity},
         assignee_team_id = ${after.assigneeTeamId}, assignee_account_id = ${after.assigneeAccountId},
         epic_id = ${after.epicId},
         version = version + 1, updated_at = now()

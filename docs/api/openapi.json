@@ -6955,6 +6955,10 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "severity": {
+            "description": "Only with `type: \"bug\"`.",
+            "$ref": "#/components/schemas/Severity"
           }
         },
         "required": [
@@ -6968,6 +6972,15 @@
           "task",
           "bug",
           "story"
+        ]
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
         ]
       },
       "UpdateTaskRequest": {
@@ -7018,6 +7031,17 @@
                 "type": "string",
                 "format": "uuid",
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "severity": {
+            "description": "Bugs only; `null` clears it. A task that stops being a bug loses it.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Severity"
               },
               {
                 "type": "null"
@@ -8517,6 +8541,43 @@
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
+          "severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Severity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Bugs only."
+          },
+          "fingerprint": {
+            "description": "Set by the triage pipeline from the agent's report; read-only.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "occurrences": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "How many bug reports this task stands for; read-only."
+          },
+          "lastReportedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Read-only."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -8558,6 +8619,10 @@
           "assignee",
           "epic",
           "reporter",
+          "severity",
+          "fingerprint",
+          "occurrences",
+          "lastReportedAt",
           "version",
           "createdAt",
           "updatedAt",
@@ -8690,6 +8755,43 @@
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
+          "severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Severity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Bugs only."
+          },
+          "fingerprint": {
+            "description": "Set by the triage pipeline from the agent's report; read-only.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "occurrences": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "How many bug reports this task stands for; read-only."
+          },
+          "lastReportedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Read-only."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -8735,6 +8837,10 @@
           "assignee",
           "epic",
           "reporter",
+          "severity",
+          "fingerprint",
+          "occurrences",
+          "lastReportedAt",
           "version",
           "createdAt",
           "updatedAt",

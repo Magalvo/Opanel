@@ -1,6 +1,6 @@
 # WS-088 — Severity on tasks
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 3 as recommended)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 3 as recommended)
 - Work-item: [WI-088](../work-items/WI-088-task-severity.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 4 (severity, "set
   by the reporter") and 9 (history); [0004](../canonical/0004-api-conventions.md) sections
@@ -136,3 +136,31 @@ Risks:
 - **Fixtures and whole-object assertions.** The schemas are strict and some tests compare
   whole tasks; each needs the four fields. This is mechanical, and the typecheck finds
   every fixture that misses one.
+
+## Deviations from the approved spec
+
+1. **The service tests are in a new file**, `src/server/services/task-severity.integration.test.ts`,
+   rather than in `tasks.integration.test.ts`, which already has 400 lines. They are tests
+   4 to 8 as planned.
+2. **The message is one exported constant**, `ONLY_BUGS` in `src/lib/schemas/tasks.ts`,
+   shared by the create request's refine and by `updateTask`.
+3. **One fixture the typecheck could not find.** `src/lib/schemas/account-ref.test.ts`
+   builds a task as an untyped object, so the typecheck passed while the full run failed on
+   it, until it got the four fields. The risk above said the typecheck finds every fixture;
+   it finds every typed one.
+
+## Implementation record
+
+- Red: the three schema tests and the six service tests failed on the missing fields and
+  on the refused `severity`; the route test, run against the code without the change,
+  failed with a `ZodError` (the create answered `400`).
+- Green: the schemas (3 cases), the service (6 cases), the route (1 case), the OpenAPI
+  document (1 case); `pnpm openapi:generate` adds `Severity`, the four fields of `Task`
+  and `TaskSummary`, and `severity` in both requests, and nothing else.
+- Fixtures: `board/test-data.ts`, `board/moves.test.ts`, `project-settings.test.tsx` and
+  `account-ref.test.ts` gained the four fields.
+- Gate on 2026-11-20:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1673 of 1673;
+  - `pnpm test:e2e --retries=0` 88 of 88;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18 on port 5433.

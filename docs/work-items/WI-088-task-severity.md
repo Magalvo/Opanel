@@ -1,6 +1,6 @@
 # WI-088 — Severity on tasks
 
-- Status: Approved (2026-11-20)
+- Status: Done (2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item C)
 - Depends on: WI-086 (done)
 - Work-spec: [WS-088](../work-specs/WS-088-task-severity.md)
@@ -15,23 +15,23 @@ history. Only bugs have a severity: a task that stops being a bug loses it. The 
 
 ## Acceptance criteria
 
-- [ ] `Task` and `TaskSummary` (task `GET`, lists, create, edit, move, restore, the
+- [x] `Task` and `TaskSummary` (task `GET`, lists, create, edit, move, restore, the
       `current` of a version conflict) carry `severity` (`low | medium | high | critical`
       or `null`), `fingerprint` (string or `null`), `occurrences` (integer, 0 or more) and
       `lastReportedAt` (date-time or `null`); a task created as before answers `null`,
       `null`, `0`, `null`.
-- [ ] `POST /projects/{projectId}/tasks` accepts an optional `severity` when `type` is
+- [x] `POST /projects/{projectId}/tasks` accepts an optional `severity` when `type` is
       `bug`; `PATCH /tasks/{taskId}` accepts `severity`, and `null` clears it.
-- [ ] A severity on a task that is not, or will not be, a bug is a `400` naming
+- [x] A severity on a task that is not, or will not be, a bug is a `400` naming
       `severity`.
-- [ ] Changing a bug's type to `task` or `story` clears its severity in the same write;
+- [x] Changing a bug's type to `task` or `story` clears its severity in the same write;
       changing a task's type to `bug` leaves its severity `null`.
-- [ ] Every change of severity, including the one a type change makes, is a
+- [x] Every change of severity, including the one a type change makes, is a
       `field_changed` entry of the task history with the actor, old and new value; a
       creation with a severity records it in the `created` entry.
-- [ ] `fingerprint`, `occurrences` and `lastReportedAt` are refused in both request
+- [x] `fingerprint`, `occurrences` and `lastReportedAt` are refused in both request
       bodies (`400`, as any unknown field).
-- [ ] The OpenAPI document describes the new fields and the new request field; the full
+- [x] The OpenAPI document describes the new fields and the new request field; the full
       quality gate passes.
 
 ## Notes
