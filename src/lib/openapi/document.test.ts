@@ -245,6 +245,19 @@ describe("buildOpenApiDocument", () => {
     });
   });
 
+  it("describes POST /api/v1/projects/{projectId}/bug-reports with both answers (WS-089)", () => {
+    const { paths } = parsedDocument();
+    const operation = paths["/api/v1/projects/{projectId}/bug-reports"]?.post;
+    const json = (status: string) =>
+      operation?.responses[status]?.content?.["application/json"]?.schema.$ref;
+
+    expect(json("201")).toBe("#/components/schemas/BugReportCreated");
+    expect(json("200")).toBe("#/components/schemas/BugReportDeduplicated");
+    expect(Object.keys(operation?.responses ?? {})).toEqual(
+      expect.arrayContaining(["400", "401", "403", "404", "409", "413", "415", "429"]),
+    );
+  });
+
   it("gives tasks their bug fields, and takes severity on create and edit (WS-088)", () => {
     const { schemas } = parsedDocument().components;
     const severity = { anyOf: [{ $ref: "#/components/schemas/Severity" }, { type: "null" }] };

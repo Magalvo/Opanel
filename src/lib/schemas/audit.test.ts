@@ -15,7 +15,9 @@ describe("auditActionSchema", () => {
   });
 
   it("includes the actions of WT-02 and of WS-026, WS-028, WS-029, WS-033, WS-075 and WS-087", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(37);
+    expect(AUDIT_ACTIONS).toHaveLength(38);
+    // The triage pipeline's entry, one per bug report (WS-089).
+    expect(AUDIT_ACTIONS).toContain("bug_report.triaged");
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("agent."))).toEqual([
       "agent.created",
       "agent.updated",

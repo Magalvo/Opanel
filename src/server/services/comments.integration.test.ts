@@ -7,7 +7,8 @@ import { getDb } from "@/server/db/client";
 import { comments, taskEvents } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { createComment, listComments } from "./comments";
+import { addSystemComment, createComment, listComments } from "./comments";
+import { listenForEvents } from "./events-testing";
 import { archiveProject, createProject } from "./projects";
 import { createTask, deleteTask, getTask } from "./tasks";
 
@@ -251,5 +252,41 @@ describe("listComments", () => {
     await archiveProject(manager, "OPA");
 
     expect((await listComments(member, "OPA-1", { limit: 50 })).items).toHaveLength(1);
+  });
+});
+
+describe("addSystemComment (WS-089)", () => {
+  it("adds an authorless system comment, a commented entry by the actor, and comment.created", async () => {
+    const { member, memberAccount, task } = await setup();
+    const listener = await listenForEvents();
+
+    try {
+      await getDb().transaction(async (tx) => {
+        await addSystemComment(tx, member, task, "Reported again by QA Bot.");
+      });
+      await listener.settle();
+
+      const [comment] = await getDb().select().from(comments).where(eq(comments.taskId, task.id));
+      expect(comment).toMatchObject({
+        kind: "system",
+        authorAccountId: null,
+        body: "Reported again by QA Bot.",
+      });
+      expect((await eventsOf(task.id)).at(-1)).toMatchObject({
+        type: "commented",
+        actorAccountId: memberAccount.id,
+        newValue: { commentId: comment?.id },
+      });
+      expect(
+        listener
+          .events()
+          .filter((event) => event.projectId === task.projectId)
+          .map((event) => [event.type, event.entityId, event.actorAccountId]),
+      ).toEqual([["comment.created", comment?.id, memberAccount.id]]);
+      const listed = await listComments(member, task.key, { limit: 50 });
+      expect(listed.items[0]).toMatchObject({ kind: "system", author: null });
+    } finally {
+      await listener.close();
+    }
   });
 });
