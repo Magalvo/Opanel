@@ -24,7 +24,7 @@ describe("the /projects/KEY/settings page", () => {
 
       const page = await SettingsRoute();
 
-      expect(page.props).toEqual({ canRestoreTasks: true });
+      expect(page.props).toEqual({ canRestoreTasks: true, canManageTriage: true });
     },
   );
 
