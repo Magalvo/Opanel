@@ -111,6 +111,31 @@ describe("Board: showing", () => {
     expect(within(columnRegion("In progress")).getByRole("listitem")).toHaveTextContent("Story");
   });
 
+  it("shows a bug's severity as a named badge and its count above 1 (WS-091)", async () => {
+    on(
+      TASKS,
+      page([
+        task(1, todo.id, { type: "bug", severity: "high", occurrences: 3 }),
+        task(2, todo.id, { type: "bug", severity: "low", occurrences: 1 }),
+        task(3, todo.id, { type: "bug" }),
+      ]),
+    );
+    await renderBoard();
+
+    const [first, second, third] = within(columnRegion("To do")).getAllByRole("listitem");
+    for (const hidden of within(columnRegion("To do")).getAllByText("Severity:", {
+      exact: false,
+    })) {
+      expect(hidden).toHaveClass("sr-only");
+    }
+    expect(first).toHaveTextContent("Severity: High");
+    expect(first).toHaveTextContent("3 reports");
+    expect(second).toHaveTextContent("Severity: Low");
+    expect(second).not.toHaveTextContent("reports");
+    expect(third).not.toHaveTextContent("Severity");
+    expect(third).not.toHaveTextContent("reports");
+  });
+
   it("explains a failure to load, and retries", async () => {
     on(TASKS, problem(500, "internal_error"));
     on(PROJECT, json(opa));
@@ -292,6 +317,35 @@ describe("Board: live (WS-048 section 6)", () => {
   function projectReads(): number {
     return calls("GET").filter(([url]) => url === "/api/v1/projects/OPA").length;
   }
+
+  it("shows a bug's new count when it is reported again (WS-091)", async () => {
+    const bug = task(2, todo.id, { type: "bug", severity: "high", occurrences: 2 });
+    on(TASKS, page([t1, bug]));
+    await renderBoard();
+    expect(within(columnRegion("To do")).getAllByRole("listitem")[1]).toHaveTextContent(
+      "2 reports",
+    );
+    on(`GET /api/v1/tasks/${bug.id}`, json(full({ ...bug, occurrences: 3, version: 2 })));
+
+    act(() => {
+      FakeSource.latest().send("task.updated", {
+        id: crypto.randomUUID(),
+        type: "task.updated",
+        projectId: opa.id,
+        entity: "task",
+        entityId: bug.id,
+        version: 2,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-20T10:00:00.000Z",
+      });
+    });
+
+    await waitFor(() => {
+      expect(within(columnRegion("To do")).getAllByRole("listitem")[1]).toHaveTextContent(
+        "3 reports",
+      );
+    });
+  });
 
   it("turns read-only and says so when someone archives the project", async () => {
     await renderBoard();

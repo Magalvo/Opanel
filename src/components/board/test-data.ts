@@ -1,6 +1,7 @@
 // Test data shared by the board's tests (WS-037).
 import type { Column } from "@/lib/schemas/columns";
 import type { Project } from "@/lib/schemas/projects";
+import type { BugReport } from "@/lib/schemas/task-bug-reports";
 import type { Task, TaskSummary } from "@/lib/schemas/tasks";
 
 export const PROJECT_ID = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
@@ -76,4 +77,30 @@ export function json(body: unknown, status = 200) {
 
 export function page(items: unknown[], nextCursor: string | null = null) {
   return json({ items, nextCursor });
+}
+
+export const QA_BOT = {
+  id: "14141414-1414-4414-8414-141414141414",
+  name: "QA Bot",
+  kind: "agent",
+} as const;
+
+/** A report the API answers for a task (WS-090), numbered so each has its own id. */
+export function bugReport(n: number, taskId: string, extra: Partial<BugReport> = {}): BugReport {
+  return {
+    id: `dddddddd-dddd-4ddd-8ddd-${String(n).padStart(12, "0")}`,
+    taskId,
+    agent: QA_BOT,
+    outcome: "deduplicated",
+    originLayer: "frontend",
+    confidence: 0.8,
+    severity: "high",
+    fingerprint: "fp-login",
+    runId: `run-${String(n)}`,
+    title: `Report ${String(n)}`,
+    summary: null,
+    evidence: null,
+    createdAt: "2026-11-20T10:00:00.000Z",
+    ...extra,
+  };
 }
