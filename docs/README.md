@@ -48,10 +48,10 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** propose WT-06 item F (bugs in the UI: severity and count on the card;
-  severity, reports and links in the task detail) or item G (the "Triage" settings
-  section) as a work-item and work-spec, and stop for the owner's approval. WT-11 (the MCP
-  server) follows WT-06.
+- **Next:** the owner approves WS-091 (WT-06 item F, bugs in the UI: severity and count
+  on the card; severity, reports and links in the task detail; proposed on 2026-11-20),
+  then it is implemented. Item G (the "Triage" settings section) runs in parallel; item H
+  follows both. WT-11 (the MCP server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -237,6 +237,7 @@ right after WT-04 and is done.
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
 | [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
 | [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links      | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
+| [WI-091](work-items/WI-091-bugs-in-the-ui.md)                   | Bugs in the UI                                                   | Proposed    | [WS-091](work-specs/WS-091-bugs-in-the-ui.md)                   | Proposed    |
 
 ## Follow-ups
 
