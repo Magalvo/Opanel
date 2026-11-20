@@ -1,6 +1,7 @@
 # WS-NNN — Title
 
-- Status: Draft (must be `Approved` by the owner before any code is written)
+- Status: Draft (must be `Approved` by the owner before any code is written; the approval
+  is recorded here: `Approved (approved by the owner on YYYY-MM-DD, ...)`)
 - Work-item: WI-NNN
 - Canonical docs: links
 

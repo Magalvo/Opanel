@@ -39,13 +39,13 @@ and any LLM call.
 
 ## Work-items (outline)
 
-| Item | Title                                                                                                              | Status | Depends on |
-| ---- | ------------------------------------------------------------------------------------------------------------------ | ------ | ---------- |
-| A    | Package skeleton: workspace, SDK pinned, configuration, stdio start-up, `opanel_whoami`, tools chosen by `GET /me` | Draft  | WT-05      |
-| B    | Read tools: projects, board, teams, people, task with its comments                                                 | Draft  | A          |
-| C    | Write tools: comment, create, update and move a task; version conflicts as tool errors                             | Draft  | B          |
-| D    | `opanel_submit_bug_report`                                                                                         | Draft  | C, WT-06   |
-| E    | Operator guide (agent account, token, Claude Code configuration) and CI                                            | Draft  | C          |
+| Item | Title                                                                                                              | Depends on |
+| ---- | ------------------------------------------------------------------------------------------------------------------ | ---------- |
+| A    | Package skeleton: workspace, SDK pinned, configuration, stdio start-up, `opanel_whoami`, tools chosen by `GET /me` | WT-05      |
+| B    | Read tools: projects, board, teams, people, task with its comments                                                 | A          |
+| C    | Write tools: comment, create, update and move a task; version conflicts as tool errors                             | B          |
+| D    | `opanel_submit_bug_report`                                                                                         | C, WT-06   |
+| E    | Operator guide (agent account, token, Claude Code configuration) and CI                                            | C          |
 
 ## Exit criteria
 

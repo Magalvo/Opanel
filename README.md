@@ -85,6 +85,7 @@ change is accepted, and CI runs the same five on every pull request.
 | `pnpm test:watch`       | Runs Vitest in watch mode.                                           |
 | `pnpm test:e2e`         | **Gate.** Builds the app and runs the Playwright end-to-end tests.   |
 | `pnpm db:generate`      | Generates a migration from changes to the Drizzle schema.            |
+| `pnpm db:check`         | Checks the migrations for collisions (CI also checks the schema).    |
 | `pnpm db:migrate`       | Applies pending migrations to the database in `DATABASE_URL`.        |
 | `pnpm openapi:generate` | Regenerates [docs/api/openapi.json](docs/api/openapi.json) from Zod. |
 

@@ -14,13 +14,17 @@ approved by the project owner. The full description is in `AGENTS.md`, section 4
 1. **Read** `AGENTS.md`, the index in [docs/README.md](docs/README.md), and the canonical
    docs in [docs/canonical/](docs/canonical/) that relate to your change.
 2. **Find or propose a work-item**: one small, independently shippable task
-   ([template](docs/work-items/_TEMPLATE.md)). Do not widen its scope as you go.
+   ([template](docs/work-items/_TEMPLATE.md)). Do not widen its scope as you go. A new
+   work-item gets its number reserved by a commit on `main` before its branch starts
+   (`AGENTS.md` section 4). If you cannot push to `main`, propose the work-item in an issue
+   or a pull request, and the owner reserves its number.
 3. **Write the work-spec**: the files you will touch, any data model or API changes, and
    the tests you will write ([template](docs/work-specs/_TEMPLATE.md)). Mark it `Proposed`.
 4. **Wait for approval.** The owner marks the work-spec `Approved`.
 5. **Implement with TDD** (below).
-6. **Update the docs**: the statuses of the work-item and work-spec, the index, and any
-   canonical doc whose content your change affects.
+6. **Update the docs**: the `Status:` lines of the work-item and work-spec, and any
+   canonical doc whose content your change affects. A branch never edits the index,
+   `docs/README.md`: it changes only by index commits on `main` (`AGENTS.md` section 4).
 
 ## Test-driven development
 

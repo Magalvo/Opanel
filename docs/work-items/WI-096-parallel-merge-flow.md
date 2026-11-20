@@ -1,10 +1,10 @@
 # WI-096 — Parallel work-items merge without renumbering or index conflicts
 
-- Status: Draft
+- Status: Done (2026-11-20)
 - Work-track: none: a development-flow item from the review of 2026-11-20 (findings D02,
   D03 and D04)
 - Depends on: none
-- Work-spec: WS-096 (once written)
+- Work-spec: [WS-096](../work-specs/WS-096-parallel-merge-flow.md)
 
 ## Outcome
 
@@ -33,40 +33,37 @@ no application code changes.
 
 ## Acceptance criteria
 
-- [ ] `AGENTS.md` section 4 says how a number is reserved before a branch starts (see
+- [x] `AGENTS.md` section 4 says how a number is reserved before a branch starts (see
       question 1), and a number, once reserved, is never reused or renamed; the existing
       renumbered items keep their current numbers.
-- [ ] "Where the project stands" in `docs/README.md` holds only what a new session needs
-      to start: what is in progress (item and branch), what is next, and open owner
-      approvals; it no longer lists every finished item. The status of each item stays in
-      the work-items table, which remains the single record.
-- [ ] `AGENTS.md` section 4 (or section 8) says that after taking in `main` a branch
+- [x] Each doc's status lives only in its own `Status:` line. The index in
+      `docs/README.md` lists links and titles, no status, and a work-item branch never
+      edits it: index rows, follow-ups and "Where the project stands" change only by small
+      commits on `main` (owner decision 4).
+- [x] "Where the project stands" holds only what a new session needs to start: what is
+      next, and decisions waiting for the owner; it no longer lists finished items.
+- [x] A test fails when a doc has no index row or no valid `Status:` line, when a row
+      points at no doc, or when a number is used twice.
+- [x] `AGENTS.md` section 4 (or section 8) says that after taking in `main` a branch
       regenerates its migration (`pnpm db:generate` on a renumbered base) and
       `docs/api/openapi.json`, and runs the full quality gate again, before merging.
-- [ ] CI fails when the Drizzle schema needs a migration that is not committed (for
+- [x] CI fails when the Drizzle schema needs a migration that is not committed (for
       example `drizzle-kit check`, or `drizzle-kit generate` producing no new file), so a
       bad merge of the journal is caught in the pull request.
-- [ ] `AGENTS.md` stays under 300 lines, and its section 7 (definition of done) asks for
+- [x] `AGENTS.md` stays under 300 lines, and its section 7 (definition of done) asks for
       the shorter "Where the project stands", not for a new "Also finished" entry.
-- [ ] `pnpm format:check` passes (and the full quality gate, for the CI step).
+- [x] `pnpm format:check` passes (and the full quality gate, for the CI step).
 
 ## Notes
 
-Questions for the owner:
+Owner decisions of 2026-11-20 (WS-096 records them):
 
-1. **How to reserve a number.** Options:
-   - (a) A one-line commit to `main` that adds the item's row to the table with status
-     `Draft`, before the branch is created. Cheap, conflicts are one line, but needs
-     direct pushes to `main` or a tiny pull request.
-   - (b) Drafts use a slug (`WI-draft-<slug>`) and get their number when the pull request
-     merges. No reservation step, but every merge renames files again.
-   - (c) Ranges per session or per work-track (for example WT-13 uses 130–139). No
-     coordination, but numbers stop being in time order.
-     Proposed: (a).
-2. **Where the finished-items history goes.** Proposed: nowhere new. The table's statuses
-   and `git log` already hold it, and any new history file would be the next hotspot.
-3. **The CI schema check.** Strictly a quality-gate change; keep it here (proposed, it is
-   one CI step) or as its own item.
+1. Numbers are reserved by a one-line commit on `main` before the branch is created
+   (option a; the others were a number given at merge, and ranges per work-track).
+2. The finished-items history goes nowhere new: the docs and `git log` hold it.
+3. The CI schema check is part of this item.
+4. A doc's status lives only in its own `Status:` line, not in the index (asked while
+   drafting WS-096: Git treats edits to neighbouring table rows as a conflict).
 
 Found by the development-flow review of 2026-11-20 (D02: numbering, D03: the index, D04:
 generated files and the missing schema check). Files this item modifies include
