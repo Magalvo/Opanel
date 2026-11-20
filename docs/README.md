@@ -236,7 +236,7 @@ right after WT-04 and is done.
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
 | [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
 | [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links      | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
-| [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                          | Proposed    | [WS-092](work-specs/WS-092-triage-section.md)                   | Proposed    |
+| [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                          | Approved    | [WS-092](work-specs/WS-092-triage-section.md)                   | Approved    |
 
 ## Follow-ups
 

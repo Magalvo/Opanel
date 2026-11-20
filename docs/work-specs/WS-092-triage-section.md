@@ -1,6 +1,6 @@
 # WS-092 — The project's "Triage" settings section
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 5 as recommended)
 - Work-item: [WI-092](../work-items/WI-092-triage-section.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 6 (routing);
   [0003](../canonical/0003-task-management.md) section 3 (Managers edit routing rules);

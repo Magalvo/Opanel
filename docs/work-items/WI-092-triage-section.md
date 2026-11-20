@@ -1,6 +1,6 @@
 # WI-092 — The project's "Triage" settings section
 
-- Status: Proposed
+- Status: Approved (2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item G)
 - Depends on: WI-087 (done)
 - Work-spec: [WS-092](../work-specs/WS-092-triage-section.md)
