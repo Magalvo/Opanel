@@ -1,6 +1,6 @@
 # WS-087 — The triage settings API
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 4 as recommended: PATCH)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 4 as recommended: `PATCH`)
 - Work-item: [WI-087](../work-items/WI-087-triage-settings-api.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 6 (routing);
   [0003](../canonical/0003-task-management.md) section 3 (Managers edit routing rules);
@@ -158,8 +158,31 @@ For the owner:
 
 ## Deviations from the approved spec
 
-None yet.
+1. **`team_in_use` finds the projects by a query, not by the violated constraint's name.**
+   Section 5 said `deleteTeam` would read the constraint; after the failed delete it asks
+   which projects name the team in their triage team or rules, and uses the triage detail
+   when there is one. Same answers, without depending on how the driver reports the
+   constraint.
+2. **`publishProjectChanged` is exported from `projects.ts`** for the triage service, and
+   the access coverage test lists it as internal, like `events.publishEvent`.
+3. **The audit catalogue gains `project.triage_updated`**, and its test
+   (`audit.test.ts`), which pins every action, was extended to 37 actions.
+4. **The route test lives in `projects/[projectId]/triage/route.integration.test.ts`** and
+   covers test 8; the `project.changed` case of test 6 is in
+   `events.integration.test.ts`, where the event listener is set up.
 
 ## Implementation record
 
-Not started.
+- Red: the schema and service tests failed to import `./triage`; the `team_in_use` test,
+  run alone against the old `teams.ts`, failed with the tasks message
+  ("Tasks are assigned to this team, …").
+- Green: `updateTriageRequestSchema` (2 cases), `getTriage` and `updateTriage` (9 cases),
+  the route (2 cases), the event (1 case), the coverage test (86 of 86, with the two new
+  functions refusing another project with `403`), the OpenAPI case.
+- `pnpm openapi:generate`: two operations, `TriageSettings`,
+  `UpdateTriageRequest` and `TriageSettingsVersionConflict`; nothing else changes.
+- Gate on 2026-11-20:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1662 of 1662;
+  - `pnpm test:e2e --retries=0` 88 of 88;
+  - Linux, Node 22.23.5, pnpm 10, Compose PostgreSQL 18 on port 5432.

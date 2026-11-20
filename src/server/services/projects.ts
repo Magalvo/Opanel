@@ -290,7 +290,7 @@ export async function updateProject(
 }
 
 /** Announces a change to a project, with its version after the write (WS-045). */
-async function publishProjectChanged(
+export async function publishProjectChanged(
   executor: Executor,
   actor: Actor,
   project: { id: string; version: number },

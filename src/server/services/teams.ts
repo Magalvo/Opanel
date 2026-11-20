@@ -184,10 +184,26 @@ export async function deleteTeam(
   try {
     await deleteTeamRow(actor, teamId, db);
   } catch (error) {
-    // A task still refers to the team (WS-030).
-    if (isReferenceViolation(error)) throw teamInUse();
-    throw error;
+    if (!isReferenceViolation(error)) throw error;
+    // The triage of a project names the team (WS-087), or a task refers to it (WS-030).
+    const keys = await triageProjectKeys(db, teamId);
+    throw keys.length > 0
+      ? teamInUse(
+          `This team handles triage in ${keys.join(", ")}. Choose another team in their ` +
+            "triage settings first.",
+        )
+      : teamInUse();
   }
+}
+
+/** The keys of the projects whose triage team or routing rules name the team, in order. */
+async function triageProjectKeys(db: Database, teamId: string): Promise<string[]> {
+  const rows = await db.execute<{ key: string }>(sql`
+    select p.key from projects p
+    where p.triage_team_id = ${teamId}
+       or exists (select 1 from routing_rules r where r.project_id = p.id and r.team_id = ${teamId})
+    order by p.key`);
+  return rows.map((row) => row.key);
 }
 
 async function deleteTeamRow(actor: Actor, teamId: string, db: Database): Promise<void> {
