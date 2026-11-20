@@ -1,0 +1,21 @@
+{
+  "event": {
+    "event": "$error_tracking_issue_created",
+    "distinct_id": "0192f6b1-77aa-7c10-8d21-0e1f2a3b4c5d",
+    "properties": {
+      "name": "PaymentGatewayError",
+      "description": "Charge failed: gateway answered 502 after 3 attempts",
+      "status": "active",
+      "fingerprint": "1a2b3c4d5e6f708192a3b4c5d6e7f809",
+      "exception_timestamp": "2026-11-20T10:01:44.500Z",
+      "$exception_issue_id": "0192f6b1-77aa-7c10-8d21-0e1f2a3b4c5d",
+      "$exception_types": ["PaymentGatewayError"],
+      "$lib": "posthog-node"
+    }
+  },
+  "project": {
+    "id": 4211,
+    "name": "Shop",
+    "url": "https://eu.posthog.com/project/4211"
+  }
+}

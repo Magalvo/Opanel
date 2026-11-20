@@ -1,0 +1,19 @@
+{
+  "event": {
+    "event": "$error_tracking_issue_spiking",
+    "distinct_id": "0192f6a8-3c1d-7b2e-9f40-5a6b7c8d9e01",
+    "properties": {
+      "name": "TypeError",
+      "description": "Cannot read properties of undefined (reading 'total')",
+      "fingerprint": "8f3c1e2d4b5a69788796a5b4c3d2e1f0",
+      "exception_timestamp": "2026-11-20T16:05:00.000Z",
+      "current_bucket_value": 412,
+      "computed_baseline": 9
+    }
+  },
+  "project": {
+    "id": 4211,
+    "name": "Shop",
+    "url": "https://eu.posthog.com/project/4211"
+  }
+}
