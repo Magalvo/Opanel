@@ -54,7 +54,7 @@ A token can do exactly what its agent's scopes allow:
 | ---------------- | ------------------------------------------ |
 | `projects:read`  | See projects, teams and people             |
 | `tasks:read`     | Read tasks, epics and comments, and events |
-| `reports:write`  | Submit bug reports (WT-06, not yet)        |
+| `reports:write`  | Submit bug reports                         |
 | `comments:write` | Comment on tasks                           |
 | `tasks:write`    | Create and edit tasks                      |
 
@@ -138,6 +138,120 @@ changes. It needs `tasks:read`, and the project must be one of yours.
 - **How many.** At most 10 open streams per account and app process; the 11th is a
   `429 too_many_streams`.
 
+## Filing bug reports
+
+A QA agent that finds a bug sends a report, and Opanel turns it into a ticket on the
+project's board, assigned to the team that owns the layer at fault. The design is doc
+[0001](canonical/0001-ai-qa-agents-and-triage.md), sections 5 and 6.
+
+```bash
+curl -X POST -H "Authorization: Bearer $OPANEL_AGENT_TOKEN" \
+  -H "Content-Type: application/json" -d @report.json \
+  https://opanel.example.com/api/v1/projects/OPA/bug-reports
+```
+
+`POST /api/v1/projects/{projectId}/bug-reports` needs `reports:write`; `projectId` is the
+project's id or its key. Only agents hold that scope: a person files a bug by creating a
+task of type `bug`.
+
+### The body
+
+```json
+{
+  "title": "Checkout button returns 500",
+  "originLayer": "api",
+  "confidence": 0.8,
+  "severity": "high",
+  "fingerprint": "6f1c9a0e4b7d2c3f5a8e1b0d9c7f6a5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a",
+  "summary": "Placing an order fails with a server error.",
+  "evidence": {
+    "stepsToReproduce": ["Add an item to the cart", "Press Place order"],
+    "expected": "The order is placed",
+    "actual": "An error page",
+    "url": "https://app.example.com/checkout",
+    "http": { "method": "POST", "path": "/api/orders", "status": 500, "responseSnippet": "{}" },
+    "consoleErrors": ["TypeError: order is undefined"],
+    "diagnosis": "The API answers 500 to a valid request."
+  },
+  "runId": "nightly-2026-11-20"
+}
+```
+
+| Field         | Rules                                                                      |
+| ------------- | -------------------------------------------------------------------------- |
+| `title`       | Required, 1 to 200 characters; the task's title                            |
+| `fingerprint` | Required, 1 to 128 printable ASCII characters (see below)                  |
+| `originLayer` | `frontend`, `api`, `backend` or `unknown` (the default)                    |
+| `severity`    | `low`, `medium` (the default), `high` or `critical`                        |
+| `confidence`  | Optional, 0 to 1: how sure you are of `originLayer`                        |
+| `summary`     | Optional Markdown, up to 10 000 characters                                 |
+| `evidence`    | Optional; every field optional and bounded                                 |
+| `runId`       | Optional, up to 128 characters: the same value for every report of one run |
+
+The OpenAPI document has every limit (`SubmitBugReportRequest`). Unknown fields are
+refused. Opanel renders the summary and evidence into the task's description, each value
+in a code block, and keeps the report itself as you sent it.
+
+### The two outcomes
+
+- **`201`**, `outcome` `created`: a new bug task.
+  `{ "outcome": "created", "taskId": "…", "taskKey": "OPA-12", "assignedTeamId": "…" }`.
+  `assignedTeamId` is `null` when no team owns the layer: the bug is created unassigned,
+  and its first comment says so.
+- **`200`**, `outcome` `deduplicated`: an open bug with the same fingerprint exists, and
+  the report counts on it.
+  `{ "outcome": "deduplicated", "taskId": "…", "taskKey": "OPA-12", "occurrences": 3 }`.
+
+Either way the report is kept. Never retry a `2xx`. Other answers: `400` names the field;
+`403` when the project is not one of yours; `409 project_archived` for a read-only project.
+
+### Where a bug goes
+
+Choose the layer at fault:
+
+| Layer      | When                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| `frontend` | Rendering, client-side logic or UI state is wrong while API responses are correct                |
+| `api`      | The HTTP contract is violated: wrong status, schema, validation, auth handling                   |
+| `backend`  | The contract is honored but the outcome is wrong: data, business logic, jobs, 5xx from internals |
+| `unknown`  | You cannot tell                                                                                  |
+
+Each project's Managers choose a team for each layer and a triage team, in the project's
+Triage settings. `GET /api/v1/projects/{projectId}/triage` (`projects:read`) shows them.
+`unknown`, and a layer with no team, go to the triage team. A new bug goes to the top of
+the project's first column, with you as its reporter, so people see it first.
+
+### Fingerprints
+
+The fingerprint says which reports are the same bug. Compute it as a hash (for example
+SHA-256, in hex) of:
+
+- the layer;
+- the route or endpoint, normalised: `/orders/{id}`, not `/orders/42`;
+- the error signature: the error's type and message without its values.
+
+Never put timestamps, ids, run ids or random values in it: two runs that meet the same bug
+must send the same fingerprint.
+
+- **While the bug is open**, a report with its fingerprint counts on it: the task's
+  `occurrences` grows, and nothing else about it changes.
+- **Once it is closed** (in a column of the `done` category), the same fingerprint opens
+  a new bug, linked as a regression of the closed one.
+- **A deleted bug** is never matched: a report about it opens a new bug.
+
+A repeat adds a comment to the bug only when its last report is over an hour old or came
+with another `runId`, so an agent that runs every few minutes does not bury the
+discussion. Send one `runId` for every report of one run.
+
+### Reading reports
+
+`GET /api/v1/tasks/{taskId}/bug-reports` (`tasks:read`) lists the reports behind a task,
+newest first, 10 by default and 25 at most. The task's own `GET` has `severity`,
+`occurrences`, `lastReportedAt` and `links`, which name the bug it is a regression of.
+
+The optional PostHog add-on ([`addons/posthog/README.md`](../addons/posthog/README.md))
+files reports this way from PostHog's error-tracking alerts.
+
 ## Rotating and revoking
 
 - **Several tokens.** An agent may hold up to 10 usable tokens. To rotate, have a new one
@@ -159,7 +273,5 @@ changes. It needs `tasks:read`, and the project must be one of yours.
 
 ## What comes next
 
-- **Bug reports and triage (WT-06).** A QA agent will submit structured bug reports, and
-  Opanel will turn each into a ticket routed to the right team (doc 0001, section 5).
 - **An MCP server (WT-11).** AI assistants such as Claude Code will use Opanel through
   tools, with an agent token (doc [0005](canonical/0005-mcp-server.md)).

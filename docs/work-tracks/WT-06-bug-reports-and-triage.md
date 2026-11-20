@@ -1,7 +1,8 @@
 # WT-06 — Bug reports and automated triage
 
-- Status: Approved (by the owner on 2026-11-19: decisions 1 to 16 and questions 1 to 8 as
-  recommended). Items get numbers from WI-086 when each starts.
+- Status: Done (2026-11-20, items A to H: WI-086 to WI-092 and WI-094). Approved by the
+  owner on 2026-11-19: decisions 1 to 16 and questions 1 to 8 as recommended. Items got
+  numbers from WI-086 when each started; WI-093 went to WT-13.
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 5 and 6:
   the bug report contract and the triage pipeline; section 7: the data model sketch;
   amended by this track, see decisions 3, 6 and 9), [0003](../canonical/0003-task-management.md)
@@ -99,10 +100,10 @@ implements it.
 
 4. **`routing_rules(project_id, origin_layer, team_id)`**, primary key
    `(project_id, origin_layer)`, `origin_layer` in `frontend | api | backend` (`unknown`
-   always goes to the triage team). Read and replaced as one document:
-   `GET` and `PUT /api/v1/projects/{projectId}/triage` return and take
+   always goes to the triage team). Read and changed as one document (`PATCH`, WS-087; doc 0004 uses no `PUT` in v1):
+   `GET` and `PATCH /api/v1/projects/{projectId}/triage` return and take
    `{ triageTeamId, rules: { frontend, api, backend }, version }`, each a team id or
-   `null`. `PUT` needs `teams:manage`, checks `version` (the project's, which it bumps, so
+   `null`. `PATCH` needs `teams:manage`, checks `version` (the project's, which it bumps, so
    two Managers editing at once get `409 version_conflict`), answers `409
 project_archived` on an archived project, and is audited as `project.triage_updated`
    with the old and new team ids. `GET` needs `projects:read`.
@@ -203,44 +204,60 @@ outcome, assignedTeamId }` and the agent as actor, so the report is traceable ev
 
 Letters until each item starts; numbers from WI-086 then, each with its work-spec.
 
-| Item                                                    | Title                                                                                                                           | Status   | Depends on |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
-| [WI-086](../work-items/WI-086-triage-data-model.md) A   | Data model: bug fields on `tasks`, `projects.triage_team_id`, `routing_rules`, append-only `bug_reports`, `task_links`          | Done     | WT-05      |
-| [WI-087](../work-items/WI-087-triage-settings-api.md) B | The triage settings API (`GET`/`PUT /projects/{projectId}/triage`), audited; `team_in_use` covers triage                        | Done     | A          |
-| [WI-088](../work-items/WI-088-task-severity.md) C       | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Done     | A          |
-| [WI-089](../work-items/WI-089-bug-report-pipeline.md) D | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Done     | A, B, C    |
-| [WI-090](../work-items/WI-090-reading-bug-reports.md) E | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Done     | D          |
-| [WI-091](../work-items/WI-091-bugs-in-the-ui.md) F      | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Done     | C, E       |
-| [WI-092](../work-items/WI-092-triage-section.md) G      | The project's "Triage" settings section                                                                                         | Done     | B          |
-| H                                                       | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Approved | D, E, F, G |
+| Item                                                      | Title                                                                                                                           | Status | Depends on |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- |
+| [WI-086](../work-items/WI-086-triage-data-model.md) A     | Data model: bug fields on `tasks`, `projects.triage_team_id`, `routing_rules`, append-only `bug_reports`, `task_links`          | Done   | WT-05      |
+| [WI-087](../work-items/WI-087-triage-settings-api.md) B   | The triage settings API (`GET`/`PATCH /projects/{projectId}/triage`), audited; `team_in_use` covers triage                      | Done   | A          |
+| [WI-088](../work-items/WI-088-task-severity.md) C         | Severity on tasks: the task schema, `PATCH`, history, OpenAPI                                                                   | Done   | A          |
+| [WI-089](../work-items/WI-089-bug-report-pipeline.md) D   | The bug report endpoint and the triage pipeline: validation, lock and dedupe, routing, creation, regression link, events, audit | Done   | A, B, C    |
+| [WI-090](../work-items/WI-090-reading-bug-reports.md) E   | Reading reports (`GET /tasks/{taskId}/bug-reports`) and the regression link in the task's `GET`                                 | Done   | D          |
+| [WI-091](../work-items/WI-091-bugs-in-the-ui.md) F        | Bugs in the UI: severity and count on the card; severity, reports and regression link in the task detail                        | Done   | C, E       |
+| [WI-092](../work-items/WI-092-triage-section.md) G        | The project's "Triage" settings section                                                                                         | Done   | B          |
+| [WI-094](../work-items/WI-094-triage-flow-and-guide.md) H | End-to-end triage flow, the guide's "Filing bug reports", and the amendments to docs 0001 and 0003                              | Done   | D, E, F, G |
 
 ## Exit criteria
 
-- [ ] An agent with `reports:write` files a report; a `bug` task appears at the top of the
+Checked on 2026-11-20 by WI-094, each against the test that proves it.
+
+- [x] An agent with `reports:write` files a report; a `bug` task appears at the top of the
       project's first column of every open board, assigned to the team of the report's
       layer, with the evidence in its description and the agent as reporter.
-- [ ] A second report with the same fingerprint while the task is open answers
+      (`bug-reports.integration.test.ts` "creates a bug at the top of the first column…";
+      `tests/e2e/triage-flow.spec.ts`, two live boards.)
+- [x] A second report with the same fingerprint while the task is open answers
       `deduplicated`, counts on that task and creates nothing; ten such reports sent at
       once leave exactly one task with `occurrences` 10 (an integration test).
-- [ ] A report whose fingerprint matches only a closed bug creates a new bug with a
-      `regression of` link to it; a soft-deleted bug is not matched.
-- [ ] `unknown`, or a layer with no rule, goes to the triage team; with no triage team the
-      bug is created unassigned and its comment says why.
-- [ ] Managers and Admins set the triage team and the team of each layer from the
+      ("counts on the open bug…", "serialises ten identical reports…"; the E2E test's
+      repeat.)
+- [x] A report whose fingerprint matches only a closed bug creates a new bug with a
+      `regression of` link to it; a soft-deleted bug is not matched. ("links a new bug to
+      the most recently updated closed bug, and never to a deleted one"; the E2E test's
+      regression; `bugs.spec.ts`.)
+- [x] `unknown`, or a layer with no rule, goes to the triage team; with no triage team the
+      bug is created unassigned and its comment says why. ("routes unknown and a layer
+      without a rule to the triage team…"; the E2E test's `unknown` report.)
+- [x] Managers and Admins set the triage team and the team of each layer from the
       project's settings; the change is audited and a concurrent change is a
       `409 version_conflict`; a team in use cannot be deleted.
-- [ ] Every report is kept as sent, append-only for the runtime role; the reports behind a
-      task are listed in its detail.
-- [ ] A restricted agent cannot file into another project (`403`); a person cannot use the
+      (`triage.integration.test.ts` in services and in schema,
+      `project-settings.test.tsx`, `projects.spec.ts`.)
+- [x] Every report is kept as sent, append-only for the runtime role; the reports behind a
+      task are listed in its detail. (`runtime-role.integration.test.ts`,
+      "reads the reports behind a task newest first, each as sent", `bugs.spec.ts`, the
+      E2E test's detail.)
+- [x] A restricted agent cannot file into another project (`403`); a person cannot use the
       endpoint (`403`); an archived project answers `409 project_archived`; the coverage
-      test of `requireProjectAccess` includes the new services.
-- [ ] Report values cannot inject Markdown structure into the task description (unit
-      tests on hostile input).
-- [ ] `docs/agents.md` documents filing reports and its doc check passes; the OpenAPI
+      test of `requireProjectAccess` includes the new services. ("refuses people, agents
+      without reports:write or outside their projects…",
+      `project-access.integration.test.ts`; the E2E test's other project.)
+- [x] Report values cannot inject Markdown structure into the task description (unit
+      tests on hostile input). (`bug-report-description.test.ts`.)
+- [x] `docs/agents.md` documents filing reports and its doc check passes; the OpenAPI
       document describes the endpoint and its answers; docs 0001 and 0003 carry the
-      amendments.
-- [ ] The full quality gate passes; an end-to-end test files, repeats and triages a bug
-      through the API and sees it on a board.
+      amendments. (`scripts/agents-guide.test.ts`, `document.test.ts`; WI-094.)
+- [x] The full quality gate passes; an end-to-end test files, repeats and triages a bug
+      through the API and sees it on a board. (`tests/e2e/triage-flow.spec.ts`; WS-094's
+      implementation record.)
 
 ## Risks and open questions
 

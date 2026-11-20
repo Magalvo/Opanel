@@ -9,7 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-093 (the optional PostHog add-on, WT-13 item A: webhook bodies
+- **Last finished:** WI-094 (the triage flow end to end, the agents' guide's "Filing bug
+  reports", and the amendments to docs 0001 and 0003 that WT-06 promised, WT-06 item H),
+  on 2026-11-20, on the branch `claude/wi-093-triage-flow-and-guide-ace4f4`. WT-06 (bug
+  reports and automated triage) is done.
+- **Also finished:** WI-093 (the optional PostHog add-on, WT-13 item A: webhook bodies
   for PostHog error-tracking alerts in `addons/posthog/`, tested against the bug report
   contract, and an operator guide; nothing in the app changed), on 2026-11-20, on the
   branch `claude/wi-092-posthog-bridge` (drafted as WI-092, renumbered on merging `main`).
@@ -58,9 +62,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** WT-06 item H (the end-to-end triage flow, the guide's "Filing bug reports",
-  and the amendments to docs 0001 and 0003): items A to G are done. WT-11 (the MCP
-  server) follows WT-06.
+- **Next:** WT-11 (the MCP server, doc 0005): its first item proposed as a work-item and
+  work-spec, and the owner's approval. WT-07 to WT-10 follow, as planned below.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -139,7 +142,7 @@ Updated at the end of every work-item, so that a new session can start from here
 | [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved    |
 | [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done        |
 | [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Done        |
-| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Approved    |
+| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Done        |
 | [WT-13](work-tracks/WT-13-integrations.md)              | Integrations (optional add-ons)                         | In progress |
 
 Planned next, not yet drafted:
@@ -250,6 +253,7 @@ right after WT-04 and is done.
 | [WI-091](work-items/WI-091-bugs-in-the-ui.md)                   | Bugs in the UI                                                    | Done        | [WS-091](work-specs/WS-091-bugs-in-the-ui.md)                   | Done        |
 | [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                           | Done        | [WS-092](work-specs/WS-092-triage-section.md)                   | Done        |
 | [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-093](work-specs/WS-093-posthog-addon.md)                    | Done        |
+| [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | Done        | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            | Done        |
 
 ## Follow-ups
 
@@ -269,6 +273,11 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   request body, and log contents, access and retention are each a section of the guide.
 
 Other follow-ups:
+
+- **WT-10 places agent-filed bugs at the top of the backlog in sprint projects** (doc 0003
+  section 13, question 1; WT-06 decision 7). Today a new bug goes to the top of the first
+  column. WT-10's work-spec changes `placeNewBug` in `src/server/services/bug-reports.ts`,
+  the one function that decides it, and nothing else in the pipeline (WI-094).
 
 - Send one real PostHog error-tracking alert, with a body from `addons/posthog/bodies/`, to
   a local Opanel through a tunnel, and record the answer in WS-093 (the manual check of

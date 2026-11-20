@@ -3,6 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Amends: [0001](0001-ai-qa-agents-and-triage.md) (human roles, task links, see section 12)
+- Amended by: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) decision 9 (section 7: the `task_links` table and its first type; applied 2026-11-20 by WI-094)
 
 ## 1. Context
 
@@ -159,6 +160,12 @@ Rules:
 Links may cross projects. They are informational: a blocked task can still be moved.
 `regression of` is the link the triage pipeline creates when a bug reappears after its
 ticket was closed (doc 0001, section 6).
+
+WT-06 created the `task_links` table (`from_task_id`, `to_task_id`, `type`, `created_by`,
+`created_at`) with the one type `regression_of`, written only by the triage pipeline, with
+the agent as `created_by`. WT-09 adds the other types and linking by hand to the same
+table. A task's answer (`links`) lists its links in both directions and leaves out links to
+deleted tasks (WS-090).
 
 ## 8. Search and filters
 
