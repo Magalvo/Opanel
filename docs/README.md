@@ -40,9 +40,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** propose WT-06 item D (the bug report endpoint and the triage pipeline) as a
-  work-item and work-spec, and stop for the owner's approval. Item G (the "Triage" settings
-  section) needs only B and may come first instead. WT-11 (the MCP server) follows WT-06.
+- **Next:** the owner approves WS-089 (the bug report endpoint and the triage pipeline,
+  WT-06 item D; proposed on 2026-11-20 with questions 1 to 5), then WI-089 is implemented
+  on the branch `claude/wi-089-bug-report-pipeline`. WT-11 (the MCP server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -226,6 +226,7 @@ right after WT-04 and is done.
 | [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Done        | [WS-086](work-specs/WS-086-triage-data-model.md)                | Done        |
 | [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                          | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
+| [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Proposed    | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Proposed    |
 
 ## Follow-ups
 
