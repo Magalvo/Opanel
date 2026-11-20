@@ -3,7 +3,7 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
-- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) decisions 1, 7 and 11 (scopes, project restrictions, no deletion; applied 2026-11-19 by WI-071; the order of refusals for a restricted agent, 2026-11-19 by WI-073)
+- Amended by: [0003](0003-task-management.md), section 12 (applied 2026-11-12); [WT-03](../work-tracks/WT-03-board-core.md) decision 17 (`projects:read` lists people, 2026-11-13); [WT-05](../work-tracks/WT-05-agent-accounts-and-tokens.md) decisions 1, 7 and 11 (scopes, project restrictions, no deletion; applied 2026-11-19 by WI-071; the order of refusals for a restricted agent, 2026-11-19 by WI-073); [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) decisions 3, 6, 9, 10 and 13 (the answers, dedupe, routing with no team, regression links, repeat comments; applied 2026-11-20 by WI-094)
 
 ## 1. Context
 
@@ -141,11 +141,22 @@ every service function takes an `Actor`. There is one permission system, not two
 }
 ```
 
+`originLayer` defaults to `unknown` and `severity` to `medium`; only `title` and
+`fingerprint` are required. Every field is bounded by the request schema
+(`SubmitBugReportRequest` in the OpenAPI document, WS-089 section 1), and unknown fields
+are refused.
+
 Responses:
 
-- `201` `{ "outcome": "created", "taskId", "assignedTeamId" }`
-- `200` `{ "outcome": "deduplicated", "taskId", "occurrences" }`
-- `400` invalid payload, `401`/`403` auth, `404` unknown project, `429` rate limited.
+- `201` `{ "outcome": "created", "taskId", "taskKey", "assignedTeamId" }`;
+  `assignedTeamId` is `null` when no team owns the layer (section 6).
+- `200` `{ "outcome": "deduplicated", "taskId", "taskKey", "occurrences" }`.
+- `400` invalid payload, `401`/`403` auth, `404` unknown project, `409 project_archived`,
+  `413` body over 512 KiB, `415` not JSON, `429` rate limited.
+
+`taskKey` (for example `OPA-12`) was added by WT-06 decision 13, for agents and people
+reading logs. Only agents hold `reports:write`, so a person gets `403`; a person files a
+bug by creating a task of type `bug`.
 
 Evidence is text/JSON only in v1, size-capped. File attachments are out of v1.
 
@@ -164,21 +175,46 @@ The layer set is fixed in v1. Teams are configurable; layers are not.
 
 In one database transaction:
 
-1. **Persist** the raw report in `bug_reports` (always, even when deduplicated).
-2. **Dedupe**: look for a task in the same project with the same fingerprint that is not
-   in a column of the `done` category (doc 0003, section 5).
-   - Found: link the report, increment the task's `occurrences`, update
-     `last_reported_at`, add a system comment. No new ticket, no reassignment.
-   - Not found: continue. A matching _closed_ task does not block creation; the new task
-     gets a `regression of` link to it (doc 0003, section 7).
+1. **Lock**: take `pg_advisory_xact_lock` on the project and fingerprint, so reports with
+   the same fingerprint in a project run one after another (see "Concurrency" below).
+2. **Dedupe**: look for an _open_ task in the same project with the same fingerprint: not
+   deleted, and not in a column of the `done` category (doc 0003, section 5). Its type
+   does not matter: a bug a person changed to another type still counts (WS-089).
+   - Found: increment the task's `occurrences`, update `last_reported_at`, record
+     `reported_again` in its history. No new ticket; column, team, assignee and severity
+     stay as they are. A system comment is added only when the previous report on the
+     task is more than an hour old or came with another `runId` (WT-06 decision 10), so
+     an agent that runs every few minutes does not bury the task's comments.
+   - Not found: continue. A matching _closed_ task (same fingerprint, not deleted, in a
+     `done` column) does not block creation; the new task gets a `regression_of` link to
+     the most recently updated one (doc 0003, section 7), and its first comment names it.
+     A soft-deleted task is neither matched nor linked: a report about it creates a new
+     task (WT-06 decision 9).
 3. **Route**: look up `routing_rules(project_id, origin_layer) -> team_id`.
-   - `unknown`, or no rule for the layer: use the project's fallback triage team.
-4. **Create** a task of type `bug`, placed in the project's first column, or at the top of
-   the backlog if the project uses sprints (doc 0003), with `assignee_team_id` set, `reporter_account_id` set to the agent, and the report rendered into the body.
-5. **Audit**: record the action against the agent's account.
+   - `unknown`, or no rule for the layer: use the project's triage team
+     (`projects.triage_team_id`).
+   - Neither: the bug is created with no team, and its first system comment says that no
+     team owns the layer, so a person triages it from the board. The report is never
+     refused for a gap in the project's configuration (WT-06 decision 3).
+4. **Create** a task of type `bug` at the top of the project's first column, or at the top
+   of the backlog if the project uses sprints (doc 0003), with `assignee_team_id` set
+   (or none, step 3), `reporter_account_id` set to the agent, the report's severity,
+   `occurrences = 1`, and the summary and evidence rendered into the description, each
+   value in a fenced block so a report cannot inject Markdown structure. One function,
+   `placeNewBug`, decides the place; WT-10 changes it for sprint projects.
+5. **Persist** the report in `bug_reports` as sent, with its outcome and task (always,
+   even when deduplicated). The table is append-only for the runtime role.
+6. **Audit**: `bug_report.triaged` with the report, the task, the outcome and the team,
+   against the agent's account; the task's history records `created` or
+   `reported_again` with the agent as actor.
 
-A unique partial index on `(project_id, fingerprint)` for open tasks makes dedupe safe
-under concurrent reports.
+**Concurrency.** Dedupe is serialised by the advisory lock of step 1, not by a unique
+index: whether a task is open depends on its column's category, which a partial index on
+`tasks` cannot see (WT-06 decision 6). A non-unique index on `(project_id, fingerprint)`
+keeps the lookup fast. Ten identical reports sent at once leave one task with
+`occurrences` 10. One narrow window is accepted (WS-089): a person who closes or deletes
+the open task between the lookup and its row lock gets the repeat counted on it; the
+report is kept either way.
 
 Fingerprints are computed by the agent and opaque to Opanel. Published guidance:
 hash of `originLayer + normalized route or endpoint + error signature`, excluding
@@ -186,7 +222,9 @@ timestamps, ids and other volatile values.
 
 Tickets are assigned to a **team**, not a person. Team members self-assign or a human
 triages within the team. Humans can always re-route a ticket; that does not change the
-routing rules. Routing rules and teams are managed by Managers and Admins.
+routing rules. Routing rules and teams are managed by Managers and Admins (`teams:manage`):
+`GET`/`PATCH /api/v1/projects/{projectId}/triage` and the project's "Triage" settings
+section. Anyone with `projects:read`, agents included, may read them.
 
 ## 7. Data model sketch
 
@@ -206,16 +244,18 @@ api_tokens(id, account_id, public_id, secret_hash, name, created_by?, created_at
            expires_at?, revoked_at?, last_used_at?)
 sessions(id, account_id, token, expires_at, ...)
 teams(id, name)                             team_members(team_id, account_id)
-projects(id, key, name, fallback_team_id)
+projects(id, key, name, triage_team_id?, version, ...)
 columns(id, project_id, name, position, category)
 epics(id, project_id, title, ...)
 tasks(id, project_id, epic_id?, column_id, type, title, body, severity?,
       assignee_team_id?, assignee_account_id?, reporter_account_id,
-      fingerprint?, occurrences, last_reported_at?)
-task_links(from_task_id, to_task_id, type)
+      fingerprint?, occurrences, last_reported_at?, version, deleted_at?, ...)
+task_links(from_task_id, to_task_id, type, created_by?, created_at)
+                                            type: regression_of only until WT-09
 comments(id, task_id, author_account_id?, kind, body)
 routing_rules(project_id, origin_layer, team_id)
-bug_reports(id, project_id, agent_account_id, task_id, payload, created_at)
+bug_reports(id, project_id, agent_account_id, task_id, outcome, origin_layer,
+            confidence?, severity, fingerprint, run_id?, payload, created_at)   append-only
 audit_log(id, actor_account_id?, action, entity, entity_id?, data?, created_at)   append-only
 ```
 

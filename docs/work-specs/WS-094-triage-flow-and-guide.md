@@ -1,6 +1,7 @@
 # WS-094 — The triage flow end to end, filing bug reports in the guide, and WT-06's amendments
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 7 as recommended)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 7 as
+  recommended)
 - Work-item: [WI-094](../work-items/WI-094-triage-flow-and-guide.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5, 6 and
   7 (amended here); [0003](../canonical/0003-task-management.md) sections 7 and 13
@@ -278,3 +279,50 @@ Risks:
   through `task.updated`; the test waits for the board's stream before the first report,
   as `live-board.spec.ts` does, so no event is lost to a stream that opened late.
 - **An exit criterion found unmet** while closing the track stops this item (section 5).
+
+## Deviations from the approved spec
+
+1. **The description is checked in its editor.** Section 1 said the detail "has the 'Steps
+   to reproduce' heading"; the Admin, who may edit the task, sees the description as its
+   Markdown editor, so the test reads the editor's value (`### Steps to reproduce`, a
+   step's text, `### HTTP`) rather than a rendered heading.
+2. **The outcomes are checked as bare code spans** (`created`, `deduplicated`), which the
+   guide uses in the outcome list, rather than quoted.
+3. **The guide's section has `###` subsections** (the body, the two outcomes, where a bug
+   goes, fingerprints, reading reports) and a `curl` example; the errors specific to the
+   endpoint are in "The two outcomes" rather than a list of their own.
+4. **Doc 0001 section 6 lists the steps in the order the code runs them**: the lock first,
+   the report persisted after the task is created or counted (the same transaction, so
+   nothing is visible in between). The old text listed "Persist" first.
+5. **WT-06's header** records that WI-093 went to WT-13 (the PostHog add-on, merged
+   first), and the owner chose WI-094 for item H.
+
+## Implementation record
+
+- Approval: the owner approved WS-094 in this session on 2026-11-20, questions 1 to 7 as
+  recommended.
+- Red, the guide's check: 5 of 13 failed, each for its reason (the section list, no
+  layers, no outcome, no JSON example, "not yet" in the `reports:write` row). Committed as
+  `test(triage)`.
+- Red, the end-to-end test (question 1), against two temporary mutations of
+  `src/server/services/bug-reports.ts`, each reverted with `git checkout` right after:
+  - `placeNewBug` placing after the last card: failed at step a, the first card of
+    "To do" was "An ordinary task";
+  - `routeBugReport` ignoring the layer's rule: failed at step a, `assignedTeamId` was
+    the triage team's.
+- First run against the unchanged code: failed on the description's heading (deviation 1);
+  after that change, green. Committed as `test(triage)`.
+- Green: the guide's check 13 of 13 with the new section.
+- Canonical docs: doc 0001 sections 5, 6 and 7 and its header; doc 0003 section 7 and its
+  header; WT-06 decision 4 and item B's row say `PATCH`.
+- WT-06: every exit criterion read again against its test and checked off, with the test
+  named; status Done. The Follow-up for WT-10 (`placeNewBug`) is in `docs/README.md`.
+- No application code, migration, dependency or API change; `docs/api/openapi.json` is
+  unchanged.
+- Gate on 2026-11-20, with no other session's tests on the database server:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1752 of 1752 (run twice; the first run's log was lost to a wrong path, its exit
+    code was 0);
+  - `pnpm test:e2e --retries=0` 94 of 94, the new test included;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18.7 on port 5433, with
+    this item's own databases (`opanel_wi093_test`, `opanel_wi093_e2e_test`).
