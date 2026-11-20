@@ -41,6 +41,7 @@ import {
   restoreTask,
   updateTask,
 } from "./tasks";
+import { getTriage, updateTriage } from "./triage";
 
 const SERVICES_ROOT = path.join(process.cwd(), "src/server/services");
 const UNKNOWN = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
@@ -97,6 +98,9 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
     updateEpic(actor, f.epic.id, { title: "Renamed", version: f.epic.version }),
   "comments.listComments": (actor, f) => listComments(actor, f.task.key, { limit: 50 }),
   "comments.createComment": (actor, f) => createComment(actor, f.task.id, { body: "Hello" }),
+  "triage.getTriage": (actor, f) => getTriage(actor, f.project.key),
+  "triage.updateTriage": (actor, f) =>
+    updateTriage(actor, f.project.id, { triageTeamId: null, version: f.project.version }),
 };
 
 /** Lists that span projects: they leave out what the actor cannot reach (section 4). */
@@ -131,6 +135,7 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "event-hub.getEventHub": "infrastructure: the events stream checks (section 6)",
   "event-hub.closeEventHub": "infrastructure: the events stream checks (section 6)",
   "events.publishEvent": "internal: called by a service that has checked",
+  "projects.publishProjectChanged": "internal: called by a service that has checked",
   "health.checkHealth": "public health check",
   "maintenance.runMaintenance": "operator command",
   "people.isPerson": "people are not project-scoped",
