@@ -54,6 +54,18 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
+      # The Drizzle schema needs no migration that is not committed, and the journal has
+      # no collision (WS-096). Neither command connects to the database; NODE_ENV=test
+      # makes drizzle.config.ts read .env.test.
+      - name: Migrations match the schema
+        env:
+          NODE_ENV: test
+        run: |
+          pnpm db:check
+          pnpm db:generate
+          git status --porcelain -- src/server/db/migrations
+          test -z "$(git status --porcelain -- src/server/db/migrations)"
+
       # Includes the test that fails when docs/api/openapi.json is stale.
       - name: Unit and integration tests
         run: pnpm test

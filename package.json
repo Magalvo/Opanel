@@ -23,6 +23,7 @@
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
     "db:migrate": "tsx scripts/migrate.ts",
     "admin:recover": "tsx scripts/recover-admin.ts",
     "maintenance": "tsx scripts/maintenance.ts",
