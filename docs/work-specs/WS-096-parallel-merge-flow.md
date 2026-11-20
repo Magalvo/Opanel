@@ -1,6 +1,6 @@
 # WS-096 — Parallel work-items merge without renumbering or index conflicts
 
-- Status: Approved (approved by the owner on 2026-11-20, decisions 1 to 4 and risk 4 as
+- Status: Done (2026-11-20; approved by the owner the same day, decisions 1 to 4 and risk 4 as
   proposed)
 - Work-item: [WI-096](../work-items/WI-096-parallel-merge-flow.md)
 - Canonical docs: `AGENTS.md` sections 4 (the spec-driven flow), 7 (definition of done)
@@ -207,3 +207,46 @@ manual checks of the rule, run once and recorded.
    pull requests. Question for the owner: is that enough, or should "Where the project
    stands" keep a line per open branch? Proposed: enough, since that line would be the
    next conflict hotspot.
+
+## Deviations from the approved spec
+
+1. **Work-track tables lost their status column too.** A work-track lists its items with a
+   status, and parallel branches edited those rows the same way (WT-06 during WI-091 and
+   WI-092). The status column was removed from `docs/work-tracks/_TEMPLATE.md` and from
+   the two open tracks, WT-11 and WT-13; the finished tracks keep theirs as a record, since
+   no branch edits them any more.
+2. **Test 3 ran on this checkout, not on a pushed scratch branch.** The commands of the CI
+   step were run locally, so that no throwaway branch reached GitHub; this item's pull
+   request is the passing case in CI.
+3. **Test 4 ran against a local bare repository** with two clones, not against `main`, so
+   that no test commit reached `main`.
+4. **Nothing from "Also finished" needed moving.** Every branch named there is in the merge
+   history of `main` except `claude/wi-052-e2e-isolation`, merged stacked on WI-054, whose
+   commits are tagged `(WI-052)`; dates are in `git log`, summaries in the docs.
+
+## Implementation record
+
+- Red: `scripts/docs-index.test.ts` failed with `indexProblems is not a function` (10 of
+  10). With the check written, the nine fixture tests passed and the repository test
+  failed with "the index has a status column" until `docs/README.md` was rewritten.
+- Green:
+  - `indexProblems` and `thisRepositoryDocs` in `scripts/doc-checks.ts`.
+  - `docs/README.md`: a new introduction (statuses in each doc, index commits), "Where the
+    project stands" reduced to what is next and what waits for the owner, no status
+    columns. The 206 docs' own status lines had been compared with the index first: no
+    difference.
+  - `AGENTS.md` section 4 (statuses, reserving a number, index commits), section 7 and
+    section 8 (after taking in `main`): 209 lines. `CONTRIBUTING.md` steps 2 and 6.
+    The work-item, work-spec and work-track templates.
+  - CI step "Migrations match the schema", `pnpm db:check`, and its row in `README.md`.
+- Test 3, on 2026-11-20: with a `probe` column added to `teams` and no migration,
+  `pnpm db:generate` wrote `0019_unusual_arclight.sql`, its snapshot and the journal, and
+  the step's check failed; with the schema restored it printed "No schema changes,
+  nothing to migrate" and the check passed. `drizzle-kit check`: "Everything's fine".
+- Test 4: clones A and B both took WI-098; A's push was accepted, B's refused; B fetched,
+  took WI-099 and pushed. The index held WI-097, WI-098 (A) and WI-099 (B).
+- Gate on 2026-11-20, on the owner's Windows machine, with `DATABASE_URL` and
+  `E2E_DATABASE_URL` on port 5433 (`CONTRIBUTING.md`: 5432 is taken there):
+  - typecheck (49 s), lint (116 s) and `format:check` pass;
+  - Vitest: 178 files, 1762 of 1762 tests (604 s);
+  - `pnpm test:e2e --retries=0`: 94 of 94 (274 s).
