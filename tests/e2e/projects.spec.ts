@@ -113,6 +113,38 @@ test("a deleted task is restored from the settings page", async ({ page }) => {
   expect((await page.request.get(`/api/v1/tasks/${key}-1`)).status()).toBe(200);
 });
 
+test("a Manager sets the triage team and a layer's team in the settings (WS-092)", async ({
+  page,
+}) => {
+  await signInAs(page, "manager");
+  const key = uniqueKey();
+  await createProjectThroughApi(page, key);
+  const teamIds: Record<string, string> = {};
+  for (const name of [`Triage ${key}`, `Web ${key}`]) {
+    const created = await page.request.post("/api/v1/teams", { headers, data: { name } });
+    expect(created.status()).toBe(201);
+    teamIds[name] = ((await created.json()) as { id: string }).id;
+  }
+
+  await page.goto(`/projects/${key}/settings`);
+  const triage = page.getByRole("region", { name: "Triage" });
+  await triage.getByLabel("Triage team").selectOption({ label: `Triage ${key}` });
+  await triage.getByLabel("Frontend").selectOption({ label: `Web ${key}` });
+  await triage.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("status")).toContainText("Saved.");
+
+  await page.reload();
+  await expect(triage.getByLabel("Triage team")).toHaveValue(teamIds[`Triage ${key}`] ?? "");
+  await expect(triage.getByLabel("Frontend")).toHaveValue(teamIds[`Web ${key}`] ?? "");
+  await expect(triage.getByLabel("API")).toHaveValue("");
+
+  const settings = await page.request.get(`/api/v1/projects/${key}/triage`);
+  expect(await settings.json()).toMatchObject({
+    triageTeamId: teamIds[`Triage ${key}`],
+    rules: { frontend: teamIds[`Web ${key}`], api: null, backend: null },
+  });
+});
+
 test("a Viewer sees projects but no New project, no Settings, and not the settings page", async ({
   page,
   browser,

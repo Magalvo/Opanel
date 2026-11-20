@@ -16,5 +16,10 @@ export default async function SettingsRoute() {
     notFound();
   }
 
-  return <ProjectSettings canRestoreTasks={can(actor, "tasks:delete_any")} />;
+  return (
+    <ProjectSettings
+      canRestoreTasks={can(actor, "tasks:delete_any")}
+      canManageTriage={can(actor, "teams:manage")}
+    />
+  );
 }
