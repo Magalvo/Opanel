@@ -1,6 +1,7 @@
 # WS-089 — The bug report endpoint and the triage pipeline
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 5 as recommended)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 5 as
+  recommended)
 - Work-item: [WI-089](../work-items/WI-089-bug-report-pipeline.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5 and 6;
   [0003](../canonical/0003-task-management.md) sections 4, 5, 7, 9 and 13;
@@ -273,3 +274,47 @@ Risks:
   escaped like every title.
 - **Growth of `bug_reports`.** Every repeat adds a row (WT-06 question 6). A Follow-up
   names it in `docs/operations.md`'s list of tables that grow.
+
+## Deviations from the approved spec
+
+1. **The renderer also exports `fenced` and `codeSpan`.** `codeSpan` puts the `runId` of a
+   repeat's comment in a code span (section 5). The coverage test lists the three as pure.
+2. **`addSystemComment` and `createComment` share one private `insertComment`**, so a
+   system comment records its history entry and event exactly as a person's does.
+3. **The task's event comes before its comment's.** `task.created` and `task.updated` are
+   published before the system comment's `comment.created`, so a board learns of a task
+   before its comment. Section 3 listed the comment first.
+4. **The comment rule's test backdates reports.** The test database's owner disables the
+   user triggers of `bug_reports` for one `update`, then enables them again. There is no
+   other way to make a stored report an hour old; the append-only rule is unchanged.
+
+## Implementation record
+
+- Red:
+  - the request, answer and contract tests failed on the missing schemas;
+  - the renderer tests and the pipeline tests failed to import their modules;
+  - the `addSystemComment` test failed (`addSystemComment is not a function`);
+  - the audit catalogue test failed on 37 actions;
+  - the coverage test failed with the seven new functions unclassified;
+  - the route test failed to import `./route`;
+  - the OpenAPI test failed with the operation missing, as did the routes test.
+- Green:
+  - request and contract: 5 cases; renderer: 4 cases; pipeline: 7 cases, ten concurrent
+    reports included; `addSystemComment`: 1 case; route: 1 case; OpenAPI: 1 case;
+  - the coverage test: 89 of 89, with `fileBugReport` refusing another project with `403`,
+    archived or not.
+- One test expectation was wrong, not the code: at every limit the steps alone are 50 000
+  characters, so the description stops after the summary, as section 7 says.
+- `pnpm openapi:generate` adds the operation, `SubmitBugReportRequest`,
+  `BugReportEvidence`, `BugReportCreated` and `BugReportDeduplicated`; `Severity` moves
+  earlier in the file, unchanged.
+- **A narrow race, accepted.** Between the lookup of the open task and its lock, a person
+  can move it to a `done` column or delete it, and the repeat is then counted on it.
+  Retrying as a creation would take the exclusive project lock after the shared one, the
+  deadlock section 3 avoids. The window is one statement long, and the report is kept
+  either way.
+- Gate on 2026-11-20:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1695 of 1695;
+  - `pnpm test:e2e --retries=0` 88 of 88;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18 on port 5433.

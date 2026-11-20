@@ -101,6 +101,57 @@ export async function listComments(
   };
 }
 
+type Executor = Pick<Database, "execute" | "insert">;
+
+/**
+ * Inserts a comment, records `commented` in the task's history with the actor, and publishes
+ * `comment.created`, all with the caller's transaction (WS-034, WS-089).
+ */
+async function insertComment(
+  tx: Executor,
+  actor: Actor,
+  task: { id: string; projectId: string },
+  kind: CommentKind,
+  body: string,
+): Promise<{ id: string }> {
+  const author = kind === "user" ? actor.accountId : null;
+  const [inserted] = await tx.execute<{ id: string }>(sql`
+    insert into comments (task_id, kind, author_account_id, body)
+    values (${task.id}, ${kind}, ${author}, ${body})
+    returning id`);
+  if (!inserted) throw new Error("The comment was not created.");
+  await recordTaskEvent(tx, {
+    taskId: task.id,
+    actor,
+    type: "commented",
+    newValue: { commentId: inserted.id },
+  });
+  await publishEvent(tx, {
+    type: "comment.created",
+    entity: "comment",
+    projectId: task.projectId,
+    entityId: inserted.id,
+    taskId: task.id,
+    version: null,
+    actorAccountId: actor.accountId,
+  });
+  return inserted;
+}
+
+/**
+ * Adds a `system` comment to a task, inside the caller's transaction: no author, shown as
+ * "Opanel" (WS-034). Its history entry and event name the actor whose action caused it, such
+ * as the agent whose report the triage pipeline handled (WS-089 section 5).
+ */
+export async function addSystemComment(
+  tx: Executor,
+  actor: Actor,
+  task: { id: string; projectId: string },
+  body: string,
+): Promise<{ id: string }> {
+  return insertComment(tx, actor, task, "system", body);
+}
+
 /**
  * Adds a `user` comment by the actor to a task that is not deleted (WS-034). The comment and
  * its `commented` history event commit together. The task itself, its `version` included,
@@ -122,26 +173,7 @@ export async function createComment(
     const task = await findLiveTask(tx, found.id, sql`for share of t`);
     if (!task) throw taskNotFound();
 
-    const [inserted] = await tx.execute<{ id: string }>(sql`
-      insert into comments (task_id, kind, author_account_id, body)
-      values (${task.id}, 'user', ${actor.accountId}, ${input.body})
-      returning id`);
-    if (!inserted) throw new Error("The comment was not created.");
-    await recordTaskEvent(tx, {
-      taskId: task.id,
-      actor,
-      type: "commented",
-      newValue: { commentId: inserted.id },
-    });
-    await publishEvent(tx, {
-      type: "comment.created",
-      entity: "comment",
-      projectId: task.projectId,
-      entityId: inserted.id,
-      taskId: task.id,
-      version: null,
-      actorAccountId: actor.accountId,
-    });
+    const inserted = await insertComment(tx, actor, task, "user", input.body);
 
     const [row] = await tx.execute<CommentRow>(sql`${COMMENT_SELECT} where c.id = ${inserted.id}`);
     if (!row) throw new Error("The comment was not created.");

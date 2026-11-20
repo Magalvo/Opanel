@@ -3,7 +3,7 @@ import type { Database } from "@/server/db/client";
 import { taskEvents } from "@/server/db/schema";
 
 export type TaskEventType =
-  "created" | "field_changed" | "moved" | "deleted" | "restored" | "commented";
+  "created" | "field_changed" | "moved" | "deleted" | "restored" | "commented" | "reported_again";
 
 export interface TaskEvent {
   taskId: string;
