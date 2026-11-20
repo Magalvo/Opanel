@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
-import { check, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
+import { teams } from "./teams";
 
 // A project and its board (canonical doc 0003, WT-03 decisions 2 to 4 and 7). Projects are
 // never deleted, only archived. `next_task_number` gives task keys from WI-030 on.
@@ -16,11 +17,15 @@ export const projects = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     version: integer("version").notNull().default(1),
     createdBy: uuid("created_by").references(() => accounts.id, { onDelete: "set null" }),
+    // Where a bug goes when no rule names a team for its layer (WT-06 decision 2). A team
+    // named here cannot be deleted (`team_in_use`).
+    triageTeamId: uuid("triage_team_id").references(() => teams.id, { onDelete: "restrict" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     check("projects_key_format", sql`${table.key} ~ '^[A-Z][A-Z0-9]{1,9}$'`),
     check("projects_version_positive", sql`${table.version} >= 1`),
+    index("projects_triage_team_idx").on(table.triageTeamId),
   ],
 );
