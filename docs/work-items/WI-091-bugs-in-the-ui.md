@@ -1,6 +1,6 @@
 # WI-091 — Bugs in the UI
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 7 as recommended)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item F)
 - Depends on: WI-088 (done), WI-090 (done)
 - Work-spec: [WS-091](../work-specs/WS-091-bugs-in-the-ui.md)

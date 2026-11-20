@@ -1,6 +1,6 @@
 # WS-091 — Bugs in the UI
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 7 as recommended)
 - Work-item: [WI-091](../work-items/WI-091-bugs-in-the-ui.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 5 (what a
   report holds); [0002](../canonical/0002-realtime-sync.md) (live updates);
