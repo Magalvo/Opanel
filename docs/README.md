@@ -67,7 +67,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
-- **Proposed on 2026-11-20, awaiting the owner:** WI-095 to WI-097 (Draft), from the
+- **Approved on 2026-11-20:** WS-096 (decisions 1 to 4 and risk 4 as proposed), in
+  progress on the branch `claude/wi-096-parallel-merge-flow`. **Proposed, awaiting the
+  owner:** WI-095 and WI-097 (Draft), from the
   development-flow review of 2026-11-20: each worktree gets its own test databases and
   ports (D01); work-item numbers are reserved up front, "Where the project stands" stops
   listing every finished item, and branches regenerate migrations and OpenAPI after
@@ -261,7 +263,7 @@ right after WT-04 and is done.
 | [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-093](work-specs/WS-093-posthog-addon.md)                    | Done        |
 | [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | Done        | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            | Done        |
 | [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | Draft       | —                                                               | —           |
-| [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | Draft       | —                                                               | —           |
+| [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | In progress | [WS-096](work-specs/WS-096-parallel-merge-flow.md)              | Approved    |
 | [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | Draft       | —                                                               | —           |
 
 ## Follow-ups
