@@ -1,6 +1,6 @@
 # WI-098 — A keyboard move works while the board is still animating
 
-- Status: In progress
+- Status: Done
 - Work-track: none: a defect found by CI (the keyboard test of `tests/e2e/board.spec.ts`
   failed in runs 44773683358 and 44783225994 on 2026-11-20)
 - Depends on: none
@@ -23,18 +23,18 @@ own place.
 
 ## Acceptance criteria
 
-- [ ] Whenever the board measures a card or column for drag and drop, the result is a
+- [x] Whenever the board measures a card or column for drag and drop, the result is a
       whole number of layout units (1/64 px), so a measurement taken while the card is
       sliding has no rounding error.
-- [ ] ArrowDown from a place that was measured while sliding goes to the next card in the
+- [x] ArrowDown from a place that was measured while sliding goes to the next card in the
       column, not back to the card's own place (unit test, with the measurement values seen
       on CI).
-- [ ] Pointer and keyboard moves are otherwise unchanged: every existing `collision`,
+- [x] Pointer and keyboard moves are otherwise unchanged: every existing `collision`,
       `board` and `board.spec.ts` test passes without changes.
-- [ ] The keyboard test passes 50 of 50 with `--retries=0`, and 30 of 30 with the page's
+- [x] The keyboard test passes 50 of 50 with `--retries=0`, and 30 of 30 with the page's
       animations slowed down so that the previous drop is still animating when the next drag
       starts (the condition that reproduced the failure: 3 failures in 24 before the fix).
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

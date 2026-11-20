@@ -1,6 +1,6 @@
 # WS-098 — A keyboard move works while the board is still animating
 
-- Status: In progress (approved by the owner on 2026-11-20, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-20, questions 1 to 4 as recommended)
 - Work-item: [WI-098](../work-items/WI-098-keyboard-move-subpixel.md)
 - Canonical docs: [WS-037](WS-037-board-page.md) (board, drag and drop),
   [WS-054](WS-054-e2e-parallel-stability.md) (the keyboard collision rule and the keyboard
@@ -170,3 +170,25 @@ For the owner:
    **Recommend: yes, by the owner, after the fix ships.** Not part of this item.
 4. **The warm-up timeout of section 4** becomes a follow-up in `docs/README.md` (an index
    commit), not part of this item. **Recommend: as proposed.**
+
+## Deviations from the approved spec
+
+None.
+
+## Implementation record
+
+- Red: `keyboard.test.ts` and `measure.test.ts` failed on the missing `./measure` module
+  (commit `3232c67`).
+- Green: `src/components/board/measure.ts` holds `snapRect` and `measureDroppable`;
+  `board.tsx` passes it as the droppable `measure`, with its measuring configuration at
+  module scope. With the values logged on the host, `@dnd-kit`'s own
+  `sortableKeyboardCoordinates` sends ArrowDown to the column on the raw rects (y 240)
+  and to Foxtrot on the rounded ones (y 336.5).
+- `board.spec.ts` and `live-board.spec.ts`: 14 of 14, unchanged. The keyboard test: 50 of
+  50 with `--workers=2 --retries=0`. The slowed-animation probe (`Animation.setPlaybackRate`
+  0.7, not committed): 30 of 30, against 2 of 8 and 5 of 30 (at 0.75) failed before.
+- Gate: `typecheck`, `lint` pass; `format:check` passes with `--end-of-line auto` (this
+  Windows checkout has CRLF working copies; every file is LF in Git); `test` 1767 of 1767
+  (180 files); `test:e2e` 94 of 94.
+- Run on Windows with Node 24 and pnpm 10.28.0, against the Compose PostgreSQL on port
+  5433, databases `opanel_flake_test` and `opanel_flake_e2e_test`.
