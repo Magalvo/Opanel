@@ -26,7 +26,7 @@ export const taskEvents = pgTable(
   (table) => [
     check(
       "task_events_type_check",
-      sql`${table.type} in ('created', 'field_changed', 'moved', 'deleted', 'restored', 'commented')`,
+      sql`${table.type} in ('created', 'field_changed', 'moved', 'deleted', 'restored', 'commented', 'reported_again')`,
     ),
     index("task_events_task_idx").on(table.taskId, table.createdAt, table.id),
   ],

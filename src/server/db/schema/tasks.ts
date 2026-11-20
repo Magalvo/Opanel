@@ -40,6 +40,11 @@ export const tasks = pgTable(
       onDelete: "restrict",
     }),
     epicId: uuid("epic_id").references(() => epics.id, { onDelete: "restrict" }),
+    // A bug's severity, and what the triage pipeline counts (WT-06 decision 1, WS-086).
+    severity: text("severity"),
+    fingerprint: text("fingerprint"),
+    occurrences: integer("occurrences").notNull().default(0),
+    lastReportedAt: timestamp("last_reported_at", { withTimezone: true }),
     reporterAccountId: uuid("reporter_account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
@@ -53,10 +58,24 @@ export const tasks = pgTable(
   (table) => [
     check("tasks_type_check", sql`${table.type} in ('task', 'bug', 'story')`),
     check("tasks_version_positive", sql`${table.version} >= 1`),
+    check(
+      "tasks_severity_check",
+      sql`${table.severity} is null or (${table.severity} in ('low', 'medium', 'high', 'critical') and ${table.type} = 'bug')`,
+    ),
+    check(
+      "tasks_fingerprint_check",
+      sql`${table.fingerprint} is null or char_length(${table.fingerprint}) between 1 and 128`,
+    ),
+    check("tasks_occurrences_check", sql`${table.occurrences} >= 0`),
     uniqueIndex("tasks_project_number_idx").on(table.projectId, table.number),
     uniqueIndex("tasks_column_position_idx").on(table.columnId, table.position),
     index("tasks_assignee_team_idx").on(table.assigneeTeamId),
     index("tasks_assignee_account_idx").on(table.assigneeAccountId),
     index("tasks_epic_idx").on(table.epicId),
+    // The triage pipeline's lookup; not unique: an advisory lock serialises it (WT-06
+    // decision 6).
+    index("tasks_project_fingerprint_idx")
+      .on(table.projectId, table.fingerprint)
+      .where(sql`${table.fingerprint} is not null`),
   ],
 );
