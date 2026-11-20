@@ -1,6 +1,6 @@
 # WI-090 — Reading the reports behind a task, and its regression links
 
-- Status: Proposed
+- Status: Approved (2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item E)
 - Depends on: WI-089 (done)
 - Work-spec: [WS-090](../work-specs/WS-090-reading-bug-reports.md)

@@ -1,6 +1,6 @@
 # WS-090 — Reading the reports behind a task, and its regression links
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 5 as recommended)
 - Work-item: [WI-090](../work-items/WI-090-reading-bug-reports.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5 and 6;
   [0003](../canonical/0003-task-management.md) section 7 (links);
