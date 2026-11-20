@@ -1,6 +1,6 @@
 # WS-094 — The triage flow end to end, filing bug reports in the guide, and WT-06's amendments
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 7 as recommended)
 - Work-item: [WI-094](../work-items/WI-094-triage-flow-and-guide.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5, 6 and
   7 (amended here); [0003](../canonical/0003-task-management.md) sections 7 and 13

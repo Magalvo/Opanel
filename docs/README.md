@@ -58,9 +58,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** the owner approves WS-094 (the triage flow end to end, the guide's "Filing bug
-  reports", and the amendments to docs 0001 and 0003, WT-06 item H; proposed on 2026-11-20
-  with questions 1 to 7), then WI-094 is implemented on the branch
+- **Next:** WI-094 (the triage flow end to end, the guide's "Filing bug reports", and the
+  amendments to docs 0001 and 0003, WT-06 item H; approved on 2026-11-20 with questions 1
+  to 7 as recommended) is implemented on the branch
   `claude/wi-093-triage-flow-and-guide-ace4f4` and closes WT-06. WT-11 (the MCP server)
   follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
@@ -252,7 +252,7 @@ right after WT-04 and is done.
 | [WI-091](work-items/WI-091-bugs-in-the-ui.md)                   | Bugs in the UI                                                    | Done        | [WS-091](work-specs/WS-091-bugs-in-the-ui.md)                   | Done        |
 | [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                           | Done        | [WS-092](work-specs/WS-092-triage-section.md)                   | Done        |
 | [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-093](work-specs/WS-093-posthog-addon.md)                    | Done        |
-| [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | Proposed    | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            | Proposed    |
+| [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | In progress | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            | Approved    |
 
 ## Follow-ups
 

@@ -1,6 +1,6 @@
 # WI-094 — The triage flow end to end, filing bug reports in the guide, and WT-06's amendments
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item H, the last)
 - Depends on: WI-089, WI-090, WI-091, WI-092 (all done)
 - Work-spec: [WS-094](../work-specs/WS-094-triage-flow-and-guide.md)
