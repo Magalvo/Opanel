@@ -76,6 +76,8 @@ src/
 tests/
   e2e/                  Playwright specs
 mcp/                    MCP server package (doc 0005, WT-11): a client of /api/v1, no DB access
+addons/                 Optional add-ons (WT-13), one directory each: clients of /api/v1, no DB
+                        access, outside the app's build; the app never depends on them
 ```
 
 Layering rules:
