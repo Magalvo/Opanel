@@ -231,3 +231,10 @@ Risks:
     and 17 of 17, `--repeat-each=3`). Another session ran tests on the same database
     server meanwhile; recorded here, not changed;
   - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18 on port 5433.
+- Merged `main` after WI-092 (item G, Magalvo/Opanel#89) landed. The conflicts were the
+  index rows, "Last finished" and "Next:" in `docs/README.md` and the WT-06 table, where
+  both items' lines are kept, and `src/components/task/api.ts`, where `listAllTeams` now
+  comes from `components/teams/api` as WI-092 moved it. Gate on the merge, 2026-11-20:
+  typecheck, lint and Prettier pass; Vitest 1748 of 1748; `pnpm test:e2e --retries=0` 93
+  of 93. Two earlier full runs on the merge timed out in many specs while another session's
+  tests loaded the shared PostgreSQL (55% CPU); the 93 of 93 run waited until it was idle.
