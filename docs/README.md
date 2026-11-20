@@ -9,7 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-088 (severity on tasks, WT-06 item C: the bug fields in every task
+- **Last finished:** WI-089 (the bug report endpoint and the triage pipeline, WT-06 item
+  D: `POST /projects/{projectId}/bug-reports`, dedupe under an advisory lock, routing,
+  regression links, system comments), on 2026-11-20, on the branch
+  `claude/wi-089-bug-report-pipeline`.
+- **Also finished:** WI-088 (severity on tasks, WT-06 item C: the bug fields in every task
   answer, `severity` on create and edit for bugs only), on 2026-11-20, on the branch
   `claude/wi-088-task-severity`.
 - **Also finished:** WI-087 (the triage settings API, WT-06 item B:
@@ -40,9 +44,9 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** propose WT-06 item D (the bug report endpoint and the triage pipeline) as a
-  work-item and work-spec, and stop for the owner's approval. Item G (the "Triage" settings
-  section) needs only B and may come first instead. WT-11 (the MCP server) follows WT-06.
+- **Next:** propose WT-06 item E (reading the reports behind a task, and the regression
+  link in the task's `GET`) or item G (the "Triage" settings section) as a work-item and
+  work-spec, and stop for the owner's approval. WT-11 (the MCP server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
   that its item H writes.
@@ -226,6 +230,7 @@ right after WT-04 and is done.
 | [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Done        | [WS-086](work-specs/WS-086-triage-data-model.md)                | Done        |
 | [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                          | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
+| [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
 
 ## Follow-ups
 
@@ -249,6 +254,10 @@ Other follow-ups:
 - **Answered by WI-084 (2026-11-19):** `tests/e2e/agents.spec.ts`, "a Manager has neither
   the Agents link nor the page", counted every link whose name contains "Agents" (found in
   WI-081). It now looks at the sidebar only.
+
+- `bug_reports` grows with every report, repeats included (WT-06 question 6, WS-089). Add
+  it to the tables that grow in `docs/operations.md`, and let `maintenance` thin old
+  repeats if installs need it.
 
 - Let end-to-end runs choose their port and database (`E2E_PORT`, already
   `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100

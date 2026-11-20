@@ -23,6 +23,7 @@ import {
   signOutContract,
   updateMeContract,
 } from "@/lib/schemas/auth";
+import { submitBugReportContract } from "@/lib/schemas/bug-reports";
 import {
   createColumnContract,
   deleteColumnContract,
@@ -103,6 +104,7 @@ export const contracts: readonly EndpointContract[] = [
   unarchiveProjectContract,
   getTriageContract,
   updateTriageContract,
+  submitBugReportContract,
   listColumnsContract,
   createColumnContract,
   updateColumnContract,

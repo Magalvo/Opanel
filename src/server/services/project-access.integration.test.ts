@@ -18,6 +18,7 @@ import { getDb } from "@/server/db/client";
 import { ApiError } from "@/server/http/errors";
 
 import { loadAgentActor } from "./agents";
+import { fileBugReport } from "./bug-reports";
 import { createColumn, deleteColumn, listColumns, moveColumn, updateColumn } from "./columns";
 import { createComment, listComments } from "./comments";
 import { createEpic, getEpic, listEpics, updateEpic } from "./epics";
@@ -98,6 +99,13 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
     updateEpic(actor, f.epic.id, { title: "Renamed", version: f.epic.version }),
   "comments.listComments": (actor, f) => listComments(actor, f.task.key, { limit: 50 }),
   "comments.createComment": (actor, f) => createComment(actor, f.task.id, { body: "Hello" }),
+  "bug-reports.fileBugReport": (actor, f) =>
+    fileBugReport(actor, f.project.key, {
+      title: "Crash",
+      fingerprint: "fp",
+      originLayer: "unknown",
+      severity: "medium",
+    }),
   "triage.getTriage": (actor, f) => getTriage(actor, f.project.key),
   "triage.updateTriage": (actor, f) =>
     updateTriage(actor, f.project.id, { triageTeamId: null, version: f.project.version }),
@@ -131,6 +139,12 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "agents.createApiToken": "agents: Admin only (agents:manage), WS-075",
   "agents.revokeApiToken": "agents: Admin only (agents:manage), WS-075",
   "audit.recordAudit": "internal: called by a service that has checked",
+  "bug-report-description.codeSpan": "pure: renders text",
+  "bug-report-description.fenced": "pure: renders text",
+  "bug-report-description.renderBugDescription": "pure: renders text",
+  "bug-reports.placeNewBug": "internal: called by fileBugReport, which has checked",
+  "bug-reports.routeBugReport": "internal: called by fileBugReport, which has checked",
+  "comments.addSystemComment": "internal: called by a service that has checked",
   "event-hub.createEventHub": "infrastructure: the events stream checks (section 6)",
   "event-hub.getEventHub": "infrastructure: the events stream checks (section 6)",
   "event-hub.closeEventHub": "infrastructure: the events stream checks (section 6)",

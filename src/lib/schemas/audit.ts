@@ -42,6 +42,7 @@ export const AUDIT_ACTIONS = [
   "agent.reenabled",
   "agent.token_created",
   "agent.token_revoked",
+  "bug_report.triaged",
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
