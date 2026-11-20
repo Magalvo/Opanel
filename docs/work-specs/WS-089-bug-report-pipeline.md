@@ -1,6 +1,6 @@
 # WS-089 — The bug report endpoint and the triage pipeline
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 5 as recommended)
 - Work-item: [WI-089](../work-items/WI-089-bug-report-pipeline.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 5 and 6;
   [0003](../canonical/0003-task-management.md) sections 4, 5, 7, 9 and 13;

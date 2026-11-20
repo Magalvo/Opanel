@@ -1,6 +1,6 @@
 # WI-089 — The bug report endpoint and the triage pipeline
 
-- Status: Proposed
+- Status: Approved (2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item D)
 - Depends on: WI-086, WI-087, WI-088 (done)
 - Work-spec: [WS-089](../work-specs/WS-089-bug-report-pipeline.md)
