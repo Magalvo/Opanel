@@ -1,6 +1,6 @@
 # WS-098 — A keyboard move works while the board is still animating
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-20, questions 1 to 4 as recommended)
 - Work-item: [WI-098](../work-items/WI-098-keyboard-move-subpixel.md)
 - Canonical docs: [WS-037](WS-037-board-page.md) (board, drag and drop),
   [WS-054](WS-054-e2e-parallel-stability.md) (the keyboard collision rule and the keyboard

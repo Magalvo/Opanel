@@ -1,6 +1,6 @@
 # WI-098 — A keyboard move works while the board is still animating
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: a defect found by CI (the keyboard test of `tests/e2e/board.spec.ts`
   failed in runs 44773683358 and 44783225994 on 2026-11-20)
 - Depends on: none
