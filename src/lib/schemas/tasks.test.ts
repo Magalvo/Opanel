@@ -7,6 +7,7 @@ import {
   moveTaskRequestSchema,
   taskListQuerySchema,
   taskParamsSchema,
+  taskSchema,
   updateTaskRequestSchema,
 } from "./tasks";
 
@@ -77,6 +78,84 @@ describe("task requests", () => {
     expect(taskListQuerySchema.parse({ deleted: "true" })).toEqual({ limit: 50, deleted: "true" });
     expect(taskListQuerySchema.safeParse({ columnId: "x" }).success).toBe(false);
     expect(taskListQuerySchema.safeParse({ deleted: "yes" }).success).toBe(false);
+  });
+});
+
+describe("severity and the bug fields (WS-088)", () => {
+  const task = {
+    id: UUID,
+    key: "OPA-1",
+    number: 1,
+    projectId: UUID,
+    type: "bug",
+    title: "Crash",
+    columnId: UUID,
+    assigneeTeam: null,
+    assignee: null,
+    epic: null,
+    reporter: { id: UUID, name: "QA Bot", kind: "agent" },
+    severity: "high",
+    fingerprint: "fp-1",
+    occurrences: 2,
+    lastReportedAt: "2026-11-20T08:30:00.123Z",
+    version: 1,
+    createdAt: "2026-11-20T08:00:00.000Z",
+    updatedAt: "2026-11-20T08:30:00.123Z",
+    deletedAt: null,
+    description: "",
+  };
+
+  it("a task carries severity, fingerprint, occurrences and lastReportedAt", () => {
+    expect(taskSchema.parse(task)).toEqual(task);
+    for (const field of ["severity", "fingerprint", "occurrences", "lastReportedAt"]) {
+      const { [field]: _omitted, ...without } = task as Record<string, unknown>;
+      expect(taskSchema.safeParse(without).success, field).toBe(false);
+    }
+    expect(taskSchema.safeParse({ ...task, severity: "urgent" }).success).toBe(false);
+    expect(taskSchema.safeParse({ ...task, occurrences: -1 }).success).toBe(false);
+  });
+
+  it("create: a severity only with type bug; the pipeline's fields are refused", () => {
+    expect(createTaskRequestSchema.parse({ title: "T", type: "bug", severity: "low" })).toEqual({
+      title: "T",
+      type: "bug",
+      severity: "low",
+    });
+    for (const body of [
+      { title: "T", severity: "low" },
+      { title: "T", type: "task", severity: "low" },
+      { title: "T", type: "story", severity: "low" },
+    ]) {
+      const result = createTaskRequestSchema.safeParse(body);
+      expect(result.success, JSON.stringify(body)).toBe(false);
+      expect(result.error?.issues.map((issue) => issue.path.join("."))).toEqual(["severity"]);
+    }
+    for (const body of [
+      { title: "T", type: "bug", severity: null },
+      { title: "T", type: "bug", fingerprint: "fp" },
+      { title: "T", type: "bug", occurrences: 1 },
+    ]) {
+      expect(createTaskRequestSchema.safeParse(body).success, JSON.stringify(body)).toBe(false);
+    }
+  });
+
+  it("update: severity alone is a change, null clears it; the pipeline's fields are refused", () => {
+    expect(updateTaskRequestSchema.parse({ severity: "critical", version: 1 })).toEqual({
+      severity: "critical",
+      version: 1,
+    });
+    expect(updateTaskRequestSchema.parse({ severity: null, version: 1 })).toEqual({
+      severity: null,
+      version: 1,
+    });
+    for (const body of [
+      { severity: "urgent", version: 1 },
+      { lastReportedAt: "2026-11-20T08:30:00.000Z", version: 1 },
+      { occurrences: 2, version: 1 },
+      { fingerprint: "fp", version: 1 },
+    ]) {
+      expect(updateTaskRequestSchema.safeParse(body).success, JSON.stringify(body)).toBe(false);
+    }
   });
 });
 

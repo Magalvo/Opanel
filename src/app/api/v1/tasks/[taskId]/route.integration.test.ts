@@ -7,8 +7,10 @@ import { taskPageSchema, taskSchema } from "@/lib/schemas/tasks";
 import { agentActor } from "@/server/auth/actor";
 import {
   apiRequest,
+  bearerRequest,
   createTestAccount,
   createTestAgent,
+  createTestToken,
   signInCookie,
 } from "@/server/auth/testing";
 import { createTask } from "@/server/services/tasks";
@@ -115,6 +117,59 @@ describe("task endpoints", () => {
 
     const missing = await GET(apiRequest("GET", "/api/v1/tasks/OPA-2", { cookie }), task("OPA-2"));
     expect(missing.status).toBe(404);
+  });
+
+  it("sets a bug's severity with a cookie and with an agent token; a Viewer gets 403 (WS-088)", async () => {
+    const manager = await cookieFor("manager");
+    await projectsPost(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const cookie = await cookieFor("member");
+    const created = await create(
+      apiRequest("POST", "/api/v1/projects/OPA/tasks", {
+        cookie,
+        body: { title: "Crash", type: "bug", severity: "medium" },
+      }),
+      project("OPA"),
+    );
+    expect(taskSchema.parse(await created.json()).severity).toBe("medium");
+
+    const byMember = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie,
+        body: { severity: "high", version: 1 },
+      }),
+      task("OPA-1"),
+    );
+    expect(byMember.status).toBe(200);
+    expect(taskSchema.parse(await byMember.json()).severity).toBe("high");
+
+    const agent = await createTestAgent({
+      name: "Worker",
+      role: "worker_agent",
+      scopes: [...AGENT_SCOPES],
+    });
+    const { token } = await createTestToken(agent.id);
+    const byAgent = await PATCH(
+      bearerRequest("/api/v1/tasks/OPA-1", token, {
+        method: "PATCH",
+        body: JSON.stringify({ severity: null, version: 2 }),
+      }),
+      task("OPA-1"),
+    );
+    expect(byAgent.status).toBe(200);
+    expect(taskSchema.parse(await byAgent.json()).severity).toBeNull();
+
+    const viewer = await cookieFor("viewer");
+    const byViewer = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie: viewer,
+        body: { severity: "low", version: 3 },
+      }),
+      task("OPA-1"),
+    );
+    expect(byViewer.status).toBe(403);
   });
 
   it("lets a Viewer read but not write, and answers 401 without a session", async () => {

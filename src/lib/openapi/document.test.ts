@@ -245,6 +245,40 @@ describe("buildOpenApiDocument", () => {
     });
   });
 
+  it("gives tasks their bug fields, and takes severity on create and edit (WS-088)", () => {
+    const { schemas } = parsedDocument().components;
+    const severity = { anyOf: [{ $ref: "#/components/schemas/Severity" }, { type: "null" }] };
+
+    expect(schemas.Severity).toMatchObject({ enum: ["low", "medium", "high", "critical"] });
+    for (const name of ["Task", "TaskSummary"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: {
+          severity,
+          fingerprint: { type: ["string", "null"] },
+          occurrences: { type: "integer", minimum: 0 },
+          lastReportedAt: { anyOf: [{ format: "date-time" }, { type: "null" }] },
+        },
+        required: expect.arrayContaining([
+          "severity",
+          "fingerprint",
+          "occurrences",
+          "lastReportedAt",
+        ]) as unknown,
+      });
+    }
+    expect(schemas.CreateTaskRequest).toMatchObject({
+      properties: { severity: { $ref: "#/components/schemas/Severity" } },
+    });
+    expect(schemas.UpdateTaskRequest).toMatchObject({ properties: { severity } });
+    for (const name of ["CreateTaskRequest", "UpdateTaskRequest"]) {
+      const { properties } = z
+        .object({ properties: z.record(z.string(), z.unknown()) })
+        .parse(schemas[name]);
+      expect(Object.keys(properties), name).not.toContain("fingerprint");
+      expect(Object.keys(properties), name).not.toContain("occurrences");
+    }
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 
