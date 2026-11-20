@@ -29,6 +29,7 @@ import type { Column } from "@/lib/schemas/columns";
 
 import { SortableColumn, StaticColumn } from "./board-column";
 import { boardCollision } from "./collision";
+import { measureDroppable } from "./measure";
 import { applyDrop, type Board as BoardState, placeOf, targetOf } from "./moves";
 import { NewTaskDialog } from "./new-task-dialog";
 import { OverlayCard } from "./task-card";
@@ -37,6 +38,14 @@ import { useBoard } from "./use-board";
 const INSTRUCTIONS =
   "To pick up a card, press Space or Enter. Use the arrow keys to move it within and " +
   "across columns. Press Space or Enter again to drop it, or Escape to cancel.";
+
+/**
+ * Drop targets are measured on every render while dragging, and rounded to whole layout
+ * units so that one measured mid-slide does not misdirect the next arrow key (WS-098).
+ */
+const MEASURING = {
+  droppable: { strategy: MeasuringStrategy.Always, measure: measureDroppable },
+};
 
 /** Where a drop leaves a card, from the board as shown while dragging. */
 function dropResult(shown: BoardState, activeId: string, overId: string): BoardState | null {
@@ -277,7 +286,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
               id={dndId}
               sensors={sensors}
               collisionDetection={collisionDetection}
-              measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+              measuring={MEASURING}
               accessibility={{
                 announcements,
                 screenReaderInstructions: { draggable: INSTRUCTIONS },
