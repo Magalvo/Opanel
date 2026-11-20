@@ -1,6 +1,6 @@
 import { call, callNoContent, jsonBody } from "@/lib/api-client";
 import { personPageSchema } from "@/lib/schemas/people";
-import { teamPageSchema, teamSchema } from "@/lib/schemas/teams";
+import { teamPageSchema, teamSchema, type TeamSummary } from "@/lib/schemas/teams";
 
 export const PAGE_SIZE = 50;
 
@@ -10,6 +10,18 @@ export const SEARCH_LIMIT = 20;
 export function listTeams(cursor?: string) {
   const query = `limit=${String(PAGE_SIZE)}${cursor === undefined ? "" : `&cursor=${encodeURIComponent(cursor)}`}`;
   return call(`/api/v1/teams?${query}`, {}, teamPageSchema);
+}
+
+/** Every team, for the team select (a small list). */
+export async function listAllTeams(): Promise<TeamSummary[]> {
+  const teams: TeamSummary[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await listTeams(cursor);
+    teams.push(...page.items);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor !== undefined);
+  return teams;
 }
 
 export function createTeam(name: string) {

@@ -6,9 +6,16 @@ import { ColumnsSection } from "./columns-section";
 import { DeletedTasksSection } from "./deleted-tasks-section";
 import { DetailsSection } from "./details-section";
 import { useProject } from "./project-frame";
+import { TriageSection } from "./triage-section";
 
-/** A project's settings (WS-036): details, columns and deleted tasks, for managers. */
-export function ProjectSettings({ canRestoreTasks }: Readonly<{ canRestoreTasks: boolean }>) {
+/**
+ * A project's settings (WS-036): details, columns, triage (WS-092) and deleted tasks, for
+ * managers.
+ */
+export function ProjectSettings({
+  canRestoreTasks,
+  canManageTriage,
+}: Readonly<{ canRestoreTasks: boolean; canManageTriage: boolean }>) {
   const { project } = useProject();
   const [message, setMessage] = useState("");
   const archived = project.archivedAt !== null;
@@ -21,6 +28,7 @@ export function ProjectSettings({ canRestoreTasks }: Readonly<{ canRestoreTasks:
       {archived && <p className="text-sm">This project is archived, so it is read-only.</p>}
       <DetailsSection announce={setMessage} />
       <ColumnsSection announce={setMessage} readOnly={archived} />
+      <TriageSection announce={setMessage} readOnly={archived || !canManageTriage} />
       {canRestoreTasks && <DeletedTasksSection announce={setMessage} readOnly={archived} />}
     </div>
   );

@@ -1,6 +1,7 @@
 # WS-092 — The project's "Triage" settings section
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 5 as recommended)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 5 as
+  recommended)
 - Work-item: [WI-092](../work-items/WI-092-triage-section.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 6 (routing);
   [0003](../canonical/0003-task-management.md) section 3 (Managers edit routing rules);
@@ -195,3 +196,31 @@ Risks:
   re-export keeps every import working, and the merge is a few lines.
 - **E2E port 3100 is shared** with the item F session on this machine; the gate is run
   when it is free.
+
+## Deviations from the approved spec
+
+1. **Live updates listen to `project.changed`**, as the Details form does, rather than
+   comparing the frame's `project.version` with the held version (section 4). The cases
+   are the same: every change that bumps the version, one's own Details save included,
+   publishes that event. Reading on the event also avoids reading again and again while
+   the frame's version stays ahead of the settings' version.
+2. **The load-failure tests render the page themselves** rather than through
+   `renderSettings`, which waits for the loaded section.
+3. **Test 9 is the existing assertion of the page's integration test**, which now expects
+   `{ canRestoreTasks: true, canManageTriage: true }`.
+
+## Implementation record
+
+- Red: the 15 new cases of `project-settings.test.tsx` failed because there was no
+  "Triage team" field, and the 22 existing ones failed with them (`renderSettings` now
+  waits for the section). Committed as `test(triage)`.
+- Green: `triage-section.tsx`, `getTriage` and `updateTriage` in `projects/api.ts`,
+  `listAllTeams` moved to `teams/api.ts` and re-exported by `task/api.ts`, the section in
+  `ProjectSettings` with `readOnly={archived || !canManageTriage}`, and the page passing
+  `canManageTriage` from `teams:manage`. The file's 37 cases pass.
+- Gate on 2026-11-20:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1724 of 1724;
+  - `pnpm test:e2e --retries=0` 89 of 89, including the new test in `projects.spec.ts`;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18.7 on port 5433, with
+    this item's own databases (`opanel_wi092_test`, `opanel_wi092_e2e_test`).
