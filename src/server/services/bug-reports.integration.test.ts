@@ -9,7 +9,7 @@ import { getDb } from "@/server/db/client";
 import { auditLog, bugReports, comments, taskEvents, taskLinks, tasks } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
-import { fileBugReport } from "./bug-reports";
+import { fileBugReport, listBugReports } from "./bug-reports";
 import { listColumns } from "./columns";
 import { type EventListener, listenForEvents } from "./events-testing";
 import { archiveProject, createProject } from "./projects";
@@ -415,5 +415,99 @@ describe("fileBugReport: who may file (WS-089)", () => {
     const archived = await failure(fileBugReport(filer, "OPA", report()));
     expect([archived.status, archived.code]).toEqual([409, "project_archived"]);
     expect(await getDb().select({ id: bugReports.id }).from(bugReports)).toHaveLength(0);
+  });
+});
+
+describe("listBugReports (WS-090)", () => {
+  it("reads the reports behind a task newest first, each as sent", async () => {
+    const { managerActor, agent, bot } = await setup();
+    const full = report({
+      evidence: {
+        stepsToReproduce: ["Open /checkout", "Click Pay"],
+        http: { method: "POST", path: "/api/orders", status: 500, responseSnippet: "{}" },
+        diagnosis: "The API throws.",
+      },
+    });
+    const first = await fileBugReport(bot, "OPA", full);
+    const minimal = submitBugReportRequestSchema.parse({
+      title: "Checkout returns 500",
+      fingerprint: "api:/orders:500",
+    });
+    await fileBugReport(bot, "OPA", minimal);
+
+    const page = await listBugReports(managerActor, first.taskKey, { limit: 10 });
+
+    expect(page.nextCursor).toBeNull();
+    expect(page.items).toEqual([
+      {
+        id: expect.any(String) as unknown,
+        taskId: first.taskId,
+        agent: { id: agent.id, name: "QA Bot", kind: "agent" },
+        outcome: "deduplicated",
+        originLayer: "unknown",
+        confidence: null,
+        severity: "medium",
+        fingerprint: "api:/orders:500",
+        runId: null,
+        title: "Checkout returns 500",
+        summary: null,
+        evidence: null,
+        createdAt: expect.any(String) as unknown,
+      },
+      {
+        id: expect.any(String) as unknown,
+        taskId: first.taskId,
+        agent: { id: agent.id, name: "QA Bot", kind: "agent" },
+        outcome: "created",
+        originLayer: "api",
+        confidence: 0.8,
+        severity: "high",
+        fingerprint: "api:/orders:500",
+        runId: "run-1",
+        title: "Checkout returns 500",
+        summary: "The Pay button fails.",
+        evidence: full.evidence,
+        createdAt: expect.any(String) as unknown,
+      },
+    ]);
+  });
+
+  it("answers an empty page, and 404 for an unknown or deleted task", async () => {
+    const { managerActor, bot } = await setup();
+    const plain = await createTask(managerActor, "OPA", { title: "Plain" });
+    const filed = await fileBugReport(bot, "OPA", report());
+    await deleteTask(managerActor, filed.taskKey);
+
+    expect(await listBugReports(managerActor, plain.key, { limit: 10 })).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    for (const ref of ["OPA-99", filed.taskKey]) {
+      expect((await failure(listBugReports(managerActor, ref, { limit: 10 }))).status).toBe(404);
+    }
+  });
+
+  it("pages through reports that share a creation time without repeating or skipping one", async () => {
+    const { managerActor, bot } = await setup();
+    const first = await fileBugReport(bot, "OPA", report());
+    for (let index = 0; index < 11; index += 1) await fileBugReport(bot, "OPA", report());
+    await getDb().execute(sql`alter table bug_reports disable trigger user`);
+    await getDb().execute(sql`update bug_reports set created_at = '2026-11-20T08:00:00.123456Z'`);
+    await getDb().execute(sql`alter table bug_reports enable trigger user`);
+
+    const seen: string[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await listBugReports(managerActor, first.taskKey, {
+        limit: 5,
+        ...(cursor === undefined ? {} : { cursor }),
+      });
+      seen.push(...page.items.map((item) => item.id));
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor !== undefined);
+
+    expect(seen).toHaveLength(12);
+    expect(new Set(seen).size).toBe(12);
+    expect(seen).toEqual([...seen].sort().reverse());
   });
 });

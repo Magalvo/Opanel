@@ -258,6 +258,22 @@ describe("buildOpenApiDocument", () => {
     );
   });
 
+  it("describes the reports of a task, paged 25 at most, and the links of a Task (WS-090)", () => {
+    const document = documentAsJson();
+    const { paths, components } = parsedDocument();
+    const operation = paths["/api/v1/tasks/{taskId}/bug-reports"]?.get;
+
+    expect(operation?.responses["200"]?.content?.["application/json"]?.schema.$ref).toBe(
+      "#/components/schemas/BugReportPage",
+    );
+    expect(JSON.stringify(document.paths)).toContain('"maximum":25');
+    expect(components.schemas.Task).toMatchObject({
+      properties: { links: { type: "array", items: { $ref: "#/components/schemas/TaskLink" } } },
+      required: expect.arrayContaining(["links"]) as unknown,
+    });
+    expect(JSON.stringify(components.schemas.TaskSummary)).not.toContain('"links"');
+  });
+
   it("gives tasks their bug fields, and takes severity on create and edit (WS-088)", () => {
     const { schemas } = parsedDocument().components;
     const severity = { anyOf: [{ $ref: "#/components/schemas/Severity" }, { type: "null" }] };

@@ -98,6 +98,13 @@ describe("severity and the bug fields (WS-088)", () => {
     fingerprint: "fp-1",
     occurrences: 2,
     lastReportedAt: "2026-11-20T08:30:00.123Z",
+    links: [
+      {
+        type: "regression_of",
+        direction: "outgoing",
+        task: { id: UUID, key: "OPA-0", title: "Old crash" },
+      },
+    ],
     version: 1,
     createdAt: "2026-11-20T08:00:00.000Z",
     updatedAt: "2026-11-20T08:30:00.123Z",
@@ -107,12 +114,21 @@ describe("severity and the bug fields (WS-088)", () => {
 
   it("a task carries severity, fingerprint, occurrences and lastReportedAt", () => {
     expect(taskSchema.parse(task)).toEqual(task);
-    for (const field of ["severity", "fingerprint", "occurrences", "lastReportedAt"]) {
+    for (const field of ["severity", "fingerprint", "occurrences", "lastReportedAt", "links"]) {
       const { [field]: _omitted, ...without } = task as Record<string, unknown>;
       expect(taskSchema.safeParse(without).success, field).toBe(false);
     }
     expect(taskSchema.safeParse({ ...task, severity: "urgent" }).success).toBe(false);
     expect(taskSchema.safeParse({ ...task, occurrences: -1 }).success).toBe(false);
+    // Links (WS-090): a type of the catalogue and a direction.
+    const [link] = task.links;
+    expect(taskSchema.safeParse({ ...task, links: [] }).success).toBe(true);
+    expect(taskSchema.safeParse({ ...task, links: [{ ...link, type: "blocks" }] }).success).toBe(
+      false,
+    );
+    expect(taskSchema.safeParse({ ...task, links: [{ ...link, direction: "both" }] }).success).toBe(
+      false,
+    );
   });
 
   it("create: a severity only with type bug; the pipeline's fields are refused", () => {
