@@ -1,13 +1,12 @@
-import { listTeams } from "@/components/teams/api";
 import { call, callNoContent, jsonBody } from "@/lib/api-client";
 import { commentPageSchema, commentSchema } from "@/lib/schemas/comments";
 import { type Epic, epicPageSchema } from "@/lib/schemas/epics";
 import { MAX_PAGE_LIMIT } from "@/lib/schemas/pagination";
+import { bugReportPageSchema } from "@/lib/schemas/task-bug-reports";
 import { taskSchema, type UpdateTaskRequest } from "@/lib/schemas/tasks";
-import type { TeamSummary } from "@/lib/schemas/teams";
 
 export { listColumns } from "@/components/projects/api";
-export { searchPeople } from "@/components/teams/api";
+export { listAllTeams, searchPeople } from "@/components/teams/api";
 
 /** Comments per page (WS-034). */
 export const COMMENT_PAGE_SIZE = 50;
@@ -53,16 +52,13 @@ export function addComment(key: string, body: string) {
   );
 }
 
-/** Every team, for the team select (a small list). */
-export async function listAllTeams(): Promise<TeamSummary[]> {
-  const teams: TeamSummary[] = [];
-  let cursor: string | undefined;
-  do {
-    const page = await listTeams(cursor);
-    teams.push(...page.items);
-    cursor = page.nextCursor ?? undefined;
-  } while (cursor !== undefined);
-  return teams;
+/**
+ * The reports behind a task, newest first (WS-090). No `limit`: the server's default of 10
+ * keeps pages small, since a report can be large (WS-091 section 5).
+ */
+export function listBugReports(key: string, cursor?: string) {
+  const query = cursor === undefined ? "" : `?cursor=${encodeURIComponent(cursor)}`;
+  return call(`/api/v1/tasks/${key}/bug-reports${query}`, {}, bugReportPageSchema);
 }
 
 /** Every open epic of the project, for the epic select. */

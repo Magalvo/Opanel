@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiFailure } from "@/lib/api-client";
+import { SEVERITIES, type Severity, severitySchema } from "@/lib/schemas/bug-reports";
 import type { Column } from "@/lib/schemas/columns";
 import type { Epic } from "@/lib/schemas/epics";
 import type { Person } from "@/lib/schemas/people";
@@ -24,6 +25,7 @@ import {
 import type { TeamSummary } from "@/lib/schemas/teams";
 
 import { updateTask } from "./api";
+import { SEVERITY_LABELS } from "./bug-labels";
 import { PersonField, personLabel } from "./person-field";
 
 const SELECT =
@@ -45,6 +47,8 @@ function Row({ term, children }: Readonly<{ term: string; children: React.ReactN
 interface Draft {
   title: string;
   type: TaskType;
+  /** Shown and sent only while the type is `bug` (WS-091 section 3). */
+  severity: Severity | null;
   description: string;
   teamId: string;
   assignee: Person | null;
@@ -55,6 +59,7 @@ function draftOf(task: Task): Draft {
   return {
     title: task.title,
     type: task.type,
+    severity: task.severity,
     description: task.description,
     teamId: task.assigneeTeam?.id ?? "",
     assignee: task.assignee,
@@ -67,6 +72,8 @@ function changesOf(task: Task, draft: Draft): Omit<UpdateTaskRequest, "version">
   const changes: Omit<UpdateTaskRequest, "version"> = {};
   if (draft.title !== task.title) changes.title = draft.title;
   if (draft.type !== task.type) changes.type = draft.type;
+  // The server clears a severity when the type leaves `bug` (WS-088 section 2).
+  if (draft.type === "bug" && draft.severity !== task.severity) changes.severity = draft.severity;
   if (draft.description !== task.description) changes.description = draft.description;
   if (draft.teamId !== (task.assigneeTeam?.id ?? "")) {
     changes.assigneeTeamId = draft.teamId === "" ? null : draft.teamId;
@@ -134,6 +141,11 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
             <Row term="Type">
               <Badge variant="outline">{TYPE_LABELS[task.type]}</Badge>
             </Row>
+            {task.type === "bug" && (
+              <Row term="Severity">
+                {task.severity === null ? "None" : SEVERITY_LABELS[task.severity]}
+              </Row>
+            )}
             <Row term="Column">{column?.name ?? "Unknown"}</Row>
             <Row term="Team">{task.assigneeTeam?.name ?? "No team"}</Row>
             <Row term="Person">
@@ -294,6 +306,31 @@ function DetailsForm({
             ))}
           </select>
         </div>
+        {draft.type === "bug" && (
+          <div className="grid min-w-0 gap-1.5">
+            <label htmlFor={`${id}-severity`} className="text-sm font-medium">
+              Severity
+            </label>
+            <select
+              id={`${id}-severity`}
+              value={draft.severity ?? ""}
+              className={SELECT}
+              onChange={(event) => {
+                const value = event.target.value;
+                set("severity", value === "" ? null : severitySchema.parse(value));
+              }}
+              {...described("severity")}
+            >
+              <option value="">No severity</option>
+              {SEVERITIES.map((severity) => (
+                <option key={severity} value={severity}>
+                  {SEVERITY_LABELS[severity]}
+                </option>
+              ))}
+            </select>
+            {errorText("severity")}
+          </div>
+        )}
         <div className="grid min-w-0 gap-1.5">
           <label htmlFor={`${id}-column`} className="text-sm font-medium">
             Column

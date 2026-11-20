@@ -1,8 +1,8 @@
-# WS-092 — Optional PostHog add-on: error-tracking issues become Opanel bug reports
+# WS-093 — Optional PostHog add-on: error-tracking issues become Opanel bug reports
 
 - Status: Done (2026-11-20). The manual PostHog check of section 4 is deferred (see the
   implementation record)
-- Work-item: [WI-092](../work-items/WI-092-posthog-bridge.md)
+- Work-item: [WI-093](../work-items/WI-093-posthog-addon.md)
 - Work-track: [WT-13](../work-tracks/WT-13-integrations.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) sections 3 to 6 (agent
   accounts, tokens, the bug report contract, triage),
@@ -10,7 +10,7 @@
 
 ## 1. What PostHog offers (read on 2026-11-20)
 
-WI-092 decision 5 asks this spec to read PostHog's current documentation and choose between
+WI-093 decision 5 asks this spec to read PostHog's current documentation and choose between
 a bridge service and a documented PostHog template. Sources: PostHog's docs pages
 "Send error tracking alerts" and "Send PostHog event data using webhooks", and in the
 `PostHog/posthog` repository on GitHub, the HTTP webhook destination
@@ -34,7 +34,7 @@ Every need above is met by PostHog's own webhook, so the add-on is **documented 
 webhook bodies plus an operator guide**, kept and tested in `addons/posthog/`. There is no
 service to run, so:
 
-- WI-092 decision 3 (a container image) does not apply: nothing is deployed. If the
+- WI-093 decision 3 (a container image) does not apply: nothing is deployed. If the
   template path ever proves insufficient, a bridge is a new work-item in WT-13.
 - Nothing in Opanel changes: no endpoint, no schema, no migration.
 - The add-on does not hold or see the token. The operator pastes it into PostHog's secret
@@ -112,7 +112,7 @@ Choices, each tied to the contract of `submitBugReportRequestSchema`:
 | `tsconfig.json`                            | modify | `exclude` gains `addons`, so the app's `typecheck` never compiles the add-on                                                          |
 | `.dockerignore`                            | modify | Gains `addons`, so the image's build context never holds it                                                                           |
 | `.github/workflows/ci.yml`                 | modify | New job "Add-ons", separate from "Quality gate": typecheck, unit tests and end-to-end test of `addons/posthog`                        |
-| `docs/README.md`, WI-092, WT-13            | modify | Statuses and the record of this item                                                                                                  |
+| `docs/README.md`, WI-093, WT-13            | modify | Statuses and the record of this item                                                                                                  |
 
 The add-on uses the repository's existing dev dependencies (`zod`, `vitest`,
 `@playwright/test`, `typescript`); `package.json` and `pnpm-lock.yaml` do not change, and
@@ -134,7 +134,7 @@ None. The add-on calls `POST /api/v1/projects/{projectId}/bug-reports` as any ag
 
 ## 4. Test plan (written first, in this order)
 
-| #   | Level | Test                                                                                                                                                                                                                                                           | Covers (WI-092)      |
+| #   | Level | Test                                                                                                                                                                                                                                                           | Covers (WI-093)      |
 | --- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | 1   | unit  | Each body, rendered with each fixture it is meant for, parses with `submitBugReportRequestSchema`                                                                                                                                                              | mapping, size caps   |
 | 2   | unit  | Each body uses only plain placeholder paths (no expressions), and only paths the fixtures define, so a typo or an unsupported path fails here, not in PostHog                                                                                                  | mapping              |
@@ -153,7 +153,7 @@ PostHog itself. Before marking the item done, the implementer also sends one rea
 from a PostHog project (its "Test function" button) to a local Opanel through a tunnel and
 records the result in the implementation record; this is a manual check, not a CI test.
 
-The WI-092 criteria about a bridge service (webhook authentication, Zod-validated
+The WI-093 criteria about a bridge service (webhook authentication, Zod-validated
 environment, retries in our code, an HTTP server) are replaced by: PostHog authenticates to
 Opanel with the agent's token in a secret header (Opanel already refuses anything else with
 `401`), configuration lives in PostHog's alert, and PostHog retries `429` and `5xx`
@@ -239,7 +239,13 @@ build .` passes with the directory in place, and the image has no `/app/addons`.
 
 - `addons/posthog/e2e/environment.ts` was added: the add-on's port (3200) and base URL,
   shared by its Playwright config and spec. Not in the files table of section 3.
-- The guide sets the triage settings through the API: the app has no page for them yet
-  (WT-06 item F).
+- The guide first set the triage settings through the API. WI-092 (the project's Triage
+  settings section, merged to `main` while this item was open) added a page for them, and
+  the guide now points to it.
+- **Renumbered from WI-092 to WI-093.** This item was drafted as WI-092 while another
+  session used the same number for the Triage settings section, which reached `main`
+  first. On merging `main`, these docs became WI-093 and WS-093. The first three commits
+  of this branch still say "(WI-092)" in their messages; they were not rewritten, since the
+  branch was already pushed.
 - In the end-to-end test the agent holds only `projects:read` and `reports:write` and is
   restricted to its project, as the guide tells operators to do.

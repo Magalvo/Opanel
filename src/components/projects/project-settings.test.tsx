@@ -8,6 +8,8 @@ import type { Column } from "@/lib/schemas/columns";
 import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Project } from "@/lib/schemas/projects";
 import type { TaskSummary } from "@/lib/schemas/tasks";
+import type { TeamSummary } from "@/lib/schemas/teams";
+import type { TriageSettings } from "@/lib/schemas/triage";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
@@ -68,7 +70,24 @@ const deleted: TaskSummary = {
   deletedAt: "2026-11-13T10:00:00.000Z",
 };
 
+function team(id: string, name: string): TeamSummary {
+  return { id, name, memberCount: 1, createdAt: "2026-11-12T10:00:00.000Z" };
+}
+
+const web = team("77777777-7777-4777-8777-777777777777", "Web");
+const platform = team("88888888-8888-4888-8888-888888888888", "Platform");
+const qa = team("99999999-9999-4999-8999-999999999999", "QA");
+
+const noTriage: TriageSettings = {
+  triageTeamId: null,
+  rules: { frontend: null, api: null, backend: null },
+  version: 3,
+};
+
 const PROJECT = "GET /api/v1/projects/OPA";
+const TRIAGE = "GET /api/v1/projects/OPA/triage";
+const PATCH_TRIAGE = "PATCH /api/v1/projects/OPA/triage";
+const TEAMS = "GET /api/v1/teams?limit=50";
 const COLUMNS = "GET /api/v1/projects/OPA/columns";
 const DELETED = "GET /api/v1/projects/OPA/tasks?limit=50&deleted=true";
 
@@ -83,26 +102,39 @@ function columns(items: Column[]) {
 async function renderSettings({
   project = opa,
   canRestoreTasks = true,
+  canManageTriage = true,
   cols = [todo, doing, done],
   tasks = [deleted],
+  triage = noTriage,
+  teams = [web, platform, qa],
 }: {
   project?: Project;
   canRestoreTasks?: boolean;
+  canManageTriage?: boolean;
   cols?: Column[];
   tasks?: TaskSummary[];
+  triage?: TriageSettings;
+  teams?: TeamSummary[];
 } = {}) {
   on(PROJECT, json(project));
   on(COLUMNS, columns(cols));
   on(DELETED, json({ items: tasks, nextCursor: null }));
+  on(TRIAGE, json(triage));
+  on(TEAMS, json({ items: teams, nextCursor: null }));
   const user = userEvent.setup();
   render(
     <ProjectFrame projectKey="OPA" canManageProjects>
-      <ProjectSettings canRestoreTasks={canRestoreTasks} />
+      <ProjectSettings canRestoreTasks={canRestoreTasks} canManageTriage={canManageTriage} />
     </ProjectFrame>,
   );
   await screen.findByRole("heading", { level: 2, name: "Details" });
   await screen.findByRole("row", { name: /In progress/ });
+  await screen.findByLabelText("Triage team");
   return user;
+}
+
+function triageSelect(name: string): HTMLSelectElement {
+  return within(section("Triage")).getByLabelText(name);
 }
 
 function section(name: string) {
@@ -471,5 +503,304 @@ describe("ProjectSettings: live (WS-049 section 5)", () => {
     });
 
     expect(await screen.findByRole("row", { name: /Review/ })).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettings: triage (WS-092)", () => {
+  const chosen: TriageSettings = {
+    triageTeamId: qa.id,
+    rules: { frontend: web.id, api: platform.id, backend: null },
+    version: 3,
+  };
+
+  function conflict(current: TriageSettings) {
+    return json(
+      {
+        type: "about:blank",
+        title: "Conflict",
+        status: 409,
+        code: "version_conflict",
+        detail: "Changed.",
+        requestId: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+        current,
+      },
+      409,
+    );
+  }
+
+  function sendProjectChanged(version: number) {
+    act(() => {
+      FakeSource.latest().send("project.changed", {
+        id: crypto.randomUUID(),
+        type: "project.changed",
+        projectId: PROJECT_ID,
+        entity: "project",
+        entityId: PROJECT_ID,
+        version,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-20T10:00:00.000Z",
+      });
+    });
+  }
+
+  function save() {
+    return within(section("Triage")).getByRole("button", { name: "Save" });
+  }
+
+  it("shows the hint and a select per layer, each set from the settings", async () => {
+    await renderSettings({ triage: chosen });
+    const triage = section("Triage");
+
+    expect(triage).toHaveTextContent(
+      "Bugs of an unknown layer, or of a layer with no team, go to the triage team.",
+    );
+    for (const name of ["Triage team", "Frontend", "API", "Backend"]) {
+      const options = within(triageSelect(name)).getAllByRole("option");
+      expect(options.map((option) => option.textContent)).toEqual([
+        "No team",
+        "Web",
+        "Platform",
+        "QA",
+      ]);
+    }
+    expect(triageSelect("Triage team")).toHaveValue(qa.id);
+    expect(triageSelect("Frontend")).toHaveValue(web.id);
+    expect(triageSelect("API")).toHaveValue(platform.id);
+    expect(triageSelect("Backend")).toHaveValue("");
+  });
+
+  it("shows a team it does not know as Unknown team", async () => {
+    const other = "abababab-abab-4bab-8bab-abababababab";
+    await renderSettings({ triage: { ...noTriage, triageTeamId: other } });
+
+    expect(triageSelect("Triage team")).toHaveValue(other);
+    expect(
+      within(triageSelect("Triage team")).getByRole("option", { selected: true }),
+    ).toHaveTextContent("Unknown team");
+  });
+
+  it("saves every value with the version it holds and shows the answer", async () => {
+    on(PROJECT, json({ ...opa, version: 4 }));
+    const user = await renderSettings({ triage: chosen });
+    on(
+      PATCH_TRIAGE,
+      json({
+        triageTeamId: null,
+        rules: { ...chosen.rules, backend: platform.id },
+        version: 4,
+      }),
+    );
+
+    await user.selectOptions(triageSelect("Triage team"), "No team");
+    await user.selectOptions(triageSelect("Backend"), "Platform");
+    await user.click(save());
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Saved.");
+    });
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({
+      triageTeamId: null,
+      rules: { frontend: web.id, api: platform.id, backend: platform.id },
+      version: 3,
+    });
+    expect(triageSelect("Triage team")).toHaveValue("");
+    expect(triageSelect("Backend")).toHaveValue(platform.id);
+  });
+
+  it("brings the frame's project to the new version, so Details saves without a conflict", async () => {
+    const user = await renderSettings();
+    on(PATCH_TRIAGE, json({ ...chosen, version: 4 }));
+    on(PROJECT, json({ ...opa, version: 4 }));
+    on("PATCH /api/v1/projects/OPA", json({ ...opa, description: "New.", version: 5 }));
+
+    await user.selectOptions(triageSelect("Triage team"), "QA");
+    await user.click(save());
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Saved.");
+    });
+    await waitFor(() => {
+      expect(calls("GET").filter(([url]) => url === "/api/v1/projects/OPA")).toHaveLength(2);
+    });
+    const details = section("Details");
+    await user.clear(within(details).getByLabelText("Description"));
+    await user.type(within(details).getByLabelText("Description"), "New.");
+    await user.click(within(details).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(calls("PATCH")).toHaveLength(2);
+    });
+    expect(bodyOf(calls("PATCH")[1]?.[1])).toMatchObject({ version: 4 });
+  });
+
+  it("shows the current settings on a version conflict and says why", async () => {
+    const user = await renderSettings();
+    on(PATCH_TRIAGE, conflict({ ...chosen, version: 6 }));
+
+    await user.selectOptions(triageSelect("Backend"), "QA");
+    await user.click(save());
+
+    await waitFor(() => {
+      expect(triageSelect("Triage team")).toHaveValue(qa.id);
+    });
+    expect(triageSelect("Backend")).toHaveValue("");
+    expect(status()).toHaveTextContent(
+      "The project changed since these settings were loaded. The current settings are shown; make your change again.",
+    );
+
+    on(PATCH_TRIAGE, json({ ...chosen, version: 7 }));
+    await user.click(save());
+    await waitFor(() => {
+      expect(calls("PATCH")).toHaveLength(2);
+    });
+    expect(bodyOf(calls("PATCH")[1]?.[1])).toMatchObject({ version: 6 });
+  });
+
+  it("says when the project is archived", async () => {
+    const user = await renderSettings();
+    on(PATCH_TRIAGE, problem(409, "project_archived"));
+
+    await user.selectOptions(triageSelect("API"), "Platform");
+    await user.click(save());
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("The project is archived.");
+    });
+  });
+
+  it("reads the teams again when a chosen team no longer exists, keeping the choices", async () => {
+    const user = await renderSettings();
+    on(
+      PATCH_TRIAGE,
+      problem(400, "invalid_request", [{ path: "rules.api", message: "There is no such team." }]),
+    );
+
+    await user.selectOptions(triageSelect("API"), "Platform");
+    on(TEAMS, json({ items: [web, qa], nextCursor: null }));
+    await user.click(save());
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent(
+        "A team you chose no longer exists. The list of teams was refreshed.",
+      );
+    });
+    await waitFor(() => {
+      expect(
+        within(triageSelect("Frontend")).queryByRole("option", { name: "Platform" }),
+      ).toBeNull();
+    });
+    expect(triageSelect("API")).toHaveValue(platform.id);
+  });
+
+  it("keeps the choices when saving fails otherwise", async () => {
+    const user = await renderSettings();
+    on(PATCH_TRIAGE, problem(500, "internal_error"));
+
+    await user.selectOptions(triageSelect("Frontend"), "Web");
+    await user.click(save());
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Could not save. Try again.");
+    });
+    expect(triageSelect("Frontend")).toHaveValue(web.id);
+  });
+
+  it.each([
+    ["an archived project", { project: { ...opa, archivedAt: "2026-11-19T10:00:00.000Z" } }],
+    ["someone without teams:manage", { canManageTriage: false }],
+  ])("is read-only for %s", async (_name, options) => {
+    await renderSettings(options);
+
+    for (const name of ["Triage team", "Frontend", "API", "Backend"]) {
+      expect(triageSelect(name)).toBeDisabled();
+    }
+    expect(save()).toBeDisabled();
+  });
+
+  it.each([TRIAGE, TEAMS])("says when %s fails to load, and retries", async (failing) => {
+    on(PROJECT, json(opa));
+    on(COLUMNS, columns([todo, doing, done]));
+    on(DELETED, json({ items: [], nextCursor: null }));
+    on(TRIAGE, json(chosen));
+    on(TEAMS, json({ items: [web, platform, qa], nextCursor: null }));
+    on(failing, problem(500, "internal_error"));
+    const user = userEvent.setup();
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects>
+        <ProjectSettings canRestoreTasks canManageTriage />
+      </ProjectFrame>,
+    );
+
+    expect(await screen.findByText("Could not load the triage settings.")).toBeVisible();
+
+    on(TRIAGE, json(chosen));
+    on(TEAMS, json({ items: [web, platform, qa], nextCursor: null }));
+    await user.click(within(section("Triage")).getByRole("button", { name: "Retry" }));
+
+    await waitFor(() => {
+      expect(triageSelect("Triage team")).toHaveValue(qa.id);
+    });
+  });
+
+  describe("live", () => {
+    async function renderLive() {
+      const user = await renderSettings();
+      act(() => {
+        FakeSource.latest().open();
+      });
+      return user;
+    }
+
+    it("reads the settings again on a newer project version when nothing is unsaved", async () => {
+      await renderLive();
+      on(PROJECT, json({ ...opa, version: 4 }));
+      on(TRIAGE, json({ ...chosen, version: 4 }));
+
+      sendProjectChanged(4);
+
+      await waitFor(() => {
+        expect(triageSelect("Triage team")).toHaveValue(qa.id);
+      });
+    });
+
+    it("keeps unsaved choices, says so, and saves on the old version", async () => {
+      const user = await renderLive();
+      on(PATCH_TRIAGE, conflict({ ...chosen, version: 4 }));
+      await user.selectOptions(triageSelect("Backend"), "Web");
+      on(PROJECT, json({ ...opa, version: 4 }));
+      on(TRIAGE, json({ ...chosen, version: 4 }));
+
+      sendProjectChanged(4);
+
+      await waitFor(() => {
+        expect(status()).toHaveTextContent(
+          "The project changed since these settings were loaded. Saving will show the current settings first.",
+        );
+      });
+      expect(triageSelect("Backend")).toHaveValue(web.id);
+      expect(triageSelect("Triage team")).toHaveValue("");
+      await user.click(save());
+      await waitFor(() => {
+        expect(calls("PATCH")).toHaveLength(1);
+      });
+      expect(bodyOf(calls("PATCH")[0]?.[1])).toMatchObject({ version: 3 });
+    });
+
+    it("reads the settings and the teams again after a reconnect", async () => {
+      const ops = team("cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd", "Ops");
+      await renderLive();
+      on(TRIAGE, json({ ...noTriage, triageTeamId: ops.id }));
+      on(TEAMS, json({ items: [web, platform, qa, ops], nextCursor: null }));
+
+      act(() => {
+        FakeSource.latest().drop();
+        FakeSource.latest().open();
+      });
+
+      await waitFor(() => {
+        expect(
+          within(triageSelect("Triage team")).getByRole("option", { selected: true }),
+        ).toHaveTextContent("Ops");
+      });
+    });
   });
 });

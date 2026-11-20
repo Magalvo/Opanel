@@ -8,7 +8,7 @@ import { submitBugReportRequestSchema } from "@/lib/schemas/bug-reports";
 
 import { isPlainPath, type Json, placeholders, readJson, render } from "./render";
 
-// WS-092 section 4, tests 1 to 7: the webhook bodies an operator pastes into PostHog,
+// WS-093 section 4, tests 1 to 7: the webhook bodies an operator pastes into PostHog,
 // rendered with alert events built from PostHog's documented properties, satisfy Opanel's
 // bug report contract, and the add-on stays apart from the app.
 
@@ -18,7 +18,7 @@ const repo = new URL("../../../", import.meta.url);
 const body = (name: string) => readJson(new URL(`bodies/body-${name}.json`, addon));
 const fixture = (name: string) => readJson(new URL(`fixtures/${name}.json`, addon));
 
-// Which alerts each body is set up for (WS-092 section 2).
+// Which alerts each body is set up for (WS-093 section 2).
 const USES = {
   unknown: ["created-web", "created-node", "reopened-web", "spiking"],
   frontend: ["created-web", "reopened-web"],

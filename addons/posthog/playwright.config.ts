@@ -10,7 +10,7 @@ import {
 } from "../../tests/e2e/environment";
 import { ADDON_BASE_URL, ADDON_PORT } from "./e2e/environment";
 
-// The PostHog add-on's end-to-end test (WS-092 section 4): the production build of the
+// The PostHog add-on's end-to-end test (WS-093 section 4): the production build of the
 // app, started as the app's own playwright.config.ts starts it, on the add-on's port. Run
 // with `pnpm exec playwright test --config addons/posthog/playwright.config.ts`.
 

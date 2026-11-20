@@ -1,7 +1,7 @@
 # PostHog add-on (optional)
 
 Turns PostHog error-tracking issues into Opanel bug reports. It is **optional**: Opanel
-works exactly the same without it, and nothing in the app depends on it (WT-13, WS-092).
+works exactly the same without it, and nothing in the app depends on it (WT-13, WS-093).
 
 There is nothing to install or run. The add-on is a set of webhook bodies you paste into a
 PostHog error-tracking alert. PostHog then calls Opanel's public bug report endpoint with
@@ -22,12 +22,9 @@ POST /api/v1/projects/<project key>/bug-reports  -->  dedupe, routing, a bug tas
    reports on.
 2. **Create token.** Copy it now: Opanel shows it once. Do not store it anywhere else than
    PostHog's secret headers (step 2).
-3. Set the project's triage settings: the team for each layer (`frontend`, `api`,
-   `backend`) and the triage team, which receives everything PostHog cannot place. Until
-   the app has a page for this, a Manager or Admin sets them through the API:
-   `GET /api/v1/projects/<project key>/triage` for the current `version`, then
-   `PATCH` the same path with `{"triageTeamId": "<team id>", "rules": {"frontend":
-"<team id>", "backend": "<team id>"}, "version": <version>}`.
+3. In the project's settings, section **Triage** (a Manager or an Admin), choose the team
+   for each layer (`frontend`, `api`, `backend`) and the triage team, which receives
+   everything PostHog cannot place.
 
 ## 2. In PostHog
 

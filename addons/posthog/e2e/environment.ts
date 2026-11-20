@@ -1,4 +1,4 @@
-// The add-on's end-to-end run (WS-092) uses the app's end-to-end database and secrets
+// The add-on's end-to-end run (WS-093) uses the app's end-to-end database and secrets
 // (tests/e2e/environment.ts) on its own port, so it never tests a server the app's own
 // end-to-end run started.
 

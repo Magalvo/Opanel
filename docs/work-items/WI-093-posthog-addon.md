@@ -1,11 +1,11 @@
-# WI-092 — Optional PostHog add-on: error-tracking issues become Opanel bug reports
+# WI-093 — Optional PostHog add-on: error-tracking issues become Opanel bug reports
 
 - Status: Done (2026-11-20). The manual check with a real PostHog alert is deferred by the
   owner to a follow-up in `docs/README.md`
 - Work-track: [WT-13](../work-tracks/WT-13-integrations.md) (item A)
 - Depends on: WI-089 (done: `POST /projects/{projectId}/bug-reports` and the triage
   pipeline)
-- Work-spec: [WS-092](../work-specs/WS-092-posthog-bridge.md)
+- Work-spec: [WS-093](../work-specs/WS-093-posthog-addon.md)
 
 ## Outcome
 
@@ -43,17 +43,17 @@ PostHog users. Concretely:
 
 - [ ] Opanel's own quality gate and its container image do not depend on the add-on:
       removing the add-on's directory leaves `pnpm typecheck`, `lint`, `test`, `test:e2e`
-      and the image build green (checked once in WS-092, then by CI keeping the add-on's
+      and the image build green (checked once in WS-093, then by CI keeping the add-on's
       job separate from the app's).
 - [ ] The bridge accepts PostHog's webhook for an error-tracking issue and answers it
       only when the request proves it came from the configured PostHog source (a shared
-      secret or signature, as WS-092 settles); any other request is refused and nothing is
+      secret or signature, as WS-093 settles); any other request is refused and nothing is
       sent to Opanel.
 - [ ] Each accepted issue is submitted as one bug report whose `fingerprint` is derived
       only from the PostHog project and issue id, so every repeat of that issue lands on
       the same open task (`200 deduplicated`) and a repeat after the task is closed opens a
       new task with a `regression of` link (doc 0001 section 6).
-- [ ] The report's fields are mapped as WS-092 specifies: `title` from the exception,
+- [ ] The report's fields are mapped as WS-093 specifies: `title` from the exception,
       `severity` from a documented rule, `summary` with links back to the PostHog issue and
       to a session replay when one exists, `evidence` with the stack trace, URL and
       exception details, all within the size caps of doc 0001 section 5.
@@ -90,14 +90,14 @@ PostHog users. Concretely:
 3. **Runtime.** A plain Node HTTP server shipped as its own optional container image,
    separate from Opanel's image.
 4. **Dependencies.** None beyond Zod is expected (plain `fetch` and Node's HTTP server).
-   If WS-092 needs a PostHog SDK, that is a canonical doc change first (AGENTS.md section
+   If WS-093 needs a PostHog SDK, that is a canonical doc change first (AGENTS.md section
    2).
-5. **Bridge or template.** WS-092 reads PostHog's current documentation for the webhook
+5. **Bridge or template.** WS-093 reads PostHog's current documentation for the webhook
    payload, its authentication and the issue fields (hard rule 13), and chooses: a
    documented PostHog webhook template with no code, if it can produce the bug report
    contract (fingerprint, `originLayer`, authentication) on its own; otherwise the bridge
    this item describes. If the template is chosen, the criteria about the bridge's code
-   become criteria about the template and its guide, and WS-092 says which.
+   become criteria about the template and its guide, and WS-093 says which.
 
 ## Notes
 
@@ -107,5 +107,5 @@ PostHog users. Concretely:
 - Not in scope: instrumenting Opanel itself with PostHog. That adds a dependency and needs
   a canonical doc change first.
 - Session replays stay in PostHog; the report carries a link. Attachments are out of v1.
-- WS-092 chose the template path (decision 5). Section 4 of WS-092 says which test covers
+- WS-093 chose the template path (decision 5). Section 4 of WS-093 says which test covers
   each criterion above and which criteria about a bridge service it replaces.

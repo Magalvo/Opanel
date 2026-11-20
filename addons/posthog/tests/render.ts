@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 // Renders a webhook body the way PostHog's HTTP Webhook does for plain placeholders: each
 // string value is a Hog f-string, so every `{a.b.c}` inside it is replaced by the value at
-// that path of the alert's globals (WS-092 section 1). Only plain paths are supported, on
+// that path of the alert's globals (WS-093 section 1). Only plain paths are supported, on
 // purpose: the bodies must not rely on Hog expressions this helper cannot check.
 
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };

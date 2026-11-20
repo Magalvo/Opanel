@@ -4,7 +4,7 @@ import { seedAccount } from "../../../tests/e2e/seed";
 import { readJson, render } from "../tests/render";
 import { ADDON_BASE_URL } from "./environment";
 
-// WS-092 section 4, tests 8 to 10: the bodies, rendered as PostHog renders them and sent
+// WS-093 section 4, tests 8 to 10: the bodies, rendered as PostHog renders them and sent
 // with the agent's token as PostHog's secret header sends it, go through the real app's
 // bug report endpoint and triage pipeline. PostHog itself is not under test.
 

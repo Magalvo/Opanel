@@ -9,10 +9,16 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-092 (the optional PostHog add-on, WT-13 item A: webhook bodies
+- **Last finished:** WI-093 (the optional PostHog add-on, WT-13 item A: webhook bodies
   for PostHog error-tracking alerts in `addons/posthog/`, tested against the bug report
   contract, and an operator guide; nothing in the app changed), on 2026-11-20, on the
-  branch `claude/wi-092-posthog-bridge`.
+  branch `claude/wi-092-posthog-bridge` (drafted as WI-092, renumbered on merging `main`).
+- **Also finished:** WI-091 (bugs in the UI, WT-06 item F: severity and report count on
+  the card; severity edit, "Reported N times", regression links and the Reports section in
+  the task detail), on 2026-11-20, on the branch `claude/wi-091-bugs-in-the-ui-fd9694`.
+- **Also finished:** WI-092 (the project's "Triage" settings section, WT-06 item G: the
+  triage team and the team of each layer, read-only without `teams:manage`, live), on
+  2026-11-20, on the branch `claude/wi-092-triage-settings-section-86a430`.
 - **Also finished:** WI-090 (reading the reports behind a task, and its regression links,
   WT-06 item E: `GET /tasks/{taskId}/bug-reports`, 10 by default and 25 at most, and
   `links` on `Task`; amends doc 0004 section 5), on 2026-11-20, on the branch
@@ -52,9 +58,8 @@ Updated at the end of every work-item, so that a new session can start from here
 - **Also finished:** WI-078 (the agent flow end to end, and `docs/agents.md`, WT-05 item
   H), on 2026-11-19, on the branch `claude/wi-078-agent-flow-and-guide`. WT-05 (agent
   accounts and API tokens) is done.
-- **Next:** propose WT-06 item F (bugs in the UI: severity and count on the card;
-  severity, reports and links in the task detail) or item G (the "Triage" settings
-  section) as a work-item and work-spec, and stop for the owner's approval. WT-11 (the MCP
+- **Next:** WT-06 item H (the end-to-end triage flow, the guide's "Filing bug reports",
+  and the amendments to docs 0001 and 0003): items A to G are done. WT-11 (the MCP
   server) follows WT-06.
 - **Approved on 2026-11-19:** WT-06 (bug reports and automated triage), decisions 1 to 16
   and questions 1 to 8 as recommended, including the amendments to docs 0001 and 0003
@@ -242,7 +247,9 @@ right after WT-04 and is done.
 | [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                 | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
 | [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                   | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
 | [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links       | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
-| [WI-092](work-items/WI-092-posthog-bridge.md)                   | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-092](work-specs/WS-092-posthog-bridge.md)                   | Done        |
+| [WI-091](work-items/WI-091-bugs-in-the-ui.md)                   | Bugs in the UI                                                    | Done        | [WS-091](work-specs/WS-091-bugs-in-the-ui.md)                   | Done        |
+| [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                           | Done        | [WS-092](work-specs/WS-092-triage-section.md)                   | Done        |
+| [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-093](work-specs/WS-093-posthog-addon.md)                    | Done        |
 
 ## Follow-ups
 
@@ -264,12 +271,8 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 Other follow-ups:
 
 - Send one real PostHog error-tracking alert, with a body from `addons/posthog/bodies/`, to
-  a local Opanel through a tunnel, and record the answer in WS-092 (the manual check of
-  WS-092 section 4, deferred by the owner on 2026-11-20: no PostHog project yet).
-
-- `docs/AGENTS.md` (the guide for agent authors) still says `reports:write` is "WT-06, not
-  yet" and lists bug reports under "What comes next", though WI-089 shipped them (found in
-  WI-092).
+  a local Opanel through a tunnel, and record the answer in WS-093 (the manual check of
+  WS-093 section 4, deferred by the owner on 2026-11-20: no PostHog project yet).
 
 - **Answered by WI-084 (2026-11-19):** `tests/e2e/agents.spec.ts`, "a Manager has neither
   the Agents link nor the page", counted every link whose name contains "Agents" (found in

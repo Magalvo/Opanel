@@ -13,6 +13,7 @@ import {
   type UpdateProjectRequest,
 } from "@/lib/schemas/projects";
 import { taskPageSchema, taskSchema } from "@/lib/schemas/tasks";
+import { triageSettingsSchema, type UpdateTriageRequest } from "@/lib/schemas/triage";
 
 export const PAGE_SIZE = 50;
 
@@ -89,4 +90,17 @@ export function listDeletedTasks(key: string, cursor?: string) {
 
 export function restoreTask(taskId: string) {
   return call(`/api/v1/tasks/${taskId}/restore`, { method: "POST" }, taskSchema);
+}
+
+/** A project's triage settings (WS-087). */
+export function getTriage(key: string) {
+  return call(`/api/v1/projects/${key}/triage`, {}, triageSettingsSchema);
+}
+
+export function updateTriage(key: string, body: UpdateTriageRequest) {
+  return call(
+    `/api/v1/projects/${key}/triage`,
+    { method: "PATCH", ...jsonBody(body) },
+    triageSettingsSchema,
+  );
 }
