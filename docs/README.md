@@ -182,6 +182,12 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
 
 Other follow-ups:
 
+- **The board can load too slowly after a reload on a cold test server** (WI-098, WS-098
+  section 4). Locally, with 4 workers on a freshly started `next start`, `board.spec.ts`'s
+  keyboard test failed 4 of 20 at `expect.poll` after `page.reload()`: the board was still
+  loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
+  if it recurs: a warm-up before the suite, or a longer wait after a reload.
+
 - **WT-10 places agent-filed bugs at the top of the backlog in sprint projects** (doc 0003
   section 13, question 1; WT-06 decision 7). Today a new bug goes to the top of the first
   column. WT-10's work-spec changes `placeNewBug` in `src/server/services/bug-reports.ts`,
