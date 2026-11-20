@@ -1,0 +1,11 @@
+{
+  "title": "{event.properties.name}",
+  "fingerprint": "posthog:{project.id}:{event.distinct_id}",
+  "originLayer": "unknown",
+  "severity": "medium",
+  "summary": "Reported by PostHog error tracking ({event.event}).\n\n{event.properties.description}\n\nIssue: {project.url}/error-tracking/fingerprint/{event.properties.fingerprint}?timestamp={event.properties.exception_timestamp}",
+  "evidence": {
+    "actual": "{event.properties.description}",
+    "diagnosis": "Reported by a PostHog alert that does not tell the layer; triage decides."
+  }
+}

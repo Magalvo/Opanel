@@ -9,7 +9,11 @@ Statuses: `Draft` → `Proposed` → `Approved` → `In progress` → `Done` (or
 
 Updated at the end of every work-item, so that a new session can start from here.
 
-- **Last finished:** WI-090 (reading the reports behind a task, and its regression links,
+- **Last finished:** WI-092 (the optional PostHog add-on, WT-13 item A: webhook bodies
+  for PostHog error-tracking alerts in `addons/posthog/`, tested against the bug report
+  contract, and an operator guide; nothing in the app changed), on 2026-11-20, on the
+  branch `claude/wi-092-posthog-bridge`.
+- **Also finished:** WI-090 (reading the reports behind a task, and its regression links,
   WT-06 item E: `GET /tasks/{taskId}/bug-reports`, 10 by default and 25 at most, and
   `links` on `Task`; amends doc 0004 section 5), on 2026-11-20, on the branch
   `claude/wi-090-reading-bug-reports`.
@@ -121,16 +125,17 @@ Updated at the end of every work-item, so that a new session can start from here
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                   | Title                                                   | Status   |
-| ------------------------------------------------------- | ------------------------------------------------------- | -------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     | Done     |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer | Done     |
-| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      | Done     |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    | Done     |
-| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved |
-| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done     |
-| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Done     |
-| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Approved |
+| Track                                                   | Title                                                   | Status      |
+| ------------------------------------------------------- | ------------------------------------------------------- | ----------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     | Done        |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer | Done        |
+| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      | Done        |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    | Done        |
+| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    | Approved    |
+| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    | Done        |
+| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           | Done        |
+| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        | Approved    |
+| [WT-13](work-tracks/WT-13-integrations.md)              | Integrations (optional add-ons)                         | In progress |
 
 Planned next, not yet drafted:
 
@@ -145,98 +150,99 @@ right after WT-04 and is done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
-| Item                                                            | Title                                                            | Item status | Spec                                                            | Spec status |
-| --------------------------------------------------------------- | ---------------------------------------------------------------- | ----------- | --------------------------------------------------------------- | ----------- |
-| [WI-001](work-items/WI-001-app-skeleton.md)                     | App skeleton: Next.js, strict TypeScript, Vitest                 | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)                     | Done        |
-| [WI-002](work-items/WI-002-lint-and-format.md)                  | ESLint and Prettier                                              | Done        | [WS-002](work-specs/WS-002-lint-and-format.md)                  | Done        |
-| [WI-003](work-items/WI-003-validated-env.md)                    | Validated environment variables                                  | Done        | [WS-003](work-specs/WS-003-validated-env.md)                    | Done        |
-| [WI-004](work-items/WI-004-database.md)                         | PostgreSQL, Drizzle and the integration test harness             | Done        | [WS-004](work-specs/WS-004-database.md)                         | Done        |
-| [WI-005](work-items/WI-005-health-endpoint.md)                  | Health endpoint: the first vertical slice                        | Done        | [WS-005](work-specs/WS-005-health-endpoint.md)                  | Done        |
-| [WI-006](work-items/WI-006-openapi.md)                          | OpenAPI document generated from Zod                              | Done        | [WS-006](work-specs/WS-006-openapi.md)                          | Done        |
-| [WI-007](work-items/WI-007-e2e.md)                              | Playwright end-to-end tests                                      | Done        | [WS-007](work-specs/WS-007-e2e.md)                              | Done        |
-| [WI-008](work-items/WI-008-ui-foundation.md)                    | UI foundation: Tailwind, shadcn/ui and the app shell             | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)                    | Done        |
-| [WI-009](work-items/WI-009-ci.md)                               | Continuous integration                                           | Done        | [WS-009](work-specs/WS-009-ci.md)                               | Done        |
-| [WI-010](work-items/WI-010-contributor-docs.md)                 | Contributor docs: README and CONTRIBUTING                        | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)                 | Done        |
-| [WI-011](work-items/WI-011-api-foundations.md)                  | API foundations: errors, validation helpers, request id          | Done        | [WS-011](work-specs/WS-011-api-foundations.md)                  | Done        |
-| [WI-012](work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type           | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)            | Done        |
-| [WI-013](work-items/WI-013-accounts-and-better-auth.md)         | Accounts, sessions schema and Better Auth                        | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)         | Done        |
-| [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                                       | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
-| [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter                   | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
-| [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                          | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
-| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu                      | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
-| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                           | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
-| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                               | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
-| [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                                | Done        | [WS-020](work-specs/WS-020-people-page.md)                      | Done        |
-| [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                            | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
-| [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth              | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
-| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks        | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
-| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted                     | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
-| [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission                 | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
-| [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                       | Done        | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Done        |
-| [WI-027](work-items/WI-027-positions-and-version-conflict.md)   | Fractional positions and the `version_conflict` response         | Done        | [WS-027](work-specs/WS-027-positions-and-version-conflict.md)   | Done        |
-| [WI-028](work-items/WI-028-projects-and-default-columns.md)     | Projects with default columns                                    | Done        | [WS-028](work-specs/WS-028-projects-and-default-columns.md)     | Done        |
-| [WI-029](work-items/WI-029-columns-api.md)                      | Columns API                                                      | Done        | [WS-029](work-specs/WS-029-columns-api.md)                      | Done        |
-| [WI-030](work-items/WI-030-tasks-core.md)                       | Tasks core                                                       | Done        | [WS-030](work-specs/WS-030-tasks-core.md)                       | Done        |
-| [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                           | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
-| [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                        | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
-| [WI-033](work-items/WI-033-epics.md)                            | Epics                                                            | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
-| [WI-034](work-items/WI-034-comments.md)                         | Comments                                                         | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
-| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                       | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
-| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings                   | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
-| [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop         | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
-| [WI-038](work-items/WI-038-task-detail.md)                      | Task detail: fields, Markdown, assignment, comments, delete      | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
-| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress                  | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
-| [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                           | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
-| [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                     | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
-| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                               | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
-| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                           | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
-| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                          | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
-| [WI-045](work-items/WI-045-event-contract-and-publishing.md)    | Event contract and publishing                                    | Done        | [WS-045](work-specs/WS-045-event-contract-and-publishing.md)    | Done        |
-| [WI-046](work-items/WI-046-event-hub.md)                        | Event hub                                                        | Done        | [WS-046](work-specs/WS-046-event-hub.md)                        | Done        |
-| [WI-047](work-items/WI-047-events-endpoint.md)                  | Events endpoint                                                  | Done        | [WS-047](work-specs/WS-047-events-endpoint.md)                  | Done        |
-| [WI-048](work-items/WI-048-live-board.md)                       | Live board                                                       | Done        | [WS-048](work-specs/WS-048-live-board.md)                       | Done        |
-| [WI-049](work-items/WI-049-live-detail-epics-settings.md)       | Live task detail, epics page and project settings                | Done        | [WS-049](work-specs/WS-049-live-detail-epics-settings.md)       | Done        |
-| [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                     | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
-| [WI-051](work-items/WI-051-cursor-date-validation.md)           | Creation-time cursors are checked as dates                       | Done        | [WS-051](work-specs/WS-051-cursor-date-validation.md)           | Done        |
-| [WI-052](work-items/WI-052-e2e-admin-isolation.md)              | End-to-end tests do not deactivate each other's Admins           | Done        | [WS-052](work-specs/WS-052-e2e-admin-isolation.md)              | Done        |
-| [WI-053](work-items/WI-053-esbuild-advisory.md)                 | No vulnerable esbuild in the dependency tree                     | Done        | [WS-053](work-specs/WS-053-esbuild-advisory.md)                 | Done        |
-| [WI-054](work-items/WI-054-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E       | Done        | [WS-054](work-specs/WS-054-e2e-parallel-stability.md)           | Done        |
-| [WI-055](work-items/WI-055-setup-fail-closed.md)                | Production setup requires a setup token                          | Done        | [WS-055](work-specs/WS-055-setup-fail-closed.md)                | Done        |
-| [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                        | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
-| [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure                    | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
-| [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together      | Done        | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Done        |
-| [WI-059](work-items/WI-059-link-lifecycle-locks.md)             | One unused link per account, under one lock order                | Done        | [WS-059](work-specs/WS-059-link-lifecycle-locks.md)             | Done        |
-| [WI-060](work-items/WI-060-portable-formatting.md)              | The formatting gate passes on every checkout                     | Done        | [WS-060](work-specs/WS-060-portable-formatting.md)              | Done        |
-| [WI-061](work-items/WI-061-picomatch-advisory.md)               | Triage of the picomatch advisory, with no fix published          | Done        | [WS-061](work-specs/WS-061-picomatch-advisory.md)               | Done        |
-| [WI-062](work-items/WI-062-production-image.md)                 | Production image, example Compose file and `migrate`             | Done        | [WS-062](work-specs/WS-062-production-image.md)                 | Done        |
-| [WI-063](work-items/WI-063-database-roles.md)                   | An owner role for migrations, a least-privilege role for the app | Done        | [WS-063](work-specs/WS-063-database-roles.md)                   | Done        |
-| [WI-064](work-items/WI-064-schema-check.md)                     | The app refuses to start on a schema it does not match           | Done        | [WS-064](work-specs/WS-064-schema-check.md)                     | Done        |
-| [WI-065](work-items/WI-065-recover-admin.md)                    | `recover-admin`: an operator command to get back in              | Done        | [WS-065](work-specs/WS-065-recover-admin.md)                    | Done        |
-| [WI-066](work-items/WI-066-maintenance.md)                      | `maintenance`: remove what has expired                           | Done        | [WS-066](work-specs/WS-066-maintenance.md)                      | Done        |
-| [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested         | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
-| [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                              | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
-| [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                   | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
-| [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                       | Done        | [WS-070](work-specs/WS-070-operations-guide.md)                 | Done        |
-| [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`          | Done        | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Done        |
-| [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                  | Done        | [WS-072](work-specs/WS-072-api-tokens.md)                       | Done        |
-| [WI-073](work-items/WI-073-project-restrictions.md)             | Project restrictions enforced in every service                   | Done        | [WS-073](work-specs/WS-073-project-restrictions.md)             | Done        |
-| [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                  | Done        | [WS-074](work-specs/WS-074-agent-badge.md)                      | Done        |
-| [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                        | Done        | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Done        |
-| [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                             | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
-| [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                  | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
-| [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                  | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
-| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs           | Done        | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Done        |
-| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                               | Done        | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Done        |
-| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                     | Done        | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Done        |
-| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move      | Done        | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Done        |
-| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                       | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
-| [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar        | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
-| [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
-| [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Done        | [WS-086](work-specs/WS-086-triage-data-model.md)                | Done        |
-| [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                          | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
-| [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
-| [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                  | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
-| [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links      | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
+| Item                                                            | Title                                                             | Item status | Spec                                                            | Spec status |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- | ----------- | --------------------------------------------------------------- | ----------- |
+| [WI-001](work-items/WI-001-app-skeleton.md)                     | App skeleton: Next.js, strict TypeScript, Vitest                  | Done        | [WS-001](work-specs/WS-001-app-skeleton.md)                     | Done        |
+| [WI-002](work-items/WI-002-lint-and-format.md)                  | ESLint and Prettier                                               | Done        | [WS-002](work-specs/WS-002-lint-and-format.md)                  | Done        |
+| [WI-003](work-items/WI-003-validated-env.md)                    | Validated environment variables                                   | Done        | [WS-003](work-specs/WS-003-validated-env.md)                    | Done        |
+| [WI-004](work-items/WI-004-database.md)                         | PostgreSQL, Drizzle and the integration test harness              | Done        | [WS-004](work-specs/WS-004-database.md)                         | Done        |
+| [WI-005](work-items/WI-005-health-endpoint.md)                  | Health endpoint: the first vertical slice                         | Done        | [WS-005](work-specs/WS-005-health-endpoint.md)                  | Done        |
+| [WI-006](work-items/WI-006-openapi.md)                          | OpenAPI document generated from Zod                               | Done        | [WS-006](work-specs/WS-006-openapi.md)                          | Done        |
+| [WI-007](work-items/WI-007-e2e.md)                              | Playwright end-to-end tests                                       | Done        | [WS-007](work-specs/WS-007-e2e.md)                              | Done        |
+| [WI-008](work-items/WI-008-ui-foundation.md)                    | UI foundation: Tailwind, shadcn/ui and the app shell              | Done        | [WS-008](work-specs/WS-008-ui-foundation.md)                    | Done        |
+| [WI-009](work-items/WI-009-ci.md)                               | Continuous integration                                            | Done        | [WS-009](work-specs/WS-009-ci.md)                               | Done        |
+| [WI-010](work-items/WI-010-contributor-docs.md)                 | Contributor docs: README and CONTRIBUTING                         | Done        | [WS-010](work-specs/WS-010-contributor-docs.md)                 | Done        |
+| [WI-011](work-items/WI-011-api-foundations.md)                  | API foundations: errors, validation helpers, request id           | Done        | [WS-011](work-specs/WS-011-api-foundations.md)                  | Done        |
+| [WI-012](work-items/WI-012-permissions-and-actor.md)            | Permission catalogue, human roles and the `Actor` type            | Done        | [WS-012](work-specs/WS-012-permissions-and-actor.md)            | Done        |
+| [WI-013](work-items/WI-013-accounts-and-better-auth.md)         | Accounts, sessions schema and Better Auth                         | Done        | [WS-013](work-specs/WS-013-accounts-and-better-auth.md)         | Done        |
+| [WI-014](work-items/WI-014-audit-log.md)                        | Audit log table and writer                                        | Done        | [WS-014](work-specs/WS-014-audit-log.md)                        | Done        |
+| [WI-015](work-items/WI-015-sign-in-and-authentication.md)       | Sign-in, sign-out, me, authentication, limiter                    | Done        | [WS-015](work-specs/WS-015-sign-in-and-authentication.md)       | Done        |
+| [WI-016](work-items/WI-016-first-run-setup.md)                  | First-run setup: create the first Admin                           | Done        | [WS-016](work-specs/WS-016-first-run-setup.md)                  | Done        |
+| [WI-017](work-items/WI-017-sign-in-page-and-protected-shell.md) | Sign-in page, protected shell, account menu                       | Done        | [WS-017](work-specs/WS-017-sign-in-page-and-protected-shell.md) | Done        |
+| [WI-018](work-items/WI-018-account-management-api.md)           | Account management API                                            | Done        | [WS-018](work-specs/WS-018-account-management-api.md)           | Done        |
+| [WI-019](work-items/WI-019-accept-invitation-or-reset-link.md)  | Accept an invitation or reset link                                | Done        | [WS-019](work-specs/WS-019-accept-invitation-or-reset-link.md)  | Done        |
+| [WI-020](work-items/WI-020-people-page.md)                      | Admin People page                                                 | Done        | [WS-020](work-specs/WS-020-people-page.md)                      | Done        |
+| [WI-021](work-items/WI-021-own-profile.md)                      | Own profile: change name and password                             | Done        | [WS-021](work-specs/WS-021-own-profile.md)                      | Done        |
+| [WI-022](work-items/WI-022-sign-in-hardening.md)                | Sign-in hardening: bounded audit and limiter growth               | Done        | [WS-022](work-specs/WS-022-sign-in-hardening.md)                | Done        |
+| [WI-023](work-items/WI-023-api-guard-rails.md)                  | API guard rails: declared authentication, enforced checks         | Done        | [WS-023](work-specs/WS-023-api-guard-rails.md)                  | Done        |
+| [WI-024](work-items/WI-024-revoke-invitation.md)                | Revoke an invitation that was never accepted                      | Done        | [WS-024](work-specs/WS-024-revoke-invitation.md)                | Done        |
+| [WI-025](work-items/WI-025-route-declares-access.md)            | `route()` declares authentication and permission                  | Done        | [WS-025](work-specs/WS-025-route-declares-access.md)            | Done        |
+| [WI-026](work-items/WI-026-teams-and-people.md)                 | Teams, membership and the people directory                        | Done        | [WS-026](work-specs/WS-026-teams-and-people.md)                 | Done        |
+| [WI-027](work-items/WI-027-positions-and-version-conflict.md)   | Fractional positions and the `version_conflict` response          | Done        | [WS-027](work-specs/WS-027-positions-and-version-conflict.md)   | Done        |
+| [WI-028](work-items/WI-028-projects-and-default-columns.md)     | Projects with default columns                                     | Done        | [WS-028](work-specs/WS-028-projects-and-default-columns.md)     | Done        |
+| [WI-029](work-items/WI-029-columns-api.md)                      | Columns API                                                       | Done        | [WS-029](work-specs/WS-029-columns-api.md)                      | Done        |
+| [WI-030](work-items/WI-030-tasks-core.md)                       | Tasks core                                                        | Done        | [WS-030](work-specs/WS-030-tasks-core.md)                       | Done        |
+| [WI-031](work-items/WI-031-move-task.md)                        | Move a task between and within columns                            | Done        | [WS-031](work-specs/WS-031-move-task.md)                        | Done        |
+| [WI-032](work-items/WI-032-delete-and-restore-task.md)          | Delete and restore a task                                         | Done        | [WS-032](work-specs/WS-032-delete-and-restore-task.md)          | Done        |
+| [WI-033](work-items/WI-033-epics.md)                            | Epics                                                             | Done        | [WS-033](work-specs/WS-033-epics.md)                            | Done        |
+| [WI-034](work-items/WI-034-comments.md)                         | Comments                                                          | Done        | [WS-034](work-specs/WS-034-comments.md)                         | Done        |
+| [WI-035](work-items/WI-035-teams-page.md)                       | Teams page                                                        | Done        | [WS-035](work-specs/WS-035-teams-page.md)                       | Done        |
+| [WI-036](work-items/WI-036-projects-pages.md)                   | Projects list, navigation and project settings                    | Done        | [WS-036](work-specs/WS-036-projects-pages.md)                   | Done        |
+| [WI-037](work-items/WI-037-board-page.md)                       | Board page: columns, cards, create a task, drag and drop          | Done        | [WS-037](work-specs/WS-037-board-page.md)                       | Done        |
+| [WI-038](work-items/WI-038-task-detail.md)                      | Task detail: fields, Markdown, assignment, comments, delete       | Done        | [WS-038](work-specs/WS-038-task-detail.md)                      | Done        |
+| [WI-039](work-items/WI-039-epics-page.md)                       | Epics page: list, create, edit, close, progress                   | Done        | [WS-039](work-specs/WS-039-epics-page.md)                       | Done        |
+| [WI-040](work-items/WI-040-account-link-hardening.md)           | Account link hardening                                            | Done        | [WS-040](work-specs/WS-040-account-link-hardening.md)           | Done        |
+| [WI-041](work-items/WI-041-security-headers.md)                 | Security headers and Content Security Policy                      | Done        | [WS-041](work-specs/WS-041-security-headers.md)                 | Done        |
+| [WI-042](work-items/WI-042-safe-error-logging.md)               | Safe error logging                                                | Done        | [WS-042](work-specs/WS-042-safe-error-logging.md)               | Done        |
+| [WI-043](work-items/WI-043-setup-refuses-before-hashing.md)     | First-run setup refuses before hashing                            | Done        | [WS-043](work-specs/WS-043-setup-refuses-before-hashing.md)     | Done        |
+| [WI-044](work-items/WI-044-request-body-limit.md)               | Request body size limit                                           | Done        | [WS-044](work-specs/WS-044-request-body-limit.md)               | Done        |
+| [WI-045](work-items/WI-045-event-contract-and-publishing.md)    | Event contract and publishing                                     | Done        | [WS-045](work-specs/WS-045-event-contract-and-publishing.md)    | Done        |
+| [WI-046](work-items/WI-046-event-hub.md)                        | Event hub                                                         | Done        | [WS-046](work-specs/WS-046-event-hub.md)                        | Done        |
+| [WI-047](work-items/WI-047-events-endpoint.md)                  | Events endpoint                                                   | Done        | [WS-047](work-specs/WS-047-events-endpoint.md)                  | Done        |
+| [WI-048](work-items/WI-048-live-board.md)                       | Live board                                                        | Done        | [WS-048](work-specs/WS-048-live-board.md)                       | Done        |
+| [WI-049](work-items/WI-049-live-detail-epics-settings.md)       | Live task detail, epics page and project settings                 | Done        | [WS-049](work-specs/WS-049-live-detail-epics-settings.md)       | Done        |
+| [WI-050](work-items/WI-050-setup-token.md)                      | Optional setup token for the first-run setup                      | Done        | [WS-050](work-specs/WS-050-setup-token.md)                      | Done        |
+| [WI-051](work-items/WI-051-cursor-date-validation.md)           | Creation-time cursors are checked as dates                        | Done        | [WS-051](work-specs/WS-051-cursor-date-validation.md)           | Done        |
+| [WI-052](work-items/WI-052-e2e-admin-isolation.md)              | End-to-end tests do not deactivate each other's Admins            | Done        | [WS-052](work-specs/WS-052-e2e-admin-isolation.md)              | Done        |
+| [WI-053](work-items/WI-053-esbuild-advisory.md)                 | No vulnerable esbuild in the dependency tree                      | Done        | [WS-053](work-specs/WS-053-esbuild-advisory.md)                 | Done        |
+| [WI-054](work-items/WI-054-e2e-parallel-stability.md)           | A keyboard move lands where announced; stable parallel E2E        | Done        | [WS-054](work-specs/WS-054-e2e-parallel-stability.md)           | Done        |
+| [WI-055](work-items/WI-055-setup-fail-closed.md)                | Production setup requires a setup token                           | Done        | [WS-055](work-specs/WS-055-setup-fail-closed.md)                | Done        |
+| [WI-056](work-items/WI-056-hashing-concurrency.md)              | Password hashing cannot starve the server                         | Done        | [WS-056](work-specs/WS-056-hashing-concurrency.md)              | Done        |
+| [WI-057](work-items/WI-057-committed-password-recovery.md)      | A set password is never reported as a failure                     | Done        | [WS-057](work-specs/WS-057-committed-password-recovery.md)      | Done        |
+| [WI-058](work-items/WI-058-session-audit-atomicity.md)          | A session change and its audit entry stand or fall together       | Done        | [WS-058](work-specs/WS-058-session-audit-atomicity.md)          | Done        |
+| [WI-059](work-items/WI-059-link-lifecycle-locks.md)             | One unused link per account, under one lock order                 | Done        | [WS-059](work-specs/WS-059-link-lifecycle-locks.md)             | Done        |
+| [WI-060](work-items/WI-060-portable-formatting.md)              | The formatting gate passes on every checkout                      | Done        | [WS-060](work-specs/WS-060-portable-formatting.md)              | Done        |
+| [WI-061](work-items/WI-061-picomatch-advisory.md)               | Triage of the picomatch advisory, with no fix published           | Done        | [WS-061](work-specs/WS-061-picomatch-advisory.md)               | Done        |
+| [WI-062](work-items/WI-062-production-image.md)                 | Production image, example Compose file and `migrate`              | Done        | [WS-062](work-specs/WS-062-production-image.md)                 | Done        |
+| [WI-063](work-items/WI-063-database-roles.md)                   | An owner role for migrations, a least-privilege role for the app  | Done        | [WS-063](work-specs/WS-063-database-roles.md)                   | Done        |
+| [WI-064](work-items/WI-064-schema-check.md)                     | The app refuses to start on a schema it does not match            | Done        | [WS-064](work-specs/WS-064-schema-check.md)                     | Done        |
+| [WI-065](work-items/WI-065-recover-admin.md)                    | `recover-admin`: an operator command to get back in               | Done        | [WS-065](work-specs/WS-065-recover-admin.md)                    | Done        |
+| [WI-066](work-items/WI-066-maintenance.md)                      | `maintenance`: remove what has expired                            | Done        | [WS-066](work-specs/WS-066-maintenance.md)                      | Done        |
+| [WI-067](work-items/WI-067-https-and-proxy.md)                  | HSTS on `https:` installs, and the reverse proxy, tested          | Done        | [WS-067](work-specs/WS-067-https-and-proxy.md)                  | Done        |
+| [WI-068](work-items/WI-068-backup-rehearsal.md)                 | Backup and restore, rehearsed in CI                               | Done        | [WS-068](work-specs/WS-068-backup-rehearsal.md)                 | Done        |
+| [WI-069](work-items/WI-069-safe-logs.md)                        | No request data in the logs when a query fails                    | Done        | [WS-069](work-specs/WS-069-safe-logs.md)                        | Done        |
+| [WI-070](work-items/WI-070-operations-guide.md)                 | The operations guide, `docs/operations.md`                        | Done        | [WS-070](work-specs/WS-070-operations-guide.md)                 | Done        |
+| [WI-071](work-items/WI-071-agent-data-model.md)                 | Agent accounts in the data model, and the agent `Actor`           | Done        | [WS-071](work-specs/WS-071-agent-data-model.md)                 | Done        |
+| [WI-072](work-items/WI-072-api-tokens.md)                       | API tokens, and `authenticate()` accepting them                   | Done        | [WS-072](work-specs/WS-072-api-tokens.md)                       | Done        |
+| [WI-073](work-items/WI-073-project-restrictions.md)             | Project restrictions enforced in every service                    | Done        | [WS-073](work-specs/WS-073-project-restrictions.md)             | Done        |
+| [WI-074](work-items/WI-074-agent-badge.md)                      | Agents where humans see them: the "Agent" badge                   | Done        | [WS-074](work-specs/WS-074-agent-badge.md)                      | Done        |
+| [WI-075](work-items/WI-075-agents-admin-api.md)                 | The Admin API for agents and their tokens                         | Done        | [WS-075](work-specs/WS-075-agents-admin-api.md)                 | Done        |
+| [WI-076](work-items/WI-076-me-for-agents.md)                    | `GET /me` for agents                                              | Done        | [WS-076](work-specs/WS-076-me-for-agents.md)                    | Done        |
+| [WI-077](work-items/WI-077-agents-page.md)                      | The Agents page                                                   | Done        | [WS-077](work-specs/WS-077-agents-page.md)                      | Done        |
+| [WI-078](work-items/WI-078-agent-flow-and-guide.md)             | The agent flow end to end, and the agents guide                   | Done        | [WS-078](work-specs/WS-078-agent-flow-and-guide.md)             | Done        |
+| [WI-079](work-items/WI-079-production-secrets-split.md)         | Each production service gets only the secrets it needs            | Done        | [WS-079](work-specs/WS-079-production-secrets-split.md)         | Done        |
+| [WI-080](work-items/WI-080-lists-without-duplicates.md)         | Paged lists never show a row twice                                | Done        | [WS-080](work-specs/WS-080-lists-without-duplicates.md)         | Done        |
+| [WI-081](work-items/WI-081-name-cursor-length.md)               | Name cursors fit the longest name they carry                      | Done        | [WS-081](work-specs/WS-081-name-cursor-length.md)               | Done        |
+| [WI-082](work-items/WI-082-board-reload-ordering.md)            | The board applies only the latest load, never during a move       | Done        | [WS-082](work-specs/WS-082-board-reload-ordering.md)            | Done        |
+| [WI-083](work-items/WI-083-documented-responses.md)             | Every response the API sends is documented                        | Done        | [WS-083](work-specs/WS-083-documented-responses.md)             | Done        |
+| [WI-084](work-items/WI-084-agents-link-assertion-scope.md)      | The Manager's Agents-link check looks only at the sidebar         | Done        | [WS-084](work-specs/WS-084-agents-link-assertion-scope.md)      | Done        |
+| [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation             | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
+| [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                          | Done        | [WS-086](work-specs/WS-086-triage-data-model.md)                | Done        |
+| [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                           | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
+| [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                 | Done        | [WS-088](work-specs/WS-088-task-severity.md)                    | Done        |
+| [WI-089](work-items/WI-089-bug-report-pipeline.md)              | The bug report endpoint and the triage pipeline                   | Done        | [WS-089](work-specs/WS-089-bug-report-pipeline.md)              | Done        |
+| [WI-090](work-items/WI-090-reading-bug-reports.md)              | Reading the reports behind a task, and its regression links       | Done        | [WS-090](work-specs/WS-090-reading-bug-reports.md)              | Done        |
+| [WI-092](work-items/WI-092-posthog-bridge.md)                   | Optional PostHog add-on: error-tracking issues become bug reports | Done        | [WS-092](work-specs/WS-092-posthog-bridge.md)                   | Done        |
 
 ## Follow-ups
 
@@ -256,6 +262,14 @@ Planning gaps found in the review of 2026-11-12. Each needs an owner decision:
   request body, and log contents, access and retention are each a section of the guide.
 
 Other follow-ups:
+
+- Send one real PostHog error-tracking alert, with a body from `addons/posthog/bodies/`, to
+  a local Opanel through a tunnel, and record the answer in WS-092 (the manual check of
+  WS-092 section 4, deferred by the owner on 2026-11-20: no PostHog project yet).
+
+- `docs/AGENTS.md` (the guide for agent authors) still says `reports:write` is "WT-06, not
+  yet" and lists bug reports under "What comes next", though WI-089 shipped them (found in
+  WI-092).
 
 - **Answered by WI-084 (2026-11-19):** `tests/e2e/agents.spec.ts`, "a Manager has neither
   the Agents link nor the page", counted every link whose name contains "Agents" (found in

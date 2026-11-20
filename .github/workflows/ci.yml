@@ -75,6 +75,54 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # Optional add-ons (WT-13) are checked apart from the app: the app's quality gate never
+  # compiles or runs them, and a failure here does not touch the "Quality gate" job.
+  # ESLint and Prettier cover them through the repository-wide lint and format checks.
+  addons:
+    name: Add-ons
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Version comes from `packageManager` in package.json.
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start PostgreSQL
+        run: docker compose up -d --wait
+
+      - name: Typecheck (PostHog add-on)
+        run: pnpm exec tsc -p addons/posthog --noEmit
+
+      - name: Unit tests (PostHog add-on)
+        run: pnpm exec vitest run --config addons/posthog/vitest.config.ts
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end test (PostHog add-on)
+        run: pnpm exec playwright test --config addons/posthog/playwright.config.ts
+
+      - name: Upload Playwright results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: addons-playwright-results
+          path: addons/posthog/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
   # Git for Windows checks text files out with CRLF unless .gitattributes says otherwise;
   # this job keeps the format check honest on such a checkout (WS-060).
   format-windows:

@@ -1,0 +1,12 @@
+{
+  "title": "{event.properties.name}",
+  "fingerprint": "posthog:{project.id}:{event.distinct_id}",
+  "originLayer": "backend",
+  "confidence": 0.5,
+  "severity": "medium",
+  "summary": "Reported by PostHog error tracking ({event.event}).\n\n{event.properties.description}\n\nIssue: {project.url}/error-tracking/fingerprint/{event.properties.fingerprint}?timestamp={event.properties.exception_timestamp}",
+  "evidence": {
+    "actual": "{event.properties.description}",
+    "diagnosis": "Captured by the PostHog SDK `{event.properties.$lib}`, a server SDK, so the fault is likely in the backend or the API."
+  }
+}
