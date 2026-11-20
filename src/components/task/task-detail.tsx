@@ -21,9 +21,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiFailure } from "@/lib/api-client";
+import type { Page } from "@/lib/paged-list";
 import type { Column } from "@/lib/schemas/columns";
 import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
+import type { BugReport } from "@/lib/schemas/task-bug-reports";
 import type { Task } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
 
@@ -31,11 +33,13 @@ import {
   deleteTask,
   getTask,
   listAllTeams,
+  listBugReports,
   listColumns,
   listComments,
   listOpenEpics,
   moveTaskTo,
 } from "./api";
+import { BugSection } from "./bug-section";
 import { CommentsSection } from "./comments-section";
 import { currentOf, DetailsSection } from "./details-section";
 import { announceTaskChanged, announceTaskDeleted } from "./events";
@@ -57,6 +61,8 @@ interface Loaded {
   epics: Epic[];
   comments: Comment[];
   commentsCursor: string | null;
+  /** The first page of reports, read only for a task that has some (WS-091 section 5). */
+  reports: Page<BugReport> | null;
 }
 
 type Phase = "loading" | "missing" | "error" | "ready";
@@ -114,11 +120,12 @@ export function TaskDetail({
       throw failure;
     }
     if (task.projectId !== project.id) return "missing";
-    const [columns, comments, teams, epics] = await Promise.all([
+    const [columns, comments, teams, epics, reports] = await Promise.all([
       listColumns(project.key),
       listComments(taskKey),
       canWriteTasks ? listAllTeams() : Promise.resolve([]),
       canWriteTasks ? listOpenEpics(project.key) : Promise.resolve([]),
+      task.occurrences > 0 ? listBugReports(taskKey) : Promise.resolve(null),
     ]);
     return {
       task,
@@ -127,6 +134,7 @@ export function TaskDetail({
       epics,
       comments: comments.items,
       commentsCursor: comments.nextCursor,
+      reports,
     };
   }, [taskKey, project.id, project.key, canWriteTasks]);
 
@@ -430,6 +438,7 @@ export function TaskDetail({
         saveVersion={saveVersion}
         onDirtyChange={setDirty}
       />
+      <BugSection key={task.id} task={task} reports={data.reports} />
       <CommentsSection
         taskKey={task.key}
         taskId={task.id}

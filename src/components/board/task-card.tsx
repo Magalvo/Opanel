@@ -6,6 +6,7 @@ import {
   BookmarkIcon,
   BugIcon,
   GripVerticalIcon,
+  RepeatIcon,
   SquareCheckIcon,
   UserIcon,
   UsersIcon,
@@ -13,6 +14,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { Badge } from "@/components/ui/badge";
 import type { TaskSummary, TaskType } from "@/lib/schemas/tasks";
 import { cn } from "@/lib/utils";
@@ -36,7 +38,8 @@ const CARD =
   "grid gap-1.5 rounded-lg border bg-card p-3 text-left text-sm text-card-foreground shadow-xs";
 
 /**
- * The content of a card: key, title, type, assignee and team. The title links to the task
+ * The content of a card: key, title, type, a bug's severity and report count (WS-091),
+ * assignee and team. The title links to the task
  * (WS-038), except on the card that follows the pointer while dragging; `handle` is the
  * drag handle, beside the key.
  */
@@ -73,6 +76,26 @@ export function CardBody({
           <Icon aria-hidden="true" />
           {TYPE_LABELS[task.type]}
         </Badge>
+        {task.severity !== null && (
+          <Badge
+            variant="outline"
+            // Red text on the card's own background: the `destructive` badge's tinted
+            // background leaves too little contrast in light mode (WS-091, deviation 1).
+            className={cn(
+              (task.severity === "high" || task.severity === "critical") &&
+                "border-destructive/60 text-destructive",
+            )}
+          >
+            <span className="sr-only">Severity: </span>
+            {SEVERITY_LABELS[task.severity]}
+          </Badge>
+        )}
+        {task.occurrences > 1 && (
+          <span className="inline-flex items-center gap-1">
+            <RepeatIcon aria-hidden="true" className="size-3 shrink-0" />
+            {task.occurrences} reports
+          </span>
+        )}
         {person !== null && (
           <span className="inline-flex min-w-0 items-center gap-1">
             <UserIcon aria-hidden="true" className="size-3 shrink-0" />

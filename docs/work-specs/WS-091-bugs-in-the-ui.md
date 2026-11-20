@@ -1,6 +1,7 @@
 # WS-091 — Bugs in the UI
 
-- Status: Approved (by the owner on 2026-11-20, questions 1 to 7 as recommended)
+- Status: Done (2026-11-20; approved by the owner the same day, questions 1 to 7 as
+  recommended)
 - Work-item: [WI-091](../work-items/WI-091-bugs-in-the-ui.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) section 5 (what a
   report holds); [0002](../canonical/0002-realtime-sync.md) (live updates);
@@ -191,3 +192,42 @@ Risks:
   width test guards against horizontal page scroll.
 - **Item G runs at the same time** and edits `docs/README.md` and WT-06; this item touches
   only its own rows and lines there, and no shared code (the settings pages are G's).
+
+## Deviations from the approved spec
+
+1. **The card's High and Critical badge is outlined, with red text and a red border**, not
+   the shadcn `destructive` variant. The axe check of test 11 found that variant's red text
+   on its tinted background at a contrast of 4:1 in light mode (4.5:1 needed). Red text on
+   the card's own background passes in both modes; Low and Medium stay plain outlined.
+2. **The reports section reads again on its own**: `ReportsSection` takes a `marker` (the
+   task's `occurrences` and `lastReportedAt`) and reads the shown reports again when it
+   changes, and on a reconnect, rather than being told to by `TaskDetail`. Same behaviour,
+   no new callback between the two.
+3. **`ReportsSection` takes `initial: null`** and then reads the first page itself, for a
+   task whose count rises above 0 while it is open. The pipeline never does that today (a
+   repeat needs a fingerprint, which only a created bug has), so it is a guard, not a path
+   the tests cover.
+4. **`bugReport()` and `QA_BOT`** went into the board's `test-data.ts`, next to `task()` and
+   `full()`, which the task detail's tests already import.
+
+## Implementation record
+
+- Red:
+  - `bug-labels.test.ts` failed to import `./bug-labels`;
+  - the 2 board cases (badge and count, live count) and the 18 detail cases of "TaskDetail:
+    bugs (WS-091)" failed: no badge, no Severity select or row, no "Reported", no Links or
+    Reports region, no request to `/bug-reports`.
+- The end-to-end spec and `seedAgentToken` were written before the code, but the spec was
+  first run after it (a run builds the whole app); its first run passed every case but the
+  light-mode axe check, which led to deviation 1.
+- Green: the 88 cases of `src/components/task` and `board.test.tsx` pass.
+- Gate on 2026-11-20:
+  - typecheck, lint and Prettier pass;
+  - Vitest 1733 of 1733;
+  - `pnpm test:e2e --retries=0` 92 of 92 on the third full run. The first two each failed
+    one live test that waits 2 seconds for another page to update, a different one each
+    time and in specs this item does not touch (`live-board.spec.ts` "a deleted task
+    disappears…", `live-pages.spec.ts` "a column renamed…"); both passed alone (12 of 12
+    and 17 of 17, `--repeat-each=3`). Another session ran tests on the same database
+    server meanwhile; recorded here, not changed;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18 on port 5433.
