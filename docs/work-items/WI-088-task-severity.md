@@ -1,6 +1,6 @@
 # WI-088 — Severity on tasks
 
-- Status: Proposed
+- Status: Approved (2026-11-20)
 - Work-track: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) (item C)
 - Depends on: WI-086 (done)
 - Work-spec: [WS-088](../work-specs/WS-088-task-severity.md)

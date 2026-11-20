@@ -1,6 +1,6 @@
 # WS-088 — Severity on tasks
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-20, questions 1 to 3 as recommended)
 - Work-item: [WI-088](../work-items/WI-088-task-severity.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 4 (severity, "set
   by the reporter") and 9 (history); [0004](../canonical/0004-api-conventions.md) sections

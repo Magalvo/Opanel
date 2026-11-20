@@ -222,7 +222,7 @@ right after WT-04 and is done.
 | [WI-085](work-items/WI-085-nav-link-assertion-scope.md)         | Absent-link assertions are scoped to their navigation            | Done        | [WS-085](work-specs/WS-085-nav-link-assertion-scope.md)         | Done        |
 | [WI-086](work-items/WI-086-triage-data-model.md)                | The data model of bug reports and triage                         | Done        | [WS-086](work-specs/WS-086-triage-data-model.md)                | Done        |
 | [WI-087](work-items/WI-087-triage-settings-api.md)              | The triage settings API                                          | Done        | [WS-087](work-specs/WS-087-triage-settings-api.md)              | Done        |
-| [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Proposed    | [WS-088](work-specs/WS-088-task-severity.md)                    | Proposed    |
+| [WI-088](work-items/WI-088-task-severity.md)                    | Severity on tasks                                                | Approved    | [WS-088](work-specs/WS-088-task-severity.md)                    | Approved    |
 
 ## Follow-ups
 
