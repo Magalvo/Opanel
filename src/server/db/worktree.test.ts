@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -57,6 +57,12 @@ describe("worktreeId", () => {
     expect(worktreeId({}, checkout("one", "file"))).not.toBe(
       worktreeId({}, checkout("two", "file")),
     );
+  });
+
+  it("gives a folder one ID whatever path names it (short names, links)", () => {
+    const root = checkout("named", "file");
+    expect(pathWorktreeId(root)).toBe(pathWorktreeId(realpathSync.native(root)));
+    expect(pathWorktreeId(`${root}${path.sep}`)).toBe(pathWorktreeId(root));
   });
 
   it("ignores the case of the path on Windows only", () => {

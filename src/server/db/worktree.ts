@@ -3,7 +3,7 @@
 // the quality gate at the same time. The main checkout and CI have no ID: today's names and
 // ports. Test infrastructure only; nothing in the app imports it.
 import { createHash } from "node:crypto";
-import { statSync } from "node:fs";
+import { existsSync, realpathSync, statSync } from "node:fs";
 import { connect } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,14 +25,18 @@ export function checkoutRoot(): string {
 }
 
 /**
- * The ID of a path: the first 8 hex characters of the SHA-256 of the resolved path. On
- * Windows the path is lower-cased first, since `C:\x` and `c:\X` are the same folder.
+ * The ID of a path: the first 8 hex characters of the SHA-256 of the resolved path. A folder
+ * that exists is first resolved to its real path, so a short name (`DIOGO~1.SAN`) or a link
+ * names the same folder as Git's listing. On Windows the path is lower-cased too, since
+ * `C:\x` and `c:\X` are the same folder.
  */
 export function pathWorktreeId(
   folder: string,
   platform: NodeJS.Platform = process.platform,
 ): string {
-  const resolved = platform === "win32" ? path.win32.resolve(folder) : path.posix.resolve(folder);
+  const real =
+    platform === process.platform && existsSync(folder) ? realpathSync.native(folder) : folder;
+  const resolved = platform === "win32" ? path.win32.resolve(real) : path.posix.resolve(real);
   const normalised = platform === "win32" ? resolved.toLowerCase() : resolved;
   return createHash("sha256").update(normalised).digest("hex").slice(0, 8);
 }
