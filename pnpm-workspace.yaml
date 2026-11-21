@@ -1,4 +1,8 @@
-# pnpm settings for this single-package repository (pnpm 10 reads them from here).
+# pnpm settings (pnpm 10 reads them from here). The root package is the app; `mcp` is the
+# MCP server, a workspace package of its own (doc 0005, WS-099).
+
+packages:
+  - mcp
 
 overrides:
   # GHSA-67mh-4wv8-2f99: drizzle-kit 0.31 lists the deprecated @esbuild-kit packages, whose

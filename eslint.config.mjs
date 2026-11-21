@@ -8,7 +8,15 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig([
   // `.claude/` holds local tool state and Claude Code worktrees, never source (WS-060).
-  globalIgnores([".next/**", "out/**", "coverage/**", "next-env.d.ts", ".claude/**", "dist/**"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "coverage/**",
+    "next-env.d.ts",
+    ".claude/**",
+    "dist/**",
+    "mcp/dist/**",
+  ]),
 
   ...nextVitals,
   ...nextTypescript,

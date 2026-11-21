@@ -35,6 +35,15 @@ export default defineConfig({
           fileParallelism: false,
         },
       },
+      // The MCP server package (WS-099): Node, no database, its own dependencies.
+      {
+        resolve: { alias },
+        test: {
+          name: "mcp",
+          environment: "node",
+          include: ["mcp/src/**/*.test.ts"],
+        },
+      },
     ],
   },
 });

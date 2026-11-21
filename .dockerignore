@@ -17,3 +17,5 @@ docs
 !.env.production.example
 # Optional add-ons are never part of the app or its image (WT-13, WS-093).
 addons
+# The MCP server package is a client of the app, never part of its image (doc 0005, WS-099).
+mcp

@@ -39,13 +39,17 @@ and any LLM call.
 
 ## Work-items (outline)
 
-| Item | Title                                                                                                              | Depends on |
-| ---- | ------------------------------------------------------------------------------------------------------------------ | ---------- |
-| A    | Package skeleton: workspace, SDK pinned, configuration, stdio start-up, `opanel_whoami`, tools chosen by `GET /me` | WT-05      |
-| B    | Read tools: projects, board, teams, people, task with its comments                                                 | A          |
-| C    | Write tools: comment, create, update and move a task; version conflicts as tool errors                             | B          |
-| D    | `opanel_submit_bug_report`                                                                                         | C, WT-06   |
-| E    | Operator guide (agent account, token, Claude Code configuration) and CI                                            | C          |
+| Item | Title                                                                                                                  | Depends on |
+| ---- | ---------------------------------------------------------------------------------------------------------------------- | ---------- |
+| A    | Package skeleton: workspace, SDK pinned, configuration, stdio start-up, `opanel_whoami`, tools chosen by `GET /me`, CI | WT-05      |
+| B    | Read tools: projects, board, teams, people, task with its comments                                                     | A          |
+| C    | Write tools: comment, create, update and move a task; version conflicts as tool errors                                 | B          |
+| D    | `opanel_submit_bug_report`                                                                                             | C, WT-06   |
+| E    | Operator guide (agent account, token, Claude Code configuration)                                                       | C          |
+
+Item A is [WI-099](../work-items/WI-099-mcp-server-skeleton.md). Its work-spec moved CI
+from item E into A: the package's checks run inside the existing gate commands (WS-099,
+question 1).
 
 ## Exit criteria
 
