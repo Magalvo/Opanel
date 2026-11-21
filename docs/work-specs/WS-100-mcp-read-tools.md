@@ -1,6 +1,7 @@
 # WS-100 — The MCP read tools: projects, board, teams, people and a task
 
-- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 4 as recommended)
+- Status: Done (2026-11-21; approved by the owner the same day, questions 1 to 4 as
+  recommended)
 - Work-item: [WI-100](../work-items/WI-100-mcp-read-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 4 to 6),
   [0004](../canonical/0004-api-conventions.md) (pagination, problems),
@@ -209,3 +210,33 @@ request (WS-099).
    - Alternative: summary only, trusting every client to read structured content.
 5. **The SDK's JSON schema for `z.coerce`.** Avoided by replacing `limit` (section 1);
    the implementation checks the `inputSchema` the SDK lists, in test 3.
+
+## Implementation record
+
+- The installed SDK (2.4.0) was read again before any code. Its own `registerTool`
+  example returns the structured content as JSON text as well, which supports question 4.
+- Red: `read-tools.test.ts` failed to import `./tools/board`, and the three
+  `offeredTools` cases failed because a definition had no `permission`.
+- Green: 68 unit tests in the `mcp` project, 26 of them new (`read-tools.test.ts` 25, and
+  `tools.test.ts` 1 more case).
+- Refactor: the board's page loop became `loadTasks`, a typed function. Inline, the
+  cursor fed the loop's own type inference, and TypeScript typed the page as `any`.
+- The SDK lists `limit` as `integer` and every input and output schema as an `object`
+  (test 3), so risk 5 did not arise.
+- The bundle `mcp/dist/index.js` grew from 16.5 kB to 48.2 kB with the task, column and
+  comment schemas.
+- Gate on 2026-11-21:
+  - typecheck (app and package), lint and Prettier pass;
+  - Vitest 1835 of 1835;
+  - `pnpm test:e2e` 96 of 96, the `mcp` project's two tests included;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+- **`mcp/e2e/agent.ts`** (not in section 2) holds the helpers of both end-to-end files:
+  the Admin, the agent and its token, and starting the server. `mcp.spec.ts` imports
+  them instead of defining them.
+- **`errors.ts` gains `messageError`**, for the server's own errors (a board that changed
+  while loading, or one that is too large), which have no `ToolFailure`.
+- **The project key is not quoted in summaries.** The API validates keys as uppercase
+  letters and digits, so they cannot carry instructions; names and titles are quoted.
