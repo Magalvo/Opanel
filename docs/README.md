@@ -167,6 +167,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-099](work-items/WI-099-mcp-server-skeleton.md)              | The MCP server starts over stdio and answers opanel_whoami        | [WS-099](work-specs/WS-099-mcp-server-skeleton.md)              |
 | [WI-100](work-items/WI-100-mcp-read-tools.md)                   | The MCP read tools: projects, board, teams, people and a task     | [WS-100](work-specs/WS-100-mcp-read-tools.md)                   |
 | [WI-101](work-items/WI-101-backlog-api.md)                      | The backlog in the data model and API                             | [WS-101](work-specs/WS-101-backlog-api.md)                      |
+| [WI-102](work-items/WI-102-priority-due-date.md)                | Priority and due date on tasks                                    | [WS-102](work-specs/WS-102-priority-due-date.md)                |
 
 ## Follow-ups
 
@@ -192,6 +193,12 @@ Other follow-ups:
   keyboard test failed 4 of 20 at `expect.poll` after `page.reload()`: the board was still
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
+
+- **An epic dated in the year `0000` answers `500`** (WI-102, WS-102 question 1).
+  `z.iso.date()` accepts `0000-01-01` and PostgreSQL refuses it, so `startDate` or
+  `targetDate` of that year fails inside the service. Needs a small work-item: use the
+  shared `calendarDateSchema` of `src/lib/schemas/dates.ts` (added by WI-102) in
+  `src/lib/schemas/epics.ts`, with a route test for the `400`.
 
 - **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
   WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and

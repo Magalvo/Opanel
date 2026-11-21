@@ -1,5 +1,6 @@
--- Runs once, when the data volume is first initialised. After changing this file,
--- recreate the volume: `docker compose down -v && docker compose up -d`.
+-- Runs once, when the data volume is first initialised. The test harnesses also create
+-- any missing test database themselves, for example a worktree's own (WS-095), so this
+-- file only saves them that step on a fresh volume.
 -- The test harnesses refuse any database whose name does not end in _test.
 
 -- Integration tests (Vitest). Emptied before every test.
