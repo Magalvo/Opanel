@@ -1,9 +1,9 @@
 # WI-095 — Parallel worktrees can run the quality gate at the same time
 
-- Status: Draft
+- Status: Proposed
 - Work-track: none: a development-flow item from the review of 2026-11-20 (finding D01)
 - Depends on: none
-- Work-spec: WS-095 (once written)
+- Work-spec: [WS-095](../work-specs/WS-095-worktree-test-isolation.md)
 
 ## Outcome
 
