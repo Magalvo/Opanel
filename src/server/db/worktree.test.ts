@@ -9,6 +9,7 @@ import {
   assertPortFree,
   e2ePort,
   pathWorktreeId,
+  staleTestDatabases,
   worktreeDatabaseUrl,
   worktreeId,
 } from "./worktree";
@@ -201,5 +202,28 @@ describe("assertPortFree", () => {
     await new Promise<void>((resolve) => server?.close(() => resolve()));
     server = undefined;
     await expect(assertPortFree(port, "E2E_PORT")).resolves.toBeUndefined();
+  });
+});
+
+describe("staleTestDatabases", () => {
+  it("picks the test databases of worktrees that no longer exist", () => {
+    expect(
+      staleTestDatabases(
+        [
+          "opanel",
+          "opanel_test",
+          "opanel_e2e_test",
+          "opanel_3f9a07c2_test",
+          "opanel_3f9a07c2_e2e_test",
+          "opanel_0badf00d_test",
+          "opanel_0badf00d_e2e_test",
+          "opanel_wi095_test",
+          "opanel_0badf00d_copy",
+          "other_0badf00d_test",
+          "postgres",
+        ],
+        new Set(["3f9a07c2"]),
+      ),
+    ).toEqual(["opanel_0badf00d_test", "opanel_0badf00d_e2e_test", "opanel_wi095_test"]);
   });
 });

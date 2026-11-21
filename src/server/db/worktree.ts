@@ -14,9 +14,14 @@ const ID_RULE = /^[a-z0-9]{1,16}$/;
 
 type Environment = Readonly<Record<string, string | undefined>>;
 
-/** The root of the checkout this file belongs to, whatever the current directory. */
+/**
+ * The root of the checkout this file belongs to, whatever the current directory. Under a
+ * browser-like test environment (jsdom), where the module has no file URL, the current
+ * directory.
+ */
 export function checkoutRoot(): string {
-  return fileURLToPath(new URL("../../..", import.meta.url));
+  const root = new URL("../../..", import.meta.url);
+  return root.protocol === "file:" ? fileURLToPath(root) : process.cwd();
 }
 
 /**
@@ -37,7 +42,7 @@ export function pathWorktreeId(
  * ID of its path; otherwise (main checkout, CI) none.
  */
 export function worktreeId(
-  root: string = checkoutRoot(),
+  root?: string,
   env: Environment = process.env,
 ): string | undefined {
   const chosen = env[WORKTREE_VARIABLE];
@@ -47,8 +52,9 @@ export function worktreeId(
     }
     return chosen;
   }
-  const git = statSync(path.join(root, ".git"), { throwIfNoEntry: false });
-  return git?.isFile() === true ? pathWorktreeId(root) : undefined;
+  const folder = root ?? checkoutRoot();
+  const git = statSync(path.join(folder, ".git"), { throwIfNoEntry: false });
+  return git?.isFile() === true ? pathWorktreeId(folder) : undefined;
 }
 
 const SUFFIXES = ["_e2e_test", "_test"] as const;
@@ -129,4 +135,21 @@ export async function assertPortFree(port: number, variable: string): Promise<vo
         `Set ${variable} to a free port.`,
     );
   }
+}
+
+const WORKTREE_DATABASE = /^opanel_([a-z0-9]{1,16})_(?:e2e_)?test$/;
+const DEFAULT_DATABASES = new Set(["opanel_test", "opanel_e2e_test"]);
+
+/**
+ * The databases named like a worktree's (`opanel_<id>_test`, `opanel_<id>_e2e_test`) whose
+ * ID belongs to none of the live worktrees. Never the default names.
+ */
+export function staleTestDatabases(
+  names: readonly string[],
+  liveIds: ReadonlySet<string>,
+): string[] {
+  return names.filter((name) => {
+    const id = WORKTREE_DATABASE.exec(name)?.[1];
+    return id !== undefined && !DEFAULT_DATABASES.has(name) && !liveIds.has(id);
+  });
 }
