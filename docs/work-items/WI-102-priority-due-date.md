@@ -1,6 +1,6 @@
 # WI-102 — Priority and due date on tasks
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-21, with WS-102)
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item B)
 - Depends on: [WI-101](WI-101-backlog-api.md) (same files; implemented after it merges)
 - Work-spec: [WS-102](../work-specs/WS-102-priority-due-date.md)

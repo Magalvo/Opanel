@@ -1,6 +1,6 @@
 # WS-102 — Priority and due date on tasks
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 3 as recommended)
 - Work-item: [WI-102](../work-items/WI-102-priority-due-date.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 4, 9;
   [0004](../canonical/0004-api-conventions.md) sections 3, 6, 8;
@@ -123,7 +123,7 @@ new permission, error code or event type.
 
 ## Risks and open questions
 
-For the owner:
+Resolved by the owner on 2026-11-21, by approving each recommendation:
 
 1. **Epics accept the year `0000` and fail inside the service** (section 3): an epic sent
    with `startDate: "0000-01-01"` passes Zod and is refused by PostgreSQL, so the client
