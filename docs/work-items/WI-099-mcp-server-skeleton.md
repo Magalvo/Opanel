@@ -1,6 +1,6 @@
 # WI-099 — The MCP server starts over stdio and answers opanel_whoami
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (item A)
 - Depends on: WT-05 (done)
 - Work-spec: [WS-099](../work-specs/WS-099-mcp-server-skeleton.md)

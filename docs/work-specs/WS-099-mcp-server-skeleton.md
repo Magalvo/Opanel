@@ -1,6 +1,6 @@
 # WS-099 — The MCP server starts over stdio and answers opanel_whoami
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-21, questions 1 and 2 as recommended)
 - Work-item: [WI-099](../work-items/WI-099-mcp-server-skeleton.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (the design),
   [0004](../canonical/0004-api-conventions.md) (problems, the API it calls),
