@@ -16,8 +16,9 @@ What a new session needs to start: what comes next, and what waits for the owner
 an index commit when a work-track is approved or done, or when what comes next changes.
 
 - **Next:** WT-11 item B (the MCP read tools, doc 0005 section 4) proposed as a work-item
-  and work-spec, and the owner's approval; item A is done (WI-099). WT-07 to WT-10 follow,
-  as planned below.
+  and work-spec, and the owner's approval; item A is done (WI-099). In parallel, WT-07
+  (approved 2026-11-21) starts with item A, the backlog in the data model and API, proposed
+  as a work-item and work-spec. WT-08 to WT-10 follow, as planned below.
 - **Waiting for the owner:** WI-095 and WI-097 (Draft), from the development-flow review
   of 2026-11-20: each worktree gets its own test databases and ports (finding D01), and a
   faster Vitest suite (D05 to D07). The lower findings D08 to D12 are listed under
@@ -38,28 +39,28 @@ an index commit when a work-track is approved or done, or when what comes next c
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                   | Title                                                   |
-| ------------------------------------------------------- | ------------------------------------------------------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer |
-| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    |
-| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    |
-| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    |
-| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           |
-| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        |
-| [WT-13](work-tracks/WT-13-integrations.md)              | Integrations (optional add-ons)                         |
+| Track                                                           | Title                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)               | Project boilerplate                                     |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)          | Accounts, human sign-in, roles and the permission layer |
+| [WT-03](work-tracks/WT-03-board-core.md)                        | Board core: projects, teams, columns, epics, tasks      |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)               | Real-time board sync                                    |
+| [WT-11](work-tracks/WT-11-mcp-server.md)                        | MCP server (outline)                                    |
+| [WT-12](work-tracks/WT-12-operations.md)                        | Production deployment and operations                    |
+| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md)         | Agent accounts and API tokens                           |
+| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)            | Bug reports and automated triage                        |
+| [WT-13](work-tracks/WT-13-integrations.md)                      | Integrations (optional add-ons)                         |
+| [WT-07](work-tracks/WT-07-backlog-priority-due-dates-labels.md) | Backlog, priority, due dates, labels                    |
 
 Planned next, not yet drafted:
 
-- WT-07 Backlog, priority, due dates, labels
 - WT-08 Search, filters, list view, activity timeline
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 come from canonical doc 0003. WT-11, the MCP server (doc 0005), is outlined
-above and comes after WT-06. WT-12, production deployment and operations (doc 0006), came
-right after WT-04 and is done.
+WT-07 to WT-10 come from canonical doc 0003; WT-07 is reserved above. WT-11, the MCP
+server (doc 0005), is outlined above and comes after WT-06. WT-12, production deployment
+and operations (doc 0006), came right after WT-04 and is done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
@@ -165,6 +166,7 @@ right after WT-04 and is done.
 | [WI-098](work-items/WI-098-keyboard-move-subpixel.md)           | A keyboard move works while the board is still animating          | [WS-098](work-specs/WS-098-keyboard-move-subpixel.md)           |
 | [WI-099](work-items/WI-099-mcp-server-skeleton.md)              | The MCP server starts over stdio and answers opanel_whoami        | [WS-099](work-specs/WS-099-mcp-server-skeleton.md)              |
 | [WI-100](work-items/WI-100-mcp-read-tools.md)                   | The MCP read tools: projects, board, teams, people and a task     | [WS-100](work-specs/WS-100-mcp-read-tools.md)                   |
+| [WI-101](work-items/WI-101-backlog-api.md)                      | The backlog in the data model and API                             | [WS-101](work-specs/WS-101-backlog-api.md)                      |
 
 ## Follow-ups
 
@@ -190,6 +192,13 @@ Other follow-ups:
   keyboard test failed 4 of 20 at `expect.poll` after `page.reload()`: the board was still
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
+
+- **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
+  WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
+  C are done. The existing tools gain priority, due date and the backlog move on their own.
+
+- **Agents cannot apply labels in v1** (WT-07 question 5): no agent scope holds
+  `labels:write`. If a worker agent needs it, amend doc 0001 section 3 first.
 
 - **WT-10 places agent-filed bugs at the top of the backlog in sprint projects** (doc 0003
   section 13, question 1; WT-06 decision 7). Today a new bug goes to the top of the first
