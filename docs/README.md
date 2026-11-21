@@ -160,7 +160,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                           | [WS-092](work-specs/WS-092-triage-section.md)                   |
 | [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | [WS-093](work-specs/WS-093-posthog-addon.md)                    |
 | [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            |
-| [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | —                                                               |
+| [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | [WS-095](work-specs/WS-095-worktree-test-isolation.md)          |
 | [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | [WS-096](work-specs/WS-096-parallel-merge-flow.md)              |
 | [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | —                                                               |
 | [WI-098](work-items/WI-098-keyboard-move-subpixel.md)           | A keyboard move works while the board is still animating          | [WS-098](work-specs/WS-098-keyboard-move-subpixel.md)           |
