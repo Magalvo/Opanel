@@ -194,6 +194,12 @@ Other follow-ups:
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
 
+- **An epic dated in the year `0000` answers `500`** (WI-102, WS-102 question 1).
+  `z.iso.date()` accepts `0000-01-01` and PostgreSQL refuses it, so `startDate` or
+  `targetDate` of that year fails inside the service. Needs a small work-item: use the
+  shared `calendarDateSchema` of `src/lib/schemas/dates.ts` (added by WI-102) in
+  `src/lib/schemas/epics.ts`, with a route test for the `400`.
+
 - **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
   WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
   C are done. The existing tools gain priority, due date and the backlog move on their own.
