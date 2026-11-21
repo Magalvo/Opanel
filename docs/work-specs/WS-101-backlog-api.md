@@ -1,6 +1,6 @@
 # WS-101 — The backlog in the data model and API
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 3 as recommended)
 - Work-item: [WI-101](../work-items/WI-101-backlog-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 4, 5;
   [0002](../canonical/0002-realtime-sync.md) section 4;
@@ -189,7 +189,7 @@ the nullable `columnId`, which WT-07 question 8 accepted before the first tagged
 
 ## Risks and open questions
 
-For the owner:
+Resolved by the owner on 2026-11-21, by approving each recommendation:
 
 1. **Locking the backlog by the project row** (section 2), rather than an advisory lock
    keyed on the project's backlog, as WT-06 did for dedupe. The project row is what

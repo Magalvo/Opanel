@@ -1,6 +1,6 @@
 # WI-101 — The backlog in the data model and API
 
-- Status: Proposed
+- Status: Approved (by the owner on 2026-11-21, with WS-101)
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item A)
 - Depends on: none
 - Work-spec: [WS-101](../work-specs/WS-101-backlog-api.md)
