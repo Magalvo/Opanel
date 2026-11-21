@@ -4,6 +4,7 @@ import { agentMeSchema } from "@/lib/schemas/auth";
 import type { Permission } from "@/lib/schemas/permissions";
 
 import { createApiClient, type ToolFailure } from "./api";
+import { toolError } from "./errors";
 import { createRedactor } from "./redact";
 import {
   connect,
@@ -15,7 +16,7 @@ import {
   TOKEN,
   URL_BASE,
 } from "./testing";
-import { buildServer, offeredTools, toolError, type ToolDefinition, TOOLS } from "./tools";
+import { buildServer, offeredTools, type ToolDefinition, TOOLS } from "./tools";
 
 // Tools chosen by permission, `opanel_whoami`, tool errors and the token (WS-099 tests 7 to 11).
 
