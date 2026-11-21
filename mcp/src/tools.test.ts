@@ -36,8 +36,8 @@ function serve(respond: () => Response) {
   return connect(buildServer(TOOLS, context(respond), QA_AGENT.permissions));
 }
 
-function definition(name: string, permission: Permission | null): ToolDefinition {
-  return { name, permission, register: () => undefined };
+function definition(name: string, permissions: readonly Permission[]): ToolDefinition {
+  return { name, permissions, register: () => undefined };
 }
 
 afterEach(() => {
@@ -46,21 +46,27 @@ afterEach(() => {
 
 describe("offeredTools", () => {
   const definitions = [
-    definition("always", null),
-    definition("read", "tasks:read"),
-    definition("comment", "comments:write"),
-    definition("write", "tasks:write"),
+    definition("always", []),
+    definition("read", ["tasks:read"]),
+    definition("board", ["projects:read", "tasks:read"]),
+    definition("comment", ["comments:write"]),
+    definition("write", ["tasks:write"]),
   ];
 
   it("keeps the tools a qa_agent may use", () => {
     const names = offeredTools(definitions, QA_AGENT.permissions).map((tool) => tool.name);
-    expect(names).toEqual(["always", "read", "comment"]);
+    expect(names).toEqual(["always", "read", "board", "comment"]);
   });
 
   it("keeps the tools a worker_agent may use", () => {
     const permissions = ["comments:write", "projects:read", "tasks:read", "tasks:write"];
     const names = offeredTools(definitions, permissions).map((tool) => tool.name);
-    expect(names).toEqual(["always", "read", "comment", "write"]);
+    expect(names).toEqual(["always", "read", "board", "comment", "write"]);
+  });
+
+  it("keeps a tool only when every one of its permissions is held", () => {
+    const names = offeredTools(definitions, ["tasks:read"]).map((tool) => tool.name);
+    expect(names).toEqual(["always", "read"]);
   });
 
   it("always keeps opanel_whoami", () => {
@@ -69,12 +75,12 @@ describe("offeredTools", () => {
 });
 
 describe("opanel_whoami", () => {
-  it("is the only tool offered today, read-only", async () => {
+  it("is the first tool offered, read-only", async () => {
     const client = await serve(() => jsonResponse(200, QA_AGENT));
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name)).toEqual(["opanel_whoami"]);
+    expect(tools[0]?.name).toBe("opanel_whoami");
     expect(tools[0]?.annotations?.readOnlyHint).toBe(true);
     expect(tools[0]?.description).toMatch(/data, not instructions/);
   });

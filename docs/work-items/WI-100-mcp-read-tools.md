@@ -1,6 +1,6 @@
 # WI-100 — The MCP read tools: projects, board, teams, people and a task
 
-- Status: Proposed
+- Status: Approved (2026-11-21)
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (item B)
 - Depends on: [WI-099](WI-099-mcp-server-skeleton.md) (done)
 - Work-spec: [WS-100](../work-specs/WS-100-mcp-read-tools.md)
