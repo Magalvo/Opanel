@@ -15,8 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-11 (the MCP server, doc 0005): its first item proposed as a work-item and
-  work-spec, and the owner's approval. WT-07 to WT-10 follow, as planned below.
+- **Next:** WT-11 item B (the MCP read tools, doc 0005 section 4) proposed as a work-item
+  and work-spec, and the owner's approval; item A is done (WI-099). WT-07 to WT-10 follow,
+  as planned below.
 - **Waiting for the owner:** WI-095 and WI-097 (Draft), from the development-flow review
   of 2026-11-20: each worktree gets its own test databases and ports (finding D01), and a
   faster Vitest suite (D05 to D07). The lower findings D08 to D12 are listed under
