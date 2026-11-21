@@ -16,8 +16,9 @@ What a new session needs to start: what comes next, and what waits for the owner
 an index commit when a work-track is approved or done, or when what comes next changes.
 
 - **Next:** WT-11 item B (the MCP read tools, doc 0005 section 4) proposed as a work-item
-  and work-spec, and the owner's approval; item A is done (WI-099). WT-07 to WT-10 follow,
-  as planned below.
+  and work-spec, and the owner's approval; item A is done (WI-099). In parallel, WT-07
+  (approved 2026-11-21) starts with item A, the backlog in the data model and API, proposed
+  as a work-item and work-spec. WT-08 to WT-10 follow, as planned below.
 - **Waiting for the owner:** WI-095 and WI-097 (Draft), from the development-flow review
   of 2026-11-20: each worktree gets its own test databases and ports (finding D01), and a
   faster Vitest suite (D05 to D07). The lower findings D08 to D12 are listed under
@@ -190,6 +191,13 @@ Other follow-ups:
   keyboard test failed 4 of 20 at `expect.poll` after `page.reload()`: the board was still
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
+
+- **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
+  WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
+  C are done. The existing tools gain priority, due date and the backlog move on their own.
+
+- **Agents cannot apply labels in v1** (WT-07 question 5): no agent scope holds
+  `labels:write`. If a worker agent needs it, amend doc 0001 section 3 first.
 
 - **WT-10 places agent-filed bugs at the top of the backlog in sprint projects** (doc 0003
   section 13, question 1; WT-06 decision 7). Today a new bug goes to the top of the first
