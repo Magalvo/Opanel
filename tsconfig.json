@@ -34,5 +34,5 @@
     "**/*.tsx",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "addons"]
+  "exclude": ["node_modules", "addons", "mcp"]
 }

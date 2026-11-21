@@ -1,0 +1,21 @@
+{
+  "name": "@opanel/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Opanel as MCP tools for AI assistants: a stdio client of /api/v1 (doc 0005).",
+  "type": "module",
+  "bin": {
+    "opanel-mcp": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0"
+  }
+}
