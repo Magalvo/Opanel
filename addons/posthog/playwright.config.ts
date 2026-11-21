@@ -3,18 +3,26 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 import {
+  assertPortFree,
   E2E_APP_DATABASE_URL,
   E2E_AUTH_SECRET,
   E2E_DATABASE_URL,
   E2E_SETUP_TOKEN,
 } from "../../tests/e2e/environment";
-import { ADDON_BASE_URL, ADDON_PORT } from "./e2e/environment";
+import { ADDON_BASE_URL, ADDON_PORT, ADDON_PORT_VARIABLE } from "./e2e/environment";
 
 // The PostHog add-on's end-to-end test (WS-093 section 4): the production build of the
 // app, started as the app's own playwright.config.ts starts it, on the add-on's port. Run
 // with `pnpm exec playwright test --config addons/posthog/playwright.config.ts`.
 
 const isCI = Boolean(process.env.CI);
+
+// Stop at once when another run already listens on this port (WS-095). Workers load this
+// config again and inherit the marker, so only the main process checks.
+if (process.env.OPANEL_E2E_PORT_CHECKED === undefined) {
+  await assertPortFree(ADDON_PORT, ADDON_PORT_VARIABLE);
+  process.env.OPANEL_E2E_PORT_CHECKED = "1";
+}
 
 export default defineConfig({
   testDir: "./e2e",

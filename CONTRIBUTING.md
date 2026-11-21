@@ -59,7 +59,30 @@ pnpm exec playwright install chromium
 | `opanel_e2e_test` | End-to-end tests  | The database of the app under test. |
 
 The test harnesses refuse to run against any database whose name does not end in `_test`,
-so tests cannot erase development data.
+so tests cannot erase development data. They create their database when it is missing and
+migrate it, so a new name never needs `docker compose down -v`.
+
+**Several worktrees at once** (WS-095). Each linked Git worktree (`git worktree add`) gets
+its own test databases and end-to-end ports, so several worktrees can run `pnpm test` and
+`pnpm test:e2e` at the same time. The main checkout and CI have no ID and use the names and
+ports above.
+
+- **The ID** is the first 8 hex characters of the SHA-256 of the worktree's path, for
+  example `3f9a07c2`. Set `OPANEL_WORKTREE` (1 to 16 lower-case letters or digits) to
+  choose it, in any checkout. Moving the worktree's folder changes the ID.
+- **The databases** get the ID before their suffix: `opanel_3f9a07c2_test` and
+  `opanel_3f9a07c2_e2e_test`. This applies to the names in `DATABASE_URL` and
+  `E2E_DATABASE_URL` too, when you set them.
+- **The ports**: the app's end-to-end run uses 20000 to 20999 and the PostHog add-on's
+  21000 to 21999, from the ID (3100 and 3200 without one). `E2E_PORT` and
+  `OPANEL_ADDON_E2E_PORT` choose them. Two worktrees share a port about once in a
+  thousand pairs; a run whose port is already in use stops at once and names the variable
+  to set.
+- **Dropping them.** `pnpm test:db:drop` drops this checkout's two test databases.
+  `pnpm test:db:drop --stale` lists the databases of worktrees that no longer exist (any
+  `opanel_<id>_test` or `opanel_<id>_e2e_test` whose ID is not one of
+  `git worktree list`), and `pnpm test:db:drop --stale --yes` drops them; run it from any
+  checkout after removing worktrees. A database in use is kept.
 
 **Port 5432 already in use?** Start the server on another port and point the app at it:
 

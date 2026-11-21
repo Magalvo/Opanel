@@ -22,6 +22,7 @@
     "test:integration": "vitest run --project integration",
     "test:e2e": "node --run mcp:build && playwright test",
     "test:watch": "vitest",
+    "test:db:drop": "tsx scripts/drop-test-databases.ts",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate": "tsx scripts/migrate.ts",

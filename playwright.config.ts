@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 import {
+  assertPortFree,
   E2E_APP_DATABASE_URL,
   E2E_AUTH_SECRET,
   E2E_BASE_URL,
@@ -10,6 +11,13 @@ import {
 } from "./tests/e2e/environment";
 
 const isCI = Boolean(process.env.CI);
+
+// Stop at once when another run already listens on this port (WS-095). Workers load this
+// config again and inherit the marker, so only the main process checks.
+if (process.env.OPANEL_E2E_PORT_CHECKED === undefined) {
+  await assertPortFree(E2E_PORT, "E2E_PORT");
+  process.env.OPANEL_E2E_PORT_CHECKED = "1";
+}
 
 export default defineConfig({
   testDir: "./tests/e2e",
