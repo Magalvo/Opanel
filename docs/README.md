@@ -160,13 +160,14 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-092](work-items/WI-092-triage-section.md)                   | The project's "Triage" settings section                           | [WS-092](work-specs/WS-092-triage-section.md)                   |
 | [WI-093](work-items/WI-093-posthog-addon.md)                    | Optional PostHog add-on: error-tracking issues become bug reports | [WS-093](work-specs/WS-093-posthog-addon.md)                    |
 | [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            |
-| [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | —                                                               |
+| [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | [WS-095](work-specs/WS-095-worktree-test-isolation.md)          |
 | [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | [WS-096](work-specs/WS-096-parallel-merge-flow.md)              |
 | [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | —                                                               |
 | [WI-098](work-items/WI-098-keyboard-move-subpixel.md)           | A keyboard move works while the board is still animating          | [WS-098](work-specs/WS-098-keyboard-move-subpixel.md)           |
 | [WI-099](work-items/WI-099-mcp-server-skeleton.md)              | The MCP server starts over stdio and answers opanel_whoami        | [WS-099](work-specs/WS-099-mcp-server-skeleton.md)              |
 | [WI-100](work-items/WI-100-mcp-read-tools.md)                   | The MCP read tools: projects, board, teams, people and a task     | [WS-100](work-specs/WS-100-mcp-read-tools.md)                   |
 | [WI-101](work-items/WI-101-backlog-api.md)                      | The backlog in the data model and API                             | [WS-101](work-specs/WS-101-backlog-api.md)                      |
+| [WI-102](work-items/WI-102-priority-due-date.md)                | Priority and due date on tasks                                    | [WS-102](work-specs/WS-102-priority-due-date.md)                |
 
 ## Follow-ups
 
@@ -192,6 +193,12 @@ Other follow-ups:
   keyboard test failed 4 of 20 at `expect.poll` after `page.reload()`: the board was still
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
+
+- **An epic dated in the year `0000` answers `500`** (WI-102, WS-102 question 1).
+  `z.iso.date()` accepts `0000-01-01` and PostgreSQL refuses it, so `startDate` or
+  `targetDate` of that year fails inside the service. Needs a small work-item: use the
+  shared `calendarDateSchema` of `src/lib/schemas/dates.ts` (added by WI-102) in
+  `src/lib/schemas/epics.ts`, with a route test for the `400`.
 
 - **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
   WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
