@@ -53,6 +53,13 @@ export default defineConfig({
       dependencies: ["exclusive"],
       use: { ...devices["Desktop Chrome"] },
     },
+    // The MCP server package (WS-099): its built server over stdio against this app. No
+    // browser. `pnpm test:e2e` builds the package first.
+    {
+      name: "mcp",
+      testDir: "./mcp/e2e",
+      dependencies: ["exclusive"],
+    },
   ],
 
   // The app under test is the production build, running against its own database.
