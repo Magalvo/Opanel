@@ -38,28 +38,28 @@ an index commit when a work-track is approved or done, or when what comes next c
 
 ## Work-tracks (`work-tracks/`)
 
-| Track                                                   | Title                                                   |
-| ------------------------------------------------------- | ------------------------------------------------------- |
-| [WT-01](work-tracks/WT-01-project-boilerplate.md)       | Project boilerplate                                     |
-| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)  | Accounts, human sign-in, roles and the permission layer |
-| [WT-03](work-tracks/WT-03-board-core.md)                | Board core: projects, teams, columns, epics, tasks      |
-| [WT-04](work-tracks/WT-04-realtime-board-sync.md)       | Real-time board sync                                    |
-| [WT-11](work-tracks/WT-11-mcp-server.md)                | MCP server (outline)                                    |
-| [WT-12](work-tracks/WT-12-operations.md)                | Production deployment and operations                    |
-| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md) | Agent accounts and API tokens                           |
-| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)    | Bug reports and automated triage                        |
-| [WT-13](work-tracks/WT-13-integrations.md)              | Integrations (optional add-ons)                         |
+| Track                                                           | Title                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------- |
+| [WT-01](work-tracks/WT-01-project-boilerplate.md)               | Project boilerplate                                     |
+| [WT-02](work-tracks/WT-02-accounts-and-permissions.md)          | Accounts, human sign-in, roles and the permission layer |
+| [WT-03](work-tracks/WT-03-board-core.md)                        | Board core: projects, teams, columns, epics, tasks      |
+| [WT-04](work-tracks/WT-04-realtime-board-sync.md)               | Real-time board sync                                    |
+| [WT-11](work-tracks/WT-11-mcp-server.md)                        | MCP server (outline)                                    |
+| [WT-12](work-tracks/WT-12-operations.md)                        | Production deployment and operations                    |
+| [WT-05](work-tracks/WT-05-agent-accounts-and-tokens.md)         | Agent accounts and API tokens                           |
+| [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)            | Bug reports and automated triage                        |
+| [WT-13](work-tracks/WT-13-integrations.md)                      | Integrations (optional add-ons)                         |
+| [WT-07](work-tracks/WT-07-backlog-priority-due-dates-labels.md) | Backlog, priority, due dates, labels                    |
 
 Planned next, not yet drafted:
 
-- WT-07 Backlog, priority, due dates, labels
 - WT-08 Search, filters, list view, activity timeline
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 come from canonical doc 0003. WT-11, the MCP server (doc 0005), is outlined
-above and comes after WT-06. WT-12, production deployment and operations (doc 0006), came
-right after WT-04 and is done.
+WT-07 to WT-10 come from canonical doc 0003; WT-07 is reserved above. WT-11, the MCP
+server (doc 0005), is outlined above and comes after WT-06. WT-12, production deployment
+and operations (doc 0006), came right after WT-04 and is done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
