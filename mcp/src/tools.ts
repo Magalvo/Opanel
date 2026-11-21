@@ -4,6 +4,11 @@ import type { Permission } from "@/lib/schemas/permissions";
 
 import type { ApiClient } from "./api";
 import type { Redactor } from "./redact";
+import { getBoard } from "./tools/board";
+import { findPeople } from "./tools/people";
+import { listProjects } from "./tools/projects";
+import { getTask } from "./tools/task";
+import { listTeams } from "./tools/teams";
 import { whoami } from "./tools/whoami";
 import { VERSION } from "./version";
 
@@ -16,13 +21,20 @@ export interface ToolContext {
 
 export interface ToolDefinition {
   name: string;
-  /** The permission the tool needs, or `null` for one any agent may use. */
-  permission: Permission | null;
+  /** Every permission the tool's API calls need; `[]` for a tool any agent may use. */
+  permissions: readonly Permission[];
   register(server: McpServer, context: ToolContext): void;
 }
 
 /** Every tool, in the order they are listed. */
-export const TOOLS: readonly ToolDefinition[] = [whoami];
+export const TOOLS: readonly ToolDefinition[] = [
+  whoami,
+  listProjects,
+  getBoard,
+  listTeams,
+  findPeople,
+  getTask,
+];
 
 /** The tools the agent may use: an assistant is never shown a tool that can only fail. */
 export function offeredTools(
@@ -30,7 +42,7 @@ export function offeredTools(
   permissions: readonly string[],
 ): ToolDefinition[] {
   const held = new Set(permissions);
-  return definitions.filter((tool) => tool.permission === null || held.has(tool.permission));
+  return definitions.filter((tool) => tool.permissions.every((permission) => held.has(permission)));
 }
 
 export function buildServer(
