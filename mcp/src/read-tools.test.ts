@@ -7,8 +7,8 @@ import { teamPageSchema } from "@/lib/schemas/teams";
 import { createApiClient } from "./api";
 import { createRedactor } from "./redact";
 import {
-  comment,
   COLUMNS,
+  comment,
   connect,
   DOING_ID,
   DONE_ID,
