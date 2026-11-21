@@ -1,6 +1,7 @@
 # WS-101 — The backlog in the data model and API
 
-- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-21, questions 1 to 3 as recommended; done on
+  2026-11-21)
 - Work-item: [WI-101](../work-items/WI-101-backlog-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 4, 5;
   [0002](../canonical/0002-realtime-sync.md) section 4;
@@ -212,3 +213,37 @@ Risks:
 - **A raw `sql` join on `columns` added elsewhere later would hide backlog tasks again**
   (follow-up D08). Test 10 reads a backlog task through every task operation, so a
   regression there fails.
+
+## Implementation record
+
+- Red: the schema and cursor tests failed on the refused `null` and the missing
+  `BacklogCursor`; the eleven backlog service tests failed on `columnId: null` (`400`) and
+  the missing `listBacklog`; the triage test answered `created` instead of `deduplicated`;
+  the board, task detail and settings tests failed on the card left on the board, the
+  missing "In backlog" and the "restored to its column" message.
+- Green: `tasks.ts` (left join, `placeOf`, `listBacklog`, the deleted list's `~`), the
+  triage lookup, the route and contract, `use-board.ts`, `moves.ts`, `details-section.tsx`,
+  `deleted-tasks-section.tsx`. `pnpm openapi:generate` adds the backlog path and the
+  nullable `columnId`; `pnpm db:generate` writes `0019_backlog` and nothing more.
+- Gate on 2026-11-21:
+  - typecheck, lint and Prettier pass; `db:check` and both generators leave no diff;
+  - Vitest 1837 tests: 1834 passed in the full run, and the 3 that timed out at 5 s
+    (`setup-form.test.tsx`, `people-page.test.tsx`, untouched by this item) passed when
+    rerun on their own (36 of 36), the load-related slowness of findings D05 to D07;
+  - `pnpm test:e2e --retries=0` 96 of 96;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18 on port 5433, with the
+    item's own databases `opanel_wi101_test` and `opanel_wi101_e2e_test`.
+
+## Deviations
+
+1. **The service tests live in one new file**, `backlog.integration.test.ts`, instead of
+   being spread over the tasks, move, delete and epics test files; the route tests are in
+   the new backlog route's test file. Same cases as the test plan.
+2. **The concurrency test (7) has a 30 s timeout**: thirty transactions queue on one
+   project row, about 6 s on a loaded machine, over Vitest's 5 s default.
+3. **"Deleted tasks" in the project settings says "restored to the backlog"** for a
+   backlog task, instead of "restored to its column" (a wording fix the spec did not list).
+4. **`groupByColumn` (`moves.ts`) skips tasks with no column**, a type fix the spec listed
+   under "types only", with a test.
+5. **The migration's index has no explicit `collate "C"`**: `position` is already declared
+   `COLLATE "C"`, and drizzle-kit writes the index on the column as it is.
