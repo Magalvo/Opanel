@@ -1,6 +1,7 @@
 # WS-095 — Parallel worktrees can run the quality gate at the same time
 
-- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 4 as recommended)
+- Status: Done (2026-11-21; approved by the owner the same day, questions 1 to 4 as
+  recommended)
 - Work-item: [WI-095](../work-items/WI-095-worktree-test-isolation.md)
 - Canonical docs: `AGENTS.md` section 5 (the quality gate); `CONTRIBUTING.md` ("Local
   database"); the development-flow review of 2026-11-20, finding D01
@@ -168,7 +169,7 @@ app's and the add-on's end-to-end runs in one worktree at once, is not a use cas
 | `addons/posthog/e2e/environment.ts`          | modify: worktree port                                              |
 | `addons/posthog/playwright.config.ts`        | modify: port-in-use check                                          |
 | `scripts/drop-test-databases.ts`             | create: `pnpm test:db:drop`                                        |
-| `scripts/drop-test-databases.test.ts`        | create: which names `--stale` picks (unit)                         |
+| `scripts/drop-test-databases.test.ts`        | not created (Deviations 1)                                         |
 | `package.json`                               | modify: `test:db:drop` script                                      |
 | `docker/postgres/init/01-create-test-db.sql` | modify: comment only                                               |
 | `CONTRIBUTING.md`                            | modify: section 7                                                  |
@@ -247,3 +248,83 @@ run in CI's single checkout anyway.
   of section 4. Still a failure, not a wrong result.
 - Every worktree migrates its databases from zero on its first run: a few seconds more,
   once.
+
+## Deviations
+
+1. **Where the helpers live.** The function that rewrites `DATABASE_URL`
+   (`applyWorktreeTestDatabase(env)`) and the `--stale` selection (`staleTestDatabases`)
+   are in `src/server/db/worktree.ts`, not in `testing.ts` and the script. ESLint forbids
+   `process.env` under `src/` (outside `env.ts`), so the module takes the environment as
+   an argument and its callers, all outside `src/`, pass `process.env`. The selection is
+   unit-tested in `worktree.test.ts`; `scripts/drop-test-databases.test.ts` was not needed.
+2. **The add-on** imports `e2ePort` and `WORKTREE_ID` from `tests/e2e/environment.ts`,
+   which re-exports them, so it still imports nothing from `src/` directly.
+3. **A folder's real path.** `pathWorktreeId` resolves a folder that exists to its real
+   path first. On this machine the temp folder has a Windows short name (`DIOGO~1.SAN`),
+   and Git lists the long one: without this, `--stale` could take a live worktree's
+   databases for stale ones. Test added first (red on this machine).
+4. **Timeouts.** The `ensureTestDatabase` tests get 60 s: `create database` took more than
+   Vitest's 5 s while the machine ran two suites.
+
+## Implementation record
+
+- Branch `claude/wi095-worktree-isolation-b6a479`. Index commit on `main`:
+  `docs: link WS-095 in the index (WI-095)` (997ab47). WI-095 was reserved before
+  the reservation rule added the spec link, and `scripts/docs-index.test.ts` requires it
+  once the spec exists.
+- Red, then green:
+  - `src/server/db/worktree.test.ts` failed to import `./worktree` (no module). Then 27
+    tests passed. The short-name test failed until `realpathSync.native` (deviation 3).
+  - `src/server/db/testing.integration.test.ts` failed with
+    `ensureTestDatabase is not a function`. Without the `42P04`/`23505` and
+    `duplicate_object` handling, the two "at the same time" tests failed, three runs out
+    of three. With it, 4 of 4 passed.
+- Checks of the port message: with a listener on this worktree's port (20095),
+  `playwright test --list` stopped with "Port 20095 is already in use, probably by
+  another end-to-end run. Set E2E_PORT to a free port."
+- **Test 9, on 2026-11-21**, on the owner's Windows machine (12 cores), PostgreSQL on
+  5433, with other sessions working:
+  - This worktree has ID `e52d57ef` (port 20095). A second worktree, `wi095-twin`, added
+    from this branch, has ID `bc8b01e4` (port 20596). The twin got a throwaway table
+    `wi095_twin` and its migration `0019`, never committed.
+  - `pnpm test` in both at once, Vitest's default workers (12:47 to 13:06): both failed,
+    13 and 12 tests, all on time limits: "Test timed out in 5000ms" or "Hook timed out".
+    In this worktree, one hook timed out, and its queries then deadlocked with the next
+    `truncate`, in this worktree's own database. No failure came from one run touching the
+    other's data. Two full suites with 12 workers each are too many for 12 cores
+    (WI-097).
+  - `pnpm test --maxWorkers=6` in both at once (13:06 to 13:19):
+    - this worktree: 187 files, 1843 of 1843 (580 s);
+    - the twin: 1842 of 1843. The one failure is `scripts/docs-index.test.ts`, timed out
+      at 5 s. It reads the docs and touches no database, and it passed on its own.
+  - `wi095_twin` exists in `opanel_bc8b01e4_test` and not in `opanel_e52d57ef_test`.
+  - `pnpm test:e2e` in both at once (13:19 to 13:25): each built and served its own app
+    on its own port.
+    - This worktree: 93 passed, 2 failed.
+    - The twin: 94 passed, 1 failed.
+    - All three failures were `expect` time limits: `bugs.spec.ts:143` "2 reports",
+      `task-detail.spec.ts:117` and `live-board.spec.ts:172`.
+    - `playwright test --last-failed` in both at once: 4 passed here (with the
+      `first-run` setup), 3 passed in the twin.
+  - `pnpm test:db:drop --stale` before removing the twin did not list it. After
+    `git worktree remove`, it listed `opanel_bc8b01e4_test` and `opanel_bc8b01e4_e2e_test`.
+    `OPANEL_WORKTREE=bc8b01e4 pnpm test:db:drop` dropped both. This worktree's two
+    databases were kept.
+  - `--stale` also lists the databases made by hand before this item (`opanel_wi072_test`
+    to `opanel_wi093_e2e_test`, `opanel_wi095_test`, `opanel_flake_test`). They were left
+    for the owner to drop with `--stale --yes`.
+- Gate on 2026-11-21, this worktree, `DATABASE_URL` and `E2E_DATABASE_URL` on port 5433:
+  - `typecheck`, `lint` and `format:check` pass;
+  - Vitest: 1843 of 1843 (in the parallel run above, alongside the twin);
+  - `pnpm test:e2e`, alone: 95 of 95 (2.5 min), including the `mcp` project;
+  - the PostHog add-on's run: 1 of 1, on its worktree port.
+- Not checked here: CI, where there is no ID and so today's names and ports. The PR's run
+  checks it.
+
+## Follow-ups
+
+- The follow-up "Let end-to-end runs choose their port and database" in `docs/README.md`
+  is answered by this item. The next index commit on `main` marks it.
+- Two full `pnpm test` runs at once overload a 12-core machine with Vitest's default
+  workers. WI-097 (a faster suite) should take this into account, for example with a
+  lower local `maxWorkers`.
