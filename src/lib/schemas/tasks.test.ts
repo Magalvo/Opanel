@@ -8,6 +8,7 @@ import {
   taskListQuerySchema,
   taskParamsSchema,
   taskSchema,
+  taskSummarySchema,
   updateTaskRequestSchema,
 } from "./tasks";
 
@@ -209,6 +210,7 @@ describe("task contracts", () => {
     const write = { kind: "permission", permission: "tasks:write" };
 
     expect(byOperation.get("GET /api/v1/projects/{projectId}/tasks")?.access).toEqual(read);
+    expect(byOperation.get("GET /api/v1/projects/{projectId}/backlog")?.access).toEqual(read);
     expect(byOperation.get("GET /api/v1/tasks/{taskId}")?.access).toEqual(read);
     expect(byOperation.get("POST /api/v1/projects/{projectId}/tasks")?.access).toEqual(write);
     expect(byOperation.get("PATCH /api/v1/tasks/{taskId}")?.access).toEqual(write);
@@ -221,5 +223,54 @@ describe("task contracts", () => {
       kind: "permission",
       permission: "tasks:delete_any",
     });
+  });
+});
+
+describe("the backlog (WS-101)", () => {
+  it("a task and a task summary may have no column", () => {
+    const summary = {
+      id: UUID,
+      key: "OPA-1",
+      number: 1,
+      projectId: UUID,
+      type: "task",
+      title: "T",
+      columnId: null,
+      assigneeTeam: null,
+      assignee: null,
+      epic: null,
+      reporter: { id: UUID, name: "Mia", kind: "human" },
+      severity: null,
+      fingerprint: null,
+      occurrences: 0,
+      lastReportedAt: null,
+      version: 1,
+      createdAt: "2026-11-21T08:00:00.000Z",
+      updatedAt: "2026-11-21T08:00:00.000Z",
+      deletedAt: null,
+    };
+    expect(taskSummarySchema.parse(summary)).toEqual(summary);
+    const task = { ...summary, description: "", links: [] };
+    expect(taskSchema.parse(task)).toEqual(task);
+    expect(taskSchema.safeParse({ ...task, columnId: "OPA" }).success).toBe(false);
+  });
+
+  it("create takes columnId null for the backlog, or none for the first column", () => {
+    expect(createTaskRequestSchema.parse({ title: "T", columnId: null })).toEqual({
+      title: "T",
+      columnId: null,
+    });
+    expect(createTaskRequestSchema.parse({ title: "T" })).toEqual({ title: "T" });
+  });
+
+  it("move takes columnId null for the backlog, and still requires columnId", () => {
+    expect(moveTaskRequestSchema.parse({ columnId: null, version: 1 })).toEqual({
+      columnId: null,
+      version: 1,
+    });
+    expect(
+      moveTaskRequestSchema.safeParse({ columnId: null, afterTaskId: UUID, version: 1 }).success,
+    ).toBe(true);
+    expect(moveTaskRequestSchema.safeParse({ version: 1 }).success).toBe(false);
   });
 });

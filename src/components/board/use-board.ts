@@ -208,14 +208,20 @@ export function useBoard({
   const placeTask = useCallback(
     async (task: TaskSummary) => {
       if (!isNewer(heldVersion(current.current, task.id), task.version)) return;
+      // A task in the backlog is not on the board (WS-101 section 7).
+      const columnId = task.columnId;
+      if (columnId === null) {
+        setBoard(removeTask(current.current, task.id));
+        return;
+      }
       const inPlace = replaceInPlace(current.current, task);
       if (inPlace !== null) {
         setBoard(inPlace);
         return;
       }
-      const tasks = await listColumnTasks(projectKey, task.columnId);
+      const tasks = await listColumnTasks(projectKey, columnId);
       if (!isMounted(mounted)) return;
-      setBoard(replaceColumn(removeTask(current.current, task.id), task.columnId, tasks));
+      setBoard(replaceColumn(removeTask(current.current, task.id), columnId, tasks));
     },
     [projectKey, setBoard],
   );
@@ -377,7 +383,13 @@ export function useBoard({
           if (!isNewer(heldVersion(latest, task.id), task.version)) return;
           const summary = summaryOf(task);
           const from = latest[place.columnId] ?? [];
-          if (place.columnId === task.columnId) {
+          const columnId = task.columnId;
+          // Moved to the backlog: it leaves the board (WS-101 section 7).
+          if (columnId === null) {
+            setBoard(removeTask(latest, task.id));
+            return;
+          }
+          if (place.columnId === columnId) {
             setBoard({
               ...latest,
               [place.columnId]: from.map((item) => (item.id === task.id ? summary : item)),
@@ -387,7 +399,7 @@ export function useBoard({
           setBoard({
             ...latest,
             [place.columnId]: from.filter((item) => item.id !== task.id),
-            [task.columnId]: [...(latest[task.columnId] ?? []), summary],
+            [columnId]: [...(latest[columnId] ?? []), summary],
           });
         },
         deleted: (id) => {
@@ -411,7 +423,10 @@ export function useBoard({
         if (inPlace !== null) setBoard(inPlace);
         return;
       }
-      setBoard({ ...before, [task.columnId]: [...(before[task.columnId] ?? []), summary] });
+      // A task created in the backlog does not go on the board (WS-101 section 7).
+      const columnId = task.columnId;
+      if (columnId === null) return;
+      setBoard({ ...before, [columnId]: [...(before[columnId] ?? []), summary] });
     },
     [setBoard],
   );

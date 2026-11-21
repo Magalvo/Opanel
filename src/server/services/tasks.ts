@@ -4,6 +4,7 @@ import { positionBetween } from "@/lib/position";
 import type { AccountKind } from "@/lib/schemas/account-ref";
 import type { Severity } from "@/lib/schemas/bug-reports";
 import {
+  type BacklogQuery,
   type CreateTaskRequest,
   type MoveTaskRequest,
   ONLY_BUGS,
@@ -30,7 +31,12 @@ import {
   notFound,
   versionConflict,
 } from "@/server/http/errors";
-import { decodeBoardCursor, encodeBoardCursor } from "@/server/http/pagination";
+import {
+  decodeBacklogCursor,
+  decodeBoardCursor,
+  encodeBacklogCursor,
+  encodeBoardCursor,
+} from "@/server/http/pagination";
 
 import { type ProjectEventInput, publishEvent } from "./events";
 import { isPerson } from "./people";
@@ -40,9 +46,14 @@ import { recordTaskEvent } from "./task-events";
 type Executor = Pick<Database, "execute">;
 
 const ISO_MS = sql`'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
+/** Sorts after every position key (base-62, compared byte by byte): the backlog's place. */
+const BACKLOG_COLUMN_POSITION = "~";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Every column of a task's API shape, plus the two positions for the board cursor. */
+/**
+ * Every column of a task's API shape, plus the two positions for the board cursor. A task
+ * in the backlog has no column (WS-101), so the join on columns is a left join.
+ */
 const TASK_SELECT = sql`
   select t.id, t.number, p.key as project_key, t.project_id, t.type, t.title, t.description,
     t.column_id, t.assignee_team_id, t.assignee_account_id, t.epic_id,
@@ -58,7 +69,7 @@ const TASK_SELECT = sql`
     to_char(t.updated_at at time zone 'utc', ${ISO_MS}) as updated_at
   from tasks t
   join projects p on p.id = t.project_id
-  join columns c on c.id = t.column_id
+  left join columns c on c.id = t.column_id
   join accounts r on r.id = t.reporter_account_id
   left join teams tm on tm.id = t.assignee_team_id
   left join accounts a on a.id = t.assignee_account_id
@@ -72,7 +83,7 @@ interface TaskRow extends Record<string, unknown> {
   type: TaskType;
   title: string;
   description: string;
-  column_id: string;
+  column_id: string | null;
   assignee_team_id: string | null;
   assignee_account_id: string | null;
   epic_id: string | null;
@@ -88,7 +99,7 @@ interface TaskRow extends Record<string, unknown> {
   occurrences: number;
   last_reported_at: string | null;
   version: number;
-  column_position: string;
+  column_position: string | null;
   position: string;
   created_at: string;
   updated_at: string;
@@ -277,21 +288,26 @@ export async function listTasks(
     }
     inColumn = sql`and t.column_id = ${query.columnId}`;
   }
+  // Only the deleted list shows backlog tasks, after every column's: `~` sorts after every
+  // byte of a position key, so the board cursor keeps its shape (WS-101 section 5).
+  const columnOrder = sql`coalesce(c.position, ${BACKLOG_COLUMN_POSITION}) collate "C"`;
   const after =
     query.cursor === undefined
       ? sql``
       : (() => {
           const cursor = decodeBoardCursor(query.cursor);
-          return sql`and (c.position, t.position, t.id) >
+          return sql`and (${columnOrder}, t.position, t.id) >
             (${cursor.columnPosition}::text collate "C", ${cursor.position}::text collate "C", ${cursor.id}::uuid)`;
         })();
+  const live = deleted
+    ? sql`t.deleted_at is not null`
+    : sql`t.deleted_at is null and t.column_id is not null`;
 
   const rows = await db.execute<TaskRow>(sql`
     ${TASK_SELECT}
-    where t.project_id = ${project.id}
-      and ${deleted ? sql`t.deleted_at is not null` : sql`t.deleted_at is null`}
+    where t.project_id = ${project.id} and ${live}
       ${inColumn} ${after}
-    order by c.position, t.position, t.id
+    order by ${columnOrder}, t.position, t.id
     limit ${query.limit + 1}`);
 
   const page = rows.slice(0, query.limit);
@@ -301,10 +317,50 @@ export async function listTasks(
     nextCursor:
       rows.length > query.limit && last
         ? encodeBoardCursor({
-            columnPosition: last.column_position,
+            columnPosition: last.column_position ?? BACKLOG_COLUMN_POSITION,
             position: last.position,
             id: last.id,
           })
+        : null,
+  };
+}
+
+/**
+ * The project's backlog (WS-101): its live tasks with no column, in backlog order, with a
+ * keyset cursor on position and id.
+ */
+export async function listBacklog(
+  actor: Actor,
+  projectRef: string,
+  query: BacklogQuery,
+  db: Database = getDb(),
+): Promise<TaskPage> {
+  requirePermission(actor, "tasks:read");
+  const project = await findProjectRef(db, actor, projectRef);
+  if (!project) throw notFound("There is no such project.");
+
+  const after =
+    query.cursor === undefined
+      ? sql``
+      : (() => {
+          const cursor = decodeBacklogCursor(query.cursor);
+          return sql`and (t.position, t.id) > (${cursor.position}::text collate "C", ${cursor.id}::uuid)`;
+        })();
+
+  const rows = await db.execute<TaskRow>(sql`
+    ${TASK_SELECT}
+    where t.project_id = ${project.id} and t.column_id is null and t.deleted_at is null
+      ${after}
+    order by t.position, t.id
+    limit ${query.limit + 1}`);
+
+  const page = rows.slice(0, query.limit);
+  const last = page.at(-1);
+  return {
+    items: page.map(toSummary),
+    nextCursor:
+      rows.length > query.limit && last
+        ? encodeBacklogCursor({ position: last.position, id: last.id })
         : null,
   };
 }
@@ -328,6 +384,13 @@ function taskEvent(
   };
 }
 
+/** The tasks of one column, or of the project's backlog when `columnId` is null (WS-101). */
+function placeOf(projectId: string, columnId: string | null): SQL {
+  return columnId === null
+    ? sql`project_id = ${projectId} and column_id is null`
+    : sql`column_id = ${columnId}`;
+}
+
 export async function createTask(
   actor: Actor,
   projectRef: string,
@@ -341,14 +404,19 @@ export async function createTask(
     const project = await claimTaskNumber(tx, actor, projectRef);
 
     // Locks the column: creations and moves into it run one at a time (WS-031 section 3).
-    const [column] = await tx.execute<{ id: string }>(
-      input.columnId === undefined
-        ? sql`select id from columns where project_id = ${project.id}
-              order by position limit 1 for no key update`
-        : sql`select id from columns where id = ${input.columnId} and project_id = ${project.id}
-              for no key update`,
-    );
-    if (!column) throw fieldError("columnId", "Not a column of this project.");
+    // The backlog has no row of its own: the project row, locked above, guards it (WS-101).
+    let columnId: string | null = null;
+    if (input.columnId !== null) {
+      const [column] = await tx.execute<{ id: string }>(
+        input.columnId === undefined
+          ? sql`select id from columns where project_id = ${project.id}
+                order by position limit 1 for no key update`
+          : sql`select id from columns where id = ${input.columnId} and project_id = ${project.id}
+                for no key update`,
+      );
+      if (!column) throw fieldError("columnId", "Not a column of this project.");
+      columnId = column.id;
+    }
 
     if (input.assigneeTeamId !== undefined) await assertTeam(tx, input.assigneeTeamId);
     if (input.assigneeAccountId !== undefined) {
@@ -358,7 +426,8 @@ export async function createTask(
 
     // Deleted tasks keep their place, so they count here too.
     const [last] = await tx.execute<{ position: string }>(
-      sql`select position from tasks where column_id = ${column.id} order by position desc limit 1`,
+      sql`select position from tasks where ${placeOf(project.id, columnId)}
+          order by position desc limit 1`,
     );
     const type = input.type ?? "task";
     const [row] = await tx
@@ -369,7 +438,7 @@ export async function createTask(
         type,
         title: input.title,
         description: input.description ?? "",
-        columnId: column.id,
+        columnId,
         position: positionBetween(last?.position ?? null, null),
         assigneeTeamId: input.assigneeTeamId ?? null,
         assigneeAccountId: input.assigneeAccountId ?? null,
@@ -389,7 +458,7 @@ export async function createTask(
         key,
         type,
         title: input.title,
-        columnId: column.id,
+        columnId,
         ...(input.severity === undefined ? {} : { severity: input.severity }),
       },
     });
@@ -508,12 +577,17 @@ export async function moveTask(
   return db.transaction(async (tx) => {
     const found = await findTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, actor, found.project_id);
+    // A move into the backlog locks the project row, which guards the backlog's order as a
+    // column's row guards its own (WS-101 section 2).
+    const toBacklog = input.columnId === null;
+    await lockWritableProject(tx, actor, found.project_id, toBacklog ? "exclusive" : "shared");
 
-    const [column] = await tx.execute(sql`
-      select id from columns where id = ${input.columnId} and project_id = ${found.project_id}
-      for no key update`);
-    if (!column) throw fieldError("columnId", "Not a column of this project.");
+    if (input.columnId !== null) {
+      const [column] = await tx.execute(sql`
+        select id from columns where id = ${input.columnId} and project_id = ${found.project_id}
+        for no key update`);
+      if (!column) throw fieldError("columnId", "Not a column of this project.");
+    }
 
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
@@ -521,7 +595,7 @@ export async function moveTask(
 
     // Neighbours are read over every task of the column, deleted or not (deleted tasks keep
     // their place), leaving the moved task out. Positions compare byte by byte (A2).
-    const others = sql`column_id = ${input.columnId} and id <> ${before.id}`;
+    const others = sql`${placeOf(before.project_id, input.columnId)} and id <> ${before.id}`;
     let previous: string | null;
     let next: string | null;
     const anchorField = input.afterTaskId !== undefined ? "afterTaskId" : "beforeTaskId";
@@ -536,7 +610,12 @@ export async function moveTask(
       const [anchor] = await tx.execute<{ position: string }>(sql`
         select position from tasks
         where id = ${anchorId} and ${others} and deleted_at is null`);
-      if (!anchor) throw fieldError(anchorField, "Not another task of the target column.");
+      if (!anchor) {
+        throw fieldError(
+          anchorField,
+          toBacklog ? "Not another task of the backlog." : "Not another task of the target column.",
+        );
+      }
       if (anchorField === "afterTaskId") {
         previous = anchor.position;
         const [following] = await tx.execute<{ position: string }>(sql`

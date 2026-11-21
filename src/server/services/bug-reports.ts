@@ -113,11 +113,12 @@ export async function fileBugReport(
     await tx.execute(sql`
       select pg_advisory_xact_lock(hashtextextended(${project.id} || ':' || ${report.fingerprint}, 0))`);
 
-    // 3. The open task: not deleted, not in a `done` column; the latest reported wins.
+    // 3. The open task: not deleted, not in a `done` column; the latest reported wins. A task
+    //    in the backlog has no column and is open (WS-101 section 6).
     const [open] = await tx.execute<{ id: string; number: number }>(sql`
-      select t.id, t.number from tasks t join columns c on c.id = t.column_id
+      select t.id, t.number from tasks t left join columns c on c.id = t.column_id
       where t.project_id = ${project.id} and t.fingerprint = ${report.fingerprint}
-        and t.deleted_at is null and c.category <> 'done'
+        and t.deleted_at is null and c.category is distinct from 'done'
       order by t.last_reported_at desc nulls last, t.created_at desc
       limit 1`);
 

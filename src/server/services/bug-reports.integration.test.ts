@@ -359,6 +359,20 @@ describe("fileBugReport: a repeat (WS-089)", () => {
   });
 });
 
+describe("fileBugReport and the backlog (WS-101)", () => {
+  it("counts on an open bug that someone moved to the backlog", async () => {
+    const { managerActor, bot } = await setup();
+    const first = await fileBugReport(bot, "OPA", report());
+    await moveTask(managerActor, first.taskKey, { columnId: null, version: 1 });
+
+    const answer = await fileBugReport(bot, "OPA", report());
+
+    expect(answer).toMatchObject({ outcome: "deduplicated", taskId: first.taskId, occurrences: 2 });
+    expect(await getDb().select({ id: tasks.id }).from(tasks)).toHaveLength(1);
+    expect((await getTask(managerActor, first.taskKey)).columnId).toBeNull();
+  });
+});
+
 describe("fileBugReport: who may file (WS-089)", () => {
   it("refuses people, agents without reports:write or outside their projects, and archived or unknown projects", async () => {
     const { managerActor } = await setup();
