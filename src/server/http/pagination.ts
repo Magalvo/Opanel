@@ -116,3 +116,37 @@ export function decodeBoardCursor(value: string): BoardCursor {
   }
   return { columnPosition: result.data.c, position: result.data.p, id: result.data.i };
 }
+
+/**
+ * Where a page of the backlog ended (WS-101): the last task's position and its id.
+ * Positions compare byte by byte (WT-03 amendment A2).
+ */
+export interface BacklogCursor {
+  position: string;
+  id: string;
+}
+
+const backlogCursorSchema = z.strictObject({
+  p: z.string().min(1).max(2000),
+  i: z.uuid(),
+});
+
+export function encodeBacklogCursor(cursor: BacklogCursor): string {
+  return Buffer.from(JSON.stringify({ p: cursor.position, i: cursor.id })).toString("base64url");
+}
+
+/** Throws `400` naming the field `cursor` if the value is not a backlog cursor of this API. */
+export function decodeBacklogCursor(value: string): BacklogCursor {
+  const invalid = invalidRequest([{ path: "cursor", message: "Invalid cursor." }]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch {
+    throw invalid;
+  }
+  const result = backlogCursorSchema.safeParse(parsed);
+  if (!result.success) {
+    throw invalid;
+  }
+  return { position: result.data.p, id: result.data.i };
+}

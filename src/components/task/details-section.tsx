@@ -146,7 +146,9 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
                 {task.severity === null ? "None" : SEVERITY_LABELS[task.severity]}
               </Row>
             )}
-            <Row term="Column">{column?.name ?? "Unknown"}</Row>
+            <Row term="Column">
+              {task.columnId === null ? "In backlog" : (column?.name ?? "Unknown")}
+            </Row>
             <Row term="Team">{task.assigneeTeam?.name ?? "No team"}</Row>
             <Row term="Person">
               {task.assignee === null ? "No one" : personLabel(task.assignee)}
@@ -337,13 +339,19 @@ function DetailsForm({
           </label>
           <select
             id={`${id}-column`}
-            value={task.columnId}
+            value={task.columnId ?? ""}
             disabled={busy}
             className={SELECT}
             onChange={(event) => {
               onMove(event.target.value);
             }}
           >
+            {/* A task in the backlog has no column; choosing one moves it to the board (WS-101). */}
+            {task.columnId === null && (
+              <option value="" disabled>
+                In backlog
+              </option>
+            )}
             {columns.map((column) => (
               <option key={column.id} value={column.id}>
                 {column.name}

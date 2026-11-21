@@ -37,6 +37,7 @@ import {
   createTask,
   deleteTask,
   getTask,
+  listBacklog,
   listTasks,
   moveTask,
   restoreTask,
@@ -85,6 +86,7 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
   "columns.deleteColumn": (actor, f) => deleteColumn(actor, f.spare.id),
   "tasks.getTask": (actor, f) => getTask(actor, f.task.key),
   "tasks.listTasks": (actor, f) => listTasks(actor, f.project.key, { limit: 50 }),
+  "tasks.listBacklog": (actor, f) => listBacklog(actor, f.project.key, { limit: 50 }),
   "tasks.createTask": (actor, f) => createTask(actor, f.project.key, { title: "New" }),
   "tasks.updateTask": (actor, f) =>
     updateTask(actor, f.task.id, { title: "Renamed", version: f.task.version }),

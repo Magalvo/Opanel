@@ -414,6 +414,29 @@ describe("TaskDetail: column, delete and the board", () => {
     window.removeEventListener("opanel:task-changed", changed);
   });
 
+  it("says a backlog task is in the backlog, and moves it to a chosen column (WS-101)", async () => {
+    const moved = { ...base, columnId: doing.id, version: 4 };
+    on("POST /api/v1/tasks/OPA-1/move", json(moved));
+    const user = await renderTask({ current: { ...base, columnId: null } });
+
+    const select = within(details()).getByLabelText("Column");
+    expect(select).toHaveValue("");
+    expect(within(select).getByRole("option", { name: "In backlog" })).toBeDisabled();
+
+    await user.selectOptions(select, "In progress");
+
+    expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ columnId: doing.id, version: 3 });
+    expect(select).toHaveValue(doing.id);
+  });
+
+  it("shows In backlog as the column of a backlog task when read-only (WS-101)", async () => {
+    await renderTask({ current: { ...base, columnId: null }, canWriteTasks: false });
+
+    expect(within(details()).getByText("Column").nextElementSibling).toHaveTextContent(
+      "In backlog",
+    );
+  });
+
   it("keeps unsaved edits when the task is moved, and saves them with the new version", async () => {
     on("POST /api/v1/tasks/OPA-1/move", json({ ...base, columnId: done.id, version: 4 }));
     on(

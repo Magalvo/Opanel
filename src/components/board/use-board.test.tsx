@@ -268,6 +268,15 @@ describe("useBoard: changes made in the task detail (WS-038 section 4)", () => {
     expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
   });
 
+  it("removes a task moved to the backlog (WS-101)", async () => {
+    const { result } = await renderBoard();
+
+    dispatch("opanel:task-changed", full({ ...t1, columnId: null, version: 2 }));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+    expect(consistent(result.current.board)).toBe(true);
+  });
+
   it("ignores unknown tasks and malformed events", async () => {
     const { result } = await renderBoard();
     const before = result.current.board;
@@ -393,6 +402,19 @@ describe("useBoard: other people's changes (WS-048 section 4)", () => {
       expect(keys(result.current.board, doing.id)).toEqual(["OPA-1", "OPA-3"]);
     });
     expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+  });
+
+  it("removes a card whose task moved to the backlog, reading no column (WS-101)", async () => {
+    const moved = { ...t1, columnId: null, version: 2 };
+    on(`GET /api/v1/tasks/${t1.id}`, json(full(moved)));
+    const { result } = await renderBoard();
+
+    send("task.moved", t1.id, 2);
+
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+    });
+    expect(consistent(result.current.board)).toBe(true);
   });
 
   it("shows a created or restored task in its place in its column", async () => {
@@ -565,7 +587,9 @@ async function settle() {
 }
 
 /** Every card is in the column its own `columnId` names. */
-function consistent(board: Readonly<Record<string, readonly { columnId: string }[]>>): boolean {
+function consistent(
+  board: Readonly<Record<string, readonly { columnId: string | null }[]>>,
+): boolean {
   return Object.entries(board).every(([columnId, items]) =>
     items.every((item) => item.columnId === columnId),
   );
