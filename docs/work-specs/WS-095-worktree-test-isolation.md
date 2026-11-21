@@ -1,6 +1,6 @@
 # WS-095 — Parallel worktrees can run the quality gate at the same time
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 4 as recommended)
 - Work-item: [WI-095](../work-items/WI-095-worktree-test-isolation.md)
 - Canonical docs: `AGENTS.md` section 5 (the quality gate); `CONTRIBUTING.md` ("Local
   database"); the development-flow review of 2026-11-20, finding D01
