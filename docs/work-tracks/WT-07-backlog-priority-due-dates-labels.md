@@ -1,6 +1,7 @@
 # WT-07 — Backlog, priority, due dates, labels
 
-- Status: Proposed
+- Status: Approved by the owner on 2026-11-21: decisions 1 to 15, proposals P1 to P3 and
+  questions 1 to 9 as recommended.
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 3: who may put
   tasks into or out of the backlog, apply, create, rename and delete labels; section 4:
   priority, due date, labels; section 5: the backlog; section 6: what WT-10 adds to the
@@ -242,8 +243,7 @@ they run one after another, A first; D, E and F can then run in parallel.
 
 ## Risks and open questions
 
-For the owner (decisions 1 to 15 are each approved or changed; these need an explicit
-answer):
+Resolved by the owner on 2026-11-21, by approving each recommendation:
 
 1. **Where a new task goes.** Doc 0003 does not say. Keeping the first column changes
    nothing for people, agents and the MCP tools; the backlog would match Jira but would
