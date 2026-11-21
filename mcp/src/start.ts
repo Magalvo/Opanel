@@ -14,9 +14,7 @@ export interface StartIo {
   stderr: { write(text: string): unknown };
 }
 
-export type Prepared =
-  | { ok: true; me: AgentMe; api: ApiClient; redact: Redactor }
-  | { ok: false };
+export type Prepared = { ok: true; me: AgentMe; api: ApiClient; redact: Redactor } | { ok: false };
 
 function failureMessage(failure: ToolFailure, url: string): string {
   if (failure.kind === "unreachable") return failure.message;

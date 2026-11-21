@@ -135,15 +135,18 @@ describe("toolError", () => {
     [{ kind: "unreachable", message: `Opanel is unreachable at ${URL_BASE}.` }, /unreachable/],
   ];
 
-  it.each(failures)("gives isError, the sentence and the failure as JSON for %j", (failure, sentence) => {
-    const result = toolError(failure, redact);
+  it.each(failures)(
+    "gives isError, the sentence and the failure as JSON for %j",
+    (failure, sentence) => {
+      const result = toolError(failure, redact);
 
-    expect(result.isError).toBe(true);
-    const block = result.content[0];
-    const text = block?.type === "text" ? block.text : "";
-    expect(text).toMatch(sentence);
-    expect(text).toContain(JSON.stringify(failure, null, 2));
-  });
+      expect(result.isError).toBe(true);
+      const block = result.content[0];
+      const text = block?.type === "text" ? block.text : "";
+      expect(text).toMatch(sentence);
+      expect(text).toContain(JSON.stringify(failure, null, 2));
+    },
+  );
 });
 
 describe("the token", () => {

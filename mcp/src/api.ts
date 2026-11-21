@@ -38,7 +38,7 @@ const TIMEOUT_MS = 30_000;
 
 async function readJson(response: Response): Promise<{ ok: true; value: unknown } | { ok: false }> {
   try {
-    return { ok: true, value: (await response.json()) };
+    return { ok: true, value: await response.json() };
   } catch {
     return { ok: false };
   }

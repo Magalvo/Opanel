@@ -6,7 +6,11 @@ import { buildServer, TOOLS } from "./tools";
 // Opanel's MCP server (doc 0005): `node mcp/dist/index.js`, started by the assistant with
 // OPANEL_URL and OPANEL_TOKEN. Stdout carries MCP messages only; everything else is stderr.
 
-const prepared = await prepare({ env: process.env, fetch: globalThis.fetch, stderr: process.stderr });
+const prepared = await prepare({
+  env: process.env,
+  fetch: globalThis.fetch,
+  stderr: process.stderr,
+});
 
 if (!prepared.ok) {
   process.exitCode = 1;

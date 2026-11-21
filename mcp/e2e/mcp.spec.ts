@@ -60,7 +60,9 @@ function environment(token: string): Record<string, string> {
 }
 
 /** Runs the server to its exit, as an assistant would start it, and keeps its stderr. */
-function runToExit(token: string): Promise<{ code: number | null; stderr: string; stdout: string }> {
+function runToExit(
+  token: string,
+): Promise<{ code: number | null; stderr: string; stdout: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [SERVER], { env: environment(token) });
     let stderr = "";

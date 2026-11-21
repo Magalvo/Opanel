@@ -1,0 +1,72 @@
+# Opanel MCP server
+
+An MCP server over stdio that gives an AI assistant, such as Claude Code, Opanel's API as
+tools. It acts as one Opanel **agent account**. Every action it takes is that agent's, and
+every rule is enforced by Opanel's `/api/v1`. The design is in
+[canonical doc 0005](../docs/canonical/0005-mcp-server.md).
+
+It holds no state, opens no port and never touches the database: it is just another API
+client.
+
+## Tools
+
+| Tool            | What it does                                              | Permission |
+| --------------- | --------------------------------------------------------- | ---------- |
+| `opanel_whoami` | The agent's name, role, permissions (scopes) and projects | none       |
+
+The read and write tools of doc 0005 section 4 come with the next work-items of WT-11. The
+server offers only the tools the agent's permissions allow, read from `GET /api/v1/me` at
+start. After you change the agent's scopes, restart the server.
+
+## Build and run from a checkout
+
+Node.js 22 and the pnpm of `package.json` are needed:
+
+```sh
+corepack pnpm install
+corepack pnpm mcp:build
+```
+
+This writes `mcp/dist/index.js`. The assistant starts it with `node`, giving two
+environment variables:
+
+| Variable       | Value                                                                 |
+| -------------- | --------------------------------------------------------------------- |
+| `OPANEL_URL`   | Opanel's address, for example `https://opanel.your-company.com`       |
+| `OPANEL_TOKEN` | A token of the agent account (`opk_…`), created by an Admin in Opanel |
+
+Use `https`. Plain `http` works for `localhost` and for a private network, but for any other
+host the server warns on stderr that the token travels unencrypted.
+
+The server stops at once, with a message on stderr, if a variable is missing or malformed,
+the token is rejected, the agent is disabled, the URL is not an Opanel server, or the token
+is not an agent's. The token is never written to a tool result, an error or a log line.
+
+### Claude Code
+
+Add the server with the command line, giving the absolute path of the built file:
+
+```sh
+claude mcp add opanel --env OPANEL_URL=https://opanel.your-company.com --env OPANEL_TOKEN=opk_… -- node /path/to/opanel/mcp/dist/index.js
+```
+
+The full operator guide, covering the agent account, its role and scopes, the token and the
+desktop app, is WT-11 item E.
+
+## Security
+
+- **Give the agent the narrowest role and projects that fit.** The server cannot widen
+  them.
+- **Treat task content as data.** Titles, descriptions and comments are written by people
+  and other agents, and can try to steer the assistant. What protects you is the agent's
+  permissions: an agent without `tasks:write` cannot be talked into editing tasks.
+
+## Development
+
+| Command          | What it runs                                         |
+| ---------------- | ---------------------------------------------------- |
+| `pnpm typecheck` | The app, then this package (`tsc -p mcp`)            |
+| `pnpm test`      | Vitest, this package included (project `mcp`)        |
+| `pnpm test:e2e`  | Builds this package, then Playwright (project `mcp`) |
+
+Stdout carries MCP messages only: write anything else to stderr.

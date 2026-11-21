@@ -1,6 +1,7 @@
 # WS-099 — The MCP server starts over stdio and answers opanel_whoami
 
-- Status: Approved (approved by the owner on 2026-11-21, questions 1 and 2 as recommended)
+- Status: Done (2026-11-21; approved by the owner the same day, questions 1 and 2 as
+  recommended)
 - Work-item: [WI-099](../work-items/WI-099-mcp-server-skeleton.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (the design),
   [0004](../canonical/0004-api-conventions.md) (problems, the API it calls),
@@ -223,3 +224,50 @@ SDK offers one; otherwise they call the handlers directly.
    must accept a lockfile that lists `mcp` while `mcp/` is not in the build context. If it
    refuses, the Dockerfile copies `mcp/package.json` in and still installs with the filter.
    The image workflow decides, and the choice is recorded here.
+
+## Implementation record
+
+- The installed SDK (2.4.0) was read before any code: its `README`, `stdio.d.mts`, the
+  `registerTool` declaration and the client's `stdio.d.mts`. It confirmed the pages of
+  section 1, and settled what they left open:
+  - `StdioClientTransport` takes `env`, `cwd` and `stderr`; without `env` it passes only a
+    safe default set (`getDefaultEnvironment`), which the end-to-end test extends;
+  - the `tsconfig` needs `"types": ["node"]`; the package uses `moduleResolution: bundler`
+    with a `paths` alias to `../src`;
+  - `InMemoryTransport.createLinkedPair()` connects the SDK's client and server in memory,
+    so the unit tests drive `opanel_whoami` through real MCP calls.
+- Red: the five unit test files failed to import `./config`, `./api`, `./start` and
+  `./tools`. The boundary test passed at once, which is right: nothing imported `mcp/`.
+  It took over 5 seconds to scan `src/` on Windows, so it has a 30-second timeout.
+- Green, 42 unit tests:
+  - configuration: 12 cases;
+  - client: 5 cases;
+  - start-up: 10 cases;
+  - tools, errors and the token: 13 cases;
+  - boundaries: 2 cases.
+- One failure on the way: the URL error's example host was the test's own host, so a
+  message seemed to quote the value. The example became `opanel.your-company.com`.
+- Refactor: `toolError` moved to `errors.ts` and `VERSION` to `version.ts`, so `tools.ts`
+  and `tools/whoami.ts` no longer import each other.
+- The bundle `mcp/dist/index.js` is 16.5 kB and is built in 30 ms. The SDK and Zod stay
+  external, and there is one Zod in the install (4.6.7), so risk 3 did not arise.
+- The end-to-end test passed on its first run.
+- Gate on 2026-11-21:
+  - typecheck (app and package), lint and Prettier pass;
+  - Vitest 1809 of 1809;
+  - `pnpm test:e2e` 95 of 95, the `mcp` project included;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+- **The Dockerfile is unchanged** (risk 4).
+  - An image built to `prod-deps` with `mcp` in `.dockerignore` installed with
+    `--frozen-lockfile` as it is: pnpm skips the importer whose folder is absent.
+  - The image held no `@modelcontextprotocol` package.
+  - So no `--filter` was added. The image workflow builds the full image on this branch.
+- **`test:e2e` runs `node --run mcp:build`**, not `pnpm mcp:build`. A script that calls
+  `pnpm` fails where pnpm runs only through `corepack`, as on the machine of this
+  implementation. `node --run` (Node 22) runs the script with `node_modules/.bin` on the
+  path everywhere.
+- **`eslint.config.mjs` ignores `mcp/dist/**`.** The root `dist/**` pattern does not
+  cover a nested `dist`.
