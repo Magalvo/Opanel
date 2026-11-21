@@ -33,7 +33,8 @@ function freshName(): string {
   return `opanel_ws095_${randomBytes(4).toString("hex")}_test`;
 }
 
-describe("ensureTestDatabase and dropTestDatabase", () => {
+// Creating a database copies a template and waits for a checkpoint: seconds on a busy machine.
+describe("ensureTestDatabase and dropTestDatabase", { timeout: 60_000 }, () => {
   it("creates a missing test database, once, and drops it", async () => {
     const name = freshName();
     expect(await exists(name)).toBe(false);
