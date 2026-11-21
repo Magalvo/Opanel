@@ -69,19 +69,19 @@ already is (doc 0001 section 2). This doc makes no assumption about it.
 Named `opanel_<verb>_<thing>`. Each tool's description names its permission. The first
 set follows the scopes of doc 0001 section 3:
 
-| Tool                       | API                                                      | Permission       |
-| -------------------------- | -------------------------------------------------------- | ---------------- |
-| `opanel_whoami`            | `GET /me`                                                | authenticated    |
-| `opanel_list_projects`     | `GET /projects`                                          | `projects:read`  |
-| `opanel_get_board`         | `GET /projects/{id}/columns` and every page of its tasks | `tasks:read`     |
-| `opanel_list_teams`        | `GET /teams`                                             | `projects:read`  |
-| `opanel_find_people`       | `GET /people?q=`                                         | `projects:read`  |
-| `opanel_get_task`          | `GET /tasks/{idOrKey}` and its comments                  | `tasks:read`     |
-| `opanel_add_comment`       | `POST /tasks/{idOrKey}/comments`                         | `comments:write` |
-| `opanel_create_task`       | `POST /projects/{id}/tasks`                              | `tasks:write`    |
-| `opanel_update_task`       | `PATCH /tasks/{idOrKey}` (fields, assignment, epic)      | `tasks:write`    |
-| `opanel_move_task`         | `POST /tasks/{idOrKey}/move`                             | `tasks:write`    |
-| `opanel_submit_bug_report` | `POST /projects/{id}/bug-reports` (WT-06)                | `reports:write`  |
+| Tool                       | API                                                      | Permission                    |
+| -------------------------- | -------------------------------------------------------- | ----------------------------- |
+| `opanel_whoami`            | `GET /me`                                                | authenticated                 |
+| `opanel_list_projects`     | `GET /projects`                                          | `projects:read`               |
+| `opanel_get_board`         | `GET /projects/{id}/columns` and every page of its tasks | `projects:read`, `tasks:read` |
+| `opanel_list_teams`        | `GET /teams`                                             | `projects:read`               |
+| `opanel_find_people`       | `GET /people?q=`                                         | `projects:read`               |
+| `opanel_get_task`          | `GET /tasks/{idOrKey}` and its comments                  | `tasks:read`                  |
+| `opanel_add_comment`       | `POST /tasks/{idOrKey}/comments`                         | `comments:write`              |
+| `opanel_create_task`       | `POST /projects/{id}/tasks`                              | `tasks:write`                 |
+| `opanel_update_task`       | `PATCH /tasks/{idOrKey}` (fields, assignment, epic)      | `tasks:write`                 |
+| `opanel_move_task`         | `POST /tasks/{idOrKey}/move`                             | `tasks:write`                 |
+| `opanel_submit_bug_report` | `POST /projects/{id}/bug-reports` (WT-06)                | `reports:write`               |
 
 - **No delete or restore tools**, and nothing for configuration (projects, columns,
   teams, accounts, tokens). Agents cannot hold those permissions anyway (doc 0001), and
@@ -101,7 +101,10 @@ set follows the scopes of doc 0001 section 3:
   cannot drift from the endpoint it calls. Inputs are validated before any request.
 - Outputs are the API's JSON (as structured content, with a short text summary), parsed
   with the response schemas. A response that does not match is reported as an error,
-  never passed on unchecked.
+  never passed on unchecked. Read tools also give the JSON in their text, as the MCP
+  specification asks, for clients that read only the text (WS-100, question 4).
+- A tool is offered only when the agent holds every permission its API calls need
+  (WS-100, question 1).
 - API problems (doc 0004 section 4) become tool errors that carry `status`, `code`,
   `detail` and field `errors`. The `requestId` is kept, so an operator can find the
   request in the logs.
