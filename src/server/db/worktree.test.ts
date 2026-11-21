@@ -6,6 +6,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  applyWorktreeTestDatabase,
   assertPortFree,
   e2ePort,
   pathWorktreeId,
@@ -37,24 +38,24 @@ describe("worktreeId", () => {
   }
 
   it("gives the main checkout, whose .git is a directory, no ID", () => {
-    expect(worktreeId(checkout("main", "directory"), {})).toBeUndefined();
+    expect(worktreeId({}, checkout("main", "directory"))).toBeUndefined();
   });
 
   it("gives a copy without Git no ID", () => {
-    expect(worktreeId(checkout("copy", "none"), {})).toBeUndefined();
+    expect(worktreeId({}, checkout("copy", "none"))).toBeUndefined();
   });
 
   it("gives a linked worktree, whose .git is a file, 8 hex characters from its path", () => {
     const root = checkout("linked", "file");
-    const id = worktreeId(root, {});
+    const id = worktreeId({}, root);
     expect(id).toMatch(/^[0-9a-f]{8}$/);
-    expect(worktreeId(root, {})).toBe(id);
+    expect(worktreeId({}, root)).toBe(id);
     expect(id).toBe(pathWorktreeId(root));
   });
 
   it("gives two worktrees two IDs", () => {
-    expect(worktreeId(checkout("one", "file"), {})).not.toBe(
-      worktreeId(checkout("two", "file"), {}),
+    expect(worktreeId({}, checkout("one", "file"))).not.toBe(
+      worktreeId({}, checkout("two", "file")),
     );
   });
 
@@ -71,18 +72,19 @@ describe("worktreeId", () => {
   });
 
   it("takes OPANEL_WORKTREE when it is set, in any checkout", () => {
-    expect(worktreeId(checkout("main", "directory"), { OPANEL_WORKTREE: "wi095" })).toBe("wi095");
-    expect(worktreeId(checkout("linked", "file"), { OPANEL_WORKTREE: "abc" })).toBe("abc");
+    expect(worktreeId({ OPANEL_WORKTREE: "wi095" }, checkout("main", "directory"))).toBe("wi095");
+    expect(worktreeId({ OPANEL_WORKTREE: "abc" }, checkout("linked", "file"))).toBe("abc");
   });
 
   it("treats an empty OPANEL_WORKTREE as not set", () => {
-    expect(worktreeId(checkout("main", "directory"), { OPANEL_WORKTREE: "" })).toBeUndefined();
+    expect(worktreeId({ OPANEL_WORKTREE: "" }, checkout("main", "directory"))).toBeUndefined();
   });
 
   it.each(["Upper", "with-dash", "x".repeat(17), "a b"])(
     "refuses OPANEL_WORKTREE=%j, naming the variable and not the value",
     (value) => {
-      const call = (): unknown => worktreeId(checkout("main", "directory"), { OPANEL_WORKTREE: value });
+      const call = (): unknown =>
+        worktreeId({ OPANEL_WORKTREE: value }, checkout("main", "directory"));
       expect(call).toThrow(/OPANEL_WORKTREE must be 1 to 16 lower-case letters or digits/);
       try {
         call();
@@ -103,9 +105,9 @@ describe("worktreeDatabaseUrl", () => {
   });
 
   it("puts the ID before the _e2e_test suffix", () => {
-    expect(
-      worktreeDatabaseUrl("postgres://opanel:opanel@localhost:5432/opanel_e2e_test", id),
-    ).toBe("postgres://opanel:opanel@localhost:5432/opanel_3f9a07c2_e2e_test");
+    expect(worktreeDatabaseUrl("postgres://opanel:opanel@localhost:5432/opanel_e2e_test", id)).toBe(
+      "postgres://opanel:opanel@localhost:5432/opanel_3f9a07c2_e2e_test",
+    );
   });
 
   it("keeps the host, port, credentials and query", () => {
@@ -199,9 +201,25 @@ describe("assertPortFree", () => {
 
   it("accepts a free port", async () => {
     const port = await listen();
-    await new Promise<void>((resolve) => server?.close(() => resolve()));
+    await new Promise<void>((resolve) => {
+      server?.close(() => {
+        resolve();
+      });
+    });
     server = undefined;
     await expect(assertPortFree(port, "E2E_PORT")).resolves.toBeUndefined();
+  });
+});
+
+describe("applyWorktreeTestDatabase", () => {
+  it("puts the worktree's ID in DATABASE_URL, once", () => {
+    const env: Record<string, string | undefined> = {
+      OPANEL_WORKTREE: "wt7",
+      DATABASE_URL: "postgres://opanel:opanel@localhost:5432/opanel_test",
+    };
+    applyWorktreeTestDatabase(env);
+    applyWorktreeTestDatabase(env);
+    expect(env.DATABASE_URL).toBe("postgres://opanel:opanel@localhost:5432/opanel_wt7_test");
   });
 });
 

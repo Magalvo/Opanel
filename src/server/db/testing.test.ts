@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { assertTestDatabaseUrl, useWorktreeTestDatabase } from "./testing";
+import { assertTestDatabaseUrl } from "./testing";
 
 describe("assertTestDatabaseUrl", () => {
   it("accepts a database whose name ends in _test", () => {
@@ -39,21 +39,5 @@ describe("assertTestDatabaseUrl", () => {
     expect(message).not.toBe("");
     expect(message).not.toContain("sup3r-s3cret");
     expect(message).not.toContain("db.internal");
-  });
-});
-
-describe("useWorktreeTestDatabase", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it("puts the worktree's ID in DATABASE_URL, once", () => {
-    vi.stubEnv("OPANEL_WORKTREE", "wt7");
-    vi.stubEnv("DATABASE_URL", "postgres://opanel:opanel@localhost:5432/opanel_test");
-    useWorktreeTestDatabase();
-    useWorktreeTestDatabase();
-    expect(process.env.DATABASE_URL).toBe(
-      "postgres://opanel:opanel@localhost:5432/opanel_wt7_test",
-    );
   });
 });

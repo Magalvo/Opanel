@@ -41,10 +41,7 @@ export function pathWorktreeId(
  * `OPANEL_WORKTREE` when set; otherwise, in a linked worktree (whose `.git` is a file), the
  * ID of its path; otherwise (main checkout, CI) none.
  */
-export function worktreeId(
-  root?: string,
-  env: Environment = process.env,
-): string | undefined {
+export function worktreeId(env: Environment, root?: string): string | undefined {
   const chosen = env[WORKTREE_VARIABLE];
   if (chosen !== undefined && chosen !== "") {
     if (!ID_RULE.test(chosen)) {
@@ -96,11 +93,7 @@ function idNumber(id: string): number {
 }
 
 /** The port of an end-to-end run: the variable, else from the ID, else the fixed port. */
-export function e2ePort(
-  choice: PortChoice,
-  id: string | undefined,
-  env: Environment = process.env,
-): number {
+export function e2ePort(choice: PortChoice, id: string | undefined, env: Environment): number {
   const value = env[choice.variable];
   if (value !== undefined && value !== "") {
     const port = Number(value);
@@ -134,6 +127,19 @@ export async function assertPortFree(port: number, variable: string): Promise<vo
       `Port ${String(port)} is already in use, probably by another end-to-end run. ` +
         `Set ${variable} to a free port.`,
     );
+  }
+}
+
+/**
+ * Points `env.DATABASE_URL` at this worktree's integration database: the name from
+ * `.env.test` or the shell, with the worktree's ID. Call with `process.env` right after
+ * `loadEnvFiles()` and before anything reads `getEnv()`. Unchanged in the main checkout and
+ * in CI.
+ */
+export function applyWorktreeTestDatabase(env: Record<string, string | undefined>): void {
+  const url = env.DATABASE_URL;
+  if (url !== undefined) {
+    env.DATABASE_URL = worktreeDatabaseUrl(url, worktreeId(env));
   }
 }
 

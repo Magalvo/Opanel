@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { getEnv } from "@/server/env";
 
-import { type Database, getDb } from "./client";
+import { getDb } from "./client";
 import * as schema from "./schema";
 import { dropTestDatabase, ensureRuntimeTestRole, ensureTestDatabase } from "./testing";
 
@@ -69,9 +69,7 @@ describe("ensureRuntimeTestRole", () => {
     );
     try {
       await Promise.all(
-        connections.map((client) =>
-          ensureRuntimeTestRole(drizzle({ client, schema }) as Database, role),
-        ),
+        connections.map((client) => ensureRuntimeTestRole(drizzle({ client, schema }), role)),
       );
       const rows = await getDb().$client`select 1 from pg_roles where rolname = ${role}`;
       expect(rows).toHaveLength(1);

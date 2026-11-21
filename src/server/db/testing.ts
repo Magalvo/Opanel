@@ -4,7 +4,6 @@ import postgres from "postgres";
 import { getEnv } from "@/server/env";
 
 import { type Database, getDb } from "./client";
-import { worktreeDatabaseUrl, worktreeId } from "./worktree";
 
 /**
  * Throws unless the URL points at a database whose name ends in "_test".
@@ -130,17 +129,5 @@ export async function dropTestDatabase(url: string): Promise<"dropped" | "missin
     return "dropped";
   } finally {
     await server.end();
-  }
-}
-
-/**
- * Points DATABASE_URL at this worktree's integration database (WS-095): the name from
- * `.env.test` or the shell, with the worktree's ID. Call right after `loadEnvFiles()` and
- * before anything reads `getEnv()`. Unchanged in the main checkout and in CI.
- */
-export function useWorktreeTestDatabase(): void {
-  const url = process.env.DATABASE_URL;
-  if (url !== undefined) {
-    process.env.DATABASE_URL = worktreeDatabaseUrl(url, worktreeId());
   }
 }
