@@ -359,6 +359,22 @@ describe("fileBugReport: a repeat (WS-089)", () => {
   });
 });
 
+describe("fileBugReport and priority (WS-102)", () => {
+  it("creates a bug with priority none, and a repeat keeps the priority a person set", async () => {
+    const { managerActor, bot } = await setup();
+    const first = await fileBugReport(bot, "OPA", report());
+    expect((await getTask(managerActor, first.taskKey)).priority).toBe("none");
+    await updateTask(managerActor, first.taskKey, { priority: "urgent", version: 1 });
+
+    await fileBugReport(bot, "OPA", report());
+
+    expect(await getTask(managerActor, first.taskKey)).toMatchObject({
+      priority: "urgent",
+      occurrences: 2,
+    });
+  });
+});
+
 describe("fileBugReport and the backlog (WS-101)", () => {
   it("counts on an open bug that someone moved to the backlog", async () => {
     const { managerActor, bot } = await setup();

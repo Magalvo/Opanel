@@ -172,6 +172,75 @@ describe("task endpoints", () => {
     expect(byViewer.status).toBe(403);
   });
 
+  it("sets priority and due date with a cookie and with an agent token; a Viewer gets 403 (WS-102)", async () => {
+    const manager = await cookieFor("manager");
+    await projectsPost(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const cookie = await cookieFor("member");
+    const created = await create(
+      apiRequest("POST", "/api/v1/projects/OPA/tasks", {
+        cookie,
+        body: { title: "Ship", priority: "low", dueDate: "2026-12-01" },
+      }),
+      project("OPA"),
+    );
+    expect(taskSchema.parse(await created.json())).toMatchObject({
+      priority: "low",
+      dueDate: "2026-12-01",
+    });
+
+    const byMember = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie,
+        body: { priority: "high", version: 1 },
+      }),
+      task("OPA-1"),
+    );
+    expect(byMember.status).toBe(200);
+    expect(taskSchema.parse(await byMember.json()).priority).toBe("high");
+
+    const agent = await createTestAgent({
+      name: "Worker",
+      role: "worker_agent",
+      scopes: [...AGENT_SCOPES],
+    });
+    const { token } = await createTestToken(agent.id);
+    const byAgent = await PATCH(
+      bearerRequest("/api/v1/tasks/OPA-1", token, {
+        method: "PATCH",
+        body: JSON.stringify({ priority: "urgent", dueDate: null, version: 2 }),
+      }),
+      task("OPA-1"),
+    );
+    expect(byAgent.status).toBe(200);
+    expect(taskSchema.parse(await byAgent.json())).toMatchObject({
+      priority: "urgent",
+      dueDate: null,
+    });
+
+    const badDate = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie,
+        body: { dueDate: "0000-01-01", version: 3 },
+      }),
+      task("OPA-1"),
+    );
+    expect(badDate.status).toBe(400);
+    expect(JSON.stringify(await badDate.json())).toContain("dueDate");
+
+    const viewer = await cookieFor("viewer");
+    const byViewer = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie: viewer,
+        body: { priority: "low", version: 3 },
+      }),
+      task("OPA-1"),
+    );
+    expect(byViewer.status).toBe(403);
+  });
+
   it("lets a Viewer read but not write, and answers 401 without a session", async () => {
     const manager = await cookieFor("manager");
     await projectsPost(
