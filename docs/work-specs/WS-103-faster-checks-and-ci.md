@@ -1,6 +1,6 @@
 # WS-103 — Faster static checks, end-to-end build and CI
 
-- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-22, questions 1 to 4 as proposed; done on 2026-11-22)
 - Work-item: [WI-103](../work-items/WI-103-faster-checks-and-ci.md)
 - Canonical docs: `AGENTS.md` sections 5 (quality gate) and 6 (hard rules 3 and 4);
   `CONTRIBUTING.md` ("Quality gate"); WS-054 (end-to-end workers), WS-095 (worktree
@@ -182,7 +182,13 @@ None.
     flag's error.
 - Times after (test 10): `pnpm check` 67 s (one check failing) and 69 s (all passing)
   against 108 s for the three in series (25 + 66 + 17 s): 62 to 64%, within the 70%
-  target. CI: recorded once the PR's run finishes.
+  target. CI (run 45027097038): 4 min 02 s against 8 min 43 s for the single job before,
+  46%, within the 60% target; "Static checks" 1 min 36 s, "End-to-end tests" 3 min 18 s,
+  "Unit and integration tests" 3 min 34 s (the slowest, WI-097's), "Quality gate" 3 s.
+- Test 9: the jobs ran in parallel and "Quality gate" passed in run 45027097038. A push
+  with an unused const in `scripts/check.ts` (run 45028166334) failed "Static checks" on
+  `@typescript-eslint/no-unused-vars` and "Quality gate" with it, while the other jobs
+  passed; the next commit reverts it.
 - Gate on 2026-11-22: `pnpm check` passes; Vitest 1922 of 1922; `pnpm test:e2e` 97 of 97.
   Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL on port 5433.
 
