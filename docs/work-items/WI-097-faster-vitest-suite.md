@@ -60,8 +60,30 @@ Questions for the work-spec:
 2. How many integration workers locally: as many as Vitest picks, or a cap like the
    end-to-end one (WS-054), since several worktrees may run at once. Proposed: a cap of 4.
 
-Not in this item, also found by the review (follow-ups): the 123 s `pnpm lint` (measure
-the type-aware rules with `TIMING=1`, try `--cache`), and the end-to-end run's full
-`next build` every time. Files this item modifies include `vitest.config.ts`,
+Measured again on 2026-11-22 (same machine, in a worktree, otherwise idle), for the
+work-spec to weigh:
+
+- `pnpm test:integration` took 412 s (91 files, 746 tests). The tests themselves add up
+  to 228 s; the rest is each file's import and setup, one file after another.
+- **`TRUNCATE` dominates the reset.** Emptying the 21 tables with
+  `truncate ... restart identity cascade` took 100 to 290 ms each time; deleting the
+  same (empty) tables with `DELETE` took 4 to 60 ms. With 746 resets this is roughly
+  75 to 150 s of the 228 s. There are no sequences in `public`, so `restart identity`
+  does nothing. A `DELETE` reset needs the append-only triggers out of the way
+  (`audit_log`, `task_events`, `comments`, `bug_reports`): for example
+  `set local session_replication_role = replica`, which needs a superuser (the test
+  owner `opanel` is one, locally and in CI). Question 3 for the work-spec.
+- **Most unit files need no jsdom.** The 68 `*.test.ts` unit files took 65 s under
+  jsdom and 17 s under `environment: "node"`; only `src/components/board/keyboard.test.ts`
+  failed there (it needs the DOM). Splitting the unit project by environment (node for
+  `*.test.ts`, jsdom for `*.test.tsx` and the few `.ts` files that need it) may beat
+  `vmThreads` for question 1, or combine with it.
+- `synchronous_commit=off` on the test PostgreSQL (`compose.yaml`, development and CI
+  only) cuts commit waits without risking corruption; `fsync=off` goes further but can
+  corrupt the local development database on a crash. Question 4 for the work-spec.
+- One Argon2id hash costs 32 ms here; `createTestAccount` is called 248 times.
+
+Not in this item, also found by the review (follow-ups): the static checks, the
+end-to-end build's repeated type check and the CI pipeline are WI-103. Files this item modifies include `vitest.config.ts`,
 `vitest.integration.global.ts`, `vitest.integration.setup.ts`,
 `src/server/db/testing.ts` and `src/server/auth/testing.ts`.
