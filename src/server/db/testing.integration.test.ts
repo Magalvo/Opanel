@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
 
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { createTestAccount, testActor } from "@/server/auth/testing";
