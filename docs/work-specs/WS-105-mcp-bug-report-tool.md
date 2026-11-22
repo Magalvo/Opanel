@@ -1,6 +1,6 @@
 # WS-105 — The MCP tool to submit a bug report
 
-- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-22, questions 1 to 4 as proposed; done on 2026-11-22)
 - Work-item: [WI-105](../work-items/WI-105-mcp-bug-report-tool.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 4 to 6),
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 5 and 6: reports,
@@ -118,6 +118,8 @@ Tests 1 to 7 in Vitest's `mcp` project with a fake `fetch`.
   (question 2); every other failure is `toolError`.
 - Test 8: `80a7433`, `mcp/e2e/bug-report-tool.spec.ts`: created (a `bug`, severity
   `high`, reporter the agent), then deduplicated on the same key with 2 occurrences.
+- Gate: `pnpm check`, `pnpm test` (1981 passed) and `pnpm test:e2e` (100 passed) locally;
+  CI run 45082632728 green on `4169397`.
 - Docs: `5adebcf`. `docs/AGENTS.md` names the tool under "Filing bug reports".
 
 ## Deviations
