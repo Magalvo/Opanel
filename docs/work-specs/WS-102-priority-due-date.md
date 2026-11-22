@@ -1,6 +1,7 @@
 # WS-102 — Priority and due date on tasks
 
-- Status: Approved (approved by the owner on 2026-11-21, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-21, questions 1 to 3 as recommended; done on
+  2026-11-22)
 - Work-item: [WI-102](../work-items/WI-102-priority-due-date.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 4, 9;
   [0004](../canonical/0004-api-conventions.md) sections 3, 6, 8;
@@ -144,3 +145,32 @@ Risks:
   second takes in `main` and reruns its tests.
 - **Item C (labels) also edits `tasks.ts` and adds a migration.** It starts after this item
   merges, as WT-07 plans.
+
+## Implementation record
+
+- Branch `claude/wi-102-priority-due-date`, from the approved work-spec, took in `main`
+  after WI-100 (PR #98) and WI-101 (PRs #99 and #101) landed; the migration is `0020`.
+- Red (`6a2166c`): the schema tests failed on the unknown `priority` and `dueDate` and the
+  missing `./dates`; the OpenAPI test on the missing `Priority`; the eight service, triage
+  and route tests on `undefined` fields and the missing `tasks_priority_check`.
+- Green (`b24e16f`): `dates.ts`, the schemas, the two columns and the check, `tasks.ts`
+  (select, row, create, `EDITABLE`, update), the fixtures. `pnpm db:generate --name
+priority_due_date` writes exactly the three statements of "Data model changes";
+  `pnpm openapi:generate` adds `Priority` and the four properties.
+- Gate on 2026-11-22: `db:generate` and `openapi:generate` leave no diff; typecheck, lint
+  and Prettier pass; Vitest 1914 of 1914; `pnpm test:e2e` 97 of 97. Windows 11, Node
+  24.18.0, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The MCP package's fixture** (`mcp/src/testing.ts`, `taskSummary`) gains the two fields:
+   WI-100 merged before this item, as the risk above foresaw; the Files table predates it.
+2. **The fixtures touched** are `board/moves.test.ts`, `board/test-data.ts`,
+   `project-settings.test.tsx` and `account-ref.test.ts`; `task-detail.test.tsx` builds its
+   tasks from `test-data.ts`, and `document.test.ts` has no task fixture, so neither changed.
+3. **Test 4 checks the constraint by name on the error's `cause`**: drizzle wraps the
+   PostgreSQL error in "Failed query", so the name is not in the message.
+4. **One test beyond the plan**: a `PATCH` that sends the current priority records no
+   `field_changed` entry, as for every other editable field.
+5. **The generated files are formatted**: drizzle-kit writes `_journal.json` and the snapshot
+   unformatted; `prettier --write` makes them pass `format:check`, as for `0019`.
