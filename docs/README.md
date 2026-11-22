@@ -169,6 +169,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-100](work-items/WI-100-mcp-read-tools.md)                   | The MCP read tools: projects, board, teams, people and a task     | [WS-100](work-specs/WS-100-mcp-read-tools.md)                   |
 | [WI-101](work-items/WI-101-backlog-api.md)                      | The backlog in the data model and API                             | [WS-101](work-specs/WS-101-backlog-api.md)                      |
 | [WI-102](work-items/WI-102-priority-due-date.md)                | Priority and due date on tasks                                    | [WS-102](work-specs/WS-102-priority-due-date.md)                |
+| [WI-103](work-items/WI-103-faster-checks-and-ci.md)             | Faster static checks, end-to-end build and CI                     | [WS-103](work-specs/WS-103-faster-checks-and-ci.md)             |
 
 ## Follow-ups
 
