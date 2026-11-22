@@ -131,3 +131,31 @@ All in Vitest's `mcp` project with a fake `fetch`, except test 12.
 5. **The end-to-end test runs in the existing `mcp` Playwright project**, after
    `read-tools.spec.ts`, against the same app; it creates its own project so it shares no
    state with the other specs (WS-052).
+
+## Implementation record
+
+- Red: `112a95a`, tests 1 to 11: 27 tests failing because `send` and the four tools did
+  not exist. The tests that list a `qa_agent`'s tools (`read-tools.test.ts`, and
+  `mcp.spec.ts` end to end) gained `opanel_add_comment` at their end, as section 1
+  intends.
+- Green: `a06ef65`. `ToolFailure` keeps `current` for `version_conflict` only, and
+  `toolError` never shows it; `conflictError` shows it once it matches `taskSchema`.
+- Test 12: `8429532`, two specs in `mcp/e2e/write-tools.spec.ts`. The worker's history
+  reads `created`, `field_changed`, `moved`, `commented`, each under the agent.
+- Docs: `mcp/README.md` lists the four tools; doc 0005 section 4 says what they take
+  and that a write without an answer may have been made; WT-11 names WI-104.
+
+## Deviations
+
+1. **The history is read from the database in test 12.** `/api/v1` has no endpoint for a
+   task's history, so `mcp/e2e/agent.ts` gains `taskHistory`, which reads `task_events`
+   from the end-to-end database, as `tests/e2e/seed.ts` already reaches it.
+2. **`agentWithToken` takes a role** and gives the agent every scope of it
+   (`scopesOfRole`), sorted as `GET /me` lists them; the `qa_agent` it made before had
+   exactly those scopes.
+3. **The test helpers' `FakeCall` records the request body**, which the write tests check.
+
+## Follow-ups
+
+1. An `opanel_list_epics` read tool, so an assistant can find the `epicId` the task writes
+   take (question 2). Recorded in the index.

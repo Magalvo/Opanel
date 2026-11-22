@@ -54,6 +54,10 @@ question 1).
 Item B is [WI-100](../work-items/WI-100-mcp-read-tools.md). Its work-spec found that
 `opanel_get_board` needs `projects:read` as well as `tasks:read`, and doc 0005 says so.
 
+Item C is [WI-104](../work-items/WI-104-mcp-write-tools.md). Its work-spec keeps `epicId`
+in the task writes although no tool lists epics yet, and records an `opanel_list_epics`
+read tool as a follow-up (WS-104, question 2).
+
 ## Exit criteria
 
 - [ ] With a `qa_agent` token, the assistant is offered only read tools, comments and bug

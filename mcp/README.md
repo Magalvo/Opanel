@@ -18,10 +18,21 @@ client.
 | `opanel_list_teams`    | A page of teams                                           | `projects:read`               |
 | `opanel_find_people`   | A page of people, by the start of their name              | `projects:read`               |
 | `opanel_get_task`      | A task, with its description, and a page of its comments  | `tasks:read`                  |
+| `opanel_add_comment`   | Comments on a task                                        | `comments:write`              |
+| `opanel_create_task`   | Creates a task, in a column or the backlog                | `tasks:write`                 |
+| `opanel_update_task`   | Changes a task's fields, assignment, epic or due date     | `tasks:write`                 |
+| `opanel_move_task`     | Moves a task within the board, or to the backlog          | `tasks:write`                 |
 
-The write tools of doc 0005 section 4 come with the next work-items of WT-11. The
-server offers only the tools the agent's permissions allow, read from `GET /api/v1/me` at
-start. After you change the agent's scopes, restart the server.
+The server offers only the tools the agent's permissions allow, read from
+`GET /api/v1/me` at start: a `qa_agent` gets the read tools and `opanel_add_comment`, and
+a `worker_agent` the three task writes too. After you change the agent's scopes, restart
+the server.
+
+The write tools change Opanel as the agent: every change is in the task's history under
+its account. `opanel_update_task` and `opanel_move_task` take the task's `version` as last
+read; if someone changed the task since, nothing changes and the tool's error holds the
+task as it is now, to look at before trying again. A write is never retried: when Opanel
+does not answer, the error says the change may have been made.
 
 ## Build and run from a checkout
 
