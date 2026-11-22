@@ -202,6 +202,12 @@ Other follow-ups:
   shared `calendarDateSchema` of `src/lib/schemas/dates.ts` (added by WI-102) in
   `src/lib/schemas/epics.ts`, with a route test for the `400`.
 
+- **The Epics page's loading test can miss the loading state** (WI-097, WS-097
+  follow-up 1). `src/components/epics/epics-page.test.tsx`, "says it is loading, then shows
+  a table...", waits for "Loading epics…", which can be gone before it looks: seen once
+  under `--sequence.shuffle`, and with the same seed it passed once and failed once. Needs
+  a small work-item if it recurs in CI.
+
 - **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
   WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
   C are done. The existing tools gain priority, due date and the backlog move on their own.
