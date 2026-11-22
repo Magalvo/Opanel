@@ -1,6 +1,6 @@
 # WS-097 — A faster unit and integration suite
 
-- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 6 as proposed)
+- Status: Done (approved by the owner on 2026-11-22, questions 1 to 6 as proposed; done on 2026-11-22)
 - Work-item: [WI-097](../work-items/WI-097-faster-vitest-suite.md)
 - Canonical docs: none changes (test infrastructure only). `AGENTS.md` section 5 and
   `CONTRIBUTING.md` "Local database" describe the result.
@@ -183,7 +183,10 @@ WI-103).
   this item; a follow-up.
 - Test 4, by hand: after a run, no `_w<n>_test` database is left; `pnpm test:db:drop`
   dropped a left-over `opanel_<id>_w9_test`.
-- CI: recorded once the PR's run finishes.
+- CI (run 45064718288, every job green): the "Unit and integration tests" job took
+  2 min 14 s, its `pnpm test` step 110 s, against 3 min 34 s and 2 min 51 s (steps 185 s
+  and 144 s) in runs 45027097038 and 45051923633 of WI-103. The whole run took 3 min 9 s;
+  the slowest job is now "End-to-end tests" (3 min 1 s).
 
 ## Deviations
 

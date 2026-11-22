@@ -1,6 +1,6 @@
 # WI-097 — A faster unit and integration suite
 
-- Status: In progress
+- Status: Done
 - Work-track: none: a development-flow item from the review of 2026-11-20 (findings D05,
   D06 and D07)
 - Depends on: WI-095 (its "create the database on demand" step, for the per-pool
@@ -32,22 +32,22 @@ today.
 
 ## Acceptance criteria
 
-- [ ] The unit project no longer creates one jsdom per file (Vitest no longer prints the
+- [x] The unit project no longer creates one jsdom per file (Vitest no longer prints the
       advice above), and no test depends on state another file left behind (the suite
       passes in random file order, for example with `--sequence.shuffle`).
-- [ ] The integration project runs files in parallel: each Vitest worker uses its own
+- [x] The integration project runs files in parallel: each Vitest worker uses its own
       database (for example `<name>_<VITEST_POOL_ID>`), created from a migrated template
       once per run, so migrations run once, not once per worker. The name guards still
       hold for every such database.
-- [ ] `resetDatabase` no longer queries `pg_tables` before every test (the list is read
+- [x] `resetDatabase` no longer queries `pg_tables` before every test (the list is read
       once per worker), and still empties every table.
-- [ ] `createTestAccount` with the default password reuses one hash computed once per
+- [x] `createTestAccount` with the default password reuses one hash computed once per
       worker; a test that passes its own password still gets a real hash, and the tests
       of `hashPassword` and of sign-in still run the production cost.
-- [ ] Measured on the same machine, before and after, with the times recorded in the
+- [x] Measured on the same machine, before and after, with the times recorded in the
       work-spec: `pnpm test:unit` and `pnpm test:integration` are each at least 40%
       faster. (Proposed target; the work-spec confirms it after measuring.)
-- [ ] CI runs the same commands, and the full quality gate passes.
+- [x] CI runs the same commands, and the full quality gate passes.
 
 ## Notes
 
