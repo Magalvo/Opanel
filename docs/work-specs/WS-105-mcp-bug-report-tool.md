@@ -1,6 +1,6 @@
 # WS-105 — The MCP tool to submit a bug report
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 4 as proposed)
 - Work-item: [WI-105](../work-items/WI-105-mcp-bug-report-tool.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 4 to 6),
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 5 and 6: reports,

@@ -1,6 +1,6 @@
 # WI-105 — The MCP tool to submit a bug report
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (item D)
 - Depends on: [WI-104](WI-104-mcp-write-tools.md) (done), WT-06 (done: the bug-report
   endpoint)
