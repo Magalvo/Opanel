@@ -108,3 +108,18 @@ Tests 1 to 7 in Vitest's `mcp` project with a fake `fetch`.
 4. **Evidence size.** A report may hold up to about 512 KiB of JSON (the API's limit,
    `413` above it). Proposed: no limit of the tool's own; the schema's per-field limits
    and the API's `413` already apply.
+
+## Implementation record
+
+- Red: `3d95850`, tests 1 to 7: 12 tests failing because the tool did not exist, and the
+  `qa_agent` tool list of `read-tools.test.ts` (and of `mcp.spec.ts` end to end), which
+  gains `opanel_submit_bug_report` at its end.
+- Green: `c5ec024`. A failure of kind `unreachable` becomes the tool's own message
+  (question 2); every other failure is `toolError`.
+- Test 8: `80a7433`, `mcp/e2e/bug-report-tool.spec.ts`: created (a `bug`, severity
+  `high`, reporter the agent), then deduplicated on the same key with 2 occurrences.
+- Docs: `5adebcf`. `docs/AGENTS.md` names the tool under "Filing bug reports".
+
+## Deviations
+
+None.
