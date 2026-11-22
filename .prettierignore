@@ -6,3 +6,6 @@ next-env.d.ts
 docs/api/openapi.json
 # Local tool state and Claude Code worktrees, never source (WS-060).
 .claude/
+# Vendored agent skills installed by `npx skills add`, pinned by skills-lock.json.
+.agents/
+skills-lock.json
