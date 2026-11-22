@@ -267,6 +267,24 @@ describe("opanel_get_board", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("leaves a backlog task off the board, as the web app does (WS-101)", async () => {
+    const withBacklog = [page([taskSummary(1, TODO_ID), taskSummary(2, null)])];
+    const { client } = await serve(board(withBacklog));
+
+    const result = await client.callTool({
+      name: "opanel_get_board",
+      arguments: { projectId: "OPA" },
+    });
+
+    expect(result.isError, textOf(result)).not.toBe(true);
+    const answer = boardSchema.parse(result.structuredContent);
+    expect(answer.columns.map((each) => each.tasks.map((one) => one.number))).toEqual([
+      [1],
+      [],
+      [],
+    ]);
+  });
+
   it("answers an error, never a wrong board, when a task's column is missing", async () => {
     const { client } = await serve(board(pages, COLUMNS.slice(0, 2)));
 

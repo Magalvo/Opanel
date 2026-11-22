@@ -97,6 +97,8 @@ export const getBoard: ToolDefinition = {
         };
         const byId = new Map(board.columns.map((column) => [column.id, column.tasks]));
         for (const task of tasks.value) {
+          // A backlog task is not on the board (WS-101 section 7).
+          if (task.columnId === null) continue;
           const list = byId.get(task.columnId);
           if (list === undefined) {
             return messageError(

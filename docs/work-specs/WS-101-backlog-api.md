@@ -247,3 +247,8 @@ Risks:
    under "types only", with a test.
 5. **The migration's index has no explicit `collate "C"`**: `position` is already declared
    `COLLATE "C"`, and drizzle-kit writes the index on the column as it is.
+6. **`opanel_get_board` (`mcp/src/tools/board.ts`) skips tasks with no column**, found when
+   this branch took in `main` after WI-100 landed (2026-11-22): the MCP read tools came
+   after this spec, and the nullable `columnId` stopped them compiling. The live task list
+   already leaves backlog tasks out, so this is the same rule as the board's (section 7),
+   with a test in `mcp/src/read-tools.test.ts`.

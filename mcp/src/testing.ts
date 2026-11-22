@@ -122,7 +122,11 @@ export const COLUMNS = [
   column(DONE_ID, "Done", "done"),
 ];
 
-export function taskSummary(number: number, columnId: string, title = `Task ${String(number)}`) {
+export function taskSummary(
+  number: number,
+  columnId: string | null,
+  title = `Task ${String(number)}`,
+) {
   return {
     id: crypto.randomUUID(),
     key: `OPA-${String(number)}`,
