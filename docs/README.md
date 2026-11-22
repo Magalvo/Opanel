@@ -211,6 +211,12 @@ Other follow-ups:
   WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
   C are done. The existing tools gain priority, due date and the backlog move on their own.
 
+- **No MCP tool lists a project's epics** (WI-104, WS-104 question 2).
+  `opanel_create_task` and `opanel_update_task` take `epicId`, but an assistant sees an
+  epic's id only on a task it has read. Needs a WT-11 work-item: `opanel_list_epics`, a
+  read tool over `GET /projects/{projectId}/epics`, beside `opanel_get_backlog` and
+  `opanel_list_labels` above.
+
 - **Agents cannot apply labels in v1** (WT-07 question 5): no agent scope holds
   `labels:write`. If a worker agent needs it, amend doc 0001 section 3 first.
 
