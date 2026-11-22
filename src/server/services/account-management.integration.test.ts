@@ -635,18 +635,19 @@ describe("issuing a link races other changes of the same account (WS-059)", () =
 
     const lock = await holdAccountLock(member.id);
     let deactivate: Promise<unknown>;
-    let issue: Promise<unknown>;
+    // Handled from the start: it fails while the test still awaits the deactivation.
+    let refused: Promise<ApiError>;
     try {
       deactivate = updateAccount(actor, member.id, { active: false });
       await waitForAdvisoryLockWaiter(3000, 1);
-      issue = issueResetLink(actor, member.id);
+      refused = failure(issueResetLink(actor, member.id));
       await waitForAdvisoryLockWaiter(3000, 2);
     } finally {
       await lock.release();
     }
     await deactivate;
 
-    expect((await failure(issue)).status).toBe(409);
+    expect((await refused).status).toBe(409);
     expect(await unusedLinks(member.id)).toHaveLength(0);
     expect(await resetLinkAudits(member.id)).toBe(0);
   });

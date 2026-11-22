@@ -188,6 +188,15 @@ WI-103).
   and 144 s) in runs 45027097038 and 45051923633 of WI-103. The whole run took 3 min 9 s;
   the slowest job is now "End-to-end tests" (3 min 1 s).
 
+- CI run 45069912003 (the docs commit) passed all 1943 tests but failed "Unit and
+  integration tests" on an unhandled rejection: in
+  `accept-link.integration.test.ts`, "a deactivation queued first", the refused
+  `accept(...)` failed while the test still awaited the deactivation, before
+  `failure(...)` handled it. The race predates this item; faster resets make it likelier.
+  The same pattern in `account-management.integration.test.ts` ("an issue queued after a
+  deactivation") is fixed with it: both now wrap the call in `failure(...)` when they start
+  it. What each test checks is unchanged.
+
 ## Deviations
 
 1. **The integration project runs after the others, not beside them.** Vitest 5.1 refuses

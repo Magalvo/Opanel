@@ -505,18 +505,19 @@ describe("accepting a link races a deactivation (WS-059)", () => {
 
     const lock = await holdAccountLock(member.id);
     let deactivate: Promise<unknown>;
-    let accepting: Promise<unknown>;
+    // Handled from the start: it fails while the test still awaits the deactivation.
+    let refused: Promise<ApiError>;
     try {
       deactivate = updateAccount(actor, member.id, { active: false });
       await waitForAdvisoryLockWaiter(3000, 1);
-      accepting = accept(tokenOf(link));
+      refused = failure(accept(tokenOf(link)));
       await waitForAdvisoryLockWaiter(5000, 2);
     } finally {
       await lock.release();
     }
     await deactivate;
 
-    const error = await failure(accepting);
+    const error = await refused;
     expect(error.status).toBe(404);
     const [after] = await getDb()
       .select({ passwordHash: credentials.passwordHash })
