@@ -134,13 +134,13 @@ All in Vitest's `mcp` project with a fake `fetch`, except test 12.
 
 ## Implementation record
 
-- Red: `112a95a`, tests 1 to 11: 27 tests failing because `send` and the four tools did
+- Red: `abc2116`, tests 1 to 11: 27 tests failing because `send` and the four tools did
   not exist. The tests that list a `qa_agent`'s tools (`read-tools.test.ts`, and
   `mcp.spec.ts` end to end) gained `opanel_add_comment` at their end, as section 1
   intends.
-- Green: `a06ef65`. `ToolFailure` keeps `current` for `version_conflict` only, and
+- Green: `0f1b5c5`. `ToolFailure` keeps `current` for `version_conflict` only, and
   `toolError` never shows it; `conflictError` shows it once it matches `taskSchema`.
-- Test 12: `8429532`, two specs in `mcp/e2e/write-tools.spec.ts`. The worker's history
+- Test 12: `bbc528a`, two specs in `mcp/e2e/write-tools.spec.ts`. The worker's history
   reads `created`, `field_changed`, `moved`, `commented`, each under the agent.
 - Docs: `mcp/README.md` lists the four tools; doc 0005 section 4 says what they take
   and that a write without an answer may have been made; WT-11 names WI-104.
