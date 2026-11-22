@@ -78,6 +78,12 @@ describe("groupByColumn", () => {
     expect(grouped[DONE]).toEqual([]);
     expect(Object.keys(grouped)).toEqual([TODO, DOING, DONE]);
   });
+
+  it("leaves out a task in the backlog (WS-101)", () => {
+    const grouped = groupByColumn([column(TODO, "To do")], [t1, { ...t2, columnId: null }]);
+
+    expect(keys(grouped, TODO)).toEqual(["OPA-1"]);
+  });
 });
 
 describe("placeOf and targetOf", () => {

@@ -396,6 +396,23 @@ describe("ProjectSettings: deleted tasks", () => {
     expect(status()).toHaveTextContent("OPA-3 was restored to its column.");
   });
 
+  it("says a restored backlog task went back to the backlog (WS-101)", async () => {
+    const later = { ...deleted, columnId: null };
+    on(
+      `POST /api/v1/tasks/${deleted.id}/restore`,
+      json({ ...later, description: "", links: [], deletedAt: null }),
+    );
+    const user = await renderSettings({ tasks: [later] });
+
+    await user.click(
+      within(section("Deleted tasks")).getByRole("button", { name: "Restore OPA-3" }),
+    );
+
+    await vi.waitFor(() => {
+      expect(status()).toHaveTextContent("OPA-3 was restored to the backlog.");
+    });
+  });
+
   it("says when nothing is deleted", async () => {
     await renderSettings({ tasks: [] });
 

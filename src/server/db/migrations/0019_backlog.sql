@@ -1,0 +1,2 @@
+ALTER TABLE "tasks" ALTER COLUMN "column_id" DROP NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "tasks_backlog_position_idx" ON "tasks" USING btree ("project_id","position") WHERE "tasks"."column_id" is null;
