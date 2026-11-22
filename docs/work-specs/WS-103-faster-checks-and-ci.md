@@ -1,6 +1,6 @@
 # WS-103 — Faster static checks, end-to-end build and CI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 4 as proposed)
 - Work-item: [WI-103](../work-items/WI-103-faster-checks-and-ci.md)
 - Canonical docs: `AGENTS.md` sections 5 (quality gate) and 6 (hard rules 3 and 4);
   `CONTRIBUTING.md` ("Quality gate"); WS-054 (end-to-end workers), WS-095 (worktree

@@ -1,6 +1,6 @@
 # WI-103 — Faster static checks, end-to-end build and CI
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: a development-flow item, from the quality-gate review of 2026-11-22
   (it covers follow-up D12 of the review of 2026-11-20)
 - Depends on: none. WI-097 speeds up `pnpm test`; this item covers the rest of the gate
