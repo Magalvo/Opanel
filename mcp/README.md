@@ -10,11 +10,16 @@ client.
 
 ## Tools
 
-| Tool            | What it does                                              | Permission |
-| --------------- | --------------------------------------------------------- | ---------- |
-| `opanel_whoami` | The agent's name, role, permissions (scopes) and projects | none       |
+| Tool                   | What it does                                              | Permissions                   |
+| ---------------------- | --------------------------------------------------------- | ----------------------------- |
+| `opanel_whoami`        | The agent's name, role, permissions (scopes) and projects | none                          |
+| `opanel_list_projects` | A page of projects                                        | `projects:read`               |
+| `opanel_get_board`     | A project's whole board: every column with all its tasks  | `projects:read`, `tasks:read` |
+| `opanel_list_teams`    | A page of teams                                           | `projects:read`               |
+| `opanel_find_people`   | A page of people, by the start of their name              | `projects:read`               |
+| `opanel_get_task`      | A task, with its description, and a page of its comments  | `tasks:read`                  |
 
-The read and write tools of doc 0005 section 4 come with the next work-items of WT-11. The
+The write tools of doc 0005 section 4 come with the next work-items of WT-11. The
 server offers only the tools the agent's permissions allow, read from `GET /api/v1/me` at
 start. After you change the agent's scopes, restart the server.
 
