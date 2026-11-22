@@ -153,14 +153,15 @@ Test levels:
 Quality gate (all must pass locally and in CI before a work-item is done):
 
 ```
-pnpm typecheck    # tsc --noEmit
-pnpm lint         # ESLint, zero warnings
-pnpm format:check # Prettier
+pnpm check        # typecheck, lint and format:check, in parallel
 pnpm test         # Vitest unit + integration
 pnpm test:e2e     # Playwright
 ```
 
-All five exist. `test` and `test:e2e` need the database: `docker compose up -d`.
+`pnpm check` is exactly the other three checks, each of which also runs alone:
+`pnpm typecheck` (route types, then `tsc --noEmit`), `pnpm lint` (ESLint, zero warnings)
+and `pnpm format:check` (Prettier). `test` and `test:e2e` need the database:
+`docker compose up -d`.
 
 ## 6. Hard rules
 
