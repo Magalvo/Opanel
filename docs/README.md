@@ -21,9 +21,8 @@ an index commit when a work-track is approved or done, or when what comes next c
   WT-11 item C (the MCP write tools) is proposed as a work-item and work-spec; WT-07 items
   C (labels) and D (the Backlog page, after A) can be proposed too. WT-08 to WT-10 follow,
   as planned below.
-- **Waiting for the owner:** WI-097 (Draft), from the development-flow review of
-  2026-11-20: a faster Vitest suite (D05 to D07). The lower findings D08 to D12 are listed
-  under [Follow-ups](#follow-ups).
+- **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
+  are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Planning gaps awaiting an owner decision** are listed first under
   [Follow-ups](#follow-ups).
 
