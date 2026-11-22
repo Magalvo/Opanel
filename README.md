@@ -80,7 +80,7 @@ change is accepted, and CI runs the same five on every pull request.
 | `pnpm format:check`     | **Gate.** Checks formatting with Prettier.                           |
 | `pnpm format`           | Formats every file with Prettier.                                    |
 | `pnpm test`             | **Gate.** Runs unit and integration tests (needs the database).      |
-| `pnpm test:unit`        | Runs unit tests only (no database needed).                           |
+| `pnpm test:unit`        | Runs unit tests only: Node and jsdom projects (no database needed).  |
 | `pnpm test:integration` | Runs integration tests only.                                         |
 | `pnpm test:watch`       | Runs Vitest in watch mode.                                           |
 | `pnpm test:e2e`         | **Gate.** Builds the app and runs the Playwright end-to-end tests.   |

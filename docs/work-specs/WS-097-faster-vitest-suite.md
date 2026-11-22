@@ -153,3 +153,52 @@ WI-103).
    do not need it, and integration runs on 4 workers.
 6. **Memory.** Four integration workers, each with its own connection pool, on one
    PostgreSQL. If CI's runner shows pressure, the worker count is the knob.
+
+## Implementation record
+
+- Red: `fed9472` (tests 1 to 8), then `isWorkerDatabaseOf` for `pnpm test:db:drop`. Each
+  failed for its reason: missing functions, the shared hash differing, the advisory-lock
+  waiter counted from another database, the table list read again. Test 5 (the reset
+  empties every table) already passed: it guards the behaviour the new reset keeps. Test 1
+  failed because `vitest.config.ts` cannot load under jsdom; it passes in Node.
+- Green: `fe29a87`. `AGENTS.md` needs no change (the gate's commands are the same),
+  and `CONTRIBUTING.md` and `README.md` describe the projects and the worker databases.
+- After, same machine and conditions as the baseline:
+
+  | Command                 | Before | After          | Saved  |
+  | ----------------------- | ------ | -------------- | ------ |
+  | `pnpm test:unit`        | 92 s   | 37 s, 37 s     | 60%    |
+  | `pnpm test:integration` | 397 s  | 123 s to 130 s | 67–69% |
+  | `pnpm test`             | —      | 166 s          |        |
+
+  Both meet the 40% target. Vitest no longer prints its jsdom advice.
+
+- `vmThreads` on the `ui` project (question 1): 24.6 and 25.0 s against 27.4 and 27.7 s
+  on the default pool, about 10%, with 18 tests failing. Below the 20% bar: not adopted.
+- Test 9: `--sequence.shuffle` passes for integration (seed 1795376676847, 762 tests).
+  For `unit` and `ui` (seed 1795376634565) one test failed,
+  `src/components/epics/epics-page.test.tsx` "says it is loading, then shows a table...":
+  run alone with the same seed it passed once and failed once, so it is timing, not
+  order. It waits for "Loading epics…", which can be gone before it looks. Unchanged by
+  this item; a follow-up.
+- Test 4, by hand: after a run, no `_w<n>_test` database is left; `pnpm test:db:drop`
+  dropped a left-over `opanel_<id>_w9_test`.
+- CI: recorded once the PR's run finishes.
+
+## Deviations
+
+1. **The integration project runs after the others, not beside them.** Vitest 5.1 refuses
+   projects with different `maxWorkers` in one group ("Projects "integration" and "unit"
+   have different 'maxWorkers' but same 'sequence.groupOrder'"), so `integration` has
+   `sequence: { groupOrder: 1 }` and starts once `unit`, `ui` and `mcp` are done.
+2. **Worker databases are created by each worker, on demand, not all by the global
+   setup.** The global setup migrates the template and drops the copies of earlier runs;
+   each worker's setup file creates its copy when missing, so the number of databases
+   follows the workers Vitest starts rather than a number the setup must guess. Its
+   teardown drops them all.
+
+## Follow-ups
+
+1. `src/components/epics/epics-page.test.tsx`, "says it is loading, then shows a table
+   with title, status, dates and progress", is timing-dependent: it can miss the loading
+   state. Seen under `--sequence.shuffle` on 2026-11-22.
