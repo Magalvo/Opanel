@@ -141,6 +141,21 @@ test("a deleted task disappears from the other board, and comes back when restor
   await expect.poll(() => titlesIn(b, "To do"), { timeout: 2_000 }).toEqual(["Echo", "Foxtrot"]);
 });
 
+test("a task moved to the backlog through the API leaves an open board (WS-101)", async ({
+  browser,
+}) => {
+  const { a, b, key } = await twoBoards(browser, ["Golf", "Hotel"]);
+
+  const response = await a.request.post(`/api/v1/tasks/${key}-1/move`, {
+    headers,
+    data: { columnId: null, version: 1 },
+  });
+  expect(response.status()).toBe(200);
+
+  await expect.poll(() => titlesIn(b, "To do"), { timeout: 2_000 }).toEqual(["Hotel"]);
+  await expect.poll(() => titlesIn(a, "To do"), { timeout: 2_000 }).toEqual(["Hotel"]);
+});
+
 test("a title edited in the task detail shows on the other board", async ({ browser }) => {
   const { a, b } = await twoBoards(browser, ["Golf"]);
 

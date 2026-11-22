@@ -95,7 +95,10 @@ export function DeletedTasksSection({
     try {
       await restoreTask(task.id);
       setTasks((current) => (current ?? []).filter((other) => other.id !== task.id));
-      announce(`${task.key} was restored to its column.`);
+      // A task deleted from the backlog goes back there (WS-101).
+      announce(
+        `${task.key} was restored to ${task.columnId === null ? "the backlog" : "its column"}.`,
+      );
     } catch (failure) {
       announce(
         failure instanceof ApiFailure && failure.code === "project_archived"

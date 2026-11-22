@@ -31,9 +31,8 @@ export const tasks = pgTable(
     type: text("type").notNull().default("task"),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
-    columnId: uuid("column_id")
-      .notNull()
-      .references(() => columns.id, { onDelete: "restrict" }),
+    // `null` when the task is in the project's backlog (WT-07 decision 1, WS-101).
+    columnId: uuid("column_id").references(() => columns.id, { onDelete: "restrict" }),
     position: byteOrderedText("position").notNull(),
     assigneeTeamId: uuid("assignee_team_id").references(() => teams.id, { onDelete: "restrict" }),
     assigneeAccountId: uuid("assignee_account_id").references(() => accounts.id, {
@@ -69,6 +68,10 @@ export const tasks = pgTable(
     check("tasks_occurrences_check", sql`${table.occurrences} >= 0`),
     uniqueIndex("tasks_project_number_idx").on(table.projectId, table.number),
     uniqueIndex("tasks_column_position_idx").on(table.columnId, table.position),
+    // The backlog's order; nulls are distinct, so the index above never sees it (WS-101).
+    uniqueIndex("tasks_backlog_position_idx")
+      .on(table.projectId, table.position)
+      .where(sql`${table.columnId} is null`),
     index("tasks_assignee_team_idx").on(table.assigneeTeamId),
     index("tasks_assignee_account_idx").on(table.assigneeAccountId),
     index("tasks_epic_idx").on(table.epicId),

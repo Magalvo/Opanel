@@ -6,7 +6,7 @@ import { sql } from "drizzle-orm";
 
 import { closeMigrationDb, getMigrationDb } from "@/server/db/client";
 import { runMigrations } from "@/server/db/migrate";
-import { ensureRuntimeTestRole } from "@/server/db/testing";
+import { ensureRuntimeTestRole, ensureTestDatabase } from "@/server/db/testing";
 import { getEnv, migrationDatabaseUrl } from "@/server/env";
 
 import { E2E_DATABASE_SUFFIX } from "./environment";
@@ -27,12 +27,12 @@ async function prepare(): Promise<void> {
   }
 
   try {
+    // Created when missing, for example in a new worktree (WS-095).
+    await ensureTestDatabase(migrationDatabaseUrl(env));
     await getMigrationDb().$client`select 1`;
   } catch {
     throw new Error(
-      "Cannot reach the end-to-end database. Start it with `docker compose up -d`. " +
-        "If the database does not exist yet, recreate the volume once: " +
-        "`docker compose down -v && docker compose up -d`.",
+      "Cannot reach the end-to-end database. Start PostgreSQL with `docker compose up -d`.",
     );
   }
 

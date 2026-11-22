@@ -43,7 +43,10 @@ const taskFields = {
   projectId: z.uuid(),
   type: taskTypeSchema,
   title: z.string(),
-  columnId: z.uuid(),
+  columnId: z
+    .uuid()
+    .nullable()
+    .meta({ description: "The task's column; `null` when the task is in the backlog." }),
   assigneeTeam: teamRefSchema.nullable(),
   assignee: personSchema.nullable(),
   epic: epicRefSchema.nullable(),
@@ -116,6 +119,11 @@ export const taskListQuerySchema = paginationQuerySchema.extend({
 
 export type TaskListQuery = z.infer<typeof taskListQuerySchema>;
 
+/** The backlog's query (WS-101): a page, nothing else. */
+export const backlogQuerySchema = paginationQuerySchema;
+
+export type BacklogQuery = z.infer<typeof backlogQuerySchema>;
+
 /** The message of a severity sent for a task that is not a bug (WS-088). */
 export const ONLY_BUGS = "Only a bug has a severity.";
 
@@ -126,8 +134,13 @@ export const createTaskRequestSchema = z
     type: taskTypeSchema.optional(),
     columnId: z
       .uuid()
+      .nullable()
       .optional()
-      .meta({ description: "A column of the project. By default the first column." }),
+      .meta({
+        description:
+          "A column of the project, or `null` for the end of the backlog. By default the first " +
+          "column.",
+      }),
     assigneeTeamId: z.uuid().optional(),
     assigneeAccountId: z.uuid().optional(),
     epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
@@ -175,7 +188,10 @@ export type UpdateTaskRequest = z.infer<typeof updateTaskRequestSchema>;
 
 export const moveTaskRequestSchema = z
   .strictObject({
-    columnId: z.uuid().meta({ description: "A column of the task's project; may be its own." }),
+    columnId: z.uuid().nullable().meta({
+      description:
+        "A column of the task's project, may be its own; `null` for the project's backlog.",
+    }),
     afterTaskId: z.uuid().optional().meta({ description: "Place the task right after this one." }),
     beforeTaskId: z
       .uuid()
@@ -202,9 +218,26 @@ export const listTasksContract = {
   summary: "List a project's tasks",
   description:
     "Tasks in board order: by column, then by their place in the column, with keyset " +
-    "pagination. Items leave out the description.",
+    "pagination. Items leave out the description. Tasks in the backlog are not on the " +
+    "board and are listed only with `deleted=true`, after every column's.",
   access: READ,
   request: { params: projectParamsSchema, query: taskListQuerySchema },
+  responses: {
+    200: { description: "A page of tasks.", schema: taskPageSchema },
+    400: { description: "The path or the query string is not valid.", problem: true },
+    404: { description: "There is no such project.", problem: true },
+  },
+} satisfies EndpointContract;
+
+export const listBacklogContract = {
+  method: "get",
+  path: "/api/v1/projects/{projectId}/backlog",
+  summary: "List a project's backlog",
+  description:
+    "The tasks that are not on the board, in the backlog's order (the team's ranking), with " +
+    "keyset pagination. Items leave out the description.",
+  access: READ,
+  request: { params: projectParamsSchema, query: backlogQuerySchema },
   responses: {
     200: { description: "A page of tasks.", schema: taskPageSchema },
     400: { description: "The path or the query string is not valid.", problem: true },
@@ -217,8 +250,9 @@ export const createTaskContract = {
   path: "/api/v1/projects/{projectId}/tasks",
   summary: "Create a task",
   description:
-    "The task gets the next key of the project and goes to the end of its column. Only " +
-    "active people can be assigned (code `account_inactive`).",
+    "The task gets the next key of the project and goes to the end of its column, or of " +
+    "the backlog with `columnId: null`. Only active people can be assigned (code " +
+    "`account_inactive`).",
   access: WRITE,
   request: { params: projectParamsSchema, body: createTaskRequestSchema },
   responses: {
@@ -274,7 +308,8 @@ export const moveTaskContract = {
   summary: "Move a task",
   description:
     "Moves the task to the end of a column of its project, or right after or right before a " +
-    "task of that column. Send the `version` the move is based on.",
+    "task of that column; with `columnId: null`, the same within the project's backlog. " +
+    "Send the `version` the move is based on.",
   access: WRITE,
   request: { params: taskParamsSchema, body: moveTaskRequestSchema },
   responses: {

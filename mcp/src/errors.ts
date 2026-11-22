@@ -24,3 +24,8 @@ export function toolError(failure: ToolFailure, redact: Redactor): CallToolResul
   const text = `${sentence(failure)}\n\n${JSON.stringify(failure, null, 2)}`;
   return { isError: true, content: [{ type: "text", text: redact(text) }] };
 }
+
+/** A tool error of the server's own, such as a board that changed while it was loading. */
+export function messageError(message: string, redact: Redactor): CallToolResult {
+  return { isError: true, content: [{ type: "text", text: redact(message) }] };
+}

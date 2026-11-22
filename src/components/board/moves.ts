@@ -22,7 +22,8 @@ export function columnDroppableId(columnId: string): string {
 export function groupByColumn(columns: readonly Column[], tasks: readonly TaskSummary[]): Board {
   const board: Record<string, TaskSummary[]> = {};
   for (const column of columns) board[column.id] = [];
-  for (const task of tasks) board[task.columnId]?.push(task);
+  // A task in the backlog has no column, and is not on the board (WS-101).
+  for (const task of tasks) if (task.columnId !== null) board[task.columnId]?.push(task);
   return board;
 }
 

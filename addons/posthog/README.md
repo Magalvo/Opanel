@@ -108,5 +108,6 @@ pnpm exec playwright test --config addons/posthog/playwright.config.ts
 ```
 
 The end-to-end test needs the database (`docker compose up -d`) and starts the app on
-port 3200. Nothing in `src/`, `tests/` or `scripts/` may import from `addons/`; a test
+port 3200 (in a linked worktree, a port from 21000 to 21999; `OPANEL_ADDON_E2E_PORT`
+chooses it; see `CONTRIBUTING.md`). Nothing in `src/`, `tests/` or `scripts/` may import from `addons/`; a test
 checks it.

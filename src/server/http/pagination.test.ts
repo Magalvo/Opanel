@@ -8,9 +8,11 @@ import { teamNameSchema } from "@/lib/schemas/teams";
 
 import { ApiError } from "./errors";
 import {
+  decodeBacklogCursor,
   decodeBoardCursor,
   decodeCursor,
   decodeNameCursor,
+  encodeBacklogCursor,
   encodeBoardCursor,
   encodeCursor,
   encodeNameCursor,
@@ -188,6 +190,34 @@ describe("board cursors (WS-030)", () => {
       let error: unknown;
       try {
         decodeBoardCursor(value);
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).errors).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
+    }
+  });
+});
+
+describe("backlog cursors (WS-101)", () => {
+  const backlog = { position: "a0V", id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f" };
+
+  it("round-trip and are URL-safe", () => {
+    expect(decodeBacklogCursor(encodeBacklogCursor(backlog))).toEqual(backlog);
+    expect(encodeBacklogCursor(backlog)).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("refuse board cursors, bad ids, oversized positions and garbage with a 400 naming cursor", () => {
+    for (const value of [
+      encodeBoardCursor({ columnPosition: "a1", ...backlog }),
+      encodeCursor(cursor),
+      Buffer.from(JSON.stringify({ p: "a0", i: "nope" })).toString("base64url"),
+      Buffer.from(JSON.stringify({ p: "a".repeat(2001), i: backlog.id })).toString("base64url"),
+      "x!",
+    ]) {
+      let error: unknown;
+      try {
+        decodeBacklogCursor(value);
       } catch (caught) {
         error = caught;
       }

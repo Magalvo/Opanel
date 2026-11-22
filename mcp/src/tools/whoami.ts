@@ -18,7 +18,7 @@ function summary(me: AgentMe): string {
 
 export const whoami: ToolDefinition = {
   name: "opanel_whoami",
-  permission: null,
+  permissions: [],
   register(server, { api, redact }) {
     server.registerTool(
       "opanel_whoami",
