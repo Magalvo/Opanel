@@ -97,6 +97,10 @@ set follows the scopes of doc 0001 section 3:
   bug's severity, which came after this doc, and `opanel_move_task` takes `columnId: null`
   for the project's backlog. `opanel_update_task` is marked `destructiveHint`, since it
   can replace what someone wrote; the other writes are not.
+- **`opanel_submit_bug_report` answers what triage did** (WS-105): `created`, with the new
+  bug's key and its team, or `deduplicated`, with the open bug's key and occurrences.
+  When Opanel does not answer, the error says the report may have been kept: a resend
+  with the same fingerprint is counted on the same bug, never filed twice.
 - Lists follow the API's cursors. A tool returns one page with its `nextCursor`, except
   `opanel_get_board`, which loads the whole board as the web app does.
 - New tools are added by work-items, like endpoints. A new tool needs no new permission:
