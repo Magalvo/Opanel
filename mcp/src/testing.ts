@@ -194,3 +194,15 @@ export function person(name: string, active = true) {
 export function page<T>(items: T[], nextCursor: string | null = null) {
   return { items, nextCursor };
 }
+
+// Answers of the bug-report endpoint (WS-105).
+
+export const TEAM_ID = "7c8d9e0f-1a2b-4c3d-8e5f-6a7b8c9d0e1f";
+
+export function bugCreated(assignedTeamId: string | null = TEAM_ID) {
+  return { outcome: "created" as const, taskId: TASK_ID, taskKey: "OPA-13", assignedTeamId };
+}
+
+export function bugDeduplicated(occurrences = 3) {
+  return { outcome: "deduplicated" as const, taskId: TASK_ID, taskKey: "OPA-12", occurrences };
+}
