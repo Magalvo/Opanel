@@ -163,7 +163,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-094](work-items/WI-094-triage-flow-and-guide.md)            | The triage flow end to end, the agents' guide, WT-06's amendments | [WS-094](work-specs/WS-094-triage-flow-and-guide.md)            |
 | [WI-095](work-items/WI-095-worktree-test-isolation.md)          | Parallel worktrees can run the quality gate at the same time      | [WS-095](work-specs/WS-095-worktree-test-isolation.md)          |
 | [WI-096](work-items/WI-096-parallel-merge-flow.md)              | Parallel work-items merge without renumbering or index conflicts  | [WS-096](work-specs/WS-096-parallel-merge-flow.md)              |
-| [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | —                                                               |
+| [WI-097](work-items/WI-097-faster-vitest-suite.md)              | A faster unit and integration suite                               | [WS-097](work-specs/WS-097-faster-vitest-suite.md)              |
 | [WI-098](work-items/WI-098-keyboard-move-subpixel.md)           | A keyboard move works while the board is still animating          | [WS-098](work-specs/WS-098-keyboard-move-subpixel.md)           |
 | [WI-099](work-items/WI-099-mcp-server-skeleton.md)              | The MCP server starts over stdio and answers opanel_whoami        | [WS-099](work-specs/WS-099-mcp-server-skeleton.md)              |
 | [WI-100](work-items/WI-100-mcp-read-tools.md)                   | The MCP read tools: projects, board, teams, people and a task     | [WS-100](work-specs/WS-100-mcp-read-tools.md)                   |
