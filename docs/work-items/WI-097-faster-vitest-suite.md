@@ -1,11 +1,11 @@
 # WI-097 — A faster unit and integration suite
 
-- Status: Draft
+- Status: Proposed
 - Work-track: none: a development-flow item from the review of 2026-11-20 (findings D05,
   D06 and D07)
 - Depends on: WI-095 (its "create the database on demand" step, for the per-pool
   databases)
-- Work-spec: WS-097 (once written)
+- Work-spec: [WS-097](../work-specs/WS-097-faster-vitest-suite.md)
 
 ## Outcome
 
