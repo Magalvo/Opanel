@@ -73,7 +73,7 @@ afterEach(() => {
 });
 
 describe("the read tools", () => {
-  it("are offered to a qa_agent after opanel_whoami, before its comment tool (WS-104)", async () => {
+  it("are offered to a qa_agent after opanel_whoami, before its writes (WS-104, WS-105)", async () => {
     const { client } = await serve(notFound);
 
     const { tools } = await client.listTools();
@@ -82,6 +82,7 @@ describe("the read tools", () => {
       "opanel_whoami",
       ...READ_TOOLS,
       "opanel_add_comment",
+      "opanel_submit_bug_report",
     ]);
   });
 

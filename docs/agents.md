@@ -249,6 +249,9 @@ discussion. Send one `runId` for every report of one run.
 newest first, 10 by default and 25 at most. The task's own `GET` has `severity`,
 `occurrences`, `lastReportedAt` and `links`, which name the bug it is a regression of.
 
+An AI assistant connected through the MCP server ([`mcp/README.md`](../mcp/README.md))
+files reports with the `opanel_submit_bug_report` tool, which takes the same body.
+
 The optional PostHog add-on ([`addons/posthog/README.md`](../addons/posthog/README.md))
 files reports this way from PostHog's error-tracking alerts.
 

@@ -58,6 +58,8 @@ Item C is [WI-104](../work-items/WI-104-mcp-write-tools.md). Its work-spec keeps
 in the task writes although no tool lists epics yet, and records an `opanel_list_epics`
 read tool as a follow-up (WS-104, question 2).
 
+Item D is [WI-105](../work-items/WI-105-mcp-bug-report-tool.md).
+
 ## Exit criteria
 
 - [ ] With a `qa_agent` token, the assistant is offered only read tools, comments and bug
