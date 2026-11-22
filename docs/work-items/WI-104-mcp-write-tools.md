@@ -1,6 +1,6 @@
 # WI-104 — The MCP write tools: comment, create, update and move a task
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (item C)
 - Depends on: [WI-100](WI-100-mcp-read-tools.md) (done)
 - Work-spec: [WS-104](../work-specs/WS-104-mcp-write-tools.md)

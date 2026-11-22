@@ -1,6 +1,6 @@
 # WS-104 — The MCP write tools: comment, create, update and move a task
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 5 as proposed)
 - Work-item: [WI-104](../work-items/WI-104-mcp-write-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 4 to 6),
   [0004](../canonical/0004-api-conventions.md) (problems, `version`),
