@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "design-motion-principles": {
+      "source": "kylezantos/design-motion-principles",
+      "commit": "4a9ca879f24a361f4dca4174fe2da0f67b5ddee3",
+      "sourceType": "github",
+      "skillPath": "skills/design-motion-principles/SKILL.md",
+      "computedHash": "afbcdb7fd0afa5cd5aaa43e4766e7326067f2ee45901e35aef912243259d0735"
+    }
+  }
+}
