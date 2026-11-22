@@ -13,6 +13,17 @@ import { hashPassword } from "./password";
 
 export const TEST_PASSWORD = "correct horse battery staple";
 
+let testPasswordHash: Promise<string> | undefined;
+
+/**
+ * One real hash of `TEST_PASSWORD`, computed once per module instance (WS-097): most test
+ * accounts use it, and Argon2id at the production cost takes tens of milliseconds.
+ */
+function hashOfTestPassword(): Promise<string> {
+  testPasswordHash ??= hashPassword(TEST_PASSWORD);
+  return testPasswordHash;
+}
+
 /** Creates a human account with a password credential, directly in the test database. */
 export async function createTestAccount(
   overrides: {
@@ -39,7 +50,9 @@ export async function createTestAccount(
     accountId: account.id,
     providerId: "credential",
     providerAccountId: account.id,
-    passwordHash: await hashPassword(overrides.password ?? TEST_PASSWORD),
+    passwordHash: await (overrides.password === undefined
+      ? hashOfTestPassword()
+      : hashPassword(overrides.password)),
   });
   return account;
 }
@@ -230,14 +243,17 @@ export async function failSessionDeletes(): Promise<() => Promise<void>> {
 /**
  * Resolves once `count` sessions wait for an advisory lock that another one holds, so a test
  * can release the holder at a known point, or queue operations in a known order: PostgreSQL
- * grants a contended lock to its waiters in the order they asked (WS-059). Throws after
+ * grants a contended lock to its waiters in the order they asked (WS-059). Only waiters in
+ * this database count, since other test runs share the server (WS-097). Throws after
  * `timeoutMs` (a caller that never takes the lock).
  */
 export async function waitForAdvisoryLockWaiter(timeoutMs = 3000, count = 1): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const waiting = await getDb().execute<{ n: number }>(
-      sql`select count(*)::int as n from pg_locks where locktype = 'advisory' and not granted`,
+      sql`select count(*)::int as n from pg_locks
+          where locktype = 'advisory' and not granted
+            and database = (select oid from pg_database where datname = current_database())`,
     );
     if ((waiting[0]?.n ?? 0) >= count) {
       return;

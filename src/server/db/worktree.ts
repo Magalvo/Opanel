@@ -147,12 +147,13 @@ export function applyWorktreeTestDatabase(env: Record<string, string | undefined
   }
 }
 
-const WORKTREE_DATABASE = /^opanel_([a-z0-9]{1,16})_(?:e2e_)?test$/;
+const WORKTREE_DATABASE = /^opanel_([a-z0-9]{1,16})_(?:e2e_|w\d+_)?test$/;
 const DEFAULT_DATABASES = new Set(["opanel_test", "opanel_e2e_test"]);
 
 /**
- * The databases named like a worktree's (`opanel_<id>_test`, `opanel_<id>_e2e_test`) whose
- * ID belongs to none of the live worktrees. Never the default names.
+ * The databases named like a worktree's (`opanel_<id>_test`, `opanel_<id>_e2e_test`, and its
+ * Vitest workers' `opanel_<id>_w<n>_test`, WS-097) whose ID belongs to none of the live
+ * worktrees. Never the default names.
  */
 export function staleTestDatabases(
   names: readonly string[],

@@ -1,6 +1,48 @@
 import { describe, expect, it } from "vitest";
 
-import { assertTestDatabaseUrl } from "./testing";
+import { assertTestDatabaseUrl, isWorkerDatabaseOf, workerDatabaseUrl } from "./testing";
+
+describe("isWorkerDatabaseOf (WS-097)", () => {
+  it("knows the worker databases of a test database, and nothing else", () => {
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_w1_test")).toBe(true);
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_w12_test")).toBe(true);
+    expect(isWorkerDatabaseOf("opanel_3f9a07c2_test", "opanel_3f9a07c2_w2_test")).toBe(true);
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_3f9a07c2_w2_test")).toBe(false);
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_w0_test")).toBe(false);
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_wx_test")).toBe(false);
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_test")).toBe(false);
+    expect(isWorkerDatabaseOf("opanel_test", "opanel_w1")).toBe(false);
+  });
+});
+
+describe("workerDatabaseUrl (WS-097)", () => {
+  const base = "postgres://opanel:opanel@localhost:5432/opanel_test";
+
+  it("puts the worker's number before the suffix", () => {
+    expect(workerDatabaseUrl(base, "2")).toBe(
+      "postgres://opanel:opanel@localhost:5432/opanel_w2_test",
+    );
+    expect(
+      workerDatabaseUrl("postgres://opanel:opanel@localhost:5432/opanel_3f9a07c2_test", "12"),
+    ).toBe("postgres://opanel:opanel@localhost:5432/opanel_3f9a07c2_w12_test");
+  });
+
+  it("keeps the name guard: the result ends in _test, and a non-test URL is refused", () => {
+    expect(() => {
+      assertTestDatabaseUrl(workerDatabaseUrl(base, "1"));
+    }).not.toThrow();
+    expect(() => workerDatabaseUrl("postgres://opanel:opanel@localhost:5432/opanel", "1")).toThrow(
+      /must end in "_test"/,
+    );
+  });
+
+  it.each([["0"], ["x"], ["-1"], ["1.5"], [""], [undefined]])(
+    "refuses the pool ID %s",
+    (poolId) => {
+      expect(() => workerDatabaseUrl(base, poolId)).toThrow(/VITEST_POOL_ID/);
+    },
+  );
+});
 
 describe("assertTestDatabaseUrl", () => {
   it("accepts a database whose name ends in _test", () => {

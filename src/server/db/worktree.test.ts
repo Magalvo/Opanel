@@ -250,4 +250,13 @@ describe("staleTestDatabases", () => {
       ),
     ).toEqual(["opanel_0badf00d_test", "opanel_0badf00d_e2e_test", "opanel_wi095_test"]);
   });
+
+  it("counts a worker database with its worktree's (WS-097)", () => {
+    expect(
+      staleTestDatabases(
+        ["opanel_3f9a07c2_w2_test", "opanel_0badf00d_w2_test", "opanel_0badf00d_w12_test"],
+        new Set(["3f9a07c2"]),
+      ),
+    ).toEqual(["opanel_0badf00d_w2_test", "opanel_0badf00d_w12_test"]);
+  });
 });

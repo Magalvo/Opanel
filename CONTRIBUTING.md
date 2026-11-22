@@ -42,6 +42,10 @@ There are three levels of test:
 | Integration | Vitest     | `*.integration.test.ts` next to the code | Runs against a real PostgreSQL. Never mocked.  |
 | End-to-end  | Playwright | [tests/e2e/](tests/e2e/)                 | Drives the production build in a real browser. |
 
+Unit tests run in two Vitest projects (WS-097): `unit` runs the `.ts` files in Node, and
+`ui` runs the `.tsx` files under jsdom, a browser-like environment. A `.ts` test that needs
+the DOM is listed in `DOM_TEST_FILES` in `vitest.config.ts`. `pnpm test:unit` runs both.
+
 Before your first end-to-end run, install the browser:
 
 ```bash
@@ -52,11 +56,18 @@ pnpm exec playwright install chromium
 
 `docker compose up -d` starts one PostgreSQL server holding three databases:
 
-| Database          | Used by           | Notes                               |
-| ----------------- | ----------------- | ----------------------------------- |
-| `opanel`          | `pnpm dev`        | Your development data.              |
-| `opanel_test`     | Integration tests | Emptied before every test.          |
-| `opanel_e2e_test` | End-to-end tests  | The database of the app under test. |
+| Database          | Used by           | Notes                                |
+| ----------------- | ----------------- | ------------------------------------ |
+| `opanel`          | `pnpm dev`        | Your development data.               |
+| `opanel_test`     | Integration tests | The template of the workers' copies. |
+| `opanel_e2e_test` | End-to-end tests  | The database of the app under test.  |
+
+Integration test files run in parallel on 4 workers (WS-097). Each run migrates
+`opanel_test`, then each worker copies it to a database of its own, `opanel_w1_test` to
+`opanel_w4_test`, emptied before every test and dropped at the end of the run. These
+copies skip waiting for the disk on commit (`synchronous_commit = off`): a crash may lose
+their last commits, which no test needs. Emptying them turns off triggers for a moment,
+which needs a superuser: the `opanel` user of `compose.yaml` is one.
 
 The test harnesses refuse to run against any database whose name does not end in `_test`,
 so tests cannot erase development data. They create their database when it is missing and
@@ -72,13 +83,15 @@ ports above.
   choose it, in any checkout. Moving the worktree's folder changes the ID.
 - **The databases** get the ID before their suffix: `opanel_3f9a07c2_test` and
   `opanel_3f9a07c2_e2e_test`. This applies to the names in `DATABASE_URL` and
-  `E2E_DATABASE_URL` too, when you set them.
+  `E2E_DATABASE_URL` too, when you set them. The integration workers' copies follow:
+  `opanel_3f9a07c2_w1_test`.
 - **The ports**: the app's end-to-end run uses 20000 to 20999 and the PostHog add-on's
   21000 to 21999, from the ID (3100 and 3200 without one). `E2E_PORT` and
   `OPANEL_ADDON_E2E_PORT` choose them. Two worktrees share a port about once in a
   thousand pairs; a run whose port is already in use stops at once and names the variable
   to set.
-- **Dropping them.** `pnpm test:db:drop` drops this checkout's two test databases.
+- **Dropping them.** `pnpm test:db:drop` drops this checkout's two test databases, and
+  any worker copies a stopped run left behind.
   `pnpm test:db:drop --stale` lists the databases of worktrees that no longer exist (any
   `opanel_<id>_test` or `opanel_<id>_e2e_test` whose ID is not one of
   `git worktree list`), and `pnpm test:db:drop --stale --yes` drops them; run it from any

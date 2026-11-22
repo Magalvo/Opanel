@@ -1,12 +1,12 @@
 // `pnpm test:db:drop`: drops this checkout's integration and end-to-end databases, with the
-// names the tests use. `pnpm test:db:drop --stale` lists the databases of worktrees that no
+// names the tests use, and the integration workers' copies left by a run that stopped (WS-097). `pnpm test:db:drop --stale` lists the databases of worktrees that no
 // longer exist (`opanel_<id>_test`, `opanel_<id>_e2e_test`); with `--yes` it drops them.
 // Only names ending in "_test", never by force: a database in use is kept (WS-095).
 import { execFileSync } from "node:child_process";
 
 import postgres from "postgres";
 
-import { dropTestDatabase } from "@/server/db/testing";
+import { dropTestDatabase, isWorkerDatabaseOf } from "@/server/db/testing";
 import {
   applyWorktreeTestDatabase,
   pathWorktreeId,
@@ -86,7 +86,14 @@ async function main(args: readonly string[]): Promise<boolean> {
   }
 
   if (!args.includes("--stale")) {
-    return drop([integrationUrl, E2E_DATABASE_URL]);
+    const workers = (await databaseNames(integrationUrl)).filter((name) =>
+      isWorkerDatabaseOf(nameOf(integrationUrl), name),
+    );
+    return drop([
+      integrationUrl,
+      E2E_DATABASE_URL,
+      ...workers.map((name) => withName(integrationUrl, name)),
+    ]);
   }
 
   const stale = staleTestDatabases(await databaseNames(integrationUrl), liveWorktreeIds());
