@@ -162,3 +162,34 @@ None.
    document it and keep the sequential commands as the fallback.
 4. **More CI minutes.** Three jobs each pay checkout, pnpm and Node setup (about 15 to
    20 s each), for a shorter wall time. Proposed: accept.
+
+## Implementation record
+
+- Branch `claude/wi-103-faster-checks-and-ci`, from the reservation `6b6b14e`; PR #104.
+- Red (`test:` commit): `scripts/check.test.ts` and the build-option test failed on the
+  missing modules.
+- Green: `scripts/check.ts`, the scripts in `package.json`, the flag in `next.config.ts`
+  and `playwright.config.ts`; then the CI jobs, `AGENTS.md` and `CONTRIBUTING.md`.
+- Manual checks, 2026-11-22, same machine as section 1:
+  - Test 6: with `.next` deleted and `href="/no-such-route"` in
+    `src/components/agents/agent-detail.tsx`, the old `tsc --noEmit` exits 0, the new
+    `pnpm typecheck` exits 2 (`TS2322 ... RouteImpl<"/no-such-route">`).
+  - Test 7: with the cache warm, an unformatted `scripts/check.ts` fails
+    `pnpm format:check` (exit 1, 4 s).
+  - Test 8: from a clean `.next`, `next build` 36.2 and 38.6 s ("Running TypeScript",
+    15.7 and 17.1 s); with `OPANEL_BUILD_SKIP_TYPECHECK=1`, 22.1 and 21.2 s ("Skipping
+    validation of types"). `OPANEL_BUILD_SKIP_TYPECHECK=yes` stops the build with the
+    flag's error.
+- Times after (test 10): `pnpm check` 67 s (one check failing) and 69 s (all passing)
+  against 108 s for the three in series (25 + 66 + 17 s): 62 to 64%, within the 70%
+  target. CI: recorded once the PR's run finishes.
+- Gate on 2026-11-22: `pnpm check` passes; Vitest 1922 of 1922; `pnpm test:e2e` 97 of 97.
+  Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **`buildSkipsTypecheck` lives in `next.config.ts`, not `scripts/build-options.ts`**, and
+   its test is `scripts/next-config.test.ts`. The runtime image copies `next.config.ts`
+   alone (`Dockerfile`, `COPY --from=build /app/package.json /app/next.config.ts`), and
+   `next start` loads it, so an import of `./scripts/...` would break the production
+   container.
