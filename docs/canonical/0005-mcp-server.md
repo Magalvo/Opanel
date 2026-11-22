@@ -89,7 +89,14 @@ set follows the scopes of doc 0001 section 3:
 - Tools accept a task key (`OPA-12`) wherever the API accepts one.
 - **Writes that need `version`** (`update`, `move`) take it as input. A
   `409 version_conflict` is returned as a tool error that includes the current task, so
-  the assistant can look again and retry. The server never retries a write on its own.
+  the assistant can look again and retry. The server never retries a write on its own:
+  when Opanel does not answer a write, the error says it may have been made, to check
+  with `opanel_get_task` first (WS-104).
+- **The write tools take the fields of their endpoint's request schema** (WS-104):
+  `opanel_create_task` and `opanel_update_task` also set the priority, the due date and a
+  bug's severity, which came after this doc, and `opanel_move_task` takes `columnId: null`
+  for the project's backlog. `opanel_update_task` is marked `destructiveHint`, since it
+  can replace what someone wrote; the other writes are not.
 - Lists follow the API's cursors. A tool returns one page with its `nextCursor`, except
   `opanel_get_board`, which loads the whole board as the web app does.
 - New tools are added by work-items, like endpoints. A new tool needs no new permission:

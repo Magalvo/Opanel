@@ -18,10 +18,20 @@ export const QA_AGENT: AgentMe = {
   projectIds: null,
 };
 
+/** An agent holding every scope of the `worker_agent` role (WS-104). */
+export const WORKER_AGENT: AgentMe = {
+  ...QA_AGENT,
+  name: "Worker bot",
+  role: "worker_agent",
+  permissions: ["comments:write", "projects:read", "reports:write", "tasks:read", "tasks:write"],
+};
+
 export interface FakeCall {
   url: string;
   headers: Headers;
   method: string;
+  /** The request's body as text; `null` for a request without one. */
+  body: string | null;
 }
 
 /** A `fetch` that answers every request with `respond`, and records the requests. */
@@ -32,7 +42,8 @@ export function fakeFetch(respond: (call: FakeCall) => Response | Promise<Respon
   const calls: FakeCall[] = [];
   const fake: typeof fetch = async (input, init) => {
     const request = new Request(input, init);
-    const call = { url: request.url, headers: request.headers, method: request.method };
+    const body = request.body === null ? null : await request.text();
+    const call = { url: request.url, headers: request.headers, method: request.method, body };
     calls.push(call);
     return respond(call);
   };

@@ -3,8 +3,12 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
 import { getDefaultEnvironment, StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { type APIRequestContext, expect } from "@playwright/test";
+import postgres from "postgres";
 
-import { E2E_BASE_URL } from "../../tests/e2e/environment";
+import { scopesOfRole } from "@/lib/schemas/agents";
+import type { AgentRole } from "@/lib/schemas/permissions";
+
+import { E2E_BASE_URL, E2E_DATABASE_URL } from "../../tests/e2e/environment";
 import { seedAccount } from "../../tests/e2e/seed";
 
 // Helpers of the MCP end-to-end tests (WS-099, WS-100): an Admin, an agent with a token,
@@ -39,15 +43,19 @@ export async function signInAsAdmin(request: APIRequestContext, id: string): Pro
   return name;
 }
 
-/** An Admin creates a qa_agent and a token for it, as the operator guide says. */
-export async function agentWithToken(request: APIRequestContext) {
+/**
+ * An Admin creates an agent with every scope of its role, `qa_agent` by default, and a
+ * token for it, as the operator guide says.
+ */
+export async function agentWithToken(request: APIRequestContext, role: AgentRole = "qa_agent") {
   const id = uniqueId();
   await signInAsAdmin(request, id);
-  const scopes = ["comments:write", "projects:read", "reports:write", "tasks:read"];
+  // Sorted, as `GET /me` lists permissions.
+  const scopes = [...scopesOfRole(role)].sort();
   const agent = await json<{ id: string }>(
     await request.post("/api/v1/agents", {
       headers,
-      data: { name: `MCP bot ${id}`, role: "qa_agent", scopes, projectIds: null },
+      data: { name: `MCP bot ${id}`, role, scopes, projectIds: null },
     }),
     201,
   );
@@ -84,4 +92,21 @@ export async function startServer(token: string) {
   const client = new Client({ name: "opanel-e2e", version: "0.0.0" });
   await client.connect(transport);
   return { client, stderr: () => stderr };
+}
+
+/**
+ * A task's history, oldest first, read from the end-to-end database (WS-104): the API has
+ * no endpoint for it, and the test checks who each change is recorded under.
+ */
+export async function taskHistory(
+  taskId: string,
+): Promise<{ type: string; field: string | null; actor: string | null }[]> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    return await client<{ type: string; field: string | null; actor: string | null }[]>`
+      select type, field, actor_account_id as actor from task_events
+      where task_id = ${taskId} order by created_at, id`;
+  } finally {
+    await client.end();
+  }
 }

@@ -73,12 +73,16 @@ afterEach(() => {
 });
 
 describe("the read tools", () => {
-  it("are offered to a qa_agent after opanel_whoami", async () => {
+  it("are offered to a qa_agent after opanel_whoami, before its comment tool (WS-104)", async () => {
     const { client } = await serve(notFound);
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name)).toEqual(["opanel_whoami", ...READ_TOOLS]);
+    expect(tools.map((tool) => tool.name)).toEqual([
+      "opanel_whoami",
+      ...READ_TOOLS,
+      "opanel_add_comment",
+    ]);
   });
 
   it("follow every permission their calls need", async () => {

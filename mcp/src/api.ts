@@ -15,6 +15,8 @@ export type ToolFailure =
       detail: string;
       errors?: FieldError[];
       requestId: string;
+      /** Only with `version_conflict`: the entity as it is now, not yet parsed (WS-104). */
+      current?: unknown;
     }
   | { kind: "unexpected_response"; status: number; requestId: string | null }
   | { kind: "unreachable"; message: string };
@@ -24,6 +26,16 @@ export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ToolFail
 export interface ApiClient {
   /** `GET /api/v1<path>`, its `2xx` body parsed with `schema`. */
   get<T>(path: string, schema: z.ZodType<T>): Promise<ApiResult<T>>;
+  /**
+   * A write (WS-104): `body` as JSON to `/api/v1<path>`, its `2xx` body parsed with `schema`.
+   * Sent once, never retried: a write that got no answer may still have been made.
+   */
+  send<T>(
+    method: "POST" | "PATCH",
+    path: string,
+    body: unknown,
+    schema: z.ZodType<T>,
+  ): Promise<ApiResult<T>>;
 }
 
 export interface ApiClientOptions {
@@ -50,15 +62,28 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     message: `Opanel is unreachable at ${options.baseUrl}.`,
   };
 
-  async function request(path: string): Promise<Response | null> {
+  const unanswered: ToolFailure = {
+    kind: "unreachable",
+    message:
+      `Opanel did not answer at ${options.baseUrl}, so the change may have been made. ` +
+      "Read the task with opanel_get_task before trying again.",
+  };
+
+  async function request(
+    method: "GET" | "POST" | "PATCH",
+    path: string,
+    body?: unknown,
+  ): Promise<Response | null> {
     try {
       return await options.fetch(`${options.baseUrl}/api/v1${path}`, {
-        method: "GET",
+        method,
         headers: {
           Authorization: `Bearer ${options.token}`,
           Accept: "application/json",
           "User-Agent": `opanel-mcp/${options.version}`,
+          ...(method === "GET" ? {} : { "Content-Type": "application/json" }),
         },
+        ...(method === "GET" ? {} : { body: JSON.stringify(body) }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
     } catch {
@@ -67,41 +92,48 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     }
   }
 
+  async function answer<T>(response: Response, schema: z.ZodType<T>): Promise<ApiResult<T>> {
+    const header = response.headers.get("X-Request-Id");
+    const body = await readJson(response);
+    const unexpected: ToolFailure = {
+      kind: "unexpected_response",
+      status: response.status,
+      requestId: body.ok ? header : null,
+    };
+
+    if (response.ok) {
+      const parsed = body.ok ? schema.safeParse(body.value) : null;
+      return parsed?.success === true
+        ? { ok: true, value: parsed.data }
+        : { ok: false, error: unexpected };
+    }
+
+    const problem = body.ok ? problemSchema.safeParse(body.value) : null;
+    if (problem?.success !== true) return { ok: false, error: unexpected };
+    const { status, code, title, detail, errors, requestId, current } = problem.data;
+    return {
+      ok: false,
+      error: {
+        kind: "problem",
+        status,
+        code,
+        title,
+        detail,
+        ...(errors === undefined ? {} : { errors }),
+        requestId,
+        ...(code === "version_conflict" && current !== undefined ? { current } : {}),
+      },
+    };
+  }
+
   return {
     async get(path, schema) {
-      const response = await request(path);
-      if (response === null) return { ok: false, error: unreachable };
-
-      const header = response.headers.get("X-Request-Id");
-      const body = await readJson(response);
-      const unexpected: ToolFailure = {
-        kind: "unexpected_response",
-        status: response.status,
-        requestId: body.ok ? header : null,
-      };
-
-      if (response.ok) {
-        const parsed = body.ok ? schema.safeParse(body.value) : null;
-        return parsed?.success === true
-          ? { ok: true, value: parsed.data }
-          : { ok: false, error: unexpected };
-      }
-
-      const problem = body.ok ? problemSchema.safeParse(body.value) : null;
-      if (problem?.success !== true) return { ok: false, error: unexpected };
-      const { status, code, title, detail, errors, requestId } = problem.data;
-      return {
-        ok: false,
-        error: {
-          kind: "problem",
-          status,
-          code,
-          title,
-          detail,
-          ...(errors === undefined ? {} : { errors }),
-          requestId,
-        },
-      };
+      const response = await request("GET", path);
+      return response === null ? { ok: false, error: unreachable } : answer(response, schema);
+    },
+    async send(method, path, body, schema) {
+      const response = await request(method, path, body);
+      return response === null ? { ok: false, error: unanswered } : answer(response, schema);
     },
   };
 }
