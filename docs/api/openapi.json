@@ -7525,6 +7525,16 @@
           "severity": {
             "description": "Only with `type: \"bug\"`.",
             "$ref": "#/components/schemas/Severity"
+          },
+          "priority": {
+            "description": "By default `none`.",
+            "$ref": "#/components/schemas/Priority"
+          },
+          "dueDate": {
+            "description": "By default none.",
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
           }
         },
         "required": [
@@ -7538,6 +7548,16 @@
           "task",
           "bug",
           "story"
+        ]
+      },
+      "Priority": {
+        "type": "string",
+        "enum": [
+          "none",
+          "low",
+          "medium",
+          "high",
+          "urgent"
         ]
       },
       "UpdateTaskRequest": {
@@ -7599,6 +7619,22 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Severity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "dueDate": {
+            "description": "`null` clears it.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
               },
               {
                 "type": "null"
@@ -9354,6 +9390,22 @@
             ],
             "description": "Read-only."
           },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "dueDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A calendar date, or `null`."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -9399,6 +9451,8 @@
           "fingerprint",
           "occurrences",
           "lastReportedAt",
+          "priority",
+          "dueDate",
           "version",
           "createdAt",
           "updatedAt",
@@ -9553,6 +9607,22 @@
             ],
             "description": "Read-only."
           },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "dueDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A calendar date, or `null`."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -9609,6 +9679,8 @@
           "fingerprint",
           "occurrences",
           "lastReportedAt",
+          "priority",
+          "dueDate",
           "version",
           "createdAt",
           "updatedAt",

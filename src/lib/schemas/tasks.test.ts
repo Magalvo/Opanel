@@ -99,6 +99,8 @@ describe("severity and the bug fields (WS-088)", () => {
     fingerprint: "fp-1",
     occurrences: 2,
     lastReportedAt: "2026-11-20T08:30:00.123Z",
+    priority: "none",
+    dueDate: null,
     links: [
       {
         type: "regression_of",
@@ -244,6 +246,8 @@ describe("the backlog (WS-101)", () => {
       fingerprint: null,
       occurrences: 0,
       lastReportedAt: null,
+      priority: "none",
+      dueDate: null,
       version: 1,
       createdAt: "2026-11-21T08:00:00.000Z",
       updatedAt: "2026-11-21T08:00:00.000Z",
@@ -272,5 +276,87 @@ describe("the backlog (WS-101)", () => {
       moveTaskRequestSchema.safeParse({ columnId: null, afterTaskId: UUID, version: 1 }).success,
     ).toBe(true);
     expect(moveTaskRequestSchema.safeParse({ version: 1 }).success).toBe(false);
+  });
+});
+
+describe("priority and due date (WS-102)", () => {
+  const summary = {
+    id: UUID,
+    key: "OPA-1",
+    number: 1,
+    projectId: UUID,
+    type: "task",
+    title: "T",
+    columnId: UUID,
+    assigneeTeam: null,
+    assignee: null,
+    epic: null,
+    reporter: { id: UUID, name: "Mia", kind: "human" },
+    severity: null,
+    fingerprint: null,
+    occurrences: 0,
+    lastReportedAt: null,
+    priority: "high",
+    dueDate: "2026-12-01",
+    version: 1,
+    createdAt: "2026-11-21T08:00:00.000Z",
+    updatedAt: "2026-11-21T08:00:00.000Z",
+    deletedAt: null,
+  };
+
+  it("a task and a task summary require priority and dueDate", () => {
+    const task = { ...summary, description: "", links: [] };
+    expect(taskSummarySchema.parse(summary)).toEqual(summary);
+    expect(taskSchema.parse(task)).toEqual(task);
+    for (const field of ["priority", "dueDate"]) {
+      const { [field]: _omitted, ...without } = task as Record<string, unknown>;
+      expect(taskSchema.safeParse(without).success, field).toBe(false);
+      const { [field]: _gone, ...bare } = summary as Record<string, unknown>;
+      expect(taskSummarySchema.safeParse(bare).success, field).toBe(false);
+    }
+    for (const priority of ["none", "low", "medium", "high", "urgent"]) {
+      expect(taskSchema.safeParse({ ...task, priority }).success, priority).toBe(true);
+    }
+    expect(taskSchema.safeParse({ ...task, priority: "critical" }).success).toBe(false);
+    expect(taskSchema.parse({ ...task, dueDate: null }).dueDate).toBeNull();
+  });
+
+  it("create takes priority and dueDate, each optional; dueDate is not null there", () => {
+    expect(
+      createTaskRequestSchema.parse({ title: "T", priority: "urgent", dueDate: "2026-12-01" }),
+    ).toEqual({ title: "T", priority: "urgent", dueDate: "2026-12-01" });
+    expect(createTaskRequestSchema.parse({ title: "T" })).toEqual({ title: "T" });
+    expect(createTaskRequestSchema.safeParse({ title: "T", dueDate: null }).success).toBe(false);
+    expect(createTaskRequestSchema.safeParse({ title: "T", priority: "critical" }).success).toBe(
+      false,
+    );
+  });
+
+  it("update: priority alone and dueDate alone are changes; null clears the date", () => {
+    expect(updateTaskRequestSchema.parse({ priority: "low", version: 1 })).toEqual({
+      priority: "low",
+      version: 1,
+    });
+    expect(updateTaskRequestSchema.parse({ dueDate: null, version: 1 })).toEqual({
+      dueDate: null,
+      version: 1,
+    });
+    expect(updateTaskRequestSchema.parse({ dueDate: "2020-01-01", version: 1 })).toEqual({
+      dueDate: "2020-01-01",
+      version: 1,
+    });
+    expect(updateTaskRequestSchema.safeParse({ priority: null, version: 1 }).success).toBe(false);
+  });
+
+  it("refuses a bad date naming dueDate, on create and on update", () => {
+    for (const dueDate of ["2026-02-30", "0000-01-01", "2026-1-01", "2026-12-31T00:00"]) {
+      for (const result of [
+        createTaskRequestSchema.safeParse({ title: "T", dueDate }),
+        updateTaskRequestSchema.safeParse({ dueDate, version: 1 }),
+      ]) {
+        expect(result.success, dueDate).toBe(false);
+        expect(result.error?.issues.map((issue) => issue.path.join("."))).toEqual(["dueDate"]);
+      }
+    }
   });
 });

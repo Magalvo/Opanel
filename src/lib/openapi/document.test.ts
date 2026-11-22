@@ -308,6 +308,34 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("gives tasks a priority and a due date, on answers and on create and edit (WS-102)", () => {
+    const { schemas } = parsedDocument().components;
+    const priority = { $ref: "#/components/schemas/Priority" };
+
+    expect(schemas.Priority).toMatchObject({
+      type: "string",
+      enum: ["none", "low", "medium", "high", "urgent"],
+    });
+    for (const name of ["Task", "TaskSummary"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: {
+          priority,
+          dueDate: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
+        },
+        required: expect.arrayContaining(["priority", "dueDate"]) as unknown,
+      });
+    }
+    expect(schemas.CreateTaskRequest).toMatchObject({
+      properties: { priority, dueDate: { type: "string", format: "date" } },
+    });
+    expect(schemas.UpdateTaskRequest).toMatchObject({
+      properties: {
+        priority,
+        dueDate: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
+      },
+    });
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

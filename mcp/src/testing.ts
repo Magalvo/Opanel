@@ -143,6 +143,8 @@ export function taskSummary(
     fingerprint: null,
     occurrences: 0,
     lastReportedAt: null,
+    priority: "none",
+    dueDate: null,
     version: 1,
     createdAt: AT,
     updatedAt: AT,

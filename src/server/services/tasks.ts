@@ -8,6 +8,7 @@ import {
   type CreateTaskRequest,
   type MoveTaskRequest,
   ONLY_BUGS,
+  type Priority,
   type Task,
   type TaskLink,
   type TaskListQuery,
@@ -63,6 +64,7 @@ const TASK_SELECT = sql`
     r.id as reporter_id, r.name as reporter_name, r.kind as reporter_kind,
     t.severity, t.fingerprint, t.occurrences,
     to_char(t.last_reported_at at time zone 'utc', ${ISO_MS}) as last_reported_at,
+    t.priority, to_char(t.due_date, 'YYYY-MM-DD') as due_date,
     t.version, c.position as column_position, t.position,
     to_char(t.deleted_at at time zone 'utc', ${ISO_MS}) as deleted_at,
     to_char(t.created_at at time zone 'utc', ${ISO_MS}) as created_at,
@@ -98,6 +100,8 @@ interface TaskRow extends Record<string, unknown> {
   fingerprint: string | null;
   occurrences: number;
   last_reported_at: string | null;
+  priority: Priority;
+  due_date: string | null;
   version: number;
   column_position: string | null;
   position: string;
@@ -133,6 +137,8 @@ function toSummary(row: TaskRow): TaskSummary {
     fingerprint: row.fingerprint,
     occurrences: row.occurrences,
     lastReportedAt: row.last_reported_at,
+    priority: row.priority,
+    dueDate: row.due_date,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -444,6 +450,8 @@ export async function createTask(
         assigneeAccountId: input.assigneeAccountId ?? null,
         epicId: input.epicId ?? null,
         severity: input.severity ?? null,
+        priority: input.priority ?? "none",
+        dueDate: input.dueDate ?? null,
         reporterAccountId: actor.accountId,
       })
       .returning({ id: tasks.id });
@@ -460,6 +468,8 @@ export async function createTask(
         title: input.title,
         columnId,
         ...(input.severity === undefined ? {} : { severity: input.severity }),
+        ...(input.priority === undefined ? {} : { priority: input.priority }),
+        ...(input.dueDate === undefined ? {} : { dueDate: input.dueDate }),
       },
     });
 
@@ -476,6 +486,8 @@ const EDITABLE = [
   ["description", "description"],
   ["type", "type"],
   ["severity", "severity"],
+  ["priority", "priority"],
+  ["dueDate", "due_date"],
   ["assigneeTeamId", "assignee_team_id"],
   ["assigneeAccountId", "assignee_account_id"],
   ["epicId", "epic_id"],
@@ -508,6 +520,8 @@ export async function updateTask(
       type,
       severity:
         type !== "bug" ? null : input.severity === undefined ? before.severity : input.severity,
+      priority: input.priority ?? before.priority,
+      dueDate: input.dueDate === undefined ? before.due_date : input.dueDate,
       assigneeTeamId:
         input.assigneeTeamId === undefined ? before.assignee_team_id : input.assigneeTeamId,
       assigneeAccountId:
@@ -532,7 +546,7 @@ export async function updateTask(
     await tx.execute(sql`
       update tasks set
         title = ${after.title}, description = ${after.description}, type = ${after.type},
-        severity = ${after.severity},
+        severity = ${after.severity}, priority = ${after.priority}, due_date = ${after.dueDate},
         assignee_team_id = ${after.assigneeTeamId}, assignee_account_id = ${after.assigneeAccountId},
         epic_id = ${after.epicId},
         version = version + 1, updated_at = now()
