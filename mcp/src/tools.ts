@@ -5,10 +5,14 @@ import type { Permission } from "@/lib/schemas/permissions";
 import type { ApiClient } from "./api";
 import type { Redactor } from "./redact";
 import { getBoard } from "./tools/board";
+import { addComment } from "./tools/comment";
+import { createTask } from "./tools/create-task";
+import { moveTask } from "./tools/move-task";
 import { findPeople } from "./tools/people";
 import { listProjects } from "./tools/projects";
 import { getTask } from "./tools/task";
 import { listTeams } from "./tools/teams";
+import { updateTask } from "./tools/update-task";
 import { whoami } from "./tools/whoami";
 import { VERSION } from "./version";
 
@@ -34,6 +38,11 @@ export const TOOLS: readonly ToolDefinition[] = [
   listTeams,
   findPeople,
   getTask,
+  // The writes (WS-104).
+  addComment,
+  createTask,
+  updateTask,
+  moveTask,
 ];
 
 /** The tools the agent may use: an assistant is never shown a tool that can only fail. */
