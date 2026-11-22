@@ -76,3 +76,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.stdout.write(text.endsWith("\n") ? text : `${text}\n`);
   });
 }
+
+// WS-103 test 9: a deliberate lint error, reverted by the next commit.
+const unusedForTest9 = 1;
