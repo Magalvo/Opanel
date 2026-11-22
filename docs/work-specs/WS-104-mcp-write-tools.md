@@ -1,6 +1,6 @@
 # WS-104 — The MCP write tools: comment, create, update and move a task
 
-- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-22, questions 1 to 5 as proposed; done on 2026-11-22)
 - Work-item: [WI-104](../work-items/WI-104-mcp-write-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 4 to 6),
   [0004](../canonical/0004-api-conventions.md) (problems, `version`),
@@ -142,6 +142,8 @@ All in Vitest's `mcp` project with a fake `fetch`, except test 12.
   `toolError` never shows it; `conflictError` shows it once it matches `taskSchema`.
 - Test 12: `bbc528a`, two specs in `mcp/e2e/write-tools.spec.ts`. The worker's history
   reads `created`, `field_changed`, `moved`, `commented`, each under the agent.
+- Gate: `pnpm check`, `pnpm test` (1969 passed) and `pnpm test:e2e` (99 passed) locally;
+  CI run 45078902292 green on `802b8b3`.
 - Docs: `mcp/README.md` lists the four tools; doc 0005 section 4 says what they take
   and that a write without an answer may have been made; WT-11 names WI-104.
 

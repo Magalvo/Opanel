@@ -1,6 +1,6 @@
 # WI-104 — The MCP write tools: comment, create, update and move a task
 
-- Status: In progress
+- Status: Done (2026-11-22)
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (item C)
 - Depends on: [WI-100](WI-100-mcp-read-tools.md) (done)
 - Work-spec: [WS-104](../work-specs/WS-104-mcp-write-tools.md)
@@ -17,30 +17,30 @@ retries a write on its own.
 
 ## Acceptance criteria
 
-- [ ] Four tools are added, as doc 0005 section 4 lists them: `opanel_add_comment`
+- [x] Four tools are added, as doc 0005 section 4 lists them: `opanel_add_comment`
       (`comments:write`), `opanel_create_task`, `opanel_update_task` and
       `opanel_move_task` (`tasks:write`). Each description names its permission and says
       the tool changes Opanel.
-- [ ] A `qa_agent` holding every scope of its role is offered `opanel_add_comment` and
+- [x] A `qa_agent` holding every scope of its role is offered `opanel_add_comment` and
       none of the three task writes; a `worker_agent` holding every scope of its role is
       offered all four.
-- [ ] Each tool takes a task id or key (`OPA-12`), or for `opanel_create_task` a project id
+- [x] Each tool takes a task id or key (`OPA-12`), or for `opanel_create_task` a project id
       or key, plus the fields of the endpoint's request schema. The input is validated
       with that schema, its cross-field rules included (a severity only on a bug, at least
       one field to change, `afterTaskId` or `beforeTaskId` but not both), before any
       request; an invalid input makes no request.
-- [ ] `opanel_update_task` and `opanel_move_task` require `version`. A
+- [x] `opanel_update_task` and `opanel_move_task` require `version`. A
       `409 version_conflict` is a tool error that carries the current task, parsed with the
       task schema, and tells the assistant to look again before retrying.
-- [ ] Every answer is parsed with the endpoint's response schema; one that does not match
+- [x] Every answer is parsed with the endpoint's response schema; one that does not match
       is a tool error. Other API problems (`400`, `403`, `404`, `409 project_archived`,
       `409 account_inactive`) are tool errors as in WI-099.
-- [ ] A write is sent once. When it times out or the connection drops, the tool error says
+- [x] A write is sent once. When it times out or the connection drops, the tool error says
       the change may have been made and to check with `opanel_get_task` before retrying.
-- [ ] Results quote every text a person or agent wrote, after the notice that it is data,
+- [x] Results quote every text a person or agent wrote, after the notice that it is data,
       not instructions, as the read tools do.
-- [ ] The token never appears in any of the new tools' results or errors (tested).
-- [ ] An end-to-end test drives the built server over stdio against the running app: a
+- [x] The token never appears in any of the new tools' results or errors (tested).
+- [x] An end-to-end test drives the built server over stdio against the running app: a
       `worker_agent` creates a task, updates it, moves it and comments on it; a retry on
       the stale `version` gets the conflict with the current task; the task's history
       shows each change under the agent's account. A `qa_agent` is offered only the
