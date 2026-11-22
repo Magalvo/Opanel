@@ -19,23 +19,110 @@ export function assertTestDatabaseUrl(url: string): void {
   }
 }
 
-/** Empties every table in the public schema. Only ever runs against a test database. */
+let tableNames: Promise<string[]> | undefined;
+
+/**
+ * Empties every table in the public schema. Only ever runs against a test database (WS-097):
+ * the list of tables is read once per module instance, and the rows are deleted in one
+ * transaction with `session_replication_role = replica`, which turns off the triggers (the
+ * append-only ones and the foreign-key checks) for that transaction only. Needs a superuser,
+ * as the test owner is locally and in CI.
+ */
 export async function resetDatabase(): Promise<void> {
   assertTestDatabaseUrl(getEnv().DATABASE_URL);
 
   const db = getDb();
-  const tables = await db.execute<{ tablename: string }>(
-    sql`select tablename from pg_tables where schemaname = 'public'`,
-  );
-  if (tables.length === 0) {
+  tableNames ??= db
+    .execute<{ tablename: string }>(
+      sql`select tablename from pg_tables where schemaname = 'public' order by tablename`,
+    )
+    .then((rows) => rows.map((row) => row.tablename));
+  const names = await tableNames;
+  if (names.length === 0) {
     return;
   }
 
-  const names = sql.join(
-    tables.map((table) => sql.identifier(table.tablename)),
-    sql`, `,
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`set local session_replication_role = replica`);
+    for (const name of names) {
+      await tx.execute(sql`delete from ${sql.identifier(name)}`);
+    }
+  });
+}
+
+const POOL_ID = /^[1-9]\d*$/;
+
+/**
+ * The database of one Vitest worker (WS-097): `opanel_test` and pool 2 give
+ * `opanel_w2_test`, `opanel_<id>_test` gives `opanel_<id>_w2_test`. `poolId` is
+ * `VITEST_POOL_ID`, a positive integer.
+ */
+export function workerDatabaseUrl(url: string, poolId: string | undefined): string {
+  assertTestDatabaseUrl(url);
+  if (poolId === undefined || !POOL_ID.test(poolId)) {
+    throw new Error("VITEST_POOL_ID must be a positive integer.");
+  }
+  const parsed = new URL(url);
+  parsed.pathname = `/${workerPrefix(databaseNameOf(url))}${poolId}_test`;
+  return parsed.toString();
+}
+
+/** `opanel_test` gives `opanel_w`; every worker database's name is this, a number, `_test`. */
+function workerPrefix(templateName: string): string {
+  return `${templateName.slice(0, -"_test".length)}_w`;
+}
+
+/** Whether `name` is the database of one of the workers of the test database `templateName`. */
+export function isWorkerDatabaseOf(templateName: string, name: string): boolean {
+  const prefix = workerPrefix(templateName);
+  return (
+    name.startsWith(prefix) &&
+    name.endsWith("_test") &&
+    POOL_ID.test(name.slice(prefix.length, -"_test".length))
   );
-  await db.execute(sql`truncate table ${names} restart identity cascade`);
+}
+
+/**
+ * Creates this worker's database from the template when it is missing, with
+ * `synchronous_commit` off (a crash may lose its last commits, never corrupt it), and returns
+ * its URL (WS-097). Nothing may be connected to the template meanwhile.
+ */
+export async function ensureWorkerDatabase(
+  templateUrl: string,
+  poolId: string | undefined,
+): Promise<string> {
+  const url = workerDatabaseUrl(templateUrl, poolId);
+  const name = databaseNameOf(url);
+  const server = maintenanceConnection(templateUrl);
+  try {
+    const found = await server`select 1 from pg_database where datname = ${name}`;
+    if (found.length === 0) {
+      await server`create database ${server(name)} template ${server(databaseNameOf(templateUrl))}`;
+      await server`alter database ${server(name)} set synchronous_commit = off`;
+    }
+  } finally {
+    await server.end();
+  }
+  return url;
+}
+
+/** Drops every worker database of the template (WS-097) and returns their names. */
+export async function dropWorkerDatabases(templateUrl: string): Promise<string[]> {
+  assertTestDatabaseUrl(templateUrl);
+  const template = databaseNameOf(templateUrl);
+  const server = maintenanceConnection(templateUrl);
+  try {
+    const rows = await server<{ datname: string }[]>`select datname from pg_database`;
+    const names = rows
+      .map((row) => row.datname)
+      .filter((name) => isWorkerDatabaseOf(template, name));
+    for (const name of names) {
+      await server`drop database if exists ${server(name)}`;
+    }
+    return names;
+  } finally {
+    await server.end();
+  }
 }
 
 /**

@@ -19,7 +19,7 @@
     "format": "prettier --write . --cache --cache-strategy content",
     "format:check": "prettier --check . --cache --cache-strategy content",
     "test": "vitest run",
-    "test:unit": "vitest run --project unit",
+    "test:unit": "vitest run --project unit --project ui",
     "test:integration": "vitest run --project integration",
     "test:e2e": "node --run mcp:build && playwright test",
     "test:watch": "vitest",
