@@ -15,12 +15,11 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-07 item B, priority and due date (WI-102): its work-spec is approved
-  (2026-11-21, on branch `claude/wi-102-priority-due-date`) and implementation starts from
-  that branch. Items A of WT-07 (WI-101) and B of WT-11 (WI-100) are done. In parallel,
-  WT-11 item C (the MCP write tools) is proposed as a work-item and work-spec; WT-07 items
-  C (labels) and D (the Backlog page, after A) can be proposed too. WT-08 to WT-10 follow,
-  as planned below.
+- **Next:** WT-11 item C, the MCP write tools: comment, create, update and move a task,
+  with version conflicts as tool errors. It has no work-item yet: its number is reserved
+  first, then its work-spec is proposed. Items A and B of WT-07 (WI-101, WI-102) and B of
+  WT-11 (WI-100) are done. WT-07 items C (labels) and D (the Backlog page) can be
+  proposed in parallel. WT-08 to WT-10 follow, as planned below.
 - **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
   are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Planning gaps awaiting an owner decision** are listed first under
