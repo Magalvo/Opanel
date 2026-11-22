@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { CHECKS, type CheckRun, runChecks } from "./check";
+import { type CheckRun, CHECKS, runChecks } from "./check";
 
 /** A runner whose checks finish only when the test says so. */
 function controlledRunner() {

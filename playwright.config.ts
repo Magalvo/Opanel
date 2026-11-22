@@ -81,6 +81,8 @@ export default defineConfig({
       BETTER_AUTH_SECRET: E2E_AUTH_SECRET,
       APP_URL: E2E_BASE_URL,
       SETUP_TOKEN: E2E_SETUP_TOKEN,
+      // The gate's `pnpm typecheck` already ran: the build skips its own (WS-103).
+      OPANEL_BUILD_SKIP_TYPECHECK: "1",
     },
     // Never reuse a server that is already listening: it could be serving an older build,
     // and the tests would pass or fail against the wrong code.

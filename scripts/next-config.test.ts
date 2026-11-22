@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { BUILD_SKIP_TYPECHECK, buildSkipsTypecheck } from "./build-options";
+import { BUILD_SKIP_TYPECHECK, buildSkipsTypecheck } from "../next.config";
 
-describe("buildSkipsTypecheck (WS-103)", () => {
+describe("buildSkipsTypecheck (WS-103, next.config.ts)", () => {
   it('is true when the variable is "1"', () => {
     expect(buildSkipsTypecheck({ [BUILD_SKIP_TYPECHECK]: "1" })).toBe(true);
   });
