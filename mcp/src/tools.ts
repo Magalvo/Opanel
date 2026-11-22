@@ -5,6 +5,7 @@ import type { Permission } from "@/lib/schemas/permissions";
 import type { ApiClient } from "./api";
 import type { Redactor } from "./redact";
 import { getBoard } from "./tools/board";
+import { submitBugReport } from "./tools/bug-report";
 import { addComment } from "./tools/comment";
 import { createTask } from "./tools/create-task";
 import { moveTask } from "./tools/move-task";
@@ -43,6 +44,7 @@ export const TOOLS: readonly ToolDefinition[] = [
   createTask,
   updateTask,
   moveTask,
+  submitBugReport, // WS-105
 ];
 
 /** The tools the agent may use: an assistant is never shown a tool that can only fail. */
