@@ -14,8 +14,57 @@ permissions:
   contents: read
 
 jobs:
-  quality-gate:
-    name: Quality gate
+  # The quality gate runs as three parallel jobs (WS-103); "Quality gate" below is the one
+  # result that needs all three.
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Version comes from `packageManager` in package.json.
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Show versions
+        run: |
+          echo "node $(node --version)"
+          echo "pnpm $(pnpm --version)"
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      # The Drizzle schema needs no migration that is not committed, and the journal has
+      # no collision (WS-096). Neither command connects to the database; NODE_ENV=test
+      # makes drizzle.config.ts read .env.test.
+      - name: Migrations match the schema
+        env:
+          NODE_ENV: test
+        run: |
+          pnpm db:check
+          pnpm db:generate
+          git status --porcelain -- src/server/db/migrations
+          test -z "$(git status --porcelain -- src/server/db/migrations)"
+
+  vitest:
+    name: Unit and integration tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -40,39 +89,41 @@ jobs:
         run: docker compose up -d --wait
 
       - name: Show versions
-        run: |
-          echo "node $(node --version)"
-          echo "pnpm $(pnpm --version)"
-          docker compose exec -T db postgres --version
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Format check
-        run: pnpm format:check
-
-      # The Drizzle schema needs no migration that is not committed, and the journal has
-      # no collision (WS-096). Neither command connects to the database; NODE_ENV=test
-      # makes drizzle.config.ts read .env.test.
-      - name: Migrations match the schema
-        env:
-          NODE_ENV: test
-        run: |
-          pnpm db:check
-          pnpm db:generate
-          git status --porcelain -- src/server/db/migrations
-          test -z "$(git status --porcelain -- src/server/db/migrations)"
+        run: docker compose exec -T db postgres --version
 
       # Includes the test that fails when docs/api/openapi.json is stale.
       - name: Unit and integration tests
         run: pnpm test
 
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Version comes from `packageManager` in package.json.
+      - name: Install pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start PostgreSQL
+        run: docker compose up -d --wait
+
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
 
+      # Its build skips Next.js's own type check: the "Static checks" job runs
+      # `pnpm typecheck`, route types included (WS-103).
       - name: End-to-end tests
         run: pnpm test:e2e
 
@@ -86,6 +137,20 @@ jobs:
             test-results/
           retention-days: 7
           if-no-files-found: ignore
+
+  quality-gate:
+    name: Quality gate
+    needs: [static, vitest, e2e]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All three jobs succeeded
+        env:
+          RESULTS: ${{ needs.static.result }} ${{ needs.vitest.result }} ${{ needs.e2e.result }}
+        run: |
+          echo "static, vitest, e2e: $RESULTS"
+          test "$RESULTS" = "success success success"
 
   # Optional add-ons (WT-13) are checked apart from the app: the app's quality gate never
   # compiles or runs them, and a failure here does not touch the "Quality gate" job.
