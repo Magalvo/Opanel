@@ -1,6 +1,6 @@
 # WI-097 — A faster unit and integration suite
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: a development-flow item from the review of 2026-11-20 (findings D05,
   D06 and D07)
 - Depends on: WI-095 (its "create the database on demand" step, for the per-pool

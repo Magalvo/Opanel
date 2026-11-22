@@ -1,6 +1,6 @@
 # WS-097 — A faster unit and integration suite
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-22, questions 1 to 6 as proposed)
 - Work-item: [WI-097](../work-items/WI-097-faster-vitest-suite.md)
 - Canonical docs: none changes (test infrastructure only). `AGENTS.md` section 5 and
   `CONTRIBUTING.md` "Local database" describe the result.
