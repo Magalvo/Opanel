@@ -10,7 +10,13 @@ describe("calendarDateSchema (WS-102)", () => {
   });
 
   it("refuses impossible dates, the year 0000 and other formats", () => {
-    for (const date of ["2026-02-30", "2027-02-29", "0000-01-01", "2026-1-01", "2026-12-31T00:00"]) {
+    for (const date of [
+      "2026-02-30",
+      "2027-02-29",
+      "0000-01-01",
+      "2026-1-01",
+      "2026-12-31T00:00",
+    ]) {
       expect(calendarDateSchema.safeParse(date).success, date).toBe(false);
     }
     expect(calendarDateSchema.safeParse("0000-01-01").error?.issues[0]?.message).toBe(

@@ -47,6 +47,8 @@ function task(number: number, columnId: string, version = 1): TaskSummary {
     fingerprint: null,
     occurrences: 0,
     lastReportedAt: null,
+    priority: "none",
+    dueDate: null,
     version,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",

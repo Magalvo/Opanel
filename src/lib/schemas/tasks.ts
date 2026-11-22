@@ -5,6 +5,7 @@ import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/respon
 
 import { accountRefSchema } from "./account-ref";
 import { severitySchema, TASK_LINK_TYPES } from "./bug-reports";
+import { calendarDateSchema } from "./dates";
 import { epicRefSchema } from "./epics";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
@@ -14,6 +15,12 @@ import { versionSchema } from "./version";
 export const taskTypeSchema = z.enum(["task", "bug", "story"]).meta({ id: "TaskType" });
 
 export type TaskType = z.infer<typeof taskTypeSchema>;
+
+/** A task's priority (doc 0003 section 4, WS-102); `none` by default. */
+export const PRIORITIES = ["none", "low", "medium", "high", "urgent"] as const;
+export const prioritySchema = z.enum(PRIORITIES).meta({ id: "Priority" });
+
+export type Priority = z.infer<typeof prioritySchema>;
 
 /** Trimmed, 1 to 200 characters. */
 export const taskTitleSchema = z.string().trim().min(1).max(200);
@@ -60,6 +67,8 @@ const taskFields = {
     description: "How many bug reports this task stands for; read-only.",
   }),
   lastReportedAt: z.iso.datetime().nullable().meta({ description: "Read-only." }),
+  priority: prioritySchema,
+  dueDate: calendarDateSchema.nullable().meta({ description: "A calendar date, or `null`." }),
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -145,6 +154,8 @@ export const createTaskRequestSchema = z
     assigneeAccountId: z.uuid().optional(),
     epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
     severity: severitySchema.optional().meta({ description: 'Only with `type: "bug"`.' }),
+    priority: prioritySchema.optional().meta({ description: "By default `none`." }),
+    dueDate: calendarDateSchema.optional().meta({ description: "By default none." }),
   })
   .refine((body) => body.severity === undefined || body.type === "bug", {
     message: ONLY_BUGS,
@@ -169,6 +180,8 @@ export const updateTaskRequestSchema = z
     severity: severitySchema.nullable().optional().meta({
       description: "Bugs only; `null` clears it. A task that stops being a bug loses it.",
     }),
+    priority: prioritySchema.optional(),
+    dueDate: calendarDateSchema.nullable().optional().meta({ description: "`null` clears it." }),
     version: versionSchema,
   })
   .refine(
@@ -179,7 +192,9 @@ export const updateTaskRequestSchema = z
       body.assigneeTeamId !== undefined ||
       body.assigneeAccountId !== undefined ||
       body.epicId !== undefined ||
-      body.severity !== undefined,
+      body.severity !== undefined ||
+      body.priority !== undefined ||
+      body.dueDate !== undefined,
     { message: "Send at least one field to change." },
   )
   .meta({ id: "UpdateTaskRequest" });

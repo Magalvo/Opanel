@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  date,
   index,
   integer,
   pgTable,
@@ -44,6 +45,9 @@ export const tasks = pgTable(
     fingerprint: text("fingerprint"),
     occurrences: integer("occurrences").notNull().default(0),
     lastReportedAt: timestamp("last_reported_at", { withTimezone: true }),
+    // Priority and due date (WT-07 decisions 6 and 7, WS-102).
+    priority: text("priority").notNull().default("none"),
+    dueDate: date("due_date", { mode: "string" }),
     reporterAccountId: uuid("reporter_account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
@@ -66,6 +70,10 @@ export const tasks = pgTable(
       sql`${table.fingerprint} is null or char_length(${table.fingerprint}) between 1 and 128`,
     ),
     check("tasks_occurrences_check", sql`${table.occurrences} >= 0`),
+    check(
+      "tasks_priority_check",
+      sql`${table.priority} in ('none', 'low', 'medium', 'high', 'urgent')`,
+    ),
     uniqueIndex("tasks_project_number_idx").on(table.projectId, table.number),
     uniqueIndex("tasks_column_position_idx").on(table.columnId, table.position),
     // The backlog's order; nulls are distinct, so the index above never sees it (WS-101).

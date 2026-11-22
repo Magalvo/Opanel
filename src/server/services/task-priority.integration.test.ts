@@ -69,7 +69,7 @@ describe("the priority and due date columns", () => {
 
     await expect(
       getDb().execute(sql`update tasks set priority = 'critical' where id = ${task.id}`),
-    ).rejects.toThrow(/tasks_priority_check/);
+    ).rejects.toMatchObject({ cause: { constraint_name: "tasks_priority_check" } });
   });
 });
 

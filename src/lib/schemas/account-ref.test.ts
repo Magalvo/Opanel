@@ -47,6 +47,8 @@ describe("account references (WS-074)", () => {
       fingerprint: null,
       occurrences: 0,
       lastReportedAt: null,
+      priority: "none",
+      dueDate: null,
       version: 1,
       createdAt: "2026-11-19T10:00:00.000Z",
       updatedAt: "2026-11-19T10:00:00.000Z",
