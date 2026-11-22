@@ -51,6 +51,9 @@ Item A is [WI-099](../work-items/WI-099-mcp-server-skeleton.md). Its work-spec m
 from item E into A: the package's checks run inside the existing gate commands (WS-099,
 question 1).
 
+Item B is [WI-100](../work-items/WI-100-mcp-read-tools.md). Its work-spec found that
+`opanel_get_board` needs `projects:read` as well as `tasks:read`, and doc 0005 says so.
+
 ## Exit criteria
 
 - [ ] With a `qa_agent` token, the assistant is offered only read tools, comments and bug
