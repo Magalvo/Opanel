@@ -1,6 +1,6 @@
 # WI-108 — Labels in the UI
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item F)
 - Depends on: [WI-107](WI-107-labels-api.md) (done: the labels API)
 - Work-spec: [WS-108](../work-specs/WS-108-labels-ui.md)

@@ -1,6 +1,6 @@
 # WS-108 — Labels in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
 - Work-item: [WI-108](../work-items/WI-108-labels-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0002](../canonical/0002-realtime-sync.md) section 4;
