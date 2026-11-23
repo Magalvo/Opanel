@@ -76,7 +76,7 @@ export function StaticColumn({
       ) : (
         <ul className="grid gap-2">
           {tasks.map((task) => (
-            <StaticCard key={task.id} task={task} />
+            <StaticCard key={task.id} task={task} done={column.category === "done"} />
           ))}
         </ul>
       )}
@@ -110,7 +110,12 @@ export function SortableColumn({
           ) : (
             <ul className="grid gap-2">
               {tasks.map((task) => (
-                <SortableCard key={task.id} task={task} disabled={dragDisabled} />
+                <SortableCard
+                  key={task.id}
+                  task={task}
+                  disabled={dragDisabled}
+                  done={column.category === "done"}
+                />
               ))}
             </ul>
           )}

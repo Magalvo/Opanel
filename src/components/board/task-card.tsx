@@ -16,7 +16,10 @@ import type { ReactNode } from "react";
 
 import { LabelChips } from "@/components/labels/label-chip";
 import { SEVERITY_LABELS } from "@/components/task/bug-labels";
+import { isOverdue } from "@/components/task/due-date";
+import { DueDateText, PriorityIcon } from "@/components/task/task-meta";
 import { Badge } from "@/components/ui/badge";
+import { useToday } from "@/hooks/use-today";
 import type { TaskSummary, TaskType } from "@/lib/schemas/tasks";
 import { cn } from "@/lib/utils";
 
@@ -39,18 +42,21 @@ const CARD =
   "grid gap-1.5 rounded-lg border bg-card p-3 text-left text-sm text-card-foreground shadow-xs";
 
 /**
- * The content of a card: key, title, type, a bug's severity and report count (WS-091),
- * assignee, team and labels (WS-108). The title links to the task
- * (WS-038), except on the card that follows the pointer while dragging; `handle` is the
- * drag handle, beside the key.
+ * The content of a card: key, title, priority (WS-110), type, a bug's severity and report
+ * count (WS-091), assignee, team, due date (WS-110) and labels (WS-108). The title links to
+ * the task (WS-038), except on the card that follows the pointer while dragging; `handle`
+ * is the drag handle, beside the key. `done`: the card is in a `done` column, so it is
+ * never overdue; a backlog task has no column and is never done.
  */
 export function CardBody({
   task,
   linked = true,
   handle,
-}: Readonly<{ task: TaskSummary; linked?: boolean; handle?: ReactNode }>) {
+  done = false,
+}: Readonly<{ task: TaskSummary; linked?: boolean; handle?: ReactNode; done?: boolean }>) {
   const Icon = TYPE_ICONS[task.type];
   const person = assigneeName(task);
+  const today = useToday();
   return (
     <>
       <span className="flex items-center justify-between gap-2">
@@ -73,6 +79,7 @@ export function CardBody({
         </span>
       )}
       <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <PriorityIcon priority={task.priority} />
         <Badge variant="outline">
           <Icon aria-hidden="true" />
           {TYPE_LABELS[task.type]}
@@ -109,6 +116,7 @@ export function CardBody({
             <span className="break-words">{task.assigneeTeam.name}</span>
           </span>
         )}
+        <DueDateText dueDate={task.dueDate} overdue={isOverdue(task.dueDate, done, today)} />
       </span>
       <LabelChips labels={task.labels} />
     </>
@@ -116,11 +124,11 @@ export function CardBody({
 }
 
 /** A card nobody can drag: for a Viewer and on an archived project. */
-export function StaticCard({ task }: Readonly<{ task: TaskSummary }>) {
+export function StaticCard({ task, done }: Readonly<{ task: TaskSummary; done: boolean }>) {
   return (
     <li>
       <div className={CARD}>
-        <CardBody task={task} />
+        <CardBody task={task} done={done} />
       </div>
     </li>
   );
@@ -134,7 +142,8 @@ export function StaticCard({ task }: Readonly<{ task: TaskSummary }>) {
 export function SortableCard({
   task,
   disabled,
-}: Readonly<{ task: TaskSummary; disabled: boolean }>) {
+  done,
+}: Readonly<{ task: TaskSummary; disabled: boolean; done: boolean }>) {
   const {
     attributes,
     listeners,
@@ -169,17 +178,17 @@ export function SortableCard({
         {...listeners}
         className={cn(CARD, "cursor-grab touch-manipulation", isDragging && "opacity-50")}
       >
-        <CardBody task={task} handle={handle} />
+        <CardBody task={task} handle={handle} done={done} />
       </div>
     </li>
   );
 }
 
 /** The card shown under the pointer while it is dragged. */
-export function OverlayCard({ task }: Readonly<{ task: TaskSummary }>) {
+export function OverlayCard({ task, done }: Readonly<{ task: TaskSummary; done: boolean }>) {
   return (
     <div className={cn(CARD, "cursor-grabbing shadow-lg")}>
-      <CardBody task={task} linked={false} />
+      <CardBody task={task} linked={false} done={done} />
     </div>
   );
 }
