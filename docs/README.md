@@ -15,12 +15,12 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-11 item E, the operator guide: creating the agent account and its token, and
-  configuring Claude Code (command line and desktop app) to start the MCP server. It has no
-  work-item yet: its number is reserved first, then its work-spec is proposed. Items A to D
-  of WT-11 (WI-099, WI-100, WI-104, WI-105) and A and B of WT-07 (WI-101, WI-102) are done.
-  In parallel, WT-07 items C (labels) and D (the Backlog page) can be proposed. WT-08 to
-  WT-10 follow, as planned below.
+- **Next:** WT-07 item C, labels: their tables, the labels API with its audit and
+  `label.changed`, `labelIds` on tasks with their history, and deleting a label in use. It
+  has no work-item yet: its number is reserved first, then its work-spec is proposed. WT-11
+  is done (items A to E: WI-099, WI-100, WI-104, WI-105, WI-106), and so are items A and B
+  of WT-07 (WI-101, WI-102). In parallel, WT-07 items D (the Backlog page) and E (priority
+  and due date in the UI) can be proposed. WT-08 to WT-10 follow, as planned below.
 - **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
   are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Planning gaps awaiting an owner decision** are listed first under
