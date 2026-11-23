@@ -1,7 +1,8 @@
 # WT-11 — MCP server
 
-- Status: Approved (outline, approved by the owner on 2026-11-16 with doc 0005). Starts after
-  WT-06; its work-items get files and numbers then.
+- Status: Done (2026-11-23, items A to E: WI-099, WI-100, WI-104, WI-105 and WI-106).
+  Outline approved by the owner on 2026-11-16 with doc 0005. Items got numbers when each
+  started.
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (the design),
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) (agent accounts, tokens, scopes,
   bug reports), [0004](../canonical/0004-api-conventions.md) (the API it wraps)
