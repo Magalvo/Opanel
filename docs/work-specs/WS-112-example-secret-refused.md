@@ -1,6 +1,6 @@
 # WS-112 — Production refuses the example session secret
 
-- Status: Approved (approved by the owner on 2026-11-23, question 1 as proposed: the Playwright secret stays out of scope)
+- Status: Done (approved by the owner on 2026-11-23, question 1 as proposed: the Playwright secret stays out of scope)
 - Work-item: [WI-112](../work-items/WI-112-example-secret-refused.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) section 3 (configuration is the
   validated environment; the image adds no default secret); [WS-079](WS-079-production-secrets-split.md)
@@ -130,3 +130,32 @@ Criterion 7 is the existing Playwright suites. Criterion 6 is a review of the di
 3. A secret that differs from a published one by a character is accepted. The check
    catches the copy, not a weak secret; strength beyond 32 characters stays the operator's
    job, as the operations guide says.
+
+## Deviations from the approved spec
+
+1. **Zod 4.6.7 runs the object-level check even when a field failed.** Section 2 expected
+   otherwise and asked for it to be checked. Checked with the installed version: a
+   `superRefine` on `z.object` runs with the raw values of the failed fields. The check
+   stays correct without a guard, because a missing or invalid secret is never in
+   `PUBLISHED_AUTH_SECRETS`; the comment in `env.ts` says so, and test 5 covers it.
+2. **Criterion 5 was checked through `register()`, not a full `next start`.** With
+   `NODE_ENV=production`, `NEXT_RUNTIME=nodejs` and the `.env.example` secret,
+   `tsx -e 'import("./src/instrumentation.ts").then((m) => m.register())'` printed
+   "Invalid environment configuration: BETTER_AUTH_SECRET: is an example value published
+   with Opanel; …" without the value, and exited with code 1. That is the code `next start`
+   runs before it accepts a request; no production build was made for this check.
+
+## Implementation record
+
+- Red: `env.test.ts`'s two refusal tests and the test that reads `.env.example` and
+  `.env.test` failed (3 of 63); the others passed, as expected (commit `f370c49`).
+- Green: `PUBLISHED_AUTH_SECRETS` and the production check in `env.ts`; the comment in
+  `.env.example`, the sentence in `docs/operations.md` and doc 0006 section 3
+  (commit `8da194e`).
+- Gate: `typecheck`, `lint`, `format:check` pass; `test:e2e` 113 of 113, so the Playwright
+  secret still works with `next start`. `test`: the first run had 1 failure of 2191, in
+  `src/server/services/epics.integration.test.ts`, which this item does not touch, while
+  other Vitest processes ran on the same machine. It did not recur: that file passed 3 of
+  3 runs alone, and the full suite then passed 2191 of 2191.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.
