@@ -241,3 +241,23 @@ export async function taskHistory(taskId: string): Promise<FieldChange[]> {
     await client.end();
   }
 }
+
+/**
+ * A task's `field_changed` history entries with the acting account's id, oldest first, for
+ * an agent's change: agents have no email for `taskHistory` to name (WS-115).
+ */
+export async function taskHistoryActors(
+  taskId: string,
+): Promise<{ field: string; newValue: unknown; actorId: string | null }[]> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    const rows = await client<{ field: string; new_value: unknown; actor: string | null }[]>`
+      select field, new_value, actor_account_id as actor
+      from task_events
+      where task_id = ${taskId} and type = 'field_changed'
+      order by id`;
+    return rows.map((row) => ({ field: row.field, newValue: row.new_value, actorId: row.actor }));
+  } finally {
+    await client.end();
+  }
+}

@@ -70,7 +70,7 @@ Events are small and carry identifiers, not full entities:
 }
 ```
 
-Event types in v1 (amended by WT-04 decision 1):
+Event types in v1 (amended by WT-04 decision 1 and WT-07 decision 12):
 
 | `type`            | `entity`  | `version`                                           | Sent by                                       |
 | ----------------- | --------- | --------------------------------------------------- | --------------------------------------------- |
@@ -82,6 +82,7 @@ Event types in v1 (amended by WT-04 decision 1):
 | `comment.created` | `comment` | `null` (comments have none); also carries `taskId`  | commenting                                    |
 | `column.changed`  | `column`  | the column's after the write; `null` when deleted   | creating, editing, moving, deleting a column  |
 | `epic.changed`    | `epic`    | the epic's after the write                          | creating, editing, closing, reopening an epic |
+| `label.changed`   | `label`   | the label's after the write; `null` when deleted    | creating, editing, deleting a label           |
 | `project.changed` | `project` | the project's after the write; `entityId` is itself | renaming, archiving, unarchiving              |
 
 Every write that bumps a version, or creates a comment, sends exactly one event, from its

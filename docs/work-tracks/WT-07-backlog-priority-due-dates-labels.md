@@ -1,7 +1,7 @@
 # WT-07 — Backlog, priority, due dates, labels
 
-- Status: In progress (2026-11-23: items A to F done, WI-101, WI-102, WI-107, WI-109,
-  WI-110 and WI-108; item G next). Approved by the owner on 2026-11-21: decisions 1 to 15,
+- Status: Done (2026-11-23: items A to G done, WI-101, WI-102, WI-107, WI-109, WI-110,
+  WI-108 and WI-115). Approved by the owner on 2026-11-21: decisions 1 to 15,
   proposals P1 to P3 and questions 1 to 9 as recommended.
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 3: who may put
   tasks into or out of the backlog, apply, create, rename and delete labels; section 4:
@@ -219,28 +219,52 @@ they run one after another, A first; D, E and F can then run in parallel.
 
 ## Exit criteria
 
-- [ ] A Member creates a task in the backlog, reorders the backlog by drag and drop and by
+Checked on 2026-11-23 by WI-115, each against the test that proves it.
+
+- [x] A Member creates a task in the backlog, reorders the backlog by drag and drop and by
       keyboard, moves a task to the board and back; the order survives a reload, and a
-      second open backlog and board follow live.
-- [ ] The board and `GET /projects/{projectId}/tasks` show only tasks with a column;
+      second open backlog and board follow live. (`tests/e2e/backlog.spec.ts`, both
+      tests; `tests/e2e/planning-flow.spec.ts`.)
+- [x] The board and `GET /projects/{projectId}/tasks` show only tasks with a column;
       `GET /projects/{projectId}/backlog` only those without, in backlog order.
-- [ ] A repeated bug report counts on an open bug that is in the backlog and creates no
-      duplicate (an integration test).
-- [ ] A Member sets and clears priority and due date; each change is one history entry; a
+      (`backlog.integration.test.ts` "lists live backlog tasks in order across pages,
+      never a deleted or board task" and "leaves backlog tasks out…"; the backlog route
+      test "lists the backlog for a person and an agent…".)
+- [x] A repeated bug report counts on an open bug that is in the backlog and creates no
+      duplicate (an integration test). (`bug-reports.integration.test.ts` "counts on an
+      open bug that someone moved to the backlog".)
+- [x] A Member sets and clears priority and due date; each change is one history entry; a
       past due date on a task outside a `done` column shows as overdue.
-- [ ] A Member creates a label and applies it; a Manager renames, recolours and deletes it;
+      (`tests/e2e/priority-due-date.spec.ts`, both tests;
+      `task-priority.integration.test.ts` "sets, changes and clears each…".)
+- [x] A Member creates a label and applies it; a Manager renames, recolours and deletes it;
       deleting a label in use removes it from its tasks with a history entry and a
-      `task.updated` for each; every label write is audited.
-- [ ] A Viewer, and an agent, get `403` from every new write endpoint, and an agent with
+      `task.updated` for each; every label write is audited. (`tests/e2e/labels.spec.ts`;
+      `labels.integration.test.ts` "lets a Member create, lists by name, and lets a
+      Manager rename and recolour" and "removes it from every task, deleted ones too, with
+      history, versions and events".)
+- [x] A Viewer, and an agent, get `403` from every new write endpoint, and an agent with
       `tasks:write` gets `403` when it sends `labelIds`; archived projects answer
       `409 project_archived`; the `requireProjectAccess` coverage test includes the new
-      services.
-- [ ] A stale `version` on a move to or from the backlog, or on a label write, answers
-      `409 version_conflict` with the current entity.
-- [ ] `docs/agents.md` and its doc check cover the new fields and endpoints; the OpenAPI
+      services. (`labels.integration.test.ts` "lets only Managers change and delete, and
+      nobody without labels:write create" and "refuses every write on an archived
+      project"; `viewer-writes.integration.test.ts`; `task-labels.integration.test.ts`
+      "refuses labelIds from an agent with tasks:write…"; `backlog.integration.test.ts`
+      "refuses a task created in it and moves to and from it with project_archived", added
+      by WI-115; `project-access.integration.test.ts`; `planning-flow.spec.ts`.)
+- [x] A stale `version` on a move to or from the backlog, or on a label write, answers
+      `409 version_conflict` with the current entity. (`backlog.integration.test.ts`
+      "refuses anchors outside the backlog with 400 and a stale version with
+      version_conflict"; the move route test; `labels.integration.test.ts` "answers a
+      stale version with the current label".)
+- [x] `docs/agents.md` and its doc check cover the new fields and endpoints; the OpenAPI
       document describes them; docs 0002 and 0003 carry the approved proposals.
-- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
-      `pnpm openapi:generate` leaving no diff.
+      ("Tasks and the backlog" and `scripts/agents-guide.test.ts`; `document.test.ts`
+      "gives tasks a priority and a due date…" and "describes labels…"; P1 to P3 applied
+      by WI-115.)
+- [x] The full quality gate passes on `main`, with `pnpm db:generate` and
+      `pnpm openapi:generate` leaving no diff. (WI-115's gate, and CI on `main` after its
+      merge.)
 
 ## Risks and open questions
 
