@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
+import { calendarDateSchema } from "./dates";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { projectParamsSchema } from "./projects";
 import { versionSchema } from "./version";
@@ -17,8 +18,11 @@ export const epicTitleSchema = z.string().trim().min(1).max(200);
 /** Markdown, up to 50 000 characters, kept as written. */
 export const epicDescriptionSchema = z.string().max(50_000);
 
-/** A calendar date, `YYYY-MM-DD` (doc 0004 section 3), or `null` for none. */
-const calendarDateSchema = z.iso.date().nullable();
+/**
+ * A calendar date PostgreSQL can store, `YYYY-MM-DD` (doc 0004 section 3), or `null` for
+ * none. The shared schema refuses the year `0000` (WS-114).
+ */
+const epicDateSchema = calendarDateSchema.nullable();
 
 /** `{ id, title }` of an epic, as a task shows it. */
 export const epicRefSchema = z
@@ -32,8 +36,8 @@ export const epicSchema = z
     title: z.string(),
     description: z.string().meta({ description: "Markdown." }),
     status: epicStatusSchema,
-    startDate: z.iso.date().nullable(),
-    targetDate: z.iso.date().nullable(),
+    startDate: epicDateSchema,
+    targetDate: epicDateSchema,
     progress: z.strictObject({ doneTasks: z.int().min(0), totalTasks: z.int().min(0) }).meta({
       description:
         "Tasks of the epic that are not deleted; done ones are in a column of the `done` category.",
@@ -76,8 +80,8 @@ export const createEpicRequestSchema = z
   .strictObject({
     title: epicTitleSchema,
     description: epicDescriptionSchema.optional(),
-    startDate: calendarDateSchema.optional(),
-    targetDate: calendarDateSchema.optional(),
+    startDate: epicDateSchema.optional(),
+    targetDate: epicDateSchema.optional(),
   })
   .refine(datesOrdered, DATES_MESSAGE)
   .meta({ id: "CreateEpicRequest" });
@@ -89,8 +93,8 @@ export const updateEpicRequestSchema = z
     title: epicTitleSchema.optional(),
     description: epicDescriptionSchema.optional(),
     status: epicStatusSchema.optional(),
-    startDate: calendarDateSchema.optional().meta({ description: "`null` clears it." }),
-    targetDate: calendarDateSchema.optional().meta({ description: "`null` clears it." }),
+    startDate: epicDateSchema.optional().meta({ description: "`null` clears it." }),
+    targetDate: epicDateSchema.optional().meta({ description: "`null` clears it." }),
     version: versionSchema,
   })
   .refine(
