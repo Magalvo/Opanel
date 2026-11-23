@@ -204,7 +204,7 @@ describe("the tool table of mcp/README.md (WS-106)", () => {
   it("lists every tool, in order, with the permissions it declares", () => {
     const rows = read("mcp/README.md")
       .split("\n")
-      .filter((line) => /^\| `opanel_/.test(line))
+      .filter((line) => line.startsWith("| `opanel_"))
       .map((line) => {
         const cells = line.split("|").map((cell) => cell.trim());
         const permissions = cells[3] === "none" ? [] : codeSpans(cells[3] ?? "");
