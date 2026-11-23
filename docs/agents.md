@@ -124,13 +124,35 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN" \
 - `limit` is 50 by default, at most 100.
 - There are no page numbers and no total count.
 
+## Tasks and the backlog
+
+- **Where a task is.** `columnId` is the task's column, or `null` when the task is in the
+  backlog: the project's tasks that are not on the board.
+  `GET /api/v1/projects/{projectId}/tasks` lists the board, in board order, and
+  `GET /api/v1/projects/{projectId}/backlog` lists the backlog, in the team's ranking.
+- **Moving.** `POST /api/v1/tasks/{taskId}/move` with `columnId: null` puts a task in the
+  backlog, and with a column's id puts it on the board. `afterTaskId` or `beforeTaskId`
+  place it; without either it goes to the end. Send the task's `version`. It needs
+  `tasks:write`.
+- **Priority.** `priority` is one of `none`, `low`, `medium`, `high` or `urgent`, and
+  `none` by default. It is the team's ordering, not a bug's severity: a bug report never
+  sets it.
+- **Due date.** `dueDate` is a calendar date, `YYYY-MM-DD`, or `null`. It has no time
+  of day.
+- **Who may set them.** An agent with `tasks:write` may set `priority` and `dueDate`
+  when it creates or edits a task, and the task's history names the agent.
+- **Labels.** `labels` lists the task's labels as `{ id, name, colour }`, and
+  `GET /api/v1/projects/{projectId}/labels` lists the project's. Agents read labels but do
+  not apply them: a body with `labelIds` answers `403`.
+
 ## Live updates
 
 `GET /api/v1/projects/{projectId}/events` is a Server-Sent Events stream of the project's
 changes. It needs `tasks:read`, and the project must be one of yours.
 
 - **What an event carries.** Each event carries a type (`task.created`, `task.moved`,
-  `comment.created`, …) and ids, not the data. Fetch what you need through the API.
+  `comment.created`, `label.changed`, …) and ids, not the data. Fetch what you need through
+  the API.
 - **Heartbeats.** A comment line arrives every 25 seconds. At each heartbeat the token is
   checked again, so a revoked token or a disabled agent loses its stream within 25
   seconds.
