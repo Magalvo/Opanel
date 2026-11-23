@@ -201,6 +201,14 @@ Other follow-ups:
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
 
+- **A reorder within one column may not reach an open board live** (WI-109, WS-109
+  "Observation for the owner"). Read in the code, not yet run: `placeTask`
+  (`src/components/board/use-board.ts`) replaces a refreshed card in place when its task
+  is still in the same column. So another person's `task.moved` within one column would
+  leave the old order until a reload, although WS-048 section 4 says it reloads the new
+  column. Needs a small work-item: a `use-board` test that fails first, then on
+  `task.moved` read the column again (`listColumnTasks`) instead of replacing in place.
+
 - **An epic dated in the year `0000` answers `500`** (WI-102, WS-102 question 1).
   `z.iso.date()` accepts `0000-01-01` and PostgreSQL refuses it, so `startDate` or
   `targetDate` of that year fails inside the service. Needs a small work-item: use the
