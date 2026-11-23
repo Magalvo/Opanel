@@ -1,6 +1,6 @@
 # WS-114 — Epic dates in the year 0000 are refused with 400
 
-- Status: Approved (approved by the owner on 2026-11-23, as proposed)
+- Status: Done (approved by the owner on 2026-11-23, as proposed)
 - Work-item: [WI-114](../work-items/WI-114-epic-date-year-zero.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 3 (dates are
   `YYYY-MM-DD`; invalid input is a `400`); [WS-102](WS-102-priority-due-date.md) section 3
@@ -93,3 +93,20 @@ Criterion 4 is checked with a search in review; criterion 5 by running the gener
 
 None known. The change only narrows what the API accepts to what the database could ever
 store, so no existing client request that succeeds today is refused.
+
+## Deviations from the approved spec
+
+None.
+
+## Implementation record
+
+- Red: `epics.test.ts` failed because both request schemas accepted `0000-01-01`; the route
+  test failed with `expected 500 to be 400`, which confirmed the defect (commit `6b5f9f7`).
+- Green: `epics.ts` uses the shared `calendarDateSchema` (as `epicDateSchema`, nullable) for
+  the requests and the response (commit `4f85fa1`). `pnpm openapi:generate` left
+  `docs/api/openapi.json` unchanged, as section 3 expected.
+- A search finds no bare `z.iso.date()` in `src/lib/schemas/` outside `dates.ts`.
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2185 of 2185 (213 files);
+  `test:e2e` 113 of 113.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.

@@ -1,6 +1,6 @@
 # WI-114 — Epic dates in the year 0000 are refused with 400
 
-- Status: In progress
+- Status: Done (2026-11-23)
 - Work-track: none: a follow-up of WI-102 (WS-102 question 1), confirmed in the code by the
   project audit of 2026-11-23
 - Depends on: none
@@ -18,16 +18,16 @@ task's due date; epics now use it too.
 
 ## Acceptance criteria
 
-- [ ] `POST /api/v1/projects/{key}/epics` with `startDate` or `targetDate` `0000-01-01`
+- [x] `POST /api/v1/projects/{key}/epics` with `startDate` or `targetDate` `0000-01-01`
       answers `400 invalid_request` with a field error on that field, and creates nothing.
-- [ ] `PATCH /api/v1/epics/{id}` with `startDate` or `targetDate` `0000-01-01` answers
+- [x] `PATCH /api/v1/epics/{id}` with `startDate` or `targetDate` `0000-01-01` answers
       `400 invalid_request` with a field error on that field, and changes nothing.
-- [ ] Valid dates, `null` (to clear) and leaving the fields out behave as today, including
+- [x] Valid dates, `null` (to clear) and leaving the fields out behave as today, including
       the rule that the target date may not come before the start date.
-- [ ] No schema in `src/lib/schemas/` validates a calendar date with a bare `z.iso.date()`
+- [x] No schema in `src/lib/schemas/` validates a calendar date with a bare `z.iso.date()`
       any more: each uses `calendarDateSchema`.
-- [ ] The generated OpenAPI document is regenerated; any difference is committed.
-- [ ] The full quality gate passes.
+- [x] The generated OpenAPI document is regenerated; any difference is committed.
+- [x] The full quality gate passes.
 
 ## Notes
 
