@@ -1,6 +1,6 @@
 # WI-109 — The Backlog page
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item D)
 - Depends on: [WI-101](WI-101-backlog-api.md) (done: the backlog in the data model and API)
 - Work-spec: [WS-109](../work-specs/WS-109-backlog-page.md)
