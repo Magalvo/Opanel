@@ -255,6 +255,114 @@ test("a Member moves a card by keyboard only, and the drop is announced", async 
   expect((await boardThroughApi(page, key))["To do"]).toEqual(["Foxtrot", "Echo"]);
 });
 
+test("a Member reorders and moves cards with clicks only, through each card's menu (WS-111)", async ({
+  page,
+}) => {
+  const key = await projectByManager(page);
+  await signInAs(page, "member");
+  await createTask(page, key, "Alpha");
+  await createTask(page, key, "Bravo");
+  await createTask(page, key, "Charlie");
+  await page.goto(`/projects/${key}`);
+  const message = page.getByRole("status", { name: "Board messages" });
+
+  // To the top of its column.
+  await page.getByRole("button", { name: `Actions for ${key}-3` }).click();
+  let response = moved(page);
+  await page.getByRole("menuitem", { name: "Move to top" }).click();
+  expect((await response).status()).toBe(200);
+  await expect(message).toHaveText(`${key}-3 was moved to To do, position 1 of 3.`);
+  await expect.poll(() => titlesIn(page, "To do")).toEqual(["Charlie", "Alpha", "Bravo"]);
+
+  // One place down.
+  await page.getByRole("button", { name: `Actions for ${key}-3` }).click();
+  response = moved(page);
+  await page.getByRole("menuitem", { name: "Move down" }).click();
+  expect((await response).status()).toBe(200);
+  await expect(message).toHaveText(`${key}-3 was moved to To do, position 2 of 3.`);
+
+  // To another column, where it goes last.
+  await page.getByRole("button", { name: `Actions for ${key}-1` }).click();
+  response = moved(page);
+  await page.getByRole("menuitem", { name: "In progress" }).click();
+  expect((await response).status()).toBe(200);
+  await expect(message).toHaveText(`${key}-1 was moved to In progress, position 1 of 1.`);
+  await expect(
+    column(page, "In progress").getByRole("button", { name: `Actions for ${key}-1` }),
+  ).toBeFocused();
+
+  await page.reload();
+  await expect.poll(() => titlesIn(page, "To do")).toEqual(["Charlie", "Bravo"]);
+  expect(await boardThroughApi(page, key)).toMatchObject({
+    "To do": ["Charlie", "Bravo"],
+    "In progress": ["Alpha"],
+  });
+});
+
+/** The page's animations and transitions still running two frames from now. */
+async function runningAnimations(page: Page): Promise<string[]> {
+  return page.evaluate(
+    () =>
+      new Promise<string[]>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve(
+              document
+                .getAnimations()
+                .filter((animation) => animation.playState === "running")
+                .map((animation) => animation.constructor.name),
+            );
+          });
+        });
+      }),
+  );
+}
+
+/**
+ * In a new project of Echo and Foxtrot, moves Echo below Foxtrot by keyboard, and returns
+ * the animations running while it is dragged past Foxtrot and just after the drop.
+ */
+async function keyboardMoveAnimations(
+  page: Page,
+): Promise<{ whileDragging: string[]; afterDrop: string[] }> {
+  const key = await projectByManager(page);
+  await createTask(page, key, "Echo");
+  await createTask(page, key, "Foxtrot");
+  await page.goto(`/projects/${key}`);
+  const live = page.locator('[id^="DndLiveRegion"]');
+
+  await column(page, "To do")
+    .getByRole("button", { name: /^Move .* Echo$/ })
+    .focus();
+  await pickUp(page);
+  await expect(live).toContainText(`Picked up ${key}-1.`);
+  await page.keyboard.press("ArrowDown");
+  await expect(live).toContainText(`${key}-1 is in To do, position 2 of 2.`);
+  // Foxtrot slides up to make room, unless motion is reduced.
+  const whileDragging = await runningAnimations(page);
+  const response = moved(page);
+  await page.keyboard.press("Space");
+  // The dropped card animates to its place, unless motion is reduced.
+  const afterDrop = await runningAnimations(page);
+  expect((await response).status()).toBe(200);
+  await expect.poll(() => titlesIn(page, "To do")).toEqual(["Foxtrot", "Echo"]);
+  return { whileDragging, afterDrop };
+}
+
+test("a keyboard move runs no animation when the person asks for reduced motion (WS-111)", async ({
+  page,
+}) => {
+  await signInAs(page, "member");
+
+  // Without the setting the board animates, so the measurement can see an animation.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const animated = await keyboardMoveAnimations(page);
+  expect([...animated.whileDragging, ...animated.afterDrop]).not.toEqual([]);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(await keyboardMoveAnimations(page)).toEqual({ whileDragging: [], afterDrop: [] });
+});
+
 test("a card someone else moved is refreshed, with an explanation", async ({ page }) => {
   const key = await projectByManager(page);
   await signInAs(page, "member");
