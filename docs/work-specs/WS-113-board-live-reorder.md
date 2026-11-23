@@ -1,6 +1,6 @@
 # WS-113 — A reorder within one column reaches an open board live
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, as proposed)
 - Work-item: [WI-113](../work-items/WI-113-board-live-reorder.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (live sync);
   [WS-048](WS-048-live-board.md) section 4 (applying events to the board);

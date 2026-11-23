@@ -1,6 +1,6 @@
 # WI-113 — A reorder within one column reaches an open board live
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: a follow-up of WI-109 (WS-109, "Observation for the owner"), confirmed in
   the code by the project audit of 2026-11-23
 - Depends on: none
