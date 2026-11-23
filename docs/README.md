@@ -182,6 +182,7 @@ WT-07 to WT-10 come from canonical doc 0003; WT-07 is listed above. WT-11, the M
 | [WI-112](work-items/WI-112-example-secret-refused.md)           | Production refuses the example session secret                     | [WS-112](work-specs/WS-112-example-secret-refused.md)           |
 | [WI-113](work-items/WI-113-board-live-reorder.md)               | A reorder within one column reaches an open board live            | [WS-113](work-specs/WS-113-board-live-reorder.md)               |
 | [WI-114](work-items/WI-114-epic-date-year-zero.md)              | Epic dates in the year 0000 are refused with 400                  | [WS-114](work-specs/WS-114-epic-date-year-zero.md)              |
+| [WI-115](work-items/WI-115-planning-exit-check.md)              | WT-07 end-to-end flow, agents guide and exit check                | [WS-115](work-specs/WS-115-planning-exit-check.md)              |
 
 ## Follow-ups
 
