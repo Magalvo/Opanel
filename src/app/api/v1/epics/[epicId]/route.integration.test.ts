@@ -89,6 +89,56 @@ describe("epic endpoints", () => {
     ]);
     expect(statuses.map((response) => response.status)).toEqual([403, 403, 401, 401]);
   });
+
+  it("answers 400 for a date in the year 0000, naming the field, and changes nothing (WS-114)", async () => {
+    const manager = await cookieFor("manager");
+    await createProject(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const created = await create(
+      apiRequest("POST", "/api/v1/projects/OPA/epics", {
+        cookie: manager,
+        body: { title: "Sign-in" },
+      }),
+      project,
+    );
+    const signIn = epicSchema.parse(await created.json());
+
+    const badCreate = await create(
+      apiRequest("POST", "/api/v1/projects/OPA/epics", {
+        cookie: manager,
+        body: { title: "Year zero", startDate: "0000-01-01" },
+      }),
+      project,
+    );
+    expect(badCreate.status).toBe(400);
+    expect(await badCreate.json()).toMatchObject({
+      code: "invalid_request",
+      errors: [expect.objectContaining({ path: "startDate" })],
+    });
+
+    const badUpdate = await PATCH(
+      apiRequest("PATCH", `/api/v1/epics/${signIn.id}`, {
+        cookie: manager,
+        body: { targetDate: "0000-01-01", version: 1 },
+      }),
+      epic(signIn.id),
+    );
+    expect(badUpdate.status).toBe(400);
+    expect(await badUpdate.json()).toMatchObject({
+      code: "invalid_request",
+      errors: [expect.objectContaining({ path: "targetDate" })],
+    });
+
+    const page = await list(
+      apiRequest("GET", "/api/v1/projects/OPA/epics", { cookie: manager }),
+      project,
+    );
+    expect(epicPageSchema.parse(await page.json()).items).toMatchObject([
+      { title: "Sign-in", targetDate: null, version: 1 },
+    ]);
+  });
 });
 
 describe("epic list paging (WS-081)", () => {

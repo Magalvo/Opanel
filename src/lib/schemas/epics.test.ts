@@ -40,6 +40,20 @@ describe("epic requests", () => {
     }
   });
 
+  it("refuses a date in the year 0000, which PostgreSQL cannot store, on its field (WS-114)", () => {
+    for (const field of ["startDate", "targetDate"]) {
+      const created = createEpicRequestSchema.safeParse({ title: "E", [field]: "0000-01-01" });
+      const updated = updateEpicRequestSchema.safeParse({ [field]: "0000-01-01", version: 1 });
+
+      expect(paths(created), `create ${field}`).toEqual([field]);
+      expect(paths(updated), `update ${field}`).toEqual([field]);
+    }
+    expect(createEpicRequestSchema.safeParse({ title: "E", startDate: "0001-01-01" }).success).toBe(
+      true,
+    );
+    expect(updateEpicRequestSchema.safeParse({ targetDate: null, version: 1 }).success).toBe(true);
+  });
+
   it("refuses a target date before the start date, on targetDate", () => {
     const result = createEpicRequestSchema.safeParse({
       title: "E",
