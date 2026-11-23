@@ -40,6 +40,12 @@ import {
 } from "@/lib/schemas/epics";
 import { projectEventsContract } from "@/lib/schemas/events";
 import { healthContract } from "@/lib/schemas/health";
+import {
+  createLabelContract,
+  deleteLabelContract,
+  listLabelsContract,
+  updateLabelContract,
+} from "@/lib/schemas/labels";
 import { openApiContract } from "@/lib/schemas/openapi";
 import { listPeopleContract } from "@/lib/schemas/people";
 import {
@@ -113,6 +119,10 @@ export const contracts: readonly EndpointContract[] = [
   updateColumnContract,
   moveColumnContract,
   deleteColumnContract,
+  listLabelsContract,
+  createLabelContract,
+  updateLabelContract,
+  deleteLabelContract,
   listTasksContract,
   listBacklogContract,
   createTaskContract,

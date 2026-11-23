@@ -1,4 +1,11 @@
-import { taskRefSchema, taskSchema, updateTaskRequestSchema } from "@/lib/schemas/tasks";
+import { z } from "zod";
+
+import {
+  taskRefSchema,
+  taskSchema,
+  updateTaskFields,
+  withUpdateTaskRules,
+} from "@/lib/schemas/tasks";
 
 import { conflictError } from "../errors";
 import type { ToolDefinition } from "../tools";
@@ -14,7 +21,10 @@ import {
 
 const NAME = "opanel_update_task";
 
-const inputSchema = updateTaskRequestSchema.extend({ taskId: taskRefSchema });
+// No `labelIds`: no agent may apply labels (WT-07 question 5, WS-107 section 7).
+const inputSchema = withUpdateTaskRules(
+  z.strictObject({ ...updateTaskFields, taskId: taskRefSchema }),
+);
 
 export const updateTask: ToolDefinition = {
   name: NAME,

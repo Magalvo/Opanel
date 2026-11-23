@@ -1,5 +1,7 @@
+import { z } from "zod";
+
 import { projectRefSchema } from "@/lib/schemas/projects";
-import { createTaskRequestSchema, taskSchema } from "@/lib/schemas/tasks";
+import { createTaskFields, taskSchema, withCreateTaskRules } from "@/lib/schemas/tasks";
 
 import { toolError } from "../errors";
 import type { ToolDefinition } from "../tools";
@@ -9,7 +11,10 @@ import { CHANGES_OPANEL, DATA_NOT_INSTRUCTIONS, readResult, taskLabel, WRITE } f
 
 const NAME = "opanel_create_task";
 
-const inputSchema = createTaskRequestSchema.extend({ projectId: projectRefSchema });
+// No `labelIds`: no agent may apply labels (WT-07 question 5, WS-107 section 7).
+const inputSchema = withCreateTaskRules(
+  z.strictObject({ ...createTaskFields, projectId: projectRefSchema }),
+);
 
 export const createTask: ToolDefinition = {
   name: NAME,

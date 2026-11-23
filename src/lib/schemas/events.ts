@@ -45,6 +45,13 @@ const columnChanged = z.strictObject({
   version: version.nullable().meta({ description: "`null` when the column was deleted." }),
 });
 
+const labelChanged = z.strictObject({
+  ...common,
+  type: z.literal("label.changed"),
+  entity: z.literal("label"),
+  version: version.nullable().meta({ description: "`null` when the label was deleted." }),
+});
+
 const epicChanged = z.strictObject({
   ...common,
   type: z.literal("epic.changed"),
@@ -68,6 +75,7 @@ export const projectEventSchema = z
     taskEvent("task.restored"),
     commentCreated,
     columnChanged,
+    labelChanged,
     epicChanged,
     projectChanged,
   ])
@@ -90,6 +98,7 @@ export const PROJECT_EVENT_TYPES: readonly ProjectEventType[] = [
   "comment.created",
   "column.changed",
   "epic.changed",
+  "label.changed",
   "project.changed",
 ];
 

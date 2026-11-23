@@ -66,6 +66,7 @@ const deleted: TaskSummary = {
   lastReportedAt: null,
   priority: "none",
   dueDate: null,
+  labels: [],
   version: 2,
   createdAt: "2026-11-12T10:00:00.000Z",
   updatedAt: "2026-11-13T10:00:00.000Z",

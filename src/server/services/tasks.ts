@@ -3,6 +3,7 @@ import { type SQL, sql } from "drizzle-orm";
 import { positionBetween } from "@/lib/position";
 import type { AccountKind } from "@/lib/schemas/account-ref";
 import type { Severity } from "@/lib/schemas/bug-reports";
+import type { LabelRef } from "@/lib/schemas/labels";
 import {
   type BacklogQuery,
   type CreateTaskRequest,
@@ -24,7 +25,7 @@ import {
   requireProjectAccess,
 } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
-import { tasks } from "@/server/db/schema";
+import { taskLabels, tasks } from "@/server/db/schema";
 import {
   accountInactive,
   forbidden,
@@ -65,6 +66,11 @@ const TASK_SELECT = sql`
     t.severity, t.fingerprint, t.occurrences,
     to_char(t.last_reported_at at time zone 'utc', ${ISO_MS}) as last_reported_at,
     t.priority, to_char(t.due_date, 'YYYY-MM-DD') as due_date,
+    coalesce((
+      select json_agg(json_build_object('id', l.id, 'name', l.name, 'colour', l.colour)
+                      order by lower(l.name), l.id)
+      from task_labels tl join labels l on l.id = tl.label_id
+      where tl.task_id = t.id), '[]'::json) as labels,
     t.version, c.position as column_position, t.position,
     to_char(t.deleted_at at time zone 'utc', ${ISO_MS}) as deleted_at,
     to_char(t.created_at at time zone 'utc', ${ISO_MS}) as created_at,
@@ -102,6 +108,7 @@ interface TaskRow extends Record<string, unknown> {
   last_reported_at: string | null;
   priority: Priority;
   due_date: string | null;
+  labels: LabelRef[];
   version: number;
   column_position: string | null;
   position: string;
@@ -139,6 +146,7 @@ function toSummary(row: TaskRow): TaskSummary {
     lastReportedAt: row.last_reported_at,
     priority: row.priority,
     dueDate: row.due_date,
+    labels: row.labels,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -397,6 +405,58 @@ function placeOf(projectId: string, columnId: string | null): SQL {
     : sql`column_id = ${columnId}`;
 }
 
+interface NamedLabel {
+  id: string;
+  name: string;
+}
+
+/** Labels as the history writes them: id and name, by name (WS-107 section 5). */
+function named(labels: readonly LabelRef[]): NamedLabel[] {
+  return labels.map((label) => ({ id: label.id, name: label.name }));
+}
+
+/**
+ * The labels of `ids`, by name, all of the project, else `400` naming `labelIds`. Label
+ * deletions lock the project exclusively and task writes hold its shared lock, so none can
+ * vanish before the transaction ends.
+ */
+async function projectLabels(
+  executor: Executor,
+  projectId: string,
+  ids: readonly string[],
+): Promise<NamedLabel[]> {
+  if (ids.length === 0) return [];
+  const rows = await executor.execute<NamedLabel>(sql`
+    select id, name from labels
+    where project_id = ${projectId}
+      and id in (${sql.join(
+        ids.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})
+    order by lower(name), id`);
+  if (rows.length !== ids.length) throw fieldError("labelIds", "Not a label of this project.");
+  return rows.map((row) => ({ id: row.id, name: row.name }));
+}
+
+/** Replaces the task's labels with `labels`. */
+async function setLabels(
+  executor: Executor & Pick<Database, "insert">,
+  taskId: string,
+  labels: readonly NamedLabel[],
+): Promise<void> {
+  await executor.execute(sql`delete from task_labels where task_id = ${taskId}`);
+  if (labels.length > 0) {
+    await executor
+      .insert(taskLabels)
+      .values(labels.map((label) => ({ taskId, labelId: label.id })));
+  }
+}
+
+function sameLabels(a: readonly NamedLabel[], b: readonly NamedLabel[]): boolean {
+  const ids = new Set(a.map((label) => label.id));
+  return a.length === b.length && b.every((label) => ids.has(label.id));
+}
+
 export async function createTask(
   actor: Actor,
   projectRef: string,
@@ -404,6 +464,8 @@ export async function createTask(
   db: Database = getDb(),
 ): Promise<Task> {
   requirePermission(actor, "tasks:write");
+  // Applying labels is a labels permission too (doc 0003 section 3, WT-07 decision 10).
+  if (input.labelIds !== undefined) requirePermission(actor, "labels:write");
 
   return db.transaction(async (tx) => {
     // Locks the project: creations in it run one at a time (WS-030 section 3).
@@ -429,6 +491,10 @@ export async function createTask(
       await assertAssignablePerson(tx, input.assigneeAccountId);
     }
     if (input.epicId !== undefined) await assertEpic(tx, input.epicId, project.id);
+    const labels =
+      input.labelIds === undefined
+        ? undefined
+        : await projectLabels(tx, project.id, input.labelIds);
 
     // Deleted tasks keep their place, so they count here too.
     const [last] = await tx.execute<{ position: string }>(
@@ -456,6 +522,7 @@ export async function createTask(
       })
       .returning({ id: tasks.id });
     if (!row) throw taskNotFound();
+    if (labels !== undefined) await setLabels(tx, row.id, labels);
 
     const key = `${project.key}-${String(project.number)}`;
     await recordTaskEvent(tx, {
@@ -470,6 +537,7 @@ export async function createTask(
         ...(input.severity === undefined ? {} : { severity: input.severity }),
         ...(input.priority === undefined ? {} : { priority: input.priority }),
         ...(input.dueDate === undefined ? {} : { dueDate: input.dueDate }),
+        ...(labels === undefined ? {} : { labels }),
       },
     });
 
@@ -500,6 +568,7 @@ export async function updateTask(
   db: Database = getDb(),
 ): Promise<Task> {
   requirePermission(actor, "tasks:write");
+  if (input.labelIds !== undefined) requirePermission(actor, "labels:write");
 
   return db.transaction(async (tx) => {
     const found = await findTask(tx, ref);
@@ -542,6 +611,13 @@ export async function updateTask(
     if (after.epicId !== null && after.epicId !== before.epic_id) {
       await assertEpic(tx, after.epicId, before.project_id);
     }
+    const labelsBefore = named(before.labels);
+    const labelsAfter =
+      input.labelIds === undefined
+        ? labelsBefore
+        : await projectLabels(tx, before.project_id, input.labelIds);
+    const labelsChanged = !sameLabels(labelsBefore, labelsAfter);
+    if (labelsChanged) await setLabels(tx, before.id, labelsAfter);
 
     await tx.execute(sql`
       update tasks set
@@ -565,6 +641,16 @@ export async function updateTask(
           newValue,
         });
       }
+    }
+    if (labelsChanged) {
+      await recordTaskEvent(tx, {
+        taskId: before.id,
+        actor,
+        type: "field_changed",
+        field: "labels",
+        oldValue: labelsBefore,
+        newValue: labelsAfter,
+      });
     }
 
     const updated = await findTask(tx, before.id);

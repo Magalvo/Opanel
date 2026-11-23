@@ -49,6 +49,7 @@ function task(number: number, columnId: string, version = 1): TaskSummary {
     lastReportedAt: null,
     priority: "none",
     dueDate: null,
+    labels: [],
     version,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",

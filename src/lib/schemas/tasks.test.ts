@@ -101,6 +101,7 @@ describe("severity and the bug fields (WS-088)", () => {
     lastReportedAt: "2026-11-20T08:30:00.123Z",
     priority: "none",
     dueDate: null,
+    labels: [],
     links: [
       {
         type: "regression_of",
@@ -248,6 +249,7 @@ describe("the backlog (WS-101)", () => {
       lastReportedAt: null,
       priority: "none",
       dueDate: null,
+      labels: [],
       version: 1,
       createdAt: "2026-11-21T08:00:00.000Z",
       updatedAt: "2026-11-21T08:00:00.000Z",
@@ -298,6 +300,7 @@ describe("priority and due date (WS-102)", () => {
     lastReportedAt: null,
     priority: "high",
     dueDate: "2026-12-01",
+    labels: [],
     version: 1,
     createdAt: "2026-11-21T08:00:00.000Z",
     updatedAt: "2026-11-21T08:00:00.000Z",

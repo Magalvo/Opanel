@@ -25,3 +25,25 @@ export async function publishEvent(
   });
   await tx.execute(sql`select pg_notify(${EVENTS_CHANNEL}, ${JSON.stringify(event)})`);
 }
+
+/**
+ * Publishes many events in one statement, in order (WS-107: deleting a label used by a
+ * thousand tasks sends a `task.updated` for each).
+ */
+export async function publishEvents(
+  tx: Pick<Database, "execute">,
+  inputs: readonly ProjectEventInput[],
+): Promise<void> {
+  if (inputs.length === 0) return;
+  const at = new Date().toISOString();
+  const payloads = inputs.map((input) =>
+    JSON.stringify(projectEventSchema.parse({ ...input, id: crypto.randomUUID(), at })),
+  );
+  await tx.execute(sql`
+    select pg_notify(${EVENTS_CHANNEL}, payload)
+    from unnest(array[${sql.join(
+      payloads.map((payload) => sql`${payload}`),
+      sql`, `,
+    )}]::text[]) with ordinality as p(payload, n)
+    order by n`);
+}

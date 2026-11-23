@@ -293,6 +293,8 @@ export function useBoard({
         case "project.changed":
         case "comment.created":
         case "epic.changed":
+        // Cards do not show labels yet (WT-07 item F).
+        case "label.changed":
           return;
       }
     },

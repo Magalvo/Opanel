@@ -9,6 +9,7 @@ export { columns } from "./columns";
 export { comments } from "./comments";
 export { credentials } from "./credentials";
 export { epics } from "./epics";
+export { labels, taskLabels } from "./labels";
 export { projects } from "./projects";
 export { rateLimits } from "./rate-limits";
 export { routingRules } from "./routing-rules";

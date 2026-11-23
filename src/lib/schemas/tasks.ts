@@ -7,6 +7,7 @@ import { accountRefSchema } from "./account-ref";
 import { severitySchema, TASK_LINK_TYPES } from "./bug-reports";
 import { calendarDateSchema } from "./dates";
 import { epicRefSchema } from "./epics";
+import { labelRefSchema, MAX_LABELS_PER_TASK } from "./labels";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
 import { projectParamsSchema } from "./projects";
@@ -69,6 +70,7 @@ const taskFields = {
   lastReportedAt: z.iso.datetime().nullable().meta({ description: "Read-only." }),
   priority: prioritySchema,
   dueDate: calendarDateSchema.nullable().meta({ description: "A calendar date, or `null`." }),
+  labels: z.array(labelRefSchema).meta({ description: "The task's labels, by name." }),
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -133,71 +135,112 @@ export const backlogQuerySchema = paginationQuerySchema;
 
 export type BacklogQuery = z.infer<typeof backlogQuerySchema>;
 
+/**
+ * A task's whole set of labels (WS-107): replaces the previous set. Sending it needs
+ * `labels:write` as well as `tasks:write`.
+ */
+const labelIdsSchema = z
+  .array(z.uuid())
+  .max(MAX_LABELS_PER_TASK)
+  .refine((ids) => new Set(ids).size === ids.length, { message: "A label is listed twice." })
+  .meta({
+    description:
+      "Labels of the project; the whole set, replacing the previous one. Needs the " +
+      "`labels:write` permission as well.",
+  });
+
 /** The message of a severity sent for a task that is not a bug (WS-088). */
 export const ONLY_BUGS = "Only a bug has a severity.";
 
-export const createTaskRequestSchema = z
-  .strictObject({
-    title: taskTitleSchema,
-    description: taskDescriptionSchema.optional(),
-    type: taskTypeSchema.optional(),
-    columnId: z
-      .uuid()
-      .nullable()
-      .optional()
-      .meta({
-        description:
-          "A column of the project, or `null` for the end of the backlog. By default the first " +
-          "column.",
-      }),
-    assigneeTeamId: z.uuid().optional(),
-    assigneeAccountId: z.uuid().optional(),
-    epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
-    severity: severitySchema.optional().meta({ description: 'Only with `type: "bug"`.' }),
-    priority: prioritySchema.optional().meta({ description: "By default `none`." }),
-    dueDate: calendarDateSchema.optional().meta({ description: "By default none." }),
-  })
-  .refine((body) => body.severity === undefined || body.type === "bug", {
+/**
+ * The fields of a task creation other than `labelIds`, and the rule they follow. Exported
+ * apart so that a client with no `labels:write`, the MCP server, can build its input
+ * without `labelIds` and with the same rule: Zod cannot `omit` from a refined schema
+ * (WS-107 section 7).
+ */
+export const createTaskFields = {
+  title: taskTitleSchema,
+  description: taskDescriptionSchema.optional(),
+  type: taskTypeSchema.optional(),
+  columnId: z
+    .uuid()
+    .nullable()
+    .optional()
+    .meta({
+      description:
+        "A column of the project, or `null` for the end of the backlog. By default the first " +
+        "column.",
+    }),
+  assigneeTeamId: z.uuid().optional(),
+  assigneeAccountId: z.uuid().optional(),
+  epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
+  severity: severitySchema.optional().meta({ description: 'Only with `type: "bug"`.' }),
+  priority: prioritySchema.optional().meta({ description: "By default `none`." }),
+  dueDate: calendarDateSchema.optional().meta({ description: "By default none." }),
+};
+
+/** A creation's rule: only a bug has a severity. */
+export function withCreateTaskRules<
+  S extends z.ZodType<{ type?: string | undefined; severity?: unknown }>,
+>(schema: S): S {
+  return schema.refine((body) => body.severity === undefined || body.type === "bug", {
     message: ONLY_BUGS,
     path: ["severity"],
-  })
-  .meta({ id: "CreateTaskRequest" });
+  });
+}
+
+export const createTaskRequestSchema = withCreateTaskRules(
+  z.strictObject({ ...createTaskFields, labelIds: labelIdsSchema.optional() }),
+).meta({ id: "CreateTaskRequest" });
 
 export type CreateTaskRequest = z.infer<typeof createTaskRequestSchema>;
 
-export const updateTaskRequestSchema = z
-  .strictObject({
-    title: taskTitleSchema.optional(),
-    description: taskDescriptionSchema.optional(),
-    type: taskTypeSchema.optional(),
-    assigneeTeamId: z.uuid().nullable().optional().meta({ description: "`null` clears it." }),
-    assigneeAccountId: z.uuid().nullable().optional().meta({ description: "`null` clears it." }),
-    epicId: z
-      .uuid()
-      .nullable()
-      .optional()
-      .meta({ description: "An epic of the project; `null` takes the task out of its epic." }),
-    severity: severitySchema.nullable().optional().meta({
-      description: "Bugs only; `null` clears it. A task that stops being a bug loses it.",
-    }),
-    priority: prioritySchema.optional(),
-    dueDate: calendarDateSchema.nullable().optional().meta({ description: "`null` clears it." }),
-    version: versionSchema,
-  })
-  .refine(
-    (body) =>
-      body.title !== undefined ||
-      body.description !== undefined ||
-      body.type !== undefined ||
-      body.assigneeTeamId !== undefined ||
-      body.assigneeAccountId !== undefined ||
-      body.epicId !== undefined ||
-      body.severity !== undefined ||
-      body.priority !== undefined ||
-      body.dueDate !== undefined,
-    { message: "Send at least one field to change." },
-  )
-  .meta({ id: "UpdateTaskRequest" });
+/** The fields of a task update other than `labelIds`; see `createTaskFields`. */
+export const updateTaskFields = {
+  title: taskTitleSchema.optional(),
+  description: taskDescriptionSchema.optional(),
+  type: taskTypeSchema.optional(),
+  assigneeTeamId: z.uuid().nullable().optional().meta({ description: "`null` clears it." }),
+  assigneeAccountId: z.uuid().nullable().optional().meta({ description: "`null` clears it." }),
+  epicId: z
+    .uuid()
+    .nullable()
+    .optional()
+    .meta({ description: "An epic of the project; `null` takes the task out of its epic." }),
+  severity: severitySchema.nullable().optional().meta({
+    description: "Bugs only; `null` clears it. A task that stops being a bug loses it.",
+  }),
+  priority: prioritySchema.optional(),
+  dueDate: calendarDateSchema.nullable().optional().meta({ description: "`null` clears it." }),
+  version: versionSchema,
+};
+
+/** Every field an update may change; `version` only says what it is based on. */
+const UPDATABLE = [
+  "title",
+  "description",
+  "type",
+  "assigneeTeamId",
+  "assigneeAccountId",
+  "epicId",
+  "severity",
+  "priority",
+  "dueDate",
+  "labelIds",
+] as const;
+
+/** An update's rule: it changes at least one field. */
+export function withUpdateTaskRules<S extends z.ZodType<Partial<Record<string, unknown>>>>(
+  schema: S,
+): S {
+  return schema.refine((body) => UPDATABLE.some((field) => body[field] !== undefined), {
+    message: "Send at least one field to change.",
+  });
+}
+
+export const updateTaskRequestSchema = withUpdateTaskRules(
+  z.strictObject({ ...updateTaskFields, labelIds: labelIdsSchema.optional() }),
+).meta({ id: "UpdateTaskRequest" });
 
 export type UpdateTaskRequest = z.infer<typeof updateTaskRequestSchema>;
 

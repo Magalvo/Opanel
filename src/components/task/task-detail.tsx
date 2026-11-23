@@ -299,6 +299,9 @@ export function TaskDetail({
             () => undefined,
           );
           return;
+        // The task detail does not show labels yet (WT-07 item F).
+        case "label.changed":
+          return;
         case "epic.changed":
           if (!canWriteTasks) return;
           listOpenEpics(project.key).then(

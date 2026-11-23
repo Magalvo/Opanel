@@ -82,11 +82,19 @@ describe("the labels tables (WS-107 test 4)", () => {
   });
 
   it("drops a task's labels with the task", async () => {
-    const { member } = await setup();
+    const { member, project } = await setup();
     const label = await createLabel(member, "OPA", { name: "Bug", colour: "red" });
-    const task = await createTask(member, "OPA", { title: "T", labelIds: [label.id] });
+    // Tasks are never deleted for real once they have history; one written by SQL has none.
+    const [task] = await getDb().execute<{ id: string }>(sql`
+      insert into tasks (project_id, number, title, column_id, position, reporter_account_id)
+      select ${project.id}, 1, 'Old', id, 'a0', ${member.accountId}
+      from columns where project_id = ${project.id} order by position limit 1
+      returning id`);
+    await getDb().execute(
+      sql`insert into task_labels (task_id, label_id) values (${task?.id}, ${label.id})`,
+    );
 
-    await getDb().execute(sql`delete from tasks where id = ${task.id}`);
+    await getDb().execute(sql`delete from tasks where id = ${task?.id}`);
 
     const rows = await getDb().execute(sql`select * from task_labels where label_id = ${label.id}`);
     expect(rows).toHaveLength(0);
@@ -346,7 +354,8 @@ describe("deleting a popular label (WS-107 test 12)", () => {
     const started = performance.now();
     await deleteLabel(manager, label.id);
     const deleteMs = performance.now() - started;
-    console.info(
+    // Recorded in WS-107's implementation record (risk: the label subquery per task).
+    console.warn(
       `WS-107 test 12: first board page of 100 labelled tasks ${listMs.toFixed(0)} ms; ` +
         `deleting the label on 1 000 tasks ${deleteMs.toFixed(0)} ms`,
     );
