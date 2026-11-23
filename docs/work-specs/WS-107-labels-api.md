@@ -249,3 +249,7 @@ Risks:
    deleted for real (`task_events` restricts it), so the cascade only matters for a task
    with no history.
 6. **Test 12's timings** go to `console.warn`, the console method lint allows in tests.
+7. **CI after the Done commit failed on an unhandled rejection**, the race WI-097 met: four
+   loops in the label tests built every refused call up front as promises, so one could
+   reject before the loop awaited it. Each is now a function the loop calls and awaits in
+   turn.

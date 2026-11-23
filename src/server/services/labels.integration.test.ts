@@ -173,16 +173,16 @@ describe("refusals (WS-107 test 6)", () => {
     const worker = await agent(["projects:read", "tasks:read", "tasks:write"]);
 
     for (const attempt of [
-      updateLabel(member, label.id, { name: "B", version: 1 }),
-      deleteLabel(member, label.id),
-      createLabel(viewer, "OPA", { name: "V", colour: "gray" }),
-      updateLabel(viewer, label.id, { name: "V", version: 1 }),
-      deleteLabel(viewer, label.id),
-      createLabel(worker, "OPA", { name: "W", colour: "gray" }),
-      updateLabel(worker, label.id, { name: "W", version: 1 }),
-      deleteLabel(worker, label.id),
+      () => updateLabel(member, label.id, { name: "B", version: 1 }),
+      () => deleteLabel(member, label.id),
+      () => createLabel(viewer, "OPA", { name: "V", colour: "gray" }),
+      () => updateLabel(viewer, label.id, { name: "V", version: 1 }),
+      () => deleteLabel(viewer, label.id),
+      () => createLabel(worker, "OPA", { name: "W", colour: "gray" }),
+      () => updateLabel(worker, label.id, { name: "W", version: 1 }),
+      () => deleteLabel(worker, label.id),
     ]) {
-      expect((await failure(attempt)).status).toBe(403);
+      expect((await failure(attempt())).status).toBe(403);
     }
     expect((await listLabels(viewer, "OPA")).items).toHaveLength(1);
     expect((await listLabels(worker, "OPA")).items).toHaveLength(1);
@@ -233,11 +233,11 @@ describe("refusals (WS-107 test 6)", () => {
     await archiveProject(manager, "OPA");
 
     for (const attempt of [
-      createLabel(member, "OPA", { name: "New", colour: "gray" }),
-      updateLabel(manager, label.id, { name: "B", version: 1 }),
-      deleteLabel(manager, label.id),
+      () => createLabel(member, "OPA", { name: "New", colour: "gray" }),
+      () => updateLabel(manager, label.id, { name: "B", version: 1 }),
+      () => deleteLabel(manager, label.id),
     ]) {
-      const refused = await failure(attempt);
+      const refused = await failure(attempt());
       expect([refused.status, refused.code]).toEqual([409, "project_archived"]);
     }
   });

@@ -142,14 +142,15 @@ describe("labelIds refused (WS-107 test 9)", () => {
     const task = await createTask(member, "OPA", { title: "T" });
 
     for (const attempt of [
-      createTask(member, "OPA", { title: "T", labelIds: [bug.id, foreign.id] }),
-      updateTask(member, task.id, { labelIds: [foreign.id], version: 1 }),
-      updateTask(member, task.id, {
-        labelIds: ["0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f"],
-        version: 1,
-      }),
+      () => createTask(member, "OPA", { title: "T", labelIds: [bug.id, foreign.id] }),
+      () => updateTask(member, task.id, { labelIds: [foreign.id], version: 1 }),
+      () =>
+        updateTask(member, task.id, {
+          labelIds: ["0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f"],
+          version: 1,
+        }),
     ]) {
-      const refused = await failure(attempt);
+      const refused = await failure(attempt());
       expect(refused.status).toBe(400);
       expect(refused.errors).toEqual([
         { path: "labelIds", message: "Not a label of this project." },
@@ -174,11 +175,11 @@ describe("labelIds refused (WS-107 test 9)", () => {
     const task = await createTask(member, "OPA", { title: "T" });
 
     for (const attempt of [
-      createTask(worker, "OPA", { title: "W", labelIds: [bug.id] }),
-      createTask(worker, "OPA", { title: "W", labelIds: [] }),
-      updateTask(worker, task.id, { labelIds: [bug.id], version: 1 }),
+      () => createTask(worker, "OPA", { title: "W", labelIds: [bug.id] }),
+      () => createTask(worker, "OPA", { title: "W", labelIds: [] }),
+      () => updateTask(worker, task.id, { labelIds: [bug.id], version: 1 }),
     ]) {
-      expect((await failure(attempt)).status).toBe(403);
+      expect((await failure(attempt())).status).toBe(403);
     }
     expect(await createTask(worker, "OPA", { title: "W" })).toMatchObject({ labels: [] });
     expect(await updateTask(worker, task.id, { title: "T2", version: 1 })).toMatchObject({
