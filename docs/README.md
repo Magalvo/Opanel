@@ -15,13 +15,14 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-07 item F, labels in the UI: chips on cards, the task detail's labels
-  picker (which creates a label for someone with `labels:write`), and the "Labels" section
-  of the project settings. It has no work-item yet: its number is reserved first, then its
+- **Next:** WT-07 item D, the Backlog page: `/projects/KEY/backlog` next to the board,
+  the backlog's tasks in order, reordered by drag and drop and by keyboard, "Add task"
+  creating in the backlog, "Move to board" on each row, and "Backlog" in the task detail's
+  column select, all live. It has no work-item yet: its number is reserved first, then its
   work-spec is proposed. WT-11 is done (items A to E: WI-099, WI-100, WI-104, WI-105,
-  WI-106), and so are items A to C of WT-07 (WI-101, WI-102, WI-107). In parallel, WT-07
-  items D (the Backlog page) and E (priority and due date in the UI) can be proposed; item
-  G follows D, E and F. WT-08 to WT-10 follow, as planned below.
+  WI-106), and so are items A, B, C and F of WT-07 (WI-101, WI-102, WI-107, WI-108). In
+  parallel, WT-07 item E (priority and due date in the UI) can be proposed; item G follows
+  D and E. WT-08 to WT-10 follow, as planned below.
 - **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
   are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Planning gaps awaiting an owner decision** are listed first under
