@@ -106,9 +106,10 @@ export function useBoard({
   });
   // `flush`, for the load loop, which is declared before it.
   const flushHeld = useRef<() => void>(() => undefined);
-  // Tasks being fetched, and those to fetch again once that ends.
+  // Tasks being fetched, and those to fetch again once that ends, with whether any of the
+  // events that asked for it may have changed the task's order (WS-113).
   const fetching = useRef(new Set<string>());
-  const again = useRef(new Set<string>());
+  const again = useRef(new Map<string, boolean>());
 
   const setBoard = useCallback((next: Board) => {
     current.current = next;
@@ -210,11 +211,13 @@ export function useBoard({
 
   /**
    * Shows a task in the column its `columnId` names, unless the board holds as new a
-   * version: in place when it is there, otherwise taken out of wherever it is and that
-   * column read again (WS-048 section 4, WS-082).
+   * version: in place when it is there and its order cannot have changed, otherwise taken
+   * out of wherever it is and that column read again (WS-048 section 4, WS-082, WS-113).
+   * `ordered` is for another person's move, which may have reordered the column; the
+   * board's own move is already in its place.
    */
   const placeTask = useCallback(
-    async (task: TaskSummary) => {
+    async (task: TaskSummary, { ordered = false }: { ordered?: boolean } = {}) => {
       if (!isNewer(heldVersion(current.current, task.id), task.version)) return;
       // A task in the backlog is not on the board (WS-101 section 7).
       const columnId = task.columnId;
@@ -222,7 +225,7 @@ export function useBoard({
         setBoard(removeTask(current.current, task.id));
         return;
       }
-      const inPlace = replaceInPlace(current.current, task);
+      const inPlace = ordered ? null : replaceInPlace(current.current, task);
       if (inPlace !== null) {
         setBoard(inPlace);
         return;
@@ -236,7 +239,7 @@ export function useBoard({
 
   /** Reads a task again and puts it where it now is (WS-048 section 4). */
   const refreshOnce = useCallback(
-    async (taskId: string) => {
+    async (taskId: string, ordered: boolean) => {
       let task: TaskSummary | null;
       try {
         const loaded = await getTask(taskId);
@@ -250,26 +253,30 @@ export function useBoard({
         setBoard(removeTask(current.current, taskId));
         return;
       }
-      await placeTask(task);
+      await placeTask(task, { ordered });
     },
     [placeTask, setBoard],
   );
 
   /**
-   * One fetch per task at a time; an event that arrives during it fetches once more after.
-   * A failure other than `404` reloads the whole board.
+   * One fetch per task at a time; an event that arrives during it fetches once more after,
+   * reading the column if any of those events may have changed the order (WS-113). A
+   * failure other than `404` reloads the whole board.
    */
   const refreshTask = useCallback(
-    async (taskId: string) => {
+    async (taskId: string, ordered: boolean) => {
       if (fetching.current.has(taskId)) {
-        again.current.add(taskId);
+        again.current.set(taskId, (again.current.get(taskId) ?? false) || ordered);
         return;
       }
       fetching.current.add(taskId);
       try {
-        do {
-          await refreshOnce(taskId);
-        } while (again.current.delete(taskId));
+        let next: boolean | undefined = ordered;
+        while (next !== undefined) {
+          await refreshOnce(taskId, next);
+          next = again.current.get(taskId);
+          again.current.delete(taskId);
+        }
       } catch {
         if (isMounted(mounted)) await reload();
       } finally {
@@ -301,7 +308,7 @@ export function useBoard({
         case "task.updated":
         case "task.moved":
           if (isNewer(heldVersion(current.current, event.entityId), event.version)) {
-            void refreshTask(event.entityId);
+            void refreshTask(event.entityId, event.type !== "task.updated");
           }
           return;
         case "column.changed":
