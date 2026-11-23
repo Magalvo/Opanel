@@ -1,5 +1,6 @@
 // Test data shared by the board's tests (WS-037).
 import type { Column } from "@/lib/schemas/columns";
+import type { Label } from "@/lib/schemas/labels";
 import type { Project } from "@/lib/schemas/projects";
 import type { BugReport } from "@/lib/schemas/task-bug-reports";
 import type { Task, TaskSummary } from "@/lib/schemas/tasks";
@@ -107,3 +108,27 @@ export function bugReport(n: number, taskId: string, extra: Partial<BugReport> =
     ...extra,
   };
 }
+
+/** A label of the project, as the API answers it (WS-108). */
+export function label(id: string, name: string, colour: Label["colour"], version = 1): Label {
+  return {
+    id,
+    projectId: PROJECT_ID,
+    name,
+    colour,
+    version,
+    createdAt: "2026-11-12T10:00:00.000Z",
+    updatedAt: "2026-11-12T10:00:00.000Z",
+  };
+}
+
+export const bugLabel = label("bbbb0000-0000-4000-8000-000000000001", "Bug", "red");
+export const uiLabel = label("bbbb0000-0000-4000-8000-000000000002", "UI", "blue");
+export const docsLabel = label("bbbb0000-0000-4000-8000-000000000003", "Docs", "green");
+
+/** A label as a task holds it. */
+export function ref({ id, name, colour }: Label) {
+  return { id, name, colour };
+}
+
+export const LABELS = "GET /api/v1/projects/OPA/labels";

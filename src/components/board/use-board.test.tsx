@@ -8,17 +8,21 @@ import { FakeSource } from "@/hooks/fake-event-source";
 import type { ProjectEvent } from "@/lib/schemas/events";
 
 import {
+  bugLabel,
   COLUMNS,
   doing,
   done,
   full,
   json,
+  LABELS,
   opa,
   page,
   PROJECT_ID,
+  ref,
   task,
   TASKS,
   todo,
+  uiLabel,
 } from "./test-data";
 import { useBoard } from "./use-board";
 
@@ -492,15 +496,56 @@ describe("useBoard: other people's changes (WS-048 section 4)", () => {
     expect(calls("GET")).toHaveLength(2);
   });
 
-  it("does nothing for labels until cards show them (WS-107)", async () => {
-    const { result } = await renderBoard();
-    const before = result.current.board;
+  describe("label.changed (WS-108)", () => {
+    const labelled = task(1, todo.id, { labels: [ref(bugLabel), ref(uiLabel)] });
+    const alsoBug = task(2, todo.id, { labels: [ref(bugLabel)] });
 
-    send("label.changed", "99999999-9999-4999-8999-999999999999", 2);
-    send("label.changed", "99999999-9999-4999-8999-999999999999", null);
+    function labelsOf(board: Readonly<Record<string, readonly { labels: unknown }[]>>) {
+      return (board[todo.id] ?? []).map((item) => item.labels);
+    }
 
-    expect(calls("GET")).toHaveLength(2);
-    expect(result.current.board).toBe(before);
+    function labelReads(): number {
+      return calls("GET").filter(([url]) => url === "/api/v1/projects/OPA/labels").length;
+    }
+
+    it("reads the labels once and rewrites the cards, without loading the tasks again", async () => {
+      on(TASKS, page([labelled, alsoBug, t3]));
+      const { result } = await renderBoard();
+      const tasksBefore = calls("GET").filter(([url]) => url.startsWith(TASKS.slice(4))).length;
+      // UI was deleted; Bug was renamed and recoloured.
+      on(LABELS, page([{ ...bugLabel, name: "Defect", colour: "pink", version: 2 }]));
+
+      send("label.changed", uiLabel.id, null);
+
+      const defect = { id: bugLabel.id, name: "Defect", colour: "pink" };
+      await waitFor(() => {
+        expect(labelsOf(result.current.board)).toEqual([[defect], [defect]]);
+      });
+      expect(labelReads()).toBe(1);
+      expect(loads()).toBe(1);
+      expect(calls("GET").filter(([url]) => url.startsWith(TASKS.slice(4))).length).toBe(
+        tasksBefore,
+      );
+    });
+
+    it("waits while a drag is in progress", async () => {
+      on(TASKS, page([labelled, t3]));
+      const { result } = await renderBoard();
+      on(LABELS, page([bugLabel]));
+      act(() => {
+        result.current.hold(true);
+      });
+
+      send("label.changed", uiLabel.id, null);
+      expect(labelReads()).toBe(0);
+      act(() => {
+        result.current.hold(false);
+      });
+
+      await waitFor(() => {
+        expect(labelsOf(result.current.board)).toEqual([[ref(bugLabel)]]);
+      });
+    });
   });
 });
 

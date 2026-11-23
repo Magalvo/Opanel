@@ -3,17 +3,23 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  bugLabel,
   bugReport,
   column,
+  docsLabel,
   doing,
   done,
   full,
   json,
+  label,
+  LABELS,
   opa,
   page,
   PROJECT,
+  ref,
   task,
   todo,
+  uiLabel,
 } from "@/components/board/test-data";
 import { bodyOf, calls, fetchMock, hold, installFetch, on, problem } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
@@ -98,6 +104,7 @@ interface Options {
   project?: Project;
   current?: Task;
   canWriteTasks?: boolean;
+  canWriteLabels?: boolean;
   canComment?: boolean;
   canDeleteAny?: boolean;
   canDeleteOwn?: boolean;
@@ -110,6 +117,7 @@ async function renderTask(options: Options = {}) {
     project = opa,
     current = base,
     canWriteTasks = true,
+    canWriteLabels = true,
     canComment = true,
     canDeleteAny = false,
     canDeleteOwn = true,
@@ -125,6 +133,7 @@ async function renderTask(options: Options = {}) {
         taskKey="OPA-1"
         mode={mode}
         canWriteTasks={canWriteTasks}
+        canWriteLabels={canWriteLabels}
         canComment={canComment}
         canDeleteAny={canDeleteAny}
         canDeleteOwn={canDeleteOwn}
@@ -157,6 +166,7 @@ beforeEach(() => {
   on(COMMENTS, page([comment(1, "First *comment*"), comment(2, "Second")]));
   on(TEAMS, page([web, api]));
   on(EPICS, page([launch]));
+  on(LABELS, page([bugLabel, docsLabel, uiLabel]));
 });
 
 describe("TaskDetail: what it shows", () => {
@@ -1249,5 +1259,135 @@ describe("TaskDetail: bugs (WS-091)", () => {
     });
 
     expect(await within(reports()).findByText("Missed")).toBeVisible();
+  });
+});
+
+describe("TaskDetail: labels (WS-108)", () => {
+  const labelled: Task = { ...base, labels: [ref(bugLabel), ref(uiLabel)] };
+
+  function picker() {
+    return within(details()).getByRole("group", { name: "Labels" });
+  }
+
+  it("lists the labels in the read view, or None", async () => {
+    await renderTask({ current: labelled, canWriteTasks: false });
+    expect(within(details()).getByText("Labels").nextElementSibling).toHaveTextContent("BugUI");
+  });
+
+  it("says None for a task without labels", async () => {
+    await renderTask({ canWriteTasks: false });
+    expect(within(details()).getByText("Labels").nextElementSibling).toHaveTextContent("None");
+  });
+
+  it("applies and removes labels, sending labelIds once with the other changes", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...labelled, version: 4 }));
+    const user = await renderTask({ current: labelled });
+
+    await user.click(within(picker()).getByRole("button", { name: "Remove label UI" }));
+    await user.click(within(picker()).getByRole("button", { name: "Choose labels" }));
+    await user.click(within(picker()).getByRole("checkbox", { name: "Docs" }));
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({
+      labelIds: [bugLabel.id, docsLabel.id],
+      version: 3,
+    });
+  });
+
+  it("sends no labelIds when only another field changed, or the same set came back", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...labelled, title: "New", version: 4 }));
+    const user = await renderTask({ current: labelled });
+
+    await user.click(within(picker()).getByRole("button", { name: "Choose labels" }));
+    await user.click(within(picker()).getByRole("checkbox", { name: "UI" }));
+    await user.click(within(picker()).getByRole("checkbox", { name: "UI" }));
+    await user.clear(within(details()).getByLabelText("Title"));
+    await user.type(within(details()).getByLabelText("Title"), "New");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "New", version: 3 });
+  });
+
+  it("creates a label from the picker with labels:write, and selects it", async () => {
+    const ops = label("bbbb0000-0000-4000-8000-000000000004", "Ops", "gray");
+    on("POST /api/v1/projects/OPA/labels", json(ops, 201));
+    const user = await renderTask();
+
+    await user.click(within(picker()).getByRole("button", { name: "Choose labels" }));
+    await user.type(within(picker()).getByLabelText("Find or create a label"), "Ops");
+    expect(within(picker()).queryByRole("checkbox", { name: "Bug" })).not.toBeInTheDocument();
+    await user.click(within(picker()).getByRole("button", { name: 'Create label "Ops"' }));
+
+    expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ name: "Ops", colour: "gray" });
+    expect(await within(picker()).findByRole("checkbox", { name: "Ops" })).toBeChecked();
+    expect(within(picker()).getByRole("button", { name: "Remove label Ops" })).toBeVisible();
+  });
+
+  it("selects the existing label when someone else made it meanwhile", async () => {
+    const ops = label("bbbb0000-0000-4000-8000-000000000004", "Ops", "gray");
+    on("POST /api/v1/projects/OPA/labels", problem(409, "label_name_taken"));
+    const user = await renderTask();
+
+    await user.click(within(picker()).getByRole("button", { name: "Choose labels" }));
+    await user.type(within(picker()).getByLabelText("Find or create a label"), "ops");
+    on(LABELS, page([bugLabel, docsLabel, ops, uiLabel]));
+    await user.click(within(picker()).getByRole("button", { name: 'Create label "ops"' }));
+
+    expect(await within(picker()).findByRole("button", { name: "Remove label Ops" })).toBeVisible();
+  });
+
+  it("offers no creation without labels:write, nor for a name that exists", async () => {
+    const user = await renderTask({ canWriteLabels: false });
+
+    await user.click(within(picker()).getByRole("button", { name: "Choose labels" }));
+    await user.type(within(picker()).getByLabelText("Find a label"), "Ops");
+    expect(
+      within(picker()).queryByRole("button", { name: /Create label/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers no creation for a name that exists, ignoring case", async () => {
+    const user = await renderTask();
+
+    await user.click(within(picker()).getByRole("button", { name: "Choose labels" }));
+    await user.type(within(picker()).getByLabelText("Find or create a label"), "bug");
+    expect(within(picker()).getByRole("checkbox", { name: "Bug" })).toBeVisible();
+    expect(
+      within(picker()).queryByRole("button", { name: /Create label/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("has no picker for a Viewer", async () => {
+    await renderTask({ current: labelled, canWriteTasks: false, canWriteLabels: false });
+
+    expect(within(details()).queryByRole("group", { name: "Labels" })).not.toBeInTheDocument();
+    expect(calls("GET").filter(([url]) => url === "/api/v1/projects/OPA/labels")).toHaveLength(0);
+  });
+
+  it("reads the labels and the task again on label.changed", async () => {
+    await renderTask({ current: labelled });
+    act(() => {
+      FakeSource.latest().open();
+    });
+    const renamed = { ...bugLabel, name: "Defect", version: 2 };
+    on(LABELS, page([renamed, docsLabel, uiLabel]));
+    on(TASK, json({ ...labelled, labels: [ref(renamed), ref(uiLabel)] }));
+
+    act(() => {
+      FakeSource.latest().send("label.changed", {
+        id: crypto.randomUUID(),
+        type: "label.changed",
+        projectId: opa.id,
+        entity: "label",
+        entityId: bugLabel.id,
+        version: 2,
+        actorAccountId: ada.id,
+        at: "2026-11-18T10:00:00.000Z",
+      });
+    });
+
+    expect(
+      await within(picker()).findByRole("button", { name: "Remove label Defect" }),
+    ).toBeVisible();
   });
 });
