@@ -334,10 +334,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
               ))}
               {/* With reduced motion the card neither glides between keyboard positions nor
                   animates to where it is dropped (WS-111 section 3). */}
-              <DragOverlay
-                transition={reducedMotion ? "none" : undefined}
-                dropAnimation={reducedMotion ? null : undefined}
-              >
+              <DragOverlay {...(reducedMotion ? { transition: "none", dropAnimation: null } : {})}>
                 {activeTask === undefined ? null : (
                   <OverlayCard task={activeTask} done={activeDone} />
                 )}
