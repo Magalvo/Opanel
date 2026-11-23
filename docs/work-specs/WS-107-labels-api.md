@@ -1,6 +1,6 @@
 # WS-107 — Labels in the data model and API
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
 - Work-item: [WI-107](../work-items/WI-107-labels-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 4, 9;
   [0004](../canonical/0004-api-conventions.md) sections 4, 6, 8;

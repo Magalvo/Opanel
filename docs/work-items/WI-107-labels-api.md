@@ -1,6 +1,6 @@
 # WI-107 — Labels in the data model and API
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item C)
 - Depends on: none ([WI-101](WI-101-backlog-api.md) and [WI-102](WI-102-priority-due-date.md),
   which touch the same files, are done)
