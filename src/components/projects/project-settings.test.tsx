@@ -6,6 +6,7 @@ import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api"
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { Column } from "@/lib/schemas/columns";
 import type { ProjectEvent } from "@/lib/schemas/events";
+import type { Label } from "@/lib/schemas/labels";
 import type { Project } from "@/lib/schemas/projects";
 import type { TaskSummary } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
@@ -93,6 +94,22 @@ const PATCH_TRIAGE = "PATCH /api/v1/projects/OPA/triage";
 const TEAMS = "GET /api/v1/teams?limit=50";
 const COLUMNS = "GET /api/v1/projects/OPA/columns";
 const DELETED = "GET /api/v1/projects/OPA/tasks?limit=50&deleted=true";
+const LABELS = "GET /api/v1/projects/OPA/labels";
+
+function label(id: string, name: string, colour: Label["colour"], version = 1): Label {
+  return {
+    id,
+    projectId: PROJECT_ID,
+    name,
+    colour,
+    version,
+    createdAt: "2026-11-12T10:00:00.000Z",
+    updatedAt: "2026-11-12T10:00:00.000Z",
+  };
+}
+
+const bug = label("bbbb0000-0000-4000-8000-000000000001", "Bug", "red", 2);
+const ui = label("bbbb0000-0000-4000-8000-000000000002", "UI", "blue");
 
 function json(body: unknown, status = 200) {
   return () => Response.json(body, { status });
@@ -110,6 +127,7 @@ async function renderSettings({
   tasks = [deleted],
   triage = noTriage,
   teams = [web, platform, qa],
+  labels = [bug, ui],
 }: {
   project?: Project;
   canRestoreTasks?: boolean;
@@ -118,12 +136,14 @@ async function renderSettings({
   tasks?: TaskSummary[];
   triage?: TriageSettings;
   teams?: TeamSummary[];
+  labels?: Label[];
 } = {}) {
   on(PROJECT, json(project));
   on(COLUMNS, columns(cols));
   on(DELETED, json({ items: tasks, nextCursor: null }));
   on(TRIAGE, json(triage));
   on(TEAMS, json({ items: teams, nextCursor: null }));
+  on(LABELS, json({ items: labels, nextCursor: null }));
   const user = userEvent.setup();
   render(
     <ProjectFrame projectKey="OPA" canManageProjects>
@@ -133,6 +153,7 @@ async function renderSettings({
   await screen.findByRole("heading", { level: 2, name: "Details" });
   await screen.findByRole("row", { name: /In progress/ });
   await screen.findByLabelText("Triage team");
+  await screen.findByRole("region", { name: "Labels" });
   return user;
 }
 
@@ -822,5 +843,143 @@ describe("ProjectSettings: triage (WS-092)", () => {
         ).toHaveTextContent("Ops");
       });
     });
+  });
+});
+
+describe("ProjectSettings: labels (WS-108)", () => {
+  function labels() {
+    return section("Labels");
+  }
+
+  it("lists the labels by name with their colour", async () => {
+    await renderSettings();
+
+    const rows = (await within(labels()).findAllByRole("row")).slice(1);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent("Bug");
+    expect(rows[0]).toHaveTextContent("Red");
+    expect(rows[1]).toHaveTextContent("UI");
+    expect(rows[1]).toHaveTextContent("Blue");
+  });
+
+  it("says when the project has no labels", async () => {
+    await renderSettings({ labels: [] });
+
+    expect(await within(labels()).findByText("No labels yet.")).toBeVisible();
+  });
+
+  it("adds a label with a name and a colour", async () => {
+    const docs = label("bbbb0000-0000-4000-8000-000000000003", "Docs", "green");
+    on("POST /api/v1/projects/OPA/labels", json(docs, 201));
+    const user = await renderSettings();
+
+    await user.click(within(labels()).getByRole("button", { name: "Add label" }));
+    const dialog = screen.getByRole("dialog", { name: "Add a label" });
+    await user.type(within(dialog).getByLabelText("Name"), "Docs");
+    await user.click(within(dialog).getByRole("radio", { name: "Green" }));
+    on(LABELS, json({ items: [bug, docs, ui], nextCursor: null }));
+    await user.click(within(dialog).getByRole("button", { name: "Add label" }));
+
+    expect(await within(labels()).findByRole("row", { name: /Docs/ })).toBeVisible();
+    expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ name: "Docs", colour: "green" });
+    expect(status()).toHaveTextContent("Added label Docs.");
+  });
+
+  it("edits a label, sending only what changed with its version", async () => {
+    on(`PATCH /api/v1/labels/${bug.id}`, json({ ...bug, colour: "pink", version: 3 }));
+    const user = await renderSettings();
+
+    await user.click(await within(labels()).findByRole("button", { name: "Edit Bug" }));
+    const dialog = screen.getByRole("dialog", { name: "Edit label" });
+    expect(within(dialog).getByLabelText("Name")).toHaveValue("Bug");
+    expect(within(dialog).getByRole("radio", { name: "Red" })).toBeChecked();
+    await user.click(within(dialog).getByRole("radio", { name: "Pink" }));
+    on(LABELS, json({ items: [{ ...bug, colour: "pink", version: 3 }, ui], nextCursor: null }));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ colour: "pink", version: 2 });
+    expect(await within(labels()).findByRole("row", { name: /Pink/ })).toBeVisible();
+  });
+
+  it("deletes a label after a confirmation that says it leaves every task", async () => {
+    on(`DELETE /api/v1/labels/${ui.id}`, () => new Response(null, { status: 204 }));
+    const user = await renderSettings();
+
+    await user.click(await within(labels()).findByRole("button", { name: "Delete UI" }));
+    const confirm = screen.getByRole("alertdialog", { name: "Delete label UI?" });
+    expect(confirm).toHaveTextContent("It is removed from every task that has it.");
+    on(LABELS, json({ items: [bug], nextCursor: null }));
+    await user.click(within(confirm).getByRole("button", { name: "Delete" }));
+
+    await vi.waitFor(() => {
+      expect(within(labels()).queryByRole("row", { name: /UI/ })).not.toBeInTheDocument();
+    });
+    expect(status()).toHaveTextContent("Deleted label UI.");
+  });
+
+  it.each([
+    ["label_name_taken", "Another label has this name."],
+    ["too_many_labels", "This project already has 200 labels."],
+    ["project_archived", "The project is archived."],
+  ])("explains a refused addition (%s)", async (code, message) => {
+    on("POST /api/v1/projects/OPA/labels", problem(409, code));
+    const user = await renderSettings();
+
+    await user.click(within(labels()).getByRole("button", { name: "Add label" }));
+    const dialog = screen.getByRole("dialog", { name: "Add a label" });
+    await user.type(within(dialog).getByLabelText("Name"), "Bug");
+    await user.click(within(dialog).getByRole("button", { name: "Add label" }));
+
+    expect(await within(dialog).findByText(message)).toBeVisible();
+  });
+
+  it("explains a version conflict and reads the labels again", async () => {
+    on(`PATCH /api/v1/labels/${bug.id}`, problem(409, "version_conflict"));
+    const user = await renderSettings();
+    await within(labels()).findByRole("button", { name: "Edit Bug" });
+    const before = calls("GET").filter(([url]) => url.endsWith("/labels")).length;
+
+    await user.click(within(labels()).getByRole("button", { name: "Edit Bug" }));
+    const dialog = screen.getByRole("dialog", { name: "Edit label" });
+    await user.click(within(dialog).getByRole("radio", { name: "Pink" }));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await vi.waitFor(() => {
+      expect(status()).toHaveTextContent(
+        "Someone else changed this label. The list was refreshed.",
+      );
+    });
+    expect(calls("GET").filter(([url]) => url.endsWith("/labels")).length).toBe(before + 1);
+  });
+
+  it("is read-only on an archived project", async () => {
+    await renderSettings({ project: { ...opa, archivedAt: "2026-11-20T10:00:00.000Z" } });
+
+    await within(labels()).findByText("Bug");
+    expect(within(labels()).queryByRole("button", { name: "Add label" })).not.toBeInTheDocument();
+    expect(within(labels()).queryByRole("button", { name: "Edit Bug" })).not.toBeInTheDocument();
+  });
+
+  it("reads the labels again on label.changed", async () => {
+    await renderSettings();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    on(LABELS, json({ items: [{ ...bug, name: "Defect", version: 3 }, ui], nextCursor: null }));
+
+    act(() => {
+      FakeSource.latest().send("label.changed", {
+        id: crypto.randomUUID(),
+        type: "label.changed",
+        projectId: PROJECT_ID,
+        entity: "label",
+        entityId: bug.id,
+        version: 3,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-18T10:00:00.000Z",
+      });
+    });
+
+    expect(await within(labels()).findByRole("row", { name: /Defect/ })).toBeVisible();
   });
 });

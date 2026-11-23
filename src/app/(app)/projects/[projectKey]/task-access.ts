@@ -8,6 +8,8 @@ import { requireAccount } from "@/server/auth/session";
 export interface TaskAccess {
   taskKey: string;
   canWriteTasks: boolean;
+  /** Applying labels and creating them (WS-108). */
+  canWriteLabels: boolean;
   canComment: boolean;
   canDeleteAny: boolean;
   canDeleteOwn: boolean;
@@ -31,6 +33,7 @@ export async function taskAccess(
   return {
     taskKey: parsed.data,
     canWriteTasks: can(actor, "tasks:write"),
+    canWriteLabels: can(actor, "labels:write"),
     canComment: can(actor, "comments:write"),
     canDeleteAny: can(actor, "tasks:delete_any"),
     canDeleteOwn: can(actor, "tasks:delete_own"),

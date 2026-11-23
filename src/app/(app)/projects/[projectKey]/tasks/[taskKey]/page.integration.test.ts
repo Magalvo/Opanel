@@ -17,10 +17,34 @@ function args(projectKey: string, taskKey: string) {
 }
 
 const RIGHTS = {
-  admin: { canWriteTasks: true, canComment: true, canDeleteAny: true, canDeleteOwn: true },
-  manager: { canWriteTasks: true, canComment: true, canDeleteAny: true, canDeleteOwn: true },
-  member: { canWriteTasks: true, canComment: true, canDeleteAny: false, canDeleteOwn: true },
-  viewer: { canWriteTasks: false, canComment: false, canDeleteAny: false, canDeleteOwn: false },
+  admin: {
+    canWriteTasks: true,
+    canWriteLabels: true,
+    canComment: true,
+    canDeleteAny: true,
+    canDeleteOwn: true,
+  },
+  manager: {
+    canWriteTasks: true,
+    canWriteLabels: true,
+    canComment: true,
+    canDeleteAny: true,
+    canDeleteOwn: true,
+  },
+  member: {
+    canWriteTasks: true,
+    canWriteLabels: true,
+    canComment: true,
+    canDeleteAny: false,
+    canDeleteOwn: true,
+  },
+  viewer: {
+    canWriteTasks: false,
+    canWriteLabels: false,
+    canComment: false,
+    canDeleteAny: false,
+    canDeleteOwn: false,
+  },
 } as const;
 
 describe("the task pages (WS-038)", () => {

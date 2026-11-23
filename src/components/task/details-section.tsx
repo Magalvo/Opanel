@@ -4,6 +4,8 @@ import { useEffect, useId, useState } from "react";
 
 import { AccountName } from "@/components/account-name";
 import { TYPE_LABELS } from "@/components/board/task-card";
+import { LabelChips } from "@/components/labels/label-chip";
+import { LabelPicker } from "@/components/labels/label-picker";
 import { Markdown } from "@/components/markdown";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +15,7 @@ import { ApiFailure } from "@/lib/api-client";
 import { SEVERITIES, type Severity, severitySchema } from "@/lib/schemas/bug-reports";
 import type { Column } from "@/lib/schemas/columns";
 import type { Epic } from "@/lib/schemas/epics";
+import type { Label } from "@/lib/schemas/labels";
 import type { Person } from "@/lib/schemas/people";
 import {
   type Task,
@@ -53,6 +56,20 @@ interface Draft {
   teamId: string;
   assignee: Person | null;
   epicId: string;
+  /** The chosen labels, in the order they were chosen (WS-108 section 3). */
+  labelIds: string[];
+}
+
+/** Two sets of label ids are the same whatever their order. */
+function sameIds(a: readonly string[], b: readonly string[]): boolean {
+  const set = new Set(a);
+  return a.length === b.length && b.every((each) => set.has(each));
+}
+
+/** A draft value as compared between versions: label ids as a set, the rest as they are. */
+function sameValue(a: Draft[keyof Draft], b: Draft[keyof Draft]): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) return sameIds(a, b);
+  return a === b;
 }
 
 function draftOf(task: Task): Draft {
@@ -64,6 +81,7 @@ function draftOf(task: Task): Draft {
     teamId: task.assigneeTeam?.id ?? "",
     assignee: task.assignee,
     epicId: task.epic?.id ?? "",
+    labelIds: task.labels.map((label) => label.id),
   };
 }
 
@@ -84,6 +102,15 @@ function changesOf(task: Task, draft: Draft): Omit<UpdateTaskRequest, "version">
   if (draft.epicId !== (task.epic?.id ?? "")) {
     changes.epicId = draft.epicId === "" ? null : draft.epicId;
   }
+  // Only when the set changed, so a save of other fields needs no labels:write (WS-108).
+  if (
+    !sameIds(
+      draft.labelIds,
+      task.labels.map((label) => label.id),
+    )
+  ) {
+    changes.labelIds = draft.labelIds;
+  }
   return changes;
 }
 
@@ -99,6 +126,12 @@ export interface DetailsProps {
   columns: readonly Column[];
   teams: readonly TeamSummary[];
   epics: readonly Epic[];
+  /** The project's labels, for the picker (WS-108 section 3). */
+  labels: readonly Label[];
+  projectKey: string;
+  canWriteLabels: boolean;
+  onLabelCreated: (label: Label) => void;
+  reloadLabels: () => Promise<readonly Label[]>;
   editable: boolean;
   busy: boolean;
   /** How many conflicts the screen has shown: a new one starts the form again. */
@@ -154,6 +187,9 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
               {task.assignee === null ? "No one" : personLabel(task.assignee)}
             </Row>
             <Row term="Epic">{task.epic?.title ?? "No epic"}</Row>
+            <Row term="Labels">
+              {task.labels.length === 0 ? "None" : <LabelChips labels={task.labels} />}
+            </Row>
             <Row term="Reporter">
               <AccountName account={task.reporter} />
             </Row>
@@ -176,6 +212,11 @@ function DetailsForm({
   columns,
   teams,
   epics,
+  labels,
+  projectKey,
+  canWriteLabels,
+  onLabelCreated,
+  reloadLabels,
   busy,
   conflicts,
   onSaved,
@@ -198,7 +239,7 @@ function DetailsForm({
     if (basedOn.conflicts === conflicts) {
       const before = draftOf(basedOn.task);
       for (const key of Object.keys(fresh) as (keyof Draft)[]) {
-        if (draft[key] !== before[key]) Object.assign(fresh, { [key]: draft[key] });
+        if (!sameValue(draft[key], before[key])) Object.assign(fresh, { [key]: draft[key] });
       }
     }
     setBasedOn({ task, conflicts });
@@ -401,6 +442,22 @@ function DetailsForm({
               <option value={task.epic.id}>{task.epic.title} (closed)</option>
             )}
           </select>
+        </div>
+        <div className="sm:col-span-2">
+          <LabelPicker
+            projectKey={projectKey}
+            labels={labels}
+            held={task.labels}
+            value={draft.labelIds}
+            onChange={(ids) => {
+              set("labelIds", ids);
+            }}
+            canCreate={canWriteLabels}
+            onCreated={onLabelCreated}
+            reloadLabels={reloadLabels}
+            disabled={busy}
+            error={errors.labelIds ?? null}
+          />
         </div>
         <div className="sm:col-span-2">
           <PersonField

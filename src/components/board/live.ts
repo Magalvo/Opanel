@@ -1,4 +1,5 @@
 // Applying other people's changes to the board (WS-048 section 4). Pure, like `moves.ts`.
+import type { Label, LabelRef } from "@/lib/schemas/labels";
 import type { TaskSummary } from "@/lib/schemas/tasks";
 
 import { type Board, placeOf } from "./moves";
@@ -57,6 +58,44 @@ export function replaceColumn(
   const next: Record<string, readonly TaskSummary[]> = {};
   for (const [id, items] of Object.entries(board)) {
     next[id] = id === columnId ? tasks : items.filter((item) => !ids.has(item.id));
+  }
+  return next;
+}
+
+function byName(a: LabelRef, b: LabelRef): number {
+  const left = a.name.toLowerCase();
+  const right = b.name.toLowerCase();
+  if (left !== right) return left < right ? -1 : 1;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+/**
+ * The board with every card's labels as the project's labels are now (WS-108 section 4):
+ * new names and colours, deleted labels dropped, by name as the API orders them. A card
+ * that does not change keeps its object.
+ */
+export function withLabels(board: Board, labels: readonly Label[]): Board {
+  const known = new Map(labels.map((label) => [label.id, label]));
+  const next: Record<string, readonly TaskSummary[]> = {};
+  for (const [columnId, tasks] of Object.entries(board)) {
+    next[columnId] = tasks.map((task) => {
+      if (task.labels.length === 0) return task;
+      const updated = task.labels
+        .flatMap((held) => {
+          const label = known.get(held.id);
+          return label === undefined
+            ? []
+            : [{ id: label.id, name: label.name, colour: label.colour }];
+        })
+        .sort(byName);
+      const same =
+        updated.length === task.labels.length &&
+        updated.every((label, index) => {
+          const held = task.labels[index];
+          return held?.id === label.id && held.name === label.name && held.colour === label.colour;
+        });
+      return same ? task : { ...task, labels: updated };
+    });
   }
   return next;
 }
