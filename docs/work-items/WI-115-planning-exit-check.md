@@ -1,6 +1,6 @@
 # WI-115 — WT-07 end-to-end flow, agents guide and exit check
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-23)
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item G)
 - Depends on: [WI-109](WI-109-backlog-page.md), [WI-110](WI-110-priority-due-date-ui.md)
   and [WI-108](WI-108-labels-ui.md) (items D, E and F, all done)

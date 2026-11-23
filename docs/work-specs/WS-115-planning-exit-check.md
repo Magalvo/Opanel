@@ -1,6 +1,6 @@
 # WS-115 — WT-07 end-to-end flow, agents guide and exit check
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 3 as proposed)
 - Work-item: [WI-115](../work-items/WI-115-planning-exit-check.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 3 (P1);
   [0003](../canonical/0003-task-management.md) sections 4 and 5 (P2, P3);
