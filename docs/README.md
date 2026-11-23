@@ -15,11 +15,12 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-07 item G, the last of the track: the end-to-end flow, `docs/agents.md`,
-  the canonical amendments of proposals P1 to P3, and the exit check. It has no work-item
-  yet: its number is reserved first, then its work-spec is proposed. Items A to F of WT-07
-  are done (WI-101, WI-102, WI-107, WI-109, WI-110, WI-108), and so is WT-11 (items A to E:
-  WI-099, WI-100, WI-104, WI-105, WI-106). WT-08 to WT-10 follow, as planned below.
+- **Next:** WT-08 (search, filters, list view, activity timeline), the first of WT-08 to
+  WT-10 as planned below. It is not drafted yet: its work-track is drafted and proposed
+  for owner approval before any work-item. WT-07 is done (items A to G: WI-101, WI-102,
+  WI-107, WI-109, WI-110, WI-108, WI-115), and so is WT-11 (items A to E: WI-099, WI-100,
+  WI-104, WI-105, WI-106). The MCP tools for the backlog and labels, under
+  [Follow-ups](#follow-ups), are no longer blocked.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
   session secret), WI-113 (a reorder within one column reaches an open board live) and
   WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
@@ -61,7 +62,7 @@ Planned next, not yet drafted:
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 come from canonical doc 0003; WT-07 is listed above. WT-11, the MCP server
+WT-07 to WT-10 come from canonical doc 0003; WT-07, listed above, is done. WT-11, the MCP server
 (doc 0005), and WT-12, production deployment and operations (doc 0006), are done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
