@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { listLabels } from "@/components/labels/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { getTask } from "@/components/task/api";
 import { onTaskEvents } from "@/components/task/events";
@@ -11,7 +12,14 @@ import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Task, TaskSummary } from "@/lib/schemas/tasks";
 
 import { listAllTasks, listColumns, listColumnTasks, moveTask } from "./api";
-import { heldVersion, isNewer, removeTask, replaceColumn, replaceInPlace } from "./live";
+import {
+  heldVersion,
+  isNewer,
+  removeTask,
+  replaceColumn,
+  replaceInPlace,
+  withLabels,
+} from "./live";
 import { applyDrop, type Board, groupByColumn, moveRequest, placeOf } from "./moves";
 
 export type BoardPhase = "loading" | "error" | "ready";
@@ -272,6 +280,16 @@ export function useBoard({
     [refreshOnce, reload],
   );
 
+  /** Rewrites the cards' labels from the project's labels (WS-108 section 4). */
+  const refreshLabels = useCallback(async () => {
+    try {
+      const { items } = await listLabels(projectKey);
+      if (isMounted(mounted)) setBoard(withLabels(current.current, items));
+    } catch {
+      // The next label event, or a reload, brings them.
+    }
+  }, [projectKey, setBoard]);
+
   const apply = useCallback(
     (event: ProjectEvent) => {
       switch (event.type) {
@@ -293,12 +311,13 @@ export function useBoard({
         case "project.changed":
         case "comment.created":
         case "epic.changed":
-        // Cards do not show labels yet (WT-07 item F).
+          return;
         case "label.changed":
+          void refreshLabels();
           return;
       }
     },
-    [refreshTask, reload, setBoard],
+    [refreshLabels, refreshTask, reload, setBoard],
   );
 
   /**

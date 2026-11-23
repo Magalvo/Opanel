@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { LabelChips } from "@/components/labels/label-chip";
 import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { Badge } from "@/components/ui/badge";
 import type { TaskSummary, TaskType } from "@/lib/schemas/tasks";
@@ -39,7 +40,7 @@ const CARD =
 
 /**
  * The content of a card: key, title, type, a bug's severity and report count (WS-091),
- * assignee and team. The title links to the task
+ * assignee, team and labels (WS-108). The title links to the task
  * (WS-038), except on the card that follows the pointer while dragging; `handle` is the
  * drag handle, beside the key.
  */
@@ -109,6 +110,7 @@ export function CardBody({
           </span>
         )}
       </span>
+      <LabelChips labels={task.labels} />
     </>
   );
 }

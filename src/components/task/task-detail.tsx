@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isNewer } from "@/components/board/live";
+import { listLabels } from "@/components/labels/api";
 import { getProject } from "@/components/projects/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
@@ -25,6 +26,7 @@ import type { Page } from "@/lib/paged-list";
 import type { Column } from "@/lib/schemas/columns";
 import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
+import type { Label } from "@/lib/schemas/labels";
 import type { BugReport } from "@/lib/schemas/task-bug-reports";
 import type { Task } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
@@ -48,6 +50,7 @@ export interface TaskDetailProps {
   taskKey: string;
   mode: "page" | "dialog";
   canWriteTasks: boolean;
+  canWriteLabels: boolean;
   canComment: boolean;
   canDeleteAny: boolean;
   canDeleteOwn: boolean;
@@ -59,6 +62,8 @@ interface Loaded {
   columns: Column[];
   teams: TeamSummary[];
   epics: Epic[];
+  /** The project's labels, read only for someone who edits (WS-108). */
+  labels: Label[];
   comments: Comment[];
   commentsCursor: string | null;
   /** The first page of reports, read only for a task that has some (WS-091 section 5). */
@@ -81,6 +86,7 @@ export function TaskDetail({
   taskKey,
   mode,
   canWriteTasks,
+  canWriteLabels,
   canComment,
   canDeleteAny,
   canDeleteOwn,
@@ -120,11 +126,12 @@ export function TaskDetail({
       throw failure;
     }
     if (task.projectId !== project.id) return "missing";
-    const [columns, comments, teams, epics, reports] = await Promise.all([
+    const [columns, comments, teams, epics, labels, reports] = await Promise.all([
       listColumns(project.key),
       listComments(taskKey),
       canWriteTasks ? listAllTeams() : Promise.resolve([]),
       canWriteTasks ? listOpenEpics(project.key) : Promise.resolve([]),
+      canWriteTasks ? listLabels(project.key).then((list) => list.items) : Promise.resolve([]),
       task.occurrences > 0 ? listBugReports(taskKey) : Promise.resolve(null),
     ]);
     return {
@@ -132,6 +139,7 @@ export function TaskDetail({
       columns: columns.items,
       teams,
       epics,
+      labels,
       comments: comments.items,
       commentsCursor: comments.nextCursor,
       reports,
@@ -235,6 +243,43 @@ export function TaskDetail({
     setTask(current);
   }
 
+  /** The project's labels, read again; the picker shows them at once. */
+  async function reloadLabels(): Promise<readonly Label[]> {
+    const { items } = await listLabels(project.key);
+    setData((current) => (current === null ? current : { ...current, labels: items }));
+    return items;
+  }
+
+  function addLabel(label: Label) {
+    setData((current) =>
+      current === null
+        ? current
+        : {
+            ...current,
+            labels: [...current.labels, label].sort((a, b) =>
+              a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+            ),
+          },
+    );
+  }
+
+  /**
+   * A label was renamed, recoloured or deleted: the task's labels are read again. A rename
+   * does not change the task's version, so only its labels are taken.
+   */
+  function refreshLabelsOfTask() {
+    getTask(taskKey).then(
+      (current) => {
+        setData((held) =>
+          held === null || held.task.id !== current.id
+            ? held
+            : { ...held, task: { ...held.task, labels: current.labels } },
+        );
+      },
+      () => undefined,
+    );
+  }
+
   /** Reads the task again after an event or a reconnect, and shows what it finds. */
   function refresh() {
     getTask(taskKey).then(
@@ -299,8 +344,10 @@ export function TaskDetail({
             () => undefined,
           );
           return;
-        // The task detail does not show labels yet (WT-07 item F).
         case "label.changed":
+          // Names and colours: the picker's list, and the task's own labels (WS-108).
+          if (canWriteTasks) void reloadLabels().catch(() => undefined);
+          if (!deleted) refreshLabelsOfTask();
           return;
         case "epic.changed":
           if (!canWriteTasks) return;
@@ -430,6 +477,11 @@ export function TaskDetail({
         columns={data.columns}
         teams={data.teams}
         epics={data.epics}
+        labels={data.labels}
+        projectKey={project.key}
+        canWriteLabels={canWriteLabels}
+        onLabelCreated={addLabel}
+        reloadLabels={reloadLabels}
         editable={editable}
         busy={busy}
         conflicts={conflicts}

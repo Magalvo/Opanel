@@ -211,6 +211,7 @@ describe("TaskDetail: what it shows", () => {
           taskKey="OPA-1"
           mode="page"
           canWriteTasks
+          canWriteLabels
           canComment
           canDeleteAny={false}
           canDeleteOwn
@@ -231,6 +232,7 @@ describe("TaskDetail: what it shows", () => {
           taskKey="OPA-1"
           mode="page"
           canWriteTasks
+          canWriteLabels
           canComment
           canDeleteAny={false}
           canDeleteOwn
