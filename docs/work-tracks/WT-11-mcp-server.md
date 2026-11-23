@@ -60,6 +60,9 @@ read tool as a follow-up (WS-104, question 2).
 
 Item D is [WI-105](../work-items/WI-105-mcp-bug-report-tool.md).
 
+Item E is [WI-106](../work-items/WI-106-mcp-operator-guide.md). Its guide is
+[`docs/mcp.md`](../mcp.md).
+
 ## Exit criteria
 
 - [ ] With a `qa_agent` token, the assistant is offered only read tools, comments and bug
