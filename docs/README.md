@@ -20,10 +20,10 @@ an index commit when a work-track is approved or done, or when what comes next c
   yet: its number is reserved first, then its work-spec is proposed. Items A to F of WT-07
   are done (WI-101, WI-102, WI-107, WI-109, WI-110, WI-108), and so is WT-11 (items A to E:
   WI-099, WI-100, WI-104, WI-105, WI-106). WT-08 to WT-10 follow, as planned below.
-- **In flight, from the project audit of 2026-11-23:** WI-112 (production refuses the
-  example session secret), WI-113 (a reorder within one column reaches an open board live)
-  and WI-114 (epic dates in the year `0000` are a `400`), each approved and on its own
-  branch. WI-111 (board moves without dragging) is done.
+- **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
+  session secret), WI-113 (a reorder within one column reaches an open board live) and
+  WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
+  dragging) is done too.
 - **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
   are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -208,19 +208,17 @@ Other follow-ups:
   loading after 5 s (`/api/v1/me` took 2.4 to 3 s). CI never showed it. Needs a work-item
   if it recurs: a warm-up before the suite, or a longer wait after a reload.
 
-- **A reorder within one column may not reach an open board live** (WI-109, WS-109
-  "Observation for the owner"). Read in the code, not yet run: `placeTask`
-  (`src/components/board/use-board.ts`) replaces a refreshed card in place when its task
-  is still in the same column. So another person's `task.moved` within one column would
-  leave the old order until a reload, although WS-048 section 4 says it reloads the new
-  column. Needs a small work-item: a `use-board` test that fails first, then on
-  `task.moved` read the column again (`listColumnTasks`) instead of replacing in place.
+- **Answered by WI-113 (2026-11-23): a reorder within one column may not reach an open
+  board live** (WI-109, WS-109 "Observation for the owner"). Confirmed: `placeTask`
+  (`src/components/board/use-board.ts`) replaced a refreshed card in place when its task
+  was still in the same column, so another person's `task.moved` within one column left
+  the old order until a reload. A `task.moved` now reads the column again, as WS-048
+  section 4 says.
 
-- **An epic dated in the year `0000` answers `500`** (WI-102, WS-102 question 1).
-  `z.iso.date()` accepts `0000-01-01` and PostgreSQL refuses it, so `startDate` or
-  `targetDate` of that year fails inside the service. Needs a small work-item: use the
-  shared `calendarDateSchema` of `src/lib/schemas/dates.ts` (added by WI-102) in
-  `src/lib/schemas/epics.ts`, with a route test for the `400`.
+- **Answered by WI-114 (2026-11-23): an epic dated in the year `0000` answered `500`**
+  (WI-102, WS-102 question 1). `z.iso.date()` accepts `0000-01-01` and PostgreSQL
+  refuses it. `src/lib/schemas/epics.ts` now uses the shared `calendarDateSchema`, so
+  that date is a `400`.
 
 - **The Epics page's loading test can miss the loading state** (WI-097, WS-097
   follow-up 1). `src/components/epics/epics-page.test.tsx`, "says it is loading, then shows
