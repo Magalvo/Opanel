@@ -1,6 +1,6 @@
 # WS-106 — The MCP operator guide
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
 - Work-item: [WI-106](../work-items/WI-106-mcp-operator-guide.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 3, 6 and 7),
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4: roles, scopes,

@@ -1,6 +1,6 @@
 # WI-106 — The MCP operator guide
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (item E)
 - Depends on: [WI-104](WI-104-mcp-write-tools.md) (done); [WI-105](WI-105-mcp-bug-report-tool.md)
   (done), so the guide covers every tool
