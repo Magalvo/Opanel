@@ -136,6 +136,10 @@ The Code tab of the Claude desktop app runs Claude Code itself, with the same se
 your home directory. A server added with `claude mcp add --scope user` is there in every
 Code tab session, and a project's `.mcp.json` in the sessions opened on that project.
 
+- **The `claude` command.** The desktop app does not put one on your `PATH`. To run
+  `claude mcp add`, install Claude Code's command line (see its
+  [setup documentation](https://code.claude.com/docs/en/setup)): the server it adds is the
+  desktop app's too.
 - **Start a new session** after you add or change the server: a running session keeps the
   tools it started with.
 - **Environment variables** for a `.mcp.json` come from the app's own environment: set

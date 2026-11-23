@@ -166,10 +166,15 @@ rejected: …` and stopped. The guide's troubleshooting starts from this.
   - **Not done here.** The tool call (`opanel_whoami`) was not tried through Claude Code:
     `claude -p` could not sign in from this session. The same call over stdio is covered
     by `mcp/e2e/mcp.spec.ts`.
-  - **Not seen yet.** No one has yet seen the desktop app's Code tab show the server. It
-    is likely to: this session runs in it on the bundled `claude.exe` 2.1.330, with
-    `CLAUDE_CODE_ENTRYPOINT=claude-desktop` and no `CLAUDE_CONFIG_DIR`. The owner checks
-    it in the app (question 3).
+  - **The desktop app, with the owner.** The server was added to the owner's own user
+    settings with `claude mcp add --scope user` and a `qa_agent` token of a throwaway
+    Opanel. In a new Code tab session of the desktop app, the owner asked "Who are you in
+    Opanel?". The assistant called `opanel_whoami` and answered with the agent "Desktop
+    check", `qa_agent`, its four scopes and all projects. This checks question 3 and the
+    tool call through Claude Code. The server was then removed from the settings, and the
+    throwaway Opanel and its database were dropped.
+  - **Found.** The desktop app puts no `claude` command on `PATH`. The guide's desktop
+    section now says to install Claude Code's command line to run `claude mcp add`.
 
 ## Deviations
 
