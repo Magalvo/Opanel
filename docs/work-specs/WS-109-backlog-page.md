@@ -1,6 +1,7 @@
 # WS-109 — The Backlog page
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 4 as proposed; done on
+  2026-11-23)
 - Work-item: [WI-109](../work-items/WI-109-backlog-page.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 5;
   [0002](../canonical/0002-realtime-sync.md) section 4;
@@ -247,3 +248,39 @@ until a reload, where WS-048 section 4 says `task.moved` reloads the new column.
 from reading the code, not from running it. If it is confirmed, it is a follow-up for the
 board. This page reloads the backlog on every `task.moved` of a backlog task, so it does
 not have the problem.
+
+## Implementation record
+
+- Branch `claude/wi-109-backlog-page`, from `main` after the reservation (`77fc176`). No
+  server change.
+- Red (`454d133`): the new backlog tests failed on the missing `moves`, `use-backlog` and
+  `backlog` modules. The frame tests failed on the missing "Backlog" tab. The task detail
+  tests failed on the missing "Backlog" option.
+- Green (`c197afe`): `components/backlog` (`api.ts`, `moves.ts`, `use-backlog.ts`,
+  `backlog-row.tsx`, `backlog.tsx`), the route, the frame's "Backlog" tab and remembered
+  list, `NewTaskDialog` with `column: null`, and the "Backlog" option in the task detail.
+- End to end (`6809d18`): `tests/e2e/backlog.spec.ts` (tests 15 and 16) and the Backlog
+  page with a task dialog over it in the accessibility check. The check found the
+  "Move to board" name problem of deviation 2.
+- Gate on 2026-11-23: typecheck, lint and Prettier pass; Vitest 2131 of 2131;
+  `pnpm test:e2e --retries=0` 107 of 107. Windows 11, pnpm 10.28.0, Compose PostgreSQL
+  on port 5433.
+
+## Deviations
+
+1. **No `backlog-row.test.tsx`.** The rows render only inside the page, with a
+   `DndContext` for the sortable one. Their tests are in `backlog.test.tsx`: content,
+   link, handle, "Move to board", and no controls when read-only.
+2. **"Move to board" is named "Move to board OPA-12"**, not "Move OPA-12 to the board"
+   (section 2). The accessibility check refused the planned name: an accessible name must
+   contain the visible text (WCAG 2.5.3, axe `label-content-name-mismatch`). The task's
+   key follows the visible text, in an `sr-only` span.
+3. **`reorder` is the backlog's own function, not `applyDrop`.** `applyDrop` writes the
+   target column's id into the moved task, which would put the `BACKLOG` key in a backlog
+   task's `columnId`. `backlogMoveRequest` still calls the board's `moveRequest`, as
+   section 3 says.
+4. **"Backlog" in the column select has the value `""`.** A `<select>` holds strings, and
+   `""` maps to `null`. The read view keeps "In backlog".
+5. **The test numbering.** Tests 4 to 8 are in `use-backlog.test.tsx` and tests 9 to 11 in
+   `backlog.test.tsx`. Test 12, the board's dialog with its column, is the existing
+   board test, which passes unchanged.
