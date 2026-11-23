@@ -1,6 +1,6 @@
 # WI-112 — Production refuses the example session secret
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: a finding of the project audit of 2026-11-23
 - Depends on: none
 - Work-spec: [WS-112](../work-specs/WS-112-example-secret-refused.md)

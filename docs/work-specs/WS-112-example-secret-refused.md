@@ -1,6 +1,6 @@
 # WS-112 — Production refuses the example session secret
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, question 1 as proposed: the Playwright secret stays out of scope)
 - Work-item: [WI-112](../work-items/WI-112-example-secret-refused.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) section 3 (configuration is the
   validated environment; the image adds no default secret); [WS-079](WS-079-production-secrets-split.md)
