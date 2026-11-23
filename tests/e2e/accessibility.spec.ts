@@ -198,3 +198,53 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(await axe()).toEqual([]);
   });
 }
+
+const COLOURS = [
+  "gray",
+  "red",
+  "orange",
+  "amber",
+  "green",
+  "teal",
+  "blue",
+  "indigo",
+  "purple",
+  "pink",
+] as const;
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`labels of every colour have no accessibility violations in ${colorScheme} mode (WS-108)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    const headers = { Origin: E2E_BASE_URL };
+    const labelIds: string[] = [];
+    for (const colour of COLOURS) {
+      const created = await page.request.post(`/api/v1/projects/${key}/labels`, {
+        headers,
+        data: { name: `Label ${colour}`, colour },
+      });
+      expect(created.status()).toBe(201);
+      labelIds.push(((await created.json()) as { id: string }).id);
+    }
+    expect(
+      (
+        await page.request.patch(`/api/v1/tasks/${key}-1`, {
+          headers,
+          data: { labelIds, version: 1 },
+        })
+      ).status(),
+    ).toBe(200);
+    await page.emulateMedia({ colorScheme });
+
+    for (const [path, loaded] of [
+      [`/projects/${key}`, page.getByRole("list", { name: "Labels" }).first()],
+      [`/projects/${key}/tasks/${key}-1`, page.getByRole("group", { name: "Labels" })],
+      [`/projects/${key}/settings`, page.getByRole("row", { name: /Label pink/ })],
+    ] as const) {
+      await page.goto(path);
+      await expect(loaded).toBeVisible();
+      expect(await violations(page), path).toEqual([]);
+    }
+  });
+}
