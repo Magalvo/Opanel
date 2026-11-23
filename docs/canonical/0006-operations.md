@@ -49,8 +49,9 @@ implements it.
 - One app process (doc 0002: the event hub lives in memory). Scaling out is out of scope
   for v1 and is refused in the docs, not silently allowed.
 - Configuration stays the validated environment of `src/server/env.ts`; the image adds no
-  default secret. `NODE_ENV=production` makes `SETUP_TOKEN` required for the first-run
-  setup (WS-055).
+  default secret, and a production server refuses the example `BETTER_AUTH_SECRET` values
+  published in the repository (WS-112). `NODE_ENV=production` makes `SETUP_TOKEN` required
+  for the first-run setup (WS-055).
 
 ## 4. Reverse proxy and HTTPS
 
