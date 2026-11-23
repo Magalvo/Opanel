@@ -176,6 +176,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-108](work-items/WI-108-labels-ui.md)                        | Labels in the UI                                                  | [WS-108](work-specs/WS-108-labels-ui.md)                        |
 | [WI-109](work-items/WI-109-backlog-page.md)                     | The Backlog page                                                  | [WS-109](work-specs/WS-109-backlog-page.md)                     |
 | [WI-110](work-items/WI-110-priority-due-date-ui.md)             | Priority and due date in the UI                                   | [WS-110](work-specs/WS-110-priority-due-date-ui.md)             |
+| [WI-111](work-items/WI-111-board-drag-accessibility.md)         | Board moves without dragging, and drags respect reduced motion    | [WS-111](work-specs/WS-111-board-drag-accessibility.md)         |
 
 ## Follow-ups
 
