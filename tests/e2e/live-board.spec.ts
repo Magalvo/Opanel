@@ -113,6 +113,24 @@ test("a card moved in one browser moves in the other, without a reload", async (
   expect(reloads).toBe(0);
 });
 
+test("a card reordered within its column moves on the other board, without a reload (WS-113)", async ({
+  browser,
+}) => {
+  const { a, b, key } = await twoBoards(browser, ["India", "Juliet"]);
+  let reloads = 0;
+  b.on("framenavigated", () => {
+    reloads += 1;
+  });
+
+  await a.getByRole("button", { name: `Actions for ${key}-2` }).click();
+  const moved = a.waitForResponse((response) => response.url().endsWith("/move"));
+  await a.getByRole("menuitem", { name: "Move to top" }).click();
+  expect((await moved).status()).toBe(200);
+
+  await expect.poll(() => titlesIn(b, "To do"), { timeout: 2_000 }).toEqual(["Juliet", "India"]);
+  expect(reloads).toBe(0);
+});
+
 test("a task created through the API appears on an open board", async ({ browser }) => {
   const { a, b, key } = await twoBoards(browser, ["Charlie"]);
 
