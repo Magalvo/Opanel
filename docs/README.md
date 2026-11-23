@@ -171,6 +171,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-103](work-items/WI-103-faster-checks-and-ci.md)             | Faster static checks, end-to-end build and CI                     | [WS-103](work-specs/WS-103-faster-checks-and-ci.md)             |
 | [WI-104](work-items/WI-104-mcp-write-tools.md)                  | The MCP write tools: comment, create, update and move a task      | [WS-104](work-specs/WS-104-mcp-write-tools.md)                  |
 | [WI-105](work-items/WI-105-mcp-bug-report-tool.md)              | The MCP tool to submit a bug report                               | [WS-105](work-specs/WS-105-mcp-bug-report-tool.md)              |
+| [WI-106](work-items/WI-106-mcp-operator-guide.md)               | The MCP operator guide                                            | [WS-106](work-specs/WS-106-mcp-operator-guide.md)               |
 
 ## Follow-ups
 
