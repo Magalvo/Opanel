@@ -199,6 +199,11 @@ For the owner:
    it fail in 2 of 3 full runs. The helper now waits for each load to end. Not a change to
    what the test checks.
 
+6. **A reorder within one column was applied in place (fixed by WS-113, 2026-11-23).** The
+   code followed the `task.updated` row of section 4 for every event, so another person's
+   `task.moved` within one column kept the old order until a reload. It now reads the
+   column, as the `task.moved` row says.
+
 ## Implementation record
 
 - Red, run before any code changed:
