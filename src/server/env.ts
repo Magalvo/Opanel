@@ -35,7 +35,19 @@ const optionalPostgresUrl = z
   .transform((value) => (value === "" ? undefined : value))
   .refine((value) => value === undefined || isPostgresUrl(value), { error: POSTGRES_URL_ERROR });
 
-const envSchema = z.object({
+/**
+ * `BETTER_AUTH_SECRET` values published in this repository (WS-112). Anyone can read them,
+ * so a production server refuses them; development and tests use them on purpose.
+ */
+const PUBLISHED_AUTH_SECRETS: ReadonlySet<string> = new Set([
+  "change-me-local-development-secret-0123456789", // .env.example
+  "test-secret-only-for-vitest-0123456789abcdef", // .env.test
+]);
+
+const PUBLISHED_AUTH_SECRET_ERROR =
+  "is an example value published with Opanel; generate one with `openssl rand -base64 32`";
+
+const envFieldsSchema = z.object({
   NODE_ENV: nodeEnvSchema,
   DATABASE_URL: z
     .string({ error: "required" })
@@ -72,6 +84,18 @@ const envSchema = z.object({
     .refine((value) => value === undefined || (value.length >= 32 && value.length <= 256), {
       error: "must be 32 to 256 characters",
     }),
+});
+
+const envSchema = envFieldsSchema.superRefine((env, ctx) => {
+  // Zod 4 runs this even when a field failed, with that field's raw value (WS-112). A
+  // missing or invalid secret is never in the set, so it is reported by its field only.
+  if (env.NODE_ENV === "production" && PUBLISHED_AUTH_SECRETS.has(env.BETTER_AUTH_SECRET)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["BETTER_AUTH_SECRET"],
+      message: PUBLISHED_AUTH_SECRET_ERROR,
+    });
+  }
 });
 
 export type Env = Readonly<z.infer<typeof envSchema>>;

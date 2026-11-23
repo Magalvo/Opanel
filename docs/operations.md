@@ -51,6 +51,8 @@ but cannot drop or alter tables, `TRUNCATE`, or change the audit log or the task
    - `POSTGRES_PASSWORD` and `OPANEL_APP_DB_PASSWORD`: one `openssl rand -hex 32` each.
      Put them in `MIGRATION_DATABASE_URL` and `DATABASE_URL` as the file shows.
    - `BETTER_AUTH_SECRET`: `openssl rand -base64 32`. Changing it later signs everyone out.
+     The server refuses to start in production with a value published in the repository
+     (`.env.example`, `.env.test`).
    - `APP_URL`: the public `https://` address, with no path.
    - `SETUP_TOKEN`: `openssl rand -hex 32`. On a production server the first-run setup
      refuses to create the first Admin without it.

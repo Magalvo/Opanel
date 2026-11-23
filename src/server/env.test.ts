@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -121,6 +124,63 @@ describe("BETTER_AUTH_SECRET", () => {
 
     expect(error.message).toContain("BETTER_AUTH_SECRET");
     expect(error.message).not.toContain("weak-and-private");
+  });
+});
+
+describe("BETTER_AUTH_SECRET published in the repository (WS-112)", () => {
+  const EXAMPLE = "change-me-local-development-secret-0123456789"; // .env.example
+  const VITEST = "test-secret-only-for-vitest-0123456789abcdef"; // .env.test
+
+  /** Every `BETTER_AUTH_SECRET=` value of a file at the repository root. */
+  function secretsIn(file: string): string[] {
+    const text = readFileSync(path.join(process.cwd(), file), "utf8");
+    return [...text.matchAll(/^BETTER_AUTH_SECRET=(.*)$/gm)].map((match) => match[1] ?? "");
+  }
+
+  it.each([EXAMPLE, VITEST])("refuses %s in production, without showing it", (secret) => {
+    const error = captureError({ ...base, NODE_ENV: "production", BETTER_AUTH_SECRET: secret });
+
+    expect(error.variables).toEqual(["BETTER_AUTH_SECRET"]);
+    expect(error.message).toContain("openssl rand -base64 32");
+    expect(error.message).not.toContain(secret);
+  });
+
+  it.each(["development", "test", undefined])("accepts both when NODE_ENV is %s", (nodeEnv) => {
+    for (const secret of [EXAMPLE, VITEST]) {
+      expect(parseEnv({ ...base, NODE_ENV: nodeEnv, BETTER_AUTH_SECRET: secret })).toMatchObject({
+        BETTER_AUTH_SECRET: secret,
+      });
+    }
+  });
+
+  it("accepts any other secret of 32 characters in production", () => {
+    expect(
+      parseEnv({ ...base, NODE_ENV: "production", BETTER_AUTH_SECRET: "y".repeat(32) })
+        .BETTER_AUTH_SECRET,
+    ).toBe("y".repeat(32));
+  });
+
+  it("refuses in production every value .env.example and .env.test hold", () => {
+    const published = [...secretsIn(".env.example"), ...secretsIn(".env.test")];
+
+    expect(published.length).toBeGreaterThanOrEqual(2);
+    for (const secret of published) {
+      expect(
+        captureError({ ...base, NODE_ENV: "production", BETTER_AUTH_SECRET: secret }).variables,
+      ).toEqual(["BETTER_AUTH_SECRET"]);
+    }
+  });
+
+  it("still reports a configuration error when another variable is invalid too", () => {
+    const error = captureError({
+      ...base,
+      NODE_ENV: "production",
+      BETTER_AUTH_SECRET: EXAMPLE,
+      APP_URL: "not a url",
+    });
+
+    expect(error.variables).toContain("APP_URL");
+    expect(error.message).not.toContain(EXAMPLE);
   });
 });
 
