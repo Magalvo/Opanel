@@ -276,5 +276,7 @@ files reports this way from PostHog's error-tracking alerts.
 
 ## What comes next
 
-- **An MCP server (WT-11).** AI assistants such as Claude Code will use Opanel through
-  tools, with an agent token (doc [0005](canonical/0005-mcp-server.md)).
+- **An AI assistant instead of a program.** The MCP server (doc
+  [0005](canonical/0005-mcp-server.md)) gives an assistant such as Claude Code this API as
+  tools, under an agent account and token like yours. Setting it up is in
+  [Connecting an AI assistant](mcp.md).

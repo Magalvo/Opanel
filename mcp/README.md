@@ -61,14 +61,9 @@ is not an agent's. The token is never written to a tool result, an error or a lo
 
 ### Claude Code
 
-Add the server with the command line, giving the absolute path of the built file:
-
-```sh
-claude mcp add opanel --env OPANEL_URL=https://opanel.your-company.com --env OPANEL_TOKEN=opk_… -- node /path/to/opanel/mcp/dist/index.js
-```
-
-The full operator guide, covering the agent account, its role and scopes, the token and the
-desktop app, is WT-11 item E.
+[Connecting an AI assistant](../docs/mcp.md) is the operator guide: the agent account and
+its scopes, the token, adding the server to Claude Code on the command line, for a team and
+in the desktop app, and what to do when it does not start.
 
 ## Security
 

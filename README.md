@@ -62,7 +62,9 @@ upgrading, backing up and restoring, recovering the last Admin, maintenance, sto
 logs. CI rehearses its commands on every change to the image.
 
 Writing a program that uses Opanel's API with an agent token? The
-[agents guide](docs/agents.md) explains tokens, scopes, errors and limits.
+[agents guide](docs/agents.md) explains tokens, scopes, errors and limits. To connect an AI
+assistant such as Claude Code through the MCP server, see
+[Connecting an AI assistant](docs/mcp.md).
 
 ## Commands
 
