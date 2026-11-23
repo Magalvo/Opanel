@@ -15,6 +15,7 @@ import {
 } from "@/lib/schemas/bug-reports";
 import { AGENT_SCOPES } from "@/lib/schemas/permissions";
 import { PROBLEM_CODES } from "@/lib/schemas/problem";
+import { PRIORITIES } from "@/lib/schemas/tasks";
 
 import {
   codeSpans,
@@ -35,6 +36,7 @@ const SECTIONS = [
   "Knowing yourself",
   "Errors and limits",
   "Lists",
+  "Tasks and the backlog",
   "Live updates",
   "Filing bug reports",
   "Rotating and revoking",
@@ -147,6 +149,20 @@ describe("docs/agents.md (WS-078)", () => {
 
   it("has no broken link or missing file", () => {
     expect(guideProblems(guide(), thisRepository())).toEqual([]);
+  });
+
+  it("lists exactly the task priorities in its tasks section (WS-115)", () => {
+    const tasks = section(guide(), "Tasks and the backlog");
+    const priorities = codeSpans(tasks).filter((span) =>
+      (PRIORITIES as readonly string[]).includes(span),
+    );
+    expect(priorities.length).toBeGreaterThan(0);
+    expect(new Set(priorities)).toEqual(new Set(PRIORITIES));
+  });
+
+  it("names the backlog endpoint and the label event (WS-115)", () => {
+    expect(guide()).toContain("GET /api/v1/projects/{projectId}/backlog");
+    expect(codeSpans(section(guide(), "Live updates"))).toContain("label.changed");
   });
 
   it("is linked from the README and from the OpenAPI document", () => {
