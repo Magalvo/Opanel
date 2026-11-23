@@ -1,6 +1,6 @@
 # WI-111 — Board moves without dragging, and drags respect reduced motion
 
-- Status: In progress
+- Status: Done (2026-11-23)
 - Work-track: none: two accessibility defects found in a review of the board UI on
   2026-11-23
 - Depends on: none
@@ -20,26 +20,26 @@ animates, whatever the setting.
 
 ## Acceptance criteria
 
-- [ ] A person who may change tasks on a project that is not archived finds, on each card, a
+- [x] A person who may change tasks on a project that is not archived finds, on each card, a
       button labelled "Actions for OPA-12" that opens a menu with "Move to top",
       "Move up", "Move down", "Move to bottom" and "Move to" each other column of the board.
-- [ ] Moves that would not change the card's place are disabled ("Move up" and "Move to
+- [x] Moves that would not change the card's place are disabled ("Move up" and "Move to
       top" on the first card, "Move down" and "Move to bottom" on the last). The card's own
       column is not offered under "Move to".
-- [ ] Choosing a move places the card at once, saves it as a drag does (the same request,
+- [x] Choosing a move places the card at once, saves it as a drag does (the same request,
       the same handling of a failure), and announces "OPA-12 was moved to In progress,
       position 2 of 5." in the board's status region. A move to another column puts the
       card at the bottom of that column.
-- [ ] After a move from the menu, the keyboard focus is on the moved card's menu button,
+- [x] After a move from the menu, the keyboard focus is on the moved card's menu button,
       also when the card went to another column.
-- [ ] The menu button is not shown to a Viewer or on an archived project, and is disabled
+- [x] The menu button is not shown to a Viewer or on an archived project, and is disabled
       while a move is being saved.
-- [ ] With `prefers-reduced-motion: reduce`, dragging a card by pointer or keyboard runs
+- [x] With `prefers-reduced-motion: reduce`, dragging a card by pointer or keyboard runs
       no animation: cards do not slide into place, and the dropped card does not animate
       to its place.
-- [ ] Without that preference, drag animations are unchanged.
-- [ ] Every existing board unit and end-to-end test passes unchanged.
-- [ ] The full quality gate passes.
+- [x] Without that preference, drag animations are unchanged.
+- [x] Every existing board unit and end-to-end test passes unchanged.
+- [x] The full quality gate passes.
 
 ## Notes
 

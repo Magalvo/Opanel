@@ -1,6 +1,6 @@
 # WS-111 — Board moves without dragging, and drags respect reduced motion
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 5 as recommended)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 5 as recommended)
 - Work-item: [WI-111](../work-items/WI-111-board-drag-accessibility.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 5 (any task moves
   to any column); [WS-037](WS-037-board-page.md) sections 5 and 6 (drag and drop, the
@@ -200,8 +200,43 @@ an upgrade of either library that changes this fails a test.
 
 ## Deviations from the approved spec
 
-None yet.
+1. **Test 11 is not written.** jsdom has no layout, so `@dnd-kit` gives every card the
+   same zero-duration `transform 0ms linear` while dragging, with or without
+   `transition: null`. The unit test could not tell the two apart, so it could not fail
+   first. The browser test 14 covers reduced motion instead, and it starts with a control
+   run that does see the animations without the setting.
+2. **A third animation, also turned off.** For keyboard drags `@dnd-kit` glides the drag
+   overlay between positions with its own `transform 250ms ease` (`DragOverlay`'s
+   `transition`, `core.esm.js` line 3637). Test 14 found it. With reduced motion the board
+   passes `transition="none"`, along with `dropAnimation={null}`.
+3. **The menu button is `aria-disabled` while a move is saved, not `disabled`.** A
+   disabled button cannot take the focus, so the focus could not go back to the moved
+   card's menu until the save ended (test 13 failed on it). As the drag handle already
+   does, the button keeps the focus and says it is disabled, and its `pointerdown` and
+   `keydown` are prevented, so it opens nothing. Test 10 checks `aria-disabled` and that
+   neither a click nor Enter opens the menu.
+4. **The menu leaves the focus to Radix when it closes without a move.** The spec said
+   `onCloseAutoFocus` is prevented. It is, but only after a move is chosen. Closed with
+   Escape or by a click outside, Radix gives the focus back to the button as usual.
+5. **`SortableColumn` gets `movesOf(taskId)` and `onMove`, not `columns` and `board`.**
+   The board computes each card's moves from the board as shown. Same result, and the
+   column needs to know less.
 
 ## Implementation record
 
-Not started.
+- Red: `moves.test.ts`, `use-reduced-motion.test.tsx` and `board.test.tsx` failed on the
+  missing `menuMoves`, the missing hook and the missing menu button; `board.spec.ts`'s two
+  new tests failed on the missing menu, and with reduced motion on 1 transition while
+  dragging and 2 animations after the drop (commit `44ccdf8`).
+- Green: `menuMoves` in `moves.ts`, `useReducedMotion` in `src/hooks/`, `CardMenu` in
+  `card-menu.tsx`, wired through `task-card.tsx`, `board-column.tsx` and `board.tsx`
+  (commit `d354aee`, with deviations 2 and 3).
+- `board.spec.ts` and `live-board.spec.ts`: 17 of 17. The two new tests: 40 of 40 with
+  `--repeat-each 20 --workers 2 --retries 0`.
+- `typecheck` first failed on `<DragOverlay transition={undefined}>` under
+  `exactOptionalPropertyTypes`; the reduced-motion props are now spread in only when they
+  apply.
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2183 of 2183 (213 files);
+  `test:e2e` 113 of 113.
+- Run on Linux (cloud session) with Node 22 and pnpm 10.28.0, against a local PostgreSQL
+  16 on port 5432 (Compose's credentials and databases; Docker was not available).

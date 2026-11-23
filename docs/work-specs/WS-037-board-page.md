@@ -250,6 +250,9 @@ Technical, settled by the tests:
 - **The keyboard end-to-end steps wait one page timer after the pick-up** (`pickUp` in
   `tests/e2e/board.spec.ts`): `@dnd-kit`'s keyboard sensor starts listening for arrow keys
   in a timer. A person never presses that fast; the test did, and was flaky until then.
+- **Dragging is no longer the only way to move a card** (WS-111): each writable card has a
+  menu that moves it up, down, to either end of its column or to another column, and drag
+  animations are off for people who ask for reduced motion.
 
 ## Implementation record
 
