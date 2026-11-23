@@ -1,6 +1,6 @@
 # WI-110 — Priority and due date in the UI
 
-- Status: Proposed
+- Status: In progress
 - Work-track: [WT-07](../work-tracks/WT-07-backlog-priority-due-dates-labels.md) (item E)
 - Depends on: [WI-102](WI-102-priority-due-date.md) (done: priority and due date in the
   data model and API)

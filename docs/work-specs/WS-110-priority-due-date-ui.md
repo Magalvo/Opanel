@@ -1,6 +1,6 @@
 # WS-110 — Priority and due date in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 5 as proposed)
 - Work-item: [WI-110](../work-items/WI-110-priority-due-date-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0004](../canonical/0004-api-conventions.md) section 3 (calendar dates);
