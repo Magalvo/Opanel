@@ -189,7 +189,7 @@ describe("Backlog: for someone who may change it (WS-109 sections 3 and 4)", () 
     on(`POST /api/v1/tasks/${t1.id}/move`, json(full({ ...t1, columnId: todo.id, version: 2 })));
     const user = await renderBacklog();
 
-    await user.click(screen.getByRole("button", { name: "Move OPA-1 to the board" }));
+    await user.click(screen.getByRole("button", { name: "Move to board OPA-1" }));
 
     expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ columnId: todo.id, version: 1 });
     await waitFor(() => {
@@ -207,17 +207,17 @@ describe("Backlog: for someone who may change it (WS-109 sections 3 and 4)", () 
     }
     const user = await renderBacklog();
 
-    await user.click(screen.getByRole("button", { name: "Move OPA-2 to the board" }));
+    await user.click(screen.getByRole("button", { name: "Move to board OPA-2" }));
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Move OPA-3 to the board" })).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Move to board OPA-3" })).toHaveFocus();
     });
 
-    await user.click(screen.getByRole("button", { name: "Move OPA-3 to the board" }));
+    await user.click(screen.getByRole("button", { name: "Move to board OPA-3" }));
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Move OPA-1 to the board" })).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Move to board OPA-1" })).toHaveFocus();
     });
 
-    await user.click(screen.getByRole("button", { name: "Move OPA-1 to the board" }));
+    await user.click(screen.getByRole("button", { name: "Move to board OPA-1" }));
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Add task" })).toHaveFocus();
     });
@@ -228,7 +228,7 @@ describe("Backlog: for someone who may change it (WS-109 sections 3 and 4)", () 
     on(`POST /api/v1/tasks/${t1.id}/move`, problem(409, "version_conflict"));
     const user = await renderBacklog();
 
-    await user.click(screen.getByRole("button", { name: "Move OPA-1 to the board" }));
+    await user.click(screen.getByRole("button", { name: "Move to board OPA-1" }));
 
     await waitFor(() => {
       expect(messages()).toHaveTextContent(

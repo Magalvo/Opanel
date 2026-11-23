@@ -88,13 +88,14 @@ export function SortableBacklogRow({
           variant="outline"
           size="sm"
           className="shrink-0"
-          aria-label={`Move ${task.key} to the board`}
           data-move-id={task.id}
           disabled={disabled || sending}
           onClick={onMoveToBoard}
         >
           <ArrowRightIcon aria-hidden="true" />
-          Move to board
+          {/* The visible text starts the name, then the task (WCAG 2.5.3). */}
+          {"Move to board "}
+          <span className="sr-only">{task.key}</span>
         </Button>
       </div>
     </li>

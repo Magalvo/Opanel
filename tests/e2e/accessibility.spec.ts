@@ -147,6 +147,31 @@ for (const colorScheme of ["light", "dark"] as const) {
     await expect(page.getByRole("dialog").getByRole("region", { name: "Comments" })).toBeVisible();
     expect(await violations(page), "task dialog").toEqual([]);
   });
+
+  test(`the Backlog page and a task over it have no accessibility violations in ${colorScheme} mode (WS-109)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    await page.emulateMedia({ colorScheme });
+    for (const title of ["A task in the backlog", "Another one"]) {
+      expect(
+        (
+          await page.request.post(`/api/v1/projects/${key}/tasks`, {
+            headers: { Origin: E2E_BASE_URL },
+            data: { title, type: "bug", columnId: null },
+          })
+        ).status(),
+      ).toBe(201);
+    }
+
+    await page.goto(`/projects/${key}/backlog`);
+    await expect(page.getByRole("button", { name: `Move to board ${key}-3` })).toBeVisible();
+    expect(await violations(page), "backlog").toEqual([]);
+
+    await page.getByRole("link", { name: "A task in the backlog" }).click();
+    await expect(page.getByRole("dialog").getByRole("region", { name: "Comments" })).toBeVisible();
+    expect(await violations(page), "task dialog over the backlog").toEqual([]);
+  });
 }
 
 for (const colorScheme of ["light", "dark"] as const) {
