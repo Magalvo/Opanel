@@ -208,3 +208,36 @@ export async function seedAgentToken(agentId: string): Promise<string> {
     await client.end();
   }
 }
+
+/** One `field_changed` entry of a task's history, as `taskHistory` reads it. */
+export interface FieldChange {
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+  actorEmail: string | null;
+}
+
+/**
+ * A task's `field_changed` history entries, oldest first. No endpoint reads a task's
+ * history before WT-08's timeline, so the test reads the table (WS-110 question 5).
+ */
+export async function taskHistory(taskId: string): Promise<FieldChange[]> {
+  const client = postgres(E2E_DATABASE_URL, { onnotice: () => undefined, max: 1 });
+  try {
+    const rows = await client<
+      { field: string; old_value: unknown; new_value: unknown; email: string | null }[]
+    >`
+      select e.field, e.old_value, e.new_value, a.email
+      from task_events e left join accounts a on a.id = e.actor_account_id
+      where e.task_id = ${taskId} and e.type = 'field_changed'
+      order by e.id`;
+    return rows.map((row) => ({
+      field: row.field,
+      oldValue: row.old_value,
+      newValue: row.new_value,
+      actorEmail: row.email,
+    }));
+  } finally {
+    await client.end();
+  }
+}

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   bugLabel,
@@ -1415,5 +1415,162 @@ describe("TaskDetail: labels (WS-108)", () => {
     expect(
       await within(picker()).findByRole("button", { name: "Remove label Defect" }),
     ).toBeVisible();
+  });
+});
+
+// Priority and due date in the task detail (WS-110 section 4, tests 8 and 9), with the
+// viewer's date fixed.
+
+describe("TaskDetail: priority and due date (WS-110)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 23, 12, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function value(term: string) {
+    return within(details()).getByText(term).nextElementSibling;
+  }
+
+  it("reads None for both when the task has neither", async () => {
+    await renderTask({ canWriteTasks: false });
+
+    expect(value("Priority")).toHaveTextContent("None");
+    expect(value("Due date")).toHaveTextContent("None");
+  });
+
+  it("reads the priority's word and an overdue date outside a done column", async () => {
+    await renderTask({
+      current: { ...base, priority: "high", dueDate: "2026-11-20" },
+      canWriteTasks: false,
+    });
+
+    expect(value("Priority")).toHaveTextContent("High");
+    expect(within(details()).getByRole("img", { name: "Priority: High" })).toBeInTheDocument();
+    expect(value("Due date")).toHaveTextContent("Overdue, due Nov 20, 2026");
+  });
+
+  it("does not mark a past date overdue in a done column, but does in the backlog", async () => {
+    await renderTask({
+      current: { ...base, columnId: done.id, dueDate: "2026-11-20" },
+      canWriteTasks: false,
+    });
+    expect(value("Due date")).toHaveTextContent("Due Nov 20, 2026");
+    expect(value("Due date")).not.toHaveTextContent("Overdue");
+  });
+
+  it("marks a past date overdue on a backlog task", async () => {
+    await renderTask({
+      current: { ...base, columnId: null, dueDate: "2026-11-20" },
+      canWriteTasks: false,
+    });
+    expect(value("Due date")).toHaveTextContent("Overdue, due Nov 20, 2026");
+  });
+
+  it("sends only a changed priority", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, priority: "high", version: 4 }));
+    const user = await renderTask();
+
+    await user.selectOptions(within(details()).getByLabelText("Priority"), "High");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ priority: "high", version: 3 });
+  });
+
+  it("offers the five priorities in order", async () => {
+    await renderTask();
+
+    const options = within(within(details()).getByLabelText("Priority")).getAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual([
+      "None",
+      "Low",
+      "Medium",
+      "High",
+      "Urgent",
+    ]);
+  });
+
+  it("sends only a changed due date", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, dueDate: "2026-12-01", version: 4 }));
+    const user = await renderTask();
+
+    fireEvent.change(within(details()).getByLabelText("Due date"), {
+      target: { value: "2026-12-01" },
+    });
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ dueDate: "2026-12-01", version: 3 });
+  });
+
+  it("clears the due date with Clear, focuses the input, and sends null", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, dueDate: null, version: 4 }));
+    const user = await renderTask({ current: { ...base, dueDate: "2026-12-01" } });
+    const input = within(details()).getByLabelText("Due date");
+    expect(input).toHaveValue("2026-12-01");
+
+    await user.click(within(details()).getByRole("button", { name: "Clear due date" }));
+
+    expect(input).toHaveValue("");
+    expect(input).toHaveFocus();
+    expect(
+      within(details()).queryByRole("button", { name: "Clear due date" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ dueDate: null, version: 3 });
+  });
+
+  it("offers no Clear without a date", async () => {
+    await renderTask();
+
+    expect(
+      within(details()).queryByRole("button", { name: "Clear due date" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sends neither when only the title changed", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, title: "Renamed", version: 4 }));
+    const user = await renderTask({
+      current: { ...base, priority: "low", dueDate: "2026-12-01" },
+    });
+
+    await user.clear(within(details()).getByLabelText("Title"));
+    await user.type(within(details()).getByLabelText("Title"), "Renamed");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Renamed", version: 3 });
+  });
+
+  it("shows a due date error from the API at the field", async () => {
+    on(
+      "PATCH /api/v1/tasks/OPA-1",
+      problem(400, "invalid_request", [{ path: "dueDate", message: "Not a calendar date." }]),
+    );
+    const user = await renderTask();
+
+    fireEvent.change(within(details()).getByLabelText("Due date"), {
+      target: { value: "2026-12-01" },
+    });
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(within(details()).getByLabelText("Due date")).toHaveAccessibleDescription(
+      "Not a calendar date.",
+    );
+  });
+
+  it("keeps an unsaved priority when the task changes underneath", async () => {
+    on("POST /api/v1/tasks/OPA-1/move", json({ ...base, columnId: done.id, version: 4 }));
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, priority: "urgent", version: 5 }));
+    const user = await renderTask();
+
+    await user.selectOptions(within(details()).getByLabelText("Priority"), "Urgent");
+    await user.selectOptions(within(details()).getByLabelText("Column"), "Done");
+    await screen.findByText("Moved to Done.");
+
+    expect(within(details()).getByLabelText("Priority")).toHaveValue("urgent");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ priority: "urgent", version: 4 });
   });
 });

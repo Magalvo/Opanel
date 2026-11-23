@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
@@ -15,6 +15,7 @@ import {
   opa,
   page,
   PROJECT,
+  PROJECT_ID,
   task,
   TASKS,
   todo,
@@ -396,5 +397,54 @@ describe("Board: live (WS-048 section 6)", () => {
     expect(screen.getByRole("status", { name: "Live updates" })).toHaveTextContent(
       "Live updates are paused. Reconnecting…",
     );
+  });
+});
+
+// Overdue on the board (WS-110 test 6): only outside a done column, and live.
+
+describe("Board: overdue (WS-110)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 23, 12, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("marks a past-due card outside a done column, not in one, and follows a live move", async () => {
+    const late = task(4, todo.id, { title: "Late", dueDate: "2026-11-20" });
+    const finished = task(5, done.id, { title: "Finished", dueDate: "2026-11-20" });
+    on(TASKS, page([late, finished]));
+    await renderBoard();
+
+    expect(within(columnRegion("To do")).getByRole("listitem")).toHaveTextContent(
+      "Overdue, due Nov 20, 2026",
+    );
+    expect(within(columnRegion("Done")).getByRole("listitem")).toHaveTextContent(
+      "Due Nov 20, 2026",
+    );
+    expect(within(columnRegion("Done")).getByRole("listitem")).not.toHaveTextContent("Overdue");
+
+    const moved = { ...late, columnId: done.id, version: 2 };
+    on(`GET /api/v1/tasks/${late.id}`, json(full(moved)));
+    on(`${TASKS}&columnId=${done.id}`, page([finished, moved]));
+    act(() => {
+      FakeSource.latest().send("task.moved", {
+        id: crypto.randomUUID(),
+        type: "task.moved",
+        projectId: PROJECT_ID,
+        entity: "task",
+        entityId: late.id,
+        version: 2,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-23T10:00:00.000Z",
+      });
+    });
+
+    await waitFor(() => {
+      expect(within(columnRegion("Done")).getAllByRole("listitem")).toHaveLength(2);
+    });
+    expect(columnRegion("Done")).not.toHaveTextContent("Overdue");
   });
 });

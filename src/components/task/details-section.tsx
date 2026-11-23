@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { AccountName } from "@/components/account-name";
 import { TYPE_LABELS } from "@/components/board/task-card";
@@ -11,6 +11,7 @@ import { MarkdownEditor } from "@/components/markdown-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToday } from "@/hooks/use-today";
 import { ApiFailure } from "@/lib/api-client";
 import { SEVERITIES, type Severity, severitySchema } from "@/lib/schemas/bug-reports";
 import type { Column } from "@/lib/schemas/columns";
@@ -18,6 +19,9 @@ import type { Epic } from "@/lib/schemas/epics";
 import type { Label } from "@/lib/schemas/labels";
 import type { Person } from "@/lib/schemas/people";
 import {
+  PRIORITIES,
+  type Priority,
+  prioritySchema,
   type Task,
   taskSchema,
   taskTitleSchema,
@@ -29,7 +33,9 @@ import type { TeamSummary } from "@/lib/schemas/teams";
 
 import { updateTask } from "./api";
 import { SEVERITY_LABELS } from "./bug-labels";
+import { isOverdue } from "./due-date";
 import { PersonField, personLabel } from "./person-field";
+import { DueDateText, PRIORITY_LABELS, PriorityIcon } from "./task-meta";
 
 const SELECT =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:text-sm dark:bg-input/30";
@@ -56,6 +62,9 @@ interface Draft {
   teamId: string;
   assignee: Person | null;
   epicId: string;
+  priority: Priority;
+  /** `""` for none, as a date input holds it (WS-110 section 4). */
+  dueDate: string;
   /** The chosen labels, in the order they were chosen (WS-108 section 3). */
   labelIds: string[];
 }
@@ -81,6 +90,8 @@ function draftOf(task: Task): Draft {
     teamId: task.assigneeTeam?.id ?? "",
     assignee: task.assignee,
     epicId: task.epic?.id ?? "",
+    priority: task.priority,
+    dueDate: task.dueDate ?? "",
     labelIds: task.labels.map((label) => label.id),
   };
 }
@@ -101,6 +112,11 @@ function changesOf(task: Task, draft: Draft): Omit<UpdateTaskRequest, "version">
   }
   if (draft.epicId !== (task.epic?.id ?? "")) {
     changes.epicId = draft.epicId === "" ? null : draft.epicId;
+  }
+  if (draft.priority !== task.priority) changes.priority = draft.priority;
+  // An emptied date clears it: `null` (WS-102 section 4).
+  if (draft.dueDate !== (task.dueDate ?? "")) {
+    changes.dueDate = draft.dueDate === "" ? null : draft.dueDate;
   }
   // Only when the set changed, so a save of other fields needs no labels:write (WS-108).
   if (
@@ -161,6 +177,9 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
   const id = useId();
   const { task, columns, editable } = props;
   const column = columns.find((item) => item.id === task.columnId);
+  const today = useToday();
+  // A backlog task has no column, so it is never done (WT-07 decision 7).
+  const overdue = isOverdue(task.dueDate, column?.category === "done", today);
 
   return (
     <section aria-labelledby={`${id}-heading`} className="grid min-w-0 gap-4">
@@ -188,6 +207,19 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
               {task.assignee === null ? "No one" : personLabel(task.assignee)}
             </Row>
             <Row term="Epic">{task.epic?.title ?? "No epic"}</Row>
+            <Row term="Priority">
+              <span className="inline-flex items-center gap-1.5">
+                <PriorityIcon priority={task.priority} />
+                {PRIORITY_LABELS[task.priority]}
+              </span>
+            </Row>
+            <Row term="Due date">
+              {task.dueDate === null ? (
+                "None"
+              ) : (
+                <DueDateText dueDate={task.dueDate} overdue={overdue} />
+              )}
+            </Row>
             <Row term="Labels">
               {task.labels.length === 0 ? "None" : <LabelChips labels={task.labels} />}
             </Row>
@@ -229,6 +261,7 @@ function DetailsForm({
   onDirtyChange,
 }: Readonly<DetailsProps>) {
   const id = useId();
+  const dueDateInput = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Draft>(() => draftOf(task));
   const [errors, setErrors] = useState<Record<string, string>>({});
   // A new version of the task. After a conflict the form starts again from what the
@@ -440,6 +473,61 @@ function DetailsForm({
               <option value={task.epic.id}>{task.epic.title} (closed)</option>
             )}
           </select>
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-priority`} className="text-sm font-medium">
+            Priority
+          </label>
+          <select
+            id={`${id}-priority`}
+            value={draft.priority}
+            className={SELECT}
+            onChange={(event) => {
+              set("priority", prioritySchema.parse(event.target.value));
+            }}
+            {...described("priority")}
+          >
+            {PRIORITIES.map((priority) => (
+              <option key={priority} value={priority}>
+                {PRIORITY_LABELS[priority]}
+              </option>
+            ))}
+          </select>
+          {errorText("priority")}
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-due-date`} className="text-sm font-medium">
+            Due date
+          </label>
+          <div className="flex min-w-0 items-center gap-2">
+            <Input
+              ref={dueDateInput}
+              id={`${id}-due-date`}
+              type="date"
+              value={draft.dueDate}
+              className="min-w-0"
+              onChange={(event) => {
+                set("dueDate", event.target.value);
+              }}
+              {...described("dueDate")}
+            />
+            {draft.dueDate !== "" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  set("dueDate", "");
+                  dueDateInput.current?.focus();
+                }}
+              >
+                {/* The visible text starts the name (WCAG 2.5.3). */}
+                {"Clear "}
+                <span className="sr-only">due date</span>
+              </Button>
+            )}
+          </div>
+          {errorText("dueDate")}
         </div>
         <div className="sm:col-span-2">
           <LabelPicker

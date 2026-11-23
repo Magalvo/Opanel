@@ -145,6 +145,24 @@ test("a Manager sets the triage team and a layer's team in the settings (WS-092)
   });
 });
 
+/**
+ * The end-to-end database keeps every project of the run, and the list is by name in pages
+ * of 50, so a project may be on a later page (seen once the run had more than 50 active
+ * projects, WS-110). As `showEveryone` in `people.spec.ts`: each click waits for its page.
+ */
+async function showEveryProject(page: Page) {
+  const more = page.getByRole("button", { name: "Load more" });
+  const loading = page.getByRole("button", { name: "Load more", disabled: true });
+  while (await more.isVisible()) {
+    const next = page.waitForResponse(
+      (response) => response.url().includes("/api/v1/projects?") && response.ok(),
+    );
+    await more.click();
+    await next;
+    await expect(loading).toHaveCount(0);
+  }
+}
+
 test("a Viewer sees projects but no New project, no Settings, and not the settings page", async ({
   page,
   browser,
@@ -157,6 +175,9 @@ test("a Viewer sees projects but no New project, no Settings, and not the settin
   await signInAs(page, "viewer");
 
   await page.goto("/projects");
+  await expect(page.getByRole("heading", { level: 1, name: "Projects" })).toBeVisible();
+  await expect(page.getByRole("table")).toBeVisible();
+  await showEveryProject(page);
   await expect(page.getByRole("link", { name: `Viewed ${key}` })).toBeVisible();
   await expect(page.getByRole("button", { name: "New project" })).toHaveCount(0);
 

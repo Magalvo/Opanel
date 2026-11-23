@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   COLUMNS,
@@ -282,5 +282,27 @@ describe("Backlog: read-only (WS-109 section 2)", () => {
       expect(messages()).toHaveTextContent("This project was archived. The backlog is read-only.");
     });
     expect(screen.queryByRole("button", { name: "Add task" })).not.toBeInTheDocument();
+  });
+});
+
+// Priority and due date on backlog rows (WS-110 test 7): a backlog task is never in a
+// done column, so a past date is overdue.
+
+describe("Backlog: priority and due date (WS-110)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 23, 12, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows a row's priority icon and Overdue for a past date", async () => {
+    on(BACKLOG, page([inBacklog(1, { priority: "urgent", dueDate: "2026-11-01" })]));
+    await renderBacklog();
+
+    expect(screen.getByRole("img", { name: "Priority: Urgent" })).toBeInTheDocument();
+    expect(rows()[0]).toHaveTextContent("Overdue, due Nov 1, 2026");
   });
 });

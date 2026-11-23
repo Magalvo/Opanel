@@ -228,13 +228,12 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     onDragCancel: ({ active }) => `Moving ${keyOf(active.id)} was cancelled.`,
   };
 
+  const activePlace = activeId === null ? null : placeOf(shown, activeId);
   const activeTask =
-    activeId === null
-      ? undefined
-      : (() => {
-          const place = placeOf(shown, activeId);
-          return place === null ? undefined : shown[place.columnId]?.[place.index];
-        })();
+    activePlace === null ? undefined : shown[activePlace.columnId]?.[activePlace.index];
+  // The dragged card's look follows the column it is over: never overdue in a done one.
+  const activeDone =
+    columns.find((column) => column.id === activePlace?.columnId)?.category === "done";
 
   return (
     <div className="grid min-w-0 gap-3">
@@ -308,7 +307,9 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
                 />
               ))}
               <DragOverlay>
-                {activeTask === undefined ? null : <OverlayCard task={activeTask} />}
+                {activeTask === undefined ? null : (
+                  <OverlayCard task={activeTask} done={activeDone} />
+                )}
               </DragOverlay>
             </DndContext>
           ) : (

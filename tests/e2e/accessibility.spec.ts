@@ -273,3 +273,44 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 }
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`priorities and an overdue date have no accessibility violations in ${colorScheme} mode (WS-110)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    const headers = { Origin: E2E_BASE_URL };
+    // The viewer's today is fixed, so the past date below is overdue.
+    await page.clock.setFixedTime(new Date("2030-06-15T12:00:00"));
+    for (const [title, data] of [
+      ["Low one", { priority: "low" }],
+      ["Medium one", { priority: "medium" }],
+      ["High one", { priority: "high", dueDate: "2030-07-01" }],
+      ["Urgent and overdue", { priority: "urgent", dueDate: "2030-06-01" }],
+      ["Overdue in the backlog", { priority: "high", dueDate: "2030-06-01", columnId: null }],
+    ] as const) {
+      expect(
+        (
+          await page.request.post(`/api/v1/projects/${key}/tasks`, {
+            headers,
+            data: { title, ...data },
+          })
+        ).status(),
+      ).toBe(201);
+    }
+    await page.emulateMedia({ colorScheme });
+
+    await page.goto(`/projects/${key}`);
+    await expect(page.getByText("Overdue, due Jun 1, 2030")).toBeVisible();
+    expect(await violations(page), "board").toEqual([]);
+
+    await page.goto(`/projects/${key}/backlog`);
+    await expect(page.getByText("Overdue, due Jun 1, 2030")).toBeVisible();
+    expect(await violations(page), "backlog").toEqual([]);
+
+    await page.goto(`/projects/${key}`);
+    await page.getByRole("link", { name: "Urgent and overdue" }).click();
+    await expect(page.getByRole("dialog").getByLabel("Due date")).toHaveValue("2030-06-01");
+    expect(await violations(page), "task dialog").toEqual([]);
+  });
+}
