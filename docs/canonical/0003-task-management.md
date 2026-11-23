@@ -95,8 +95,9 @@ Manager). Members may delete only tasks they reported; Managers may delete any.
 | Sprint       | Optional, only in projects with sprints enabled                 |
 
 **Severity is not priority.** Severity is the reporter's assessment of impact and is what
-an AI agent sends with a bug report. Priority is the team's decision about ordering and is
-set by people. An agent-filed bug arrives with a severity and priority `none`.
+an AI agent sends with a bug report. Priority is the team's decision about ordering.
+Priority is set by people and by agents holding `tasks:write`; the triage pipeline never
+sets it. An agent-filed bug arrives with a severity and priority `none`.
 
 **Epics** have a title, description, status (`open` or `closed`), optional start and
 target dates, and show progress as done tasks and done story points over their totals.
@@ -114,6 +115,8 @@ Epics are not cards on the board; the board can be filtered or grouped by epic.
 - There are no workflow rules: any task can move to any column.
 - The **backlog** is the list of tasks that are not on the board. It is ordered by drag
   and drop, and that order is the team's ranking.
+- A task in the backlog has no column. A new task goes to the first column unless it is
+  created in the backlog; agent-filed bugs follow section 13.
 - Live updates and concurrent-edit rules for all of this follow doc 0002.
 
 ## 6. Sprints
