@@ -1,7 +1,8 @@
 # WT-07 — Backlog, priority, due dates, labels
 
-- Status: Approved by the owner on 2026-11-21: decisions 1 to 15, proposals P1 to P3 and
-  questions 1 to 9 as recommended.
+- Status: In progress (2026-11-23: items A to F done, WI-101, WI-102, WI-107, WI-109,
+  WI-110 and WI-108; item G next). Approved by the owner on 2026-11-21: decisions 1 to 15,
+  proposals P1 to P3 and questions 1 to 9 as recommended.
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 3: who may put
   tasks into or out of the backlog, apply, create, rename and delete labels; section 4:
   priority, due date, labels; section 5: the backlog; section 6: what WT-10 adds to the
