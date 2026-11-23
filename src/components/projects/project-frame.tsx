@@ -82,10 +82,20 @@ export function ProjectFrame({
   }
 
   const boardHref = `/projects/${projectKey}` as const;
+  const backlogHref = `/projects/${projectKey}/backlog` as const;
   const settingsHref = `/projects/${projectKey}/settings` as const;
   const epicsHref = `/projects/${projectKey}/epics` as const;
-  // A task, as a dialog over the board or as its own page, belongs to the board (WS-038).
-  const onBoard = pathname === boardHref || pathname.startsWith(`${boardHref}/tasks/`);
+  // A task, as a dialog or as its own page, belongs to the list it was opened from: the
+  // board or the backlog (WS-038, WS-109 section 1). The frame stays mounted across them,
+  // so it remembers the last one; a task loaded directly belongs to the board.
+  const [lastList, setLastList] = useState<"board" | "backlog">(
+    pathname === backlogHref ? "backlog" : "board",
+  );
+  const shownList = pathname === boardHref ? "board" : pathname === backlogHref ? "backlog" : null;
+  if (shownList !== null && shownList !== lastList) setLastList(shownList);
+  const onTask = pathname.startsWith(`${boardHref}/tasks/`);
+  const onBoard = pathname === boardHref || (onTask && lastList === "board");
+  const onBacklog = pathname === backlogHref || (onTask && lastList === "backlog");
 
   function tabClass(current: boolean) {
     return cn(
@@ -144,6 +154,13 @@ export function ProjectFrame({
                 className={tabClass(onBoard)}
               >
                 Board
+              </Link>
+              <Link
+                href={backlogHref}
+                aria-current={onBacklog ? "page" : undefined}
+                className={tabClass(onBacklog)}
+              >
+                Backlog
               </Link>
               <Link
                 href={epicsHref}
