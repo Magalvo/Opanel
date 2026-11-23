@@ -2,7 +2,16 @@ import { act, render, renderHook, screen, waitFor } from "@testing-library/react
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { bodyOf, calls, fetchMock, installFetch, on, problem, urlOf } from "@/components/fake-api";
+import {
+  bodyOf,
+  calls,
+  fetchMock,
+  hold,
+  installFetch,
+  on,
+  problem,
+  urlOf,
+} from "@/components/fake-api";
 import { ProjectEventsProvider } from "@/components/projects/project-events";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { ProjectEvent } from "@/lib/schemas/events";
@@ -189,6 +198,17 @@ describe("useBoard: moving", () => {
     expect(result.current.moving).toBe(false);
     expect(result.current.board[doing.id]?.[0]).toMatchObject({ key: "OPA-2", version: 5 });
     expect(result.current.board[doing.id]?.[0]).not.toHaveProperty("description");
+  });
+
+  it("places its own move within a column without reading the column (WS-113)", async () => {
+    on(`POST /api/v1/tasks/${t1.id}/move`, json(full(t1, { version: 2 })));
+    const { result } = await renderBoard();
+
+    await act(() => result.current.drop(t1.id, todo.id, 1));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2", "OPA-1"]);
+    expect(result.current.board[todo.id]?.[1]).toMatchObject({ version: 2 });
+    expect(taskGets()).toEqual([]);
   });
 
   it("sends nothing when the card is dropped on its own place", async () => {
@@ -406,6 +426,41 @@ describe("useBoard: other people's changes (WS-048 section 4)", () => {
       expect(keys(result.current.board, doing.id)).toEqual(["OPA-1", "OPA-3"]);
     });
     expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+  });
+
+  it("reorders a card moved within its column by reading that column (WS-113)", async () => {
+    const moved = { ...t1, version: 2 };
+    on(`GET /api/v1/tasks/${t1.id}`, json(full(moved)));
+    on(COLUMN_TASKS(todo.id), page([t2, moved]));
+    const { result } = await renderBoard();
+
+    send("task.moved", t1.id, 2);
+
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-2", "OPA-1"]);
+    });
+    expect(taskGets()).toEqual([
+      `/api/v1/tasks/${t1.id}`,
+      COLUMN_TASKS(todo.id).slice("GET ".length),
+    ]);
+  });
+
+  it("still reads the column when an update follows a move during the task's fetch (WS-113)", async () => {
+    const release = hold(`GET /api/v1/tasks/${t1.id}`);
+    const { result } = await renderBoard();
+
+    send("task.updated", t1.id, 2);
+    send("task.moved", t1.id, 3);
+    send("task.updated", t1.id, 4);
+    const latest = { ...t1, title: "Renamed", version: 4 };
+    on(`GET /api/v1/tasks/${t1.id}`, json(full(latest)));
+    on(COLUMN_TASKS(todo.id), page([t2, latest]));
+    await act(() => release(json(full({ ...t1, version: 2 }))));
+
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-2", "OPA-1"]);
+    });
+    expect(result.current.board[todo.id]?.[1]).toMatchObject({ title: "Renamed", version: 4 });
   });
 
   it("removes a card whose task moved to the backlog, reading no column (WS-101)", async () => {
