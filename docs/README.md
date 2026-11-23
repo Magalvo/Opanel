@@ -380,3 +380,15 @@ Optimisations found by the same audit, none urgent:
   column fails with `400` (WS-081, question 3).
 - CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
   has no BuildKit cache.
+
+From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none urgent:
+
+- The board's horizontal scrollbar sits below its longest column, often off screen.
+  Columns could scroll on their own inside a board sized to the window.
+- Nothing shows that dragging is paused while a move is saved: cards keep the grab cursor.
+- At phone width the board does not snap to whole columns (`snap-x` on the board,
+  `snap-start` on columns).
+- A column's category badge often repeats its name and pushes the task count onto a
+  second line.
+- The loading skeleton's `animate-pulse` ignores reduced motion; the shadcn/ui `Skeleton`
+  is shared by every page.
