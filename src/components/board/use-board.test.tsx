@@ -491,6 +491,17 @@ describe("useBoard: other people's changes (WS-048 section 4)", () => {
 
     expect(calls("GET")).toHaveLength(2);
   });
+
+  it("does nothing for labels until cards show them (WS-107)", async () => {
+    const { result } = await renderBoard();
+    const before = result.current.board;
+
+    send("label.changed", "99999999-9999-4999-8999-999999999999", 2);
+    send("label.changed", "99999999-9999-4999-8999-999999999999", null);
+
+    expect(calls("GET")).toHaveLength(2);
+    expect(result.current.board).toBe(before);
+  });
 });
 
 describe("useBoard: events during a drag or a move (WS-048 section 5)", () => {

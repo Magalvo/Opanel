@@ -336,6 +336,42 @@ describe("buildOpenApiDocument", () => {
     });
   });
 
+  it("describes labels, their operations, and labels on tasks (WS-107)", () => {
+    const { schemas } = parsedDocument().components;
+    const { paths } = parsedDocument();
+    const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
+
+    expect(schemas.LabelColour).toMatchObject({
+      type: "string",
+      enum: ["gray", "red", "orange", "amber", "green", "teal", "blue", "indigo", "purple", "pink"],
+    });
+    expect(schemas.Label).toMatchObject({
+      properties: { colour: ref("LabelColour") },
+      required: expect.arrayContaining(["id", "projectId", "name", "colour", "version"]) as unknown,
+    });
+    expect(schemas.LabelRef).toMatchObject({ required: ["id", "name", "colour"] });
+    for (const name of ["Task", "TaskSummary"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: { labels: { type: "array", items: ref("LabelRef") } },
+        required: expect.arrayContaining(["labels"]) as unknown,
+      });
+    }
+    for (const name of ["CreateTaskRequest", "UpdateTaskRequest"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: { labelIds: { type: "array", maxItems: 20 } },
+      });
+    }
+    expect(Object.keys(paths["/api/v1/projects/{projectId}/labels"] ?? {}).sort()).toEqual([
+      "get",
+      "post",
+    ]);
+    expect(Object.keys(paths["/api/v1/labels/{labelId}"] ?? {}).sort()).toEqual([
+      "delete",
+      "patch",
+    ]);
+    expect(paths["/api/v1/labels/{labelId}"]?.patch?.responses["409"]?.content).toBeDefined();
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

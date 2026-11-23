@@ -360,3 +360,66 @@ describe("priority and due date (WS-102)", () => {
     }
   });
 });
+
+describe("labels on tasks (WS-107)", () => {
+  const summary = {
+    id: UUID,
+    key: "OPA-1",
+    number: 1,
+    projectId: UUID,
+    type: "task",
+    title: "T",
+    columnId: UUID,
+    assigneeTeam: null,
+    assignee: null,
+    epic: null,
+    reporter: { id: UUID, name: "Mia", kind: "human" },
+    severity: null,
+    fingerprint: null,
+    occurrences: 0,
+    lastReportedAt: null,
+    priority: "none",
+    dueDate: null,
+    labels: [{ id: UUID, name: "Bug", colour: "red" }],
+    version: 1,
+    createdAt: "2026-11-23T08:00:00.000Z",
+    updatedAt: "2026-11-23T08:00:00.000Z",
+    deletedAt: null,
+  };
+  const OTHER = "1a9c7d2e-4b63-4e8c-8b62-1d2e3f4a5b6c";
+
+  it("a task and a task summary require labels", () => {
+    const task = { ...summary, description: "", links: [] };
+    expect(taskSummarySchema.parse(summary)).toEqual(summary);
+    expect(taskSchema.parse({ ...task, labels: [] }).labels).toEqual([]);
+    const { labels: _omitted, ...without } = task;
+    expect(taskSchema.safeParse(without).success).toBe(false);
+    const { labels: _gone, ...bare } = summary;
+    expect(taskSummarySchema.safeParse(bare).success).toBe(false);
+    expect(
+      taskSummarySchema.safeParse({ ...summary, labels: [{ id: UUID, name: "B", colour: "x" }] })
+        .success,
+    ).toBe(false);
+  });
+
+  it("create and update take labelIds: unique UUIDs, at most 20", () => {
+    expect(createTaskRequestSchema.parse({ title: "T", labelIds: [UUID, OTHER] }).labelIds).toEqual(
+      [UUID, OTHER],
+    );
+    expect(updateTaskRequestSchema.parse({ labelIds: [], version: 3 })).toEqual({
+      labelIds: [],
+      version: 3,
+    });
+    const many = Array.from(
+      { length: 21 },
+      (_, index) => `0f8b6c1e-3a52-4d7b-9a51-${String(index).padStart(12, "0")}`,
+    );
+    for (const labelIds of [many, [UUID, UUID], ["Bug"]]) {
+      expect(createTaskRequestSchema.safeParse({ title: "T", labelIds }).success).toBe(false);
+      expect(updateTaskRequestSchema.safeParse({ labelIds, version: 1 }).success).toBe(false);
+    }
+    expect(
+      createTaskRequestSchema.safeParse({ title: "T", labelIds: many.slice(0, 20) }).success,
+    ).toBe(true);
+  });
+});
