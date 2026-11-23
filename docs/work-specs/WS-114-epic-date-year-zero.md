@@ -1,6 +1,6 @@
 # WS-114 — Epic dates in the year 0000 are refused with 400
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, as proposed)
 - Work-item: [WI-114](../work-items/WI-114-epic-date-year-zero.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 3 (dates are
   `YYYY-MM-DD`; invalid input is a `400`); [WS-102](WS-102-priority-due-date.md) section 3

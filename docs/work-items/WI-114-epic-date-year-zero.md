@@ -1,6 +1,6 @@
 # WI-114 — Epic dates in the year 0000 are refused with 400
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: a follow-up of WI-102 (WS-102 question 1), confirmed in the code by the
   project audit of 2026-11-23
 - Depends on: none
