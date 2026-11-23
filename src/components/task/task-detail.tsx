@@ -367,11 +367,14 @@ export function TaskDetail({
     },
   });
 
-  async function move(task: Task, columnId: string, columns: readonly Column[]) {
+  async function move(task: Task, columnId: string | null, columns: readonly Column[]) {
     setWriting(true);
     try {
       const moved = await moveTaskTo(task.key, columnId, task.version);
-      const name = columns.find((column) => column.id === columnId)?.name ?? "the column";
+      const name =
+        columnId === null
+          ? "the backlog"
+          : (columns.find((column) => column.id === columnId)?.name ?? "the column");
       saved(moved, `Moved to ${name}.`);
     } catch (failure) {
       const current = failure instanceof ApiFailure ? currentOf(failure) : null;

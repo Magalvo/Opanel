@@ -140,7 +140,8 @@ export interface DetailsProps {
   onSaved: (task: Task, message: string) => void;
   onConflict: (current: Task) => void;
   onFailure: (failure: unknown, fallback: string) => void;
-  onMove: (columnId: string) => void;
+  /** A column, or `null` for the backlog (WS-109 section 5). */
+  onMove: (columnId: string | null) => void;
   setBusy: (busy: boolean) => void;
   /**
    * The version a save is based on, when it is not the task's: the version the viewer
@@ -384,15 +385,12 @@ function DetailsForm({
             disabled={busy}
             className={SELECT}
             onChange={(event) => {
-              onMove(event.target.value);
+              const value = event.target.value;
+              onMove(value === "" ? null : value);
             }}
           >
-            {/* A task in the backlog has no column; choosing one moves it to the board (WS-101). */}
-            {task.columnId === null && (
-              <option value="" disabled>
-                In backlog
-              </option>
-            )}
+            {/* The backlog first, then the board's columns (WS-109 section 5). */}
+            <option value="">Backlog</option>
             {columns.map((column) => (
               <option key={column.id} value={column.id}>
                 {column.name}

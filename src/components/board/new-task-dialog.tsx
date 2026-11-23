@@ -20,8 +20,9 @@ import { createTask } from "./api";
 import { TYPE_LABELS } from "./task-card";
 
 /**
- * Adds a task to a column with a title and a type (WS-037 section 4). Closes on success
- * and when the project turns out to be archived; other problems are shown in the dialog.
+ * Adds a task to a column, or to the backlog when `column` is null (WS-109 section 4), with
+ * a title and a type (WS-037 section 4). Closes on success and when the project turns out
+ * to be archived; other problems are shown in the dialog.
  */
 export function NewTaskDialog({
   projectKey,
@@ -32,7 +33,8 @@ export function NewTaskDialog({
   onArchived,
 }: Readonly<{
   projectKey: string;
-  column: Column;
+  /** The column the task goes to the end of; `null` for the end of the backlog. */
+  column: Column | null;
   /** Without a dialog trigger, the element that gets the focus back on close. */
   returnFocusTo: HTMLElement | null;
   onOpenChange: (open: boolean) => void;
@@ -57,7 +59,11 @@ export function NewTaskDialog({
     setError(null);
     setPending(true);
     try {
-      const task = await createTask(projectKey, { title: parsed.data, type, columnId: column.id });
+      const task = await createTask(projectKey, {
+        title: parsed.data,
+        type,
+        columnId: column === null ? null : column.id,
+      });
       onCreated(task);
       onOpenChange(false);
     } catch (failure) {
@@ -89,8 +95,14 @@ export function NewTaskDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle>Add a task to {column.name}</DialogTitle>
-          <DialogDescription>It goes to the end of the column.</DialogDescription>
+          <DialogTitle>
+            {column === null ? "Add a task to the backlog" : `Add a task to ${column.name}`}
+          </DialogTitle>
+          <DialogDescription>
+            {column === null
+              ? "It goes to the end of the backlog."
+              : "It goes to the end of the column."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={(event) => void submit(event)} className="grid gap-4" noValidate>
           <div className="grid gap-1.5">

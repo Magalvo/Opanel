@@ -23,8 +23,11 @@ export function updateTask(key: string, body: UpdateTaskRequest) {
   return call(`/api/v1/tasks/${key}`, { method: "PATCH", ...jsonBody(body) }, taskSchema);
 }
 
-/** To the end of a column: the column select (WT-03 decision 15). */
-export function moveTaskTo(key: string, columnId: string, version: number) {
+/**
+ * To the end of a column, or of the backlog for `null`: the column select (WT-03 decision
+ * 15, WS-109 section 5).
+ */
+export function moveTaskTo(key: string, columnId: string | null, version: number) {
   return call(
     `/api/v1/tasks/${key}/move`,
     { method: "POST", ...jsonBody({ columnId, version }) },

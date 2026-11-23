@@ -426,19 +426,42 @@ describe("TaskDetail: column, delete and the board", () => {
     window.removeEventListener("opanel:task-changed", changed);
   });
 
-  it("says a backlog task is in the backlog, and moves it to a chosen column (WS-101)", async () => {
+  it("selects Backlog for a backlog task, and moves it to a chosen column (WS-101, WS-109)", async () => {
     const moved = { ...base, columnId: doing.id, version: 4 };
     on("POST /api/v1/tasks/OPA-1/move", json(moved));
     const user = await renderTask({ current: { ...base, columnId: null } });
 
     const select = within(details()).getByLabelText("Column");
     expect(select).toHaveValue("");
-    expect(within(select).getByRole("option", { name: "In backlog" })).toBeDisabled();
+    expect(within(select).getByRole("option", { name: "Backlog" })).toBeEnabled();
+    expect(within(select).queryByRole("option", { name: "In backlog" })).toBeNull();
 
     await user.selectOptions(select, "In progress");
 
     expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ columnId: doing.id, version: 3 });
     expect(select).toHaveValue(doing.id);
+  });
+
+  it("offers Backlog first, and moves a task to the end of the backlog (WS-109)", async () => {
+    const moved = { ...base, columnId: null, version: 4 };
+    on("POST /api/v1/tasks/OPA-1/move", json(moved));
+    const changed = vi.fn<(event: Event) => void>();
+    window.addEventListener("opanel:task-changed", changed);
+    const user = await renderTask();
+
+    const select = within(details()).getByLabelText("Column");
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Backlog", "To do", "In progress", "Done"]);
+    await user.selectOptions(select, "Backlog");
+
+    expect(bodyOf(calls("POST")[0]?.[1])).toEqual({ columnId: null, version: 3 });
+    expect(status()).toHaveTextContent("Moved to the backlog.");
+    expect(select).toHaveValue("");
+    expect((changed.mock.calls[0]?.[0] as CustomEvent).detail).toEqual(moved);
+    window.removeEventListener("opanel:task-changed", changed);
   });
 
   it("shows In backlog as the column of a backlog task when read-only (WS-101)", async () => {
@@ -736,8 +759,9 @@ describe("TaskDetail: accessibility", () => {
     );
     await renderTask();
 
+    // The four columns, after "Backlog" (WS-109).
     expect(within(within(details()).getByLabelText("Column")).getAllByRole("option")).toHaveLength(
-      4,
+      5,
     );
   });
 });

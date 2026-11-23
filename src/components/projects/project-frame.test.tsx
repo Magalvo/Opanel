@@ -74,7 +74,7 @@ describe("ProjectFrame", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Board", "Epics"]);
+    ).toEqual(["Board", "Backlog", "Epics"]);
     expect(within(nav).getByRole("link", { name: "Board" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -115,7 +115,7 @@ describe("ProjectFrame", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Board", "Epics", "Settings"]);
+    ).toEqual(["Board", "Backlog", "Epics", "Settings"]);
     expect(within(nav).getByRole("link", { name: "Epics" })).toHaveAttribute(
       "href",
       "/projects/OPA/epics",
@@ -141,6 +141,64 @@ describe("ProjectFrame", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("links the Backlog for everyone, after Board, current on its page (WS-109)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    pathname = "/projects/OPA/backlog";
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        page
+      </ProjectFrame>,
+    );
+
+    const nav = await screen.findByRole("navigation", { name: "Project" });
+    const backlog = within(nav).getByRole("link", { name: "Backlog" });
+    expect(backlog).toHaveAttribute("href", "/projects/OPA/backlog");
+    expect(backlog).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("keeps the tab of the list a task was opened from current (WS-109)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    pathname = "/projects/OPA/backlog";
+    const frame = (
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        page
+      </ProjectFrame>
+    );
+    const { rerender } = render(frame);
+    const nav = await screen.findByRole("navigation", { name: "Project" });
+
+    pathname = "/projects/OPA/tasks/OPA-12";
+    rerender(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        page
+      </ProjectFrame>,
+    );
+    expect(within(nav).getByRole("link", { name: "Backlog" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(nav).getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current");
+
+    pathname = "/projects/OPA";
+    rerender(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        page
+      </ProjectFrame>,
+    );
+    pathname = "/projects/OPA/tasks/OPA-12";
+    rerender(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        page
+      </ProjectFrame>,
+    );
+    expect(within(nav).getByRole("link", { name: "Board" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(nav).getByRole("link", { name: "Backlog" })).not.toHaveAttribute("aria-current");
   });
 
   it("says a project the API does not know does not exist, without the page", async () => {
