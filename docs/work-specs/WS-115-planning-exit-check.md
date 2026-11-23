@@ -1,6 +1,6 @@
 # WS-115 — WT-07 end-to-end flow, agents guide and exit check
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 3 as proposed)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 3 as proposed; done on 2026-11-23)
 - Work-item: [WI-115](../work-items/WI-115-planning-exit-check.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 3 (P1);
   [0003](../canonical/0003-task-management.md) sections 4 and 5 (P2, P3);
@@ -162,3 +162,33 @@ Risks:
   fixed, and may become its own work-item.
 - **The e2e flow is slow** (the UI steps plus an agent). It uses its own project, as
   `live-board.spec.ts` does, so it runs in parallel with the other specs.
+
+## Deviations from the approved spec
+
+1. **Two new guide tests, not three.** Test 1 is the existing test "has the sections of
+   WS-078, in order", whose list gained "Tasks and the backlog". Tests 2 and 3 are new; test
+   3 also checks that "Live updates" names `label.changed`.
+2. **A helper in `tests/e2e/seed.ts`**, `taskHistoryActors`, not listed under Files. The
+   e2e test needs the acting account's id: an agent has no email for `taskHistory` to name.
+3. **The Member edits the task in a second tab**, so the Backlog page stays open from the
+   move to the board to the end, and step 7 checks that it followed with no reload.
+4. **One gap found by the exit check:** no test showed an archived project refusing a task
+   created in the backlog, or a move to or from it. The behaviour was there, so the new
+   test in `backlog.integration.test.ts` passed at once.
+
+## Implementation record
+
+- Red: the guide's doc check failed on the missing section, the priorities and the backlog
+  endpoint (commit `a9ee2a8`). Green: "Tasks and the backlog" and `label.changed` in
+  `docs/agents.md` (commit `d02fdc4`).
+- P1 to P3 applied to docs 0002 and 0003 as approved, P3 replacing "and is set by people"
+  (commit `b861ddd`).
+- The exit check: each WT-07 criterion is ticked in WT-07 with the tests that prove it. One
+  clause lacked a test, see deviation 4 (commit `af710eb`).
+- `planning-flow.spec.ts` passed on its first run, as section 6 expected. Run once with
+  step 6 expecting `200`, it failed with "Expected: 200, Received: 403", and was restored
+  (commit `a49f69f`).
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2199 of 2199 (213 files);
+  `test:e2e` 115 of 115. `pnpm db:generate` and `pnpm openapi:generate` left no diff.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.
