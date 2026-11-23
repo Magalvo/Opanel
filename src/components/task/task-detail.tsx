@@ -271,9 +271,9 @@ export function TaskDetail({
     getTask(taskKey).then(
       (current) => {
         setData((held) =>
-          held === null || held.task.id !== current.id
-            ? held
-            : { ...held, task: { ...held.task, labels: current.labels } },
+          held?.task.id === current.id
+            ? { ...held, task: { ...held.task, labels: current.labels } }
+            : held,
         );
       },
       () => undefined,
