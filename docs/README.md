@@ -179,6 +179,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-111](work-items/WI-111-board-drag-accessibility.md)         | Board moves without dragging, and drags respect reduced motion    | [WS-111](work-specs/WS-111-board-drag-accessibility.md)         |
 | [WI-112](work-items/WI-112-example-secret-refused.md)           | Production refuses the example session secret                     | [WS-112](work-specs/WS-112-example-secret-refused.md)           |
 | [WI-113](work-items/WI-113-board-live-reorder.md)               | A reorder within one column reaches an open board live            | [WS-113](work-specs/WS-113-board-live-reorder.md)               |
+| [WI-114](work-items/WI-114-epic-date-year-zero.md)              | Epic dates in the year 0000 are refused with 400                  | [WS-114](work-specs/WS-114-epic-date-year-zero.md)              |
 
 ## Follow-ups
 
