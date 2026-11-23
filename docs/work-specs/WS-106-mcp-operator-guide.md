@@ -139,3 +139,41 @@ All in `mcp/src/guide.test.ts` (unit, project `mcp`), except test 8.
 4. **Claude Code changes.** The guide describes another product's commands, which may
    change. It says which Claude Code version it was checked with, and links Claude Code's
    MCP documentation for anything beyond it.
+
+## Implementation record
+
+- Red: `0f31b2a`, `mcp/src/guide.test.ts`, tests 1 to 7: six failing because
+  `docs/mcp.md` did not exist and no doc linked it; the README's tool table (test 3)
+  already passed.
+- Green: `1771f50` (the guide) and `fa76762` (the links, WT-11). `dd23e71` makes the
+  test pass lint.
+- Gate: `pnpm check`, `pnpm test` (1988 passed) and `pnpm test:e2e` (100 passed) locally.
+- Test 8, by hand on 2026-11-23 with Claude Code 2.1.330 on Windows. The app ran on port
+  3106 against a throwaway database, with a `qa_agent` and a 30-day token. Claude Code
+  used its own configuration directory (`CLAUDE_CONFIG_DIR`), so the owner's settings
+  were not touched. What happened:
+  - `claude mcp add opanel --scope user -e … -e … -- node …/mcp/dist/index.js` worked in
+    Git Bash and in Windows PowerShell 5.1. `claude mcp list` showed `✔ Connected`.
+  - The token was then kept in plain text in `.claude.json`, and `claude mcp get opanel`
+    printed it. The guide says so.
+  - A project `.mcp.json` with `${OPANEL_URL}` and `${OPANEL_TOKEN}` warned
+    `Missing environment variables: OPANEL_URL, OPANEL_TOKEN` when the variables were
+    unset, and showed `⏸ Pending approval` until it was approved. Once approved it
+    showed `✔ Connected` with the variables set, and `✘ Failed to connect` with a wrong
+    token.
+  - Started by hand with a wrong token, the server wrote `opanel-mcp: OPANEL_TOKEN was
+rejected: …` and stopped. The guide's troubleshooting starts from this.
+  - **Not done here.** The tool call (`opanel_whoami`) was not tried through Claude Code:
+    `claude -p` could not sign in from this session. The same call over stdio is covered
+    by `mcp/e2e/mcp.spec.ts`.
+  - **Not seen.** The desktop app's Code tab was not seen showing the server. Two things
+    show that it runs the same Claude Code with the same home settings: this session runs
+    in it on the bundled `claude.exe` 2.1.330, with `CLAUDE_CODE_ENTRYPOINT=claude-desktop`
+    and no `CLAUDE_CONFIG_DIR`. The owner confirms it in the app (question 3).
+
+## Deviations
+
+- The `claude mcp add` example puts the server's name before `-e`, as
+  `claude mcp add --help` does in 2.1.330. A name after a variadic `-e` would be read as
+  one more variable. Test 6 checks this order, not "`--env` before the name" as section 5
+  said.
