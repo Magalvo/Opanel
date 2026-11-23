@@ -172,6 +172,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-104](work-items/WI-104-mcp-write-tools.md)                  | The MCP write tools: comment, create, update and move a task      | [WS-104](work-specs/WS-104-mcp-write-tools.md)                  |
 | [WI-105](work-items/WI-105-mcp-bug-report-tool.md)              | The MCP tool to submit a bug report                               | [WS-105](work-specs/WS-105-mcp-bug-report-tool.md)              |
 | [WI-106](work-items/WI-106-mcp-operator-guide.md)               | The MCP operator guide                                            | [WS-106](work-specs/WS-106-mcp-operator-guide.md)               |
+| [WI-107](work-items/WI-107-labels-api.md)                       | Labels in the data model and API                                  | [WS-107](work-specs/WS-107-labels-api.md)                       |
 
 ## Follow-ups
 
