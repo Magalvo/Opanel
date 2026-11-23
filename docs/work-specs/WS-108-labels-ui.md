@@ -1,6 +1,6 @@
 # WS-108 — Labels in the UI
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 4 as proposed; done on 2026-11-23)
 - Work-item: [WI-108](../work-items/WI-108-labels-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0002](../canonical/0002-realtime-sync.md) section 4;
@@ -174,7 +174,8 @@ Risks:
   full `pnpm test:e2e` had 3 failures. Its output named only `toBeVisible` and not the
   tests. The next full run passed 103 of 103. The label-related specs (labels,
   accessibility, task detail, live pages) then passed three times each, 83 of 83, so the
-  failures could not be reproduced.
+  failures could not be reproduced. CI run 45179943670 green on `01a68f9`, its end-to-end job
+  included.
 
 ## Deviations
 
