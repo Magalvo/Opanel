@@ -166,10 +166,10 @@ rejected: …` and stopped. The guide's troubleshooting starts from this.
   - **Not done here.** The tool call (`opanel_whoami`) was not tried through Claude Code:
     `claude -p` could not sign in from this session. The same call over stdio is covered
     by `mcp/e2e/mcp.spec.ts`.
-  - **Not seen.** The desktop app's Code tab was not seen showing the server. Two things
-    show that it runs the same Claude Code with the same home settings: this session runs
-    in it on the bundled `claude.exe` 2.1.330, with `CLAUDE_CODE_ENTRYPOINT=claude-desktop`
-    and no `CLAUDE_CONFIG_DIR`. The owner confirms it in the app (question 3).
+  - **The desktop app.** The owner confirmed on 2026-11-23 that a server added with
+    `claude mcp add` shows in the desktop app's Code tab (question 3). This session also
+    runs there, on the bundled `claude.exe` 2.1.330, with
+    `CLAUDE_CODE_ENTRYPOINT=claude-desktop` and no `CLAUDE_CONFIG_DIR`.
 
 ## Deviations
 
