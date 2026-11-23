@@ -177,6 +177,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-109](work-items/WI-109-backlog-page.md)                     | The Backlog page                                                  | [WS-109](work-specs/WS-109-backlog-page.md)                     |
 | [WI-110](work-items/WI-110-priority-due-date-ui.md)             | Priority and due date in the UI                                   | [WS-110](work-specs/WS-110-priority-due-date-ui.md)             |
 | [WI-111](work-items/WI-111-board-drag-accessibility.md)         | Board moves without dragging, and drags respect reduced motion    | [WS-111](work-specs/WS-111-board-drag-accessibility.md)         |
+| [WI-112](work-items/WI-112-example-secret-refused.md)           | Production refuses the example session secret                     | [WS-112](work-specs/WS-112-example-secret-refused.md)           |
 
 ## Follow-ups
 
