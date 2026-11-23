@@ -12,7 +12,7 @@ import { listColumns } from "./columns";
 import { createComment } from "./comments";
 import { createEpic, getEpic } from "./epics";
 import { listenForEvents } from "./events-testing";
-import { createProject } from "./projects";
+import { archiveProject, createProject } from "./projects";
 import {
   createTask,
   deleteTask,
@@ -219,6 +219,27 @@ describe("moveTask and the backlog", () => {
     expect(await backlog(actor)).toEqual(first);
     // Thirty transactions that queue on one project row: about 6 s on a loaded machine.
   }, 30_000);
+});
+
+describe("the backlog on an archived project (WS-115)", () => {
+  it("refuses a task created in it and moves to and from it with project_archived", async () => {
+    const { actor, manager, todo } = await setup();
+    const waiting = await createTask(actor, "OPA", { title: "Waiting", columnId: null });
+    const onBoard = await createTask(actor, "OPA", { title: "On the board", columnId: todo });
+    await archiveProject(manager, "OPA");
+
+    const refused = [
+      await failure(createTask(actor, "OPA", { title: "New", columnId: null })),
+      await failure(moveTask(actor, waiting.id, { columnId: todo, version: 1 })),
+      await failure(moveTask(actor, onBoard.id, { columnId: null, version: 1 })),
+    ];
+    expect(refused.map((error) => [error.status, error.code])).toEqual([
+      [409, "project_archived"],
+      [409, "project_archived"],
+      [409, "project_archived"],
+    ]);
+    expect(await backlog(actor)).toEqual(["OPA-1"]);
+  });
 });
 
 describe("listBacklog", () => {
