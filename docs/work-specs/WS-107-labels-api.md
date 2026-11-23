@@ -206,3 +206,46 @@ Risks:
   with it.
 - **Items D, E and F** start from this item's `TaskSummary`; whichever of them is in
   flight takes in `main` before merging (`AGENTS.md` section 8).
+
+## Implementation record
+
+- Branch `claude/wi-107-labels-api`, from `main` after WI-101 and WI-102; the migration is
+  `0021_labels`.
+- Red (`555c61c`): the schema tests failed on the missing `./labels` module, the two
+  problem codes, the three audit actions, `label.changed`, and `labels`/`labelIds` on
+  tasks; the OpenAPI test on the missing `LabelColour`; the three integration files on the
+  missing service and routes; the MCP test on a task answer with `labels`. Two tests
+  passed before any code and stay as guards: the MCP tools offering no `labelIds`, and the
+  board ignoring `label.changed`.
+- Green (`defebb2`, `b917d7a`): `labels.ts` (schemas and contracts), the two tables and
+  `pnpm db:generate --name labels`, which writes exactly the statements of "Data model
+  changes"; `services/labels.ts`; labels in `TASK_SELECT`, `createTask` and `updateTask`;
+  the two routes; the fixtures; `pnpm openapi:generate`.
+- Test 12, on 2026-11-23 (Windows 11, Compose PostgreSQL on port 5433): the first board
+  page of 100 labelled tasks read in 27 ms; deleting a label used by 1 000 tasks took
+  309 ms. A first version sent each `task.updated` in its own statement and took 3.7 s;
+  `publishEvents` now sends them in one.
+- Gate on 2026-11-23: `db:generate` and `openapi:generate` leave no diff; typecheck, lint
+  and Prettier pass; Vitest 2035 of 2035; `pnpm test:e2e` 100 of 100. One run of
+  `rate-limit.integration.test.ts` failed on its time window and passed when run again; it
+  is not touched here.
+
+## Deviations
+
+1. **The MCP tools' inputs** cannot use `.omit({ labelIds: true })`: Zod 4.6.7 refuses
+   `omit` on a schema with refinements. `tasks.ts` instead exports the request fields
+   without `labelIds` (`createTaskFields`, `updateTaskFields`) and the rules
+   (`withCreateTaskRules`, `withUpdateTaskRules`). The request schemas and the MCP inputs
+   are built from them, so both keep the same rules. The update rule now lists its fields
+   in one array.
+2. **`publishEvents`** is new in `services/events.ts`: one `pg_notify` statement for many
+   events, in order. It is classified in the project-access coverage test as internal.
+3. **Doc 0004 section 4** gains `label_name_taken` and `too_many_labels`, as
+   `scripts/api-conventions.test.ts` requires of every problem code. WS-075 added its codes
+   the same way.
+4. **The project-access coverage test** gains the four label services, a label in its
+   fixture, and the `labels` and `task_labels` tables in what it compares.
+5. **Test 4's cascade case** inserts its task by SQL. A task that has history cannot be
+   deleted for real (`task_events` restricts it), so the cascade only matters for a task
+   with no history.
+6. **Test 12's timings** go to `console.warn`, the console method lint allows in tests.
