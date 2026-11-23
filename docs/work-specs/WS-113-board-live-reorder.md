@@ -1,6 +1,6 @@
 # WS-113 — A reorder within one column reaches an open board live
 
-- Status: Approved (approved by the owner on 2026-11-23, as proposed)
+- Status: Done (approved by the owner on 2026-11-23, as proposed)
 - Work-item: [WI-113](../work-items/WI-113-board-live-reorder.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (live sync);
   [WS-048](WS-048-live-board.md) section 4 (applying events to the board);
@@ -105,3 +105,25 @@ reorder from Playwright.
 2. No other behaviour depends on a `task.moved` being applied in place: the only callers of
    `placeTask` are `refreshOnce` and the board's own move (checked in the code on
    2026-11-23).
+
+## Deviations from the approved spec
+
+1. **Test 2 needed no change.** The existing test "replaces an updated card in place when
+   it stays in its column" already asserts that the only request is the task's `GET`
+   (`taskGets()` counts column reads too), so it already covers criterion 2.
+
+## Implementation record
+
+- Red: in `use-board.test.tsx`, the reorder test and the test with an update after a move
+  failed with the old order (`OPA-1`, `OPA-2`); the test of the board's own move passed, as
+  expected for a guard (commit `7f3a091`).
+- Green: `ordered` from `apply` through `refreshTask` (its `again` set became a map whose
+  values are ORed), `refreshOnce` and `placeTask`, which skips `replaceInPlace` when it is
+  set (commit `2146be2`).
+- End to end: the new `live-board.spec.ts` test (commit `573b04e`) failed against the code
+  before the fix and passed after; `live-board.spec.ts` 10 of 10.
+- `WS-048-live-board.md` records the fix under its deviations (commit `5b5fa1c`).
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2186 of 2186 (213 files);
+  `test:e2e` 114 of 114.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.

@@ -1,6 +1,6 @@
 # WI-113 — A reorder within one column reaches an open board live
 
-- Status: In progress
+- Status: Done (2026-11-23)
 - Work-track: none: a follow-up of WI-109 (WS-109, "Observation for the owner"), confirmed in
   the code by the project audit of 2026-11-23
 - Depends on: none
@@ -17,19 +17,19 @@ every other event, behaves as today.
 
 ## Acceptance criteria
 
-- [ ] On an open board, a `task.moved` event for a card that stays in its column reads that
+- [x] On an open board, a `task.moved` event for a card that stays in its column reads that
       column again (`GET /api/v1/projects/{key}/tasks?columnId=`) and shows the cards in
       the order the server returns.
-- [ ] A `task.updated` event for a card that stays in its column still replaces the card in
+- [x] A `task.updated` event for a card that stays in its column still replaces the card in
       place, without reading the column.
-- [ ] When a `task.updated` and a `task.moved` for the same task arrive while that task is
+- [x] When a `task.updated` and a `task.moved` for the same task arrive while that task is
       being fetched, the fetch that follows still reads the column again.
-- [ ] The board's own move (the person's drag, keyboard move or menu move) still places the
+- [x] The board's own move (the person's drag, keyboard move or menu move) still places the
       returned task in place, without reading the column again.
-- [ ] Two people on the same board: when one reorders a card within a column, the other
+- [x] Two people on the same board: when one reorders a card within a column, the other
       sees the new order without reloading (end to end).
-- [ ] Every existing board unit and end-to-end test passes unchanged.
-- [ ] The full quality gate passes.
+- [x] Every existing board unit and end-to-end test passes unchanged.
+- [x] The full quality gate passes.
 
 ## Notes
 
