@@ -1,6 +1,6 @@
 # WS-107 — Labels in the data model and API
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 4 as proposed; done on 2026-11-23)
 - Work-item: [WI-107](../work-items/WI-107-labels-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 4, 9;
   [0004](../canonical/0004-api-conventions.md) sections 4, 6, 8;
@@ -228,7 +228,7 @@ Risks:
 - Gate on 2026-11-23: `db:generate` and `openapi:generate` leave no diff; typecheck, lint
   and Prettier pass; Vitest 2035 of 2035; `pnpm test:e2e` 100 of 100. One run of
   `rate-limit.integration.test.ts` failed on its time window and passed when run again; it
-  is not touched here.
+  is not touched here. CI run 45170092731 green on `8daa5ab`.
 
 ## Deviations
 
