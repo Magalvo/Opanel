@@ -80,9 +80,8 @@ async function startMessage(
 ): Promise<string> {
   const stderr = memoryStream();
   await prepare({ env, fetch: fakeFetch(respond).fetch, stderr });
-  return stderr
-    .text()
-    .split("\n")[0]!
+  const [first = ""] = stderr.text().split("\n");
+  return first
     .replace(/^opanel-mcp: /, "")
     .replaceAll(URL_BASE, "<OPANEL_URL>")
     .replaceAll("opanel.internal", "<host>");
@@ -182,10 +181,11 @@ describe("docs/mcp.md, the operator guide (WS-106)", () => {
     expect(commands.length).toBeGreaterThan(0);
     for (const command of commands) {
       const words = command.trim().split(/\s+/);
+      // The name first, as `claude mcp add --help` shows it: after a variadic `-e`, a name
+      // would be read as one more variable.
+      expect(words[3], command).toBe("opanel");
       const separator = words.indexOf("--");
-      expect(separator, command).toBeGreaterThan(0);
-      expect(words[separator - 1], command).toBe("opanel");
-      expect(words[separator - 3], `${command}: --env right before the name`).not.toBe("--env");
+      expect(separator, command).toBeGreaterThan(3);
       expect(words[separator + 1], command).toBe("node");
       expect(words.at(-1), command).toMatch(/mcp\/dist\/index\.js$/);
     }
