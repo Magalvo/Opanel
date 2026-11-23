@@ -426,7 +426,7 @@ async function projectLabels(
   ids: readonly string[],
 ): Promise<NamedLabel[]> {
   if (ids.length === 0) return [];
-  const rows = await executor.execute<NamedLabel>(sql`
+  const rows = await executor.execute<{ id: string; name: string }>(sql`
     select id, name from labels
     where project_id = ${projectId}
       and id in (${sql.join(
