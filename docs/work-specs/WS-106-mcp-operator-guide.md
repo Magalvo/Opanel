@@ -1,6 +1,6 @@
 # WS-106 — The MCP operator guide
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 4 as proposed)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 4 as proposed; done on 2026-11-23)
 - Work-item: [WI-106](../work-items/WI-106-mcp-operator-guide.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) (sections 3, 6 and 7),
   [0001](../canonical/0001-ai-qa-agents-and-triage.md) (sections 3 and 4: roles, scopes,
@@ -147,7 +147,7 @@ All in `mcp/src/guide.test.ts` (unit, project `mcp`), except test 8.
   already passed.
 - Green: `1771f50` (the guide) and `fa76762` (the links, WT-11). `dd23e71` makes the
   test pass lint.
-- Gate: `pnpm check`, `pnpm test` (1988 passed) and `pnpm test:e2e` (100 passed) locally.
+- Gate: `pnpm check`, `pnpm test` (1988 passed) and `pnpm test:e2e` (100 passed) locally; CI run 45160917546 green on `c2fe753`.
 - Test 8, by hand on 2026-11-23 with Claude Code 2.1.330 on Windows. The app ran on port
   3106 against a throwaway database, with a `qa_agent` and a 30-day token. Claude Code
   used its own configuration directory (`CLAUDE_CONFIG_DIR`), so the owner's settings
