@@ -178,6 +178,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-110](work-items/WI-110-priority-due-date-ui.md)             | Priority and due date in the UI                                   | [WS-110](work-specs/WS-110-priority-due-date-ui.md)             |
 | [WI-111](work-items/WI-111-board-drag-accessibility.md)         | Board moves without dragging, and drags respect reduced motion    | [WS-111](work-specs/WS-111-board-drag-accessibility.md)         |
 | [WI-112](work-items/WI-112-example-secret-refused.md)           | Production refuses the example session secret                     | [WS-112](work-specs/WS-112-example-secret-refused.md)           |
+| [WI-113](work-items/WI-113-board-live-reorder.md)               | A reorder within one column reaches an open board live            | [WS-113](work-specs/WS-113-board-live-reorder.md)               |
 
 ## Follow-ups
 
