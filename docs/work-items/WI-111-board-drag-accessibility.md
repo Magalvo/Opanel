@@ -1,6 +1,6 @@
 # WI-111 — Board moves without dragging, and drags respect reduced motion
 
-- Status: Proposed
+- Status: In progress
 - Work-track: none: two accessibility defects found in a review of the board UI on
   2026-11-23
 - Depends on: none

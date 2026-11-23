@@ -1,6 +1,6 @@
 # WS-111 — Board moves without dragging, and drags respect reduced motion
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 5 as recommended)
 - Work-item: [WI-111](../work-items/WI-111-board-drag-accessibility.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 5 (any task moves
   to any column); [WS-037](WS-037-board-page.md) sections 5 and 6 (drag and drop, the
