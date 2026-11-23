@@ -2,7 +2,7 @@ import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { bodyOf, calls, installFetch, on, problem } from "@/components/fake-api";
+import { bodyOf, calls, hold, installFetch, on, problem } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { Project } from "@/lib/schemas/projects";
 
@@ -446,5 +446,148 @@ describe("Board: overdue (WS-110)", () => {
       expect(within(columnRegion("Done")).getAllByRole("listitem")).toHaveLength(2);
     });
     expect(columnRegion("Done")).not.toHaveTextContent("Overdue");
+  });
+});
+
+describe("Board: moving without dragging (WS-111 section 1)", () => {
+  const MOVE_T1 = `POST /api/v1/tasks/${t1.id}/move`;
+
+  function boardMessage() {
+    return screen.getByRole("status", { name: "Board messages" });
+  }
+
+  async function openMenu(user: ReturnType<typeof userEvent.setup>, key: string) {
+    await user.click(screen.getByRole("button", { name: `Actions for ${key}` }));
+    return screen.findByRole("menu");
+  }
+
+  it("gives a writable card a menu with the four moves and every other column (test 4)", async () => {
+    const user = await renderBoard();
+
+    const menu = await openMenu(user, "OPA-1");
+
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Move to top", "Move up", "Move down", "Move to bottom", "In progress", "Done"]);
+    expect(within(menu).getByText("Move to")).toBeInTheDocument();
+    // The first card of its column: it cannot go up.
+    expect(within(menu).getByRole("menuitem", { name: "Move to top" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(within(menu).getByRole("menuitem", { name: "Move up" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(within(menu).getByRole("menuitem", { name: "Move down" })).not.toHaveAttribute(
+      "aria-disabled",
+    );
+  });
+
+  it("gives no menu to a Viewer, nor on an archived project (test 5)", async () => {
+    await renderBoard({ canWriteTasks: false });
+    expect(screen.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+  });
+
+  it("gives no menu on an archived project (test 5)", async () => {
+    await renderBoard({ project: { ...opa, archivedAt: "2026-11-16T10:00:00.000Z" } });
+    expect(screen.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+  });
+
+  it("moves a card down at once, saves it, and announces its place (test 6)", async () => {
+    on(MOVE_T1, json(full({ ...t1, version: 2 })));
+    const user = await renderBoard();
+
+    const menu = await openMenu(user, "OPA-1");
+    await user.click(within(menu).getByRole("menuitem", { name: "Move down" }));
+
+    expect(
+      within(columnRegion("To do"))
+        .getAllByRole("button", { name: /^Actions for/ })
+        .map((button) => button.getAttribute("aria-label")),
+    ).toEqual(["Actions for OPA-2", "Actions for OPA-1"]);
+    await waitFor(() => {
+      expect(boardMessage()).toHaveTextContent("OPA-1 was moved to To do, position 2 of 2.");
+    });
+    const [[url, init]] = calls("POST") as [[string, RequestInit]];
+    expect(url).toBe(`/api/v1/tasks/${t1.id}/move`);
+    expect(bodyOf(init)).toEqual({ columnId: todo.id, afterTaskId: t2.id, version: 1 });
+  });
+
+  it("moves a card to the end of another column and keeps the focus on its menu (test 7)", async () => {
+    on(MOVE_T1, json(full({ ...t1, columnId: doing.id, version: 2 })));
+    const user = await renderBoard();
+
+    const menu = await openMenu(user, "OPA-1");
+    await user.click(within(menu).getByRole("menuitem", { name: "In progress" }));
+
+    const moved = within(columnRegion("In progress")).getByRole("button", {
+      name: "Actions for OPA-1",
+    });
+    await waitFor(() => {
+      expect(moved).toHaveFocus();
+    });
+    await waitFor(() => {
+      expect(boardMessage()).toHaveTextContent("OPA-1 was moved to In progress, position 2 of 2.");
+    });
+    const [[, init]] = calls("POST") as [[string, RequestInit]];
+    expect(bodyOf(init)).toEqual({ columnId: doing.id, afterTaskId: t3.id, version: 1 });
+  });
+
+  it("opens the menu with Enter and does not pick the card up (test 8)", async () => {
+    const user = await renderBoard();
+
+    screen.getByRole("button", { name: "Actions for OPA-1" }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(await screen.findByRole("menu")).toBeInTheDocument();
+    expect(screen.queryByText(/Picked up/)).not.toBeInTheDocument();
+  });
+
+  it("reloads the board and explains a conflict, as a drag does (test 9)", async () => {
+    on(MOVE_T1, problem(409, "version_conflict"));
+    const user = await renderBoard();
+
+    const menu = await openMenu(user, "OPA-1");
+    await user.click(within(menu).getByRole("menuitem", { name: "Move to bottom" }));
+
+    await waitFor(() => {
+      expect(boardMessage()).toHaveTextContent(
+        "Someone else changed OPA-1. The board was refreshed.",
+      );
+    });
+    // Loaded once on opening, once after the failure.
+    expect(
+      calls("GET").filter(([url]) => url.startsWith("/api/v1/projects/OPA/tasks")),
+    ).toHaveLength(2);
+  });
+
+  it("disables the menus while a move is saved (test 10)", async () => {
+    const release = hold(MOVE_T1);
+    const user = await renderBoard();
+
+    const menu = await openMenu(user, "OPA-1");
+    await user.click(within(menu).getByRole("menuitem", { name: "Move down" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Actions for OPA-2" })).toHaveAttribute(
+        "aria-disabled",
+        "true",
+      );
+    });
+    // It keeps the focus, but opens nothing while the move is saved.
+    await user.click(screen.getByRole("button", { name: "Actions for OPA-2" }));
+    screen.getByRole("button", { name: "Actions for OPA-2" }).focus();
+    await user.keyboard("{Enter}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    await act(() => release(json(full({ ...t1, version: 2 }))));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Actions for OPA-2" })).toHaveAttribute(
+        "aria-disabled",
+        "false",
+      );
+    });
   });
 });

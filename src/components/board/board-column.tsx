@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import type { Column } from "@/lib/schemas/columns";
 import type { TaskSummary } from "@/lib/schemas/tasks";
 
-import { columnDroppableId } from "./moves";
+import { columnDroppableId, type MenuMove } from "./moves";
 import { SortableCard, StaticCard } from "./task-card";
 
 function count(tasks: number): string {
@@ -90,11 +90,16 @@ export function SortableColumn({
   tasks,
   dragDisabled,
   onAdd,
+  movesOf,
+  onMove,
 }: Readonly<{
   column: Column;
   tasks: readonly TaskSummary[];
   dragDisabled: boolean;
   onAdd: (opener: HTMLButtonElement) => void;
+  /** The moves each card's menu offers (WS-111 section 2). */
+  movesOf: (taskId: string) => readonly MenuMove[];
+  onMove: (taskId: string, move: MenuMove) => void;
 }>) {
   const { setNodeRef } = useDroppable({ id: columnDroppableId(column.id) });
   return (
@@ -115,6 +120,10 @@ export function SortableColumn({
                   task={task}
                   disabled={dragDisabled}
                   done={column.category === "done"}
+                  moves={movesOf(task.id)}
+                  onMove={(move) => {
+                    onMove(task.id, move);
+                  }}
                 />
               ))}
             </ul>

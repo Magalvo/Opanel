@@ -8,6 +8,7 @@ import {
   type Board,
   columnDroppableId,
   groupByColumn,
+  menuMoves,
   moveRequest,
   placeOf,
   targetOf,
@@ -163,5 +164,64 @@ describe("moveRequest", () => {
   it("sends nothing when the card is back in its own place, or unknown", () => {
     expect(moveRequest(board, applyDrop(board, t2.id, TODO, 1), t2.id)).toBeNull();
     expect(moveRequest(board, board, "nope")).toBeNull();
+  });
+});
+
+describe("menuMoves (WS-111 section 2)", () => {
+  const columns = [column(TODO, "To do"), column(DOING, "In progress"), column(DONE, "Done")];
+
+  function inColumn(taskId: string) {
+    return menuMoves(board, columns, taskId)
+      .slice(0, 4)
+      .map(({ label, columnId, index, disabled }) => ({ label, columnId, index, disabled }));
+  }
+
+  it("cannot move the first card up or to the top", () => {
+    expect(inColumn(t1.id)).toEqual([
+      { label: "Move to top", columnId: TODO, index: 0, disabled: true },
+      { label: "Move up", columnId: TODO, index: 0, disabled: true },
+      { label: "Move down", columnId: TODO, index: 1, disabled: false },
+      { label: "Move to bottom", columnId: TODO, index: 2, disabled: false },
+    ]);
+  });
+
+  it("moves a middle card one place either way, or to either end", () => {
+    expect(inColumn(t2.id)).toEqual([
+      { label: "Move to top", columnId: TODO, index: 0, disabled: false },
+      { label: "Move up", columnId: TODO, index: 0, disabled: false },
+      { label: "Move down", columnId: TODO, index: 2, disabled: false },
+      { label: "Move to bottom", columnId: TODO, index: 2, disabled: false },
+    ]);
+  });
+
+  it("cannot move the last card down or to the bottom", () => {
+    expect(inColumn(t3.id)).toEqual([
+      { label: "Move to top", columnId: TODO, index: 0, disabled: false },
+      { label: "Move up", columnId: TODO, index: 1, disabled: false },
+      { label: "Move down", columnId: TODO, index: 2, disabled: true },
+      { label: "Move to bottom", columnId: TODO, index: 2, disabled: true },
+    ]);
+  });
+
+  it("cannot move a column's only card within it", () => {
+    expect(inColumn(t4.id).map((move) => move.disabled)).toEqual([true, true, true, true]);
+  });
+
+  it("offers every other column in board order, at its end, never the card's own", () => {
+    expect(menuMoves(board, columns, t4.id).slice(4)).toEqual([
+      { label: "To do", columnId: TODO, index: 3, disabled: false },
+      { label: "Done", columnId: DONE, index: 0, disabled: false },
+    ]);
+  });
+
+  it("puts a card moved to another column last there", () => {
+    const [toDoing] = menuMoves(board, columns, t1.id).slice(4);
+    expect(toDoing).toEqual({ label: "In progress", columnId: DOING, index: 1, disabled: false });
+    const after = applyDrop(board, t1.id, DOING, toDoing?.index ?? -1);
+    expect(keys(after, DOING)).toEqual(["OPA-4", "OPA-1"]);
+  });
+
+  it("gives no moves for a task that is not on the board", () => {
+    expect(menuMoves(board, columns, "unknown")).toEqual([]);
   });
 });
