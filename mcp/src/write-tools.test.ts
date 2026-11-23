@@ -313,3 +313,42 @@ describe("answers and the token", () => {
     expect(stdout).not.toHaveBeenCalled();
   });
 });
+
+describe("labels (WS-107)", () => {
+  it("offers no labelIds, which no agent may send, and makes no request for it", async () => {
+    const { client, calls } = await serve(() => jsonResponse(201, task()));
+    const tools = (await client.listTools()).tools;
+
+    for (const name of ["opanel_create_task", "opanel_update_task"]) {
+      const schema = tools.find((tool) => tool.name === name)?.inputSchema as {
+        properties?: Record<string, unknown>;
+      };
+      expect(Object.keys(schema.properties ?? {}), name).not.toContain("labelIds");
+    }
+    const created = await client.callTool({
+      name: "opanel_create_task",
+      arguments: { projectId: "OPA", title: "T", labelIds: [OTHER_ID] },
+    });
+    const updated = await client.callTool({
+      name: "opanel_update_task",
+      arguments: { taskId: "OPA-12", labelIds: [], version: 1 },
+    });
+
+    expect(created.isError).toBe(true);
+    expect(updated.isError).toBe(true);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("answers a task with its labels", async () => {
+    const labelled = { ...task(), labels: [{ id: OTHER_ID, name: "Bug", colour: "red" }] };
+    const { client } = await serve(() => jsonResponse(200, labelled));
+
+    const result = await client.callTool({
+      name: "opanel_update_task",
+      arguments: { taskId: "OPA-12", title: "T", version: 1 },
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.structuredContent).toMatchObject({ labels: labelled.labels });
+  });
+});

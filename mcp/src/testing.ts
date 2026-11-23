@@ -156,6 +156,7 @@ export function taskSummary(
     lastReportedAt: null,
     priority: "none",
     dueDate: null,
+    labels: [],
     version: 1,
     createdAt: AT,
     updatedAt: AT,

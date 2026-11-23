@@ -49,6 +49,7 @@ describe("account references (WS-074)", () => {
       lastReportedAt: null,
       priority: "none",
       dueDate: null,
+      labels: [],
       version: 1,
       createdAt: "2026-11-19T10:00:00.000Z",
       updatedAt: "2026-11-19T10:00:00.000Z",

@@ -247,3 +247,17 @@ export function internalError(): ApiError {
     detail: "An unexpected error occurred.",
   });
 }
+
+/** `409` (WS-107): another label of the project has this name, ignoring case. */
+export function labelNameTaken(
+  detail = "Another label of this project already has this name.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "label_name_taken", detail });
+}
+
+/** `409` (WS-107): the project already has its 200 labels (WT-07 decision 8). */
+export function tooManyLabels(
+  detail = "This project already has 200 labels. Delete one first.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "too_many_labels", detail });
+}

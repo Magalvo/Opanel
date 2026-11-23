@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import type { Column } from "@/lib/schemas/columns";
 import type { Epic } from "@/lib/schemas/epics";
+import type { Label } from "@/lib/schemas/labels";
 import { PERMISSIONS } from "@/lib/schemas/permissions";
 import type { Project } from "@/lib/schemas/projects";
 import type { Task } from "@/lib/schemas/tasks";
@@ -22,6 +23,7 @@ import { fileBugReport, listBugReports } from "./bug-reports";
 import { createColumn, deleteColumn, listColumns, moveColumn, updateColumn } from "./columns";
 import { createComment, listComments } from "./comments";
 import { createEpic, getEpic, listEpics, updateEpic } from "./epics";
+import { createLabel, deleteLabel, listLabels, updateLabel } from "./labels";
 import {
   archiveProject,
   claimTaskNumber,
@@ -56,6 +58,7 @@ interface Fixture {
   task: Task;
   deletedTask: Task;
   epic: Epic;
+  label: Label;
 }
 
 type ScopedCall = (actor: Actor, target: Fixture) => Promise<unknown>;
@@ -99,6 +102,12 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
   "epics.createEpic": (actor, f) => createEpic(actor, f.project.key, { title: "New" }),
   "epics.updateEpic": (actor, f) =>
     updateEpic(actor, f.epic.id, { title: "Renamed", version: f.epic.version }),
+  "labels.listLabels": (actor, f) => listLabels(actor, f.project.key),
+  "labels.createLabel": (actor, f) =>
+    createLabel(actor, f.project.key, { name: "New", colour: "gray" }),
+  "labels.updateLabel": (actor, f) =>
+    updateLabel(actor, f.label.id, { name: "Renamed", version: f.label.version }),
+  "labels.deleteLabel": (actor, f) => deleteLabel(actor, f.label.id),
   "comments.listComments": (actor, f) => listComments(actor, f.task.key, { limit: 50 }),
   "comments.createComment": (actor, f) => createComment(actor, f.task.id, { body: "Hello" }),
   "bug-reports.fileBugReport": (actor, f) =>
@@ -152,6 +161,7 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "event-hub.getEventHub": "infrastructure: the events stream checks (section 6)",
   "event-hub.closeEventHub": "infrastructure: the events stream checks (section 6)",
   "events.publishEvent": "internal: called by a service that has checked",
+  "events.publishEvents": "internal: called by a service that has checked",
   "projects.publishProjectChanged": "internal: called by a service that has checked",
   "health.checkHealth": "public health check",
   "maintenance.runMaintenance": "operator command",
@@ -212,7 +222,17 @@ async function failure(promise: Promise<unknown>): Promise<ApiError> {
 
 /** Everything a project-scoped call could write, as one value per table. */
 async function fingerprint(): Promise<Record<string, string>> {
-  const tables = ["projects", "columns", "tasks", "epics", "comments", "task_events", "audit_log"];
+  const tables = [
+    "projects",
+    "columns",
+    "tasks",
+    "epics",
+    "comments",
+    "task_events",
+    "audit_log",
+    "labels",
+    "task_labels",
+  ];
   const result: Record<string, string> = {};
   for (const table of tables) {
     const [row] = await getDb().execute<{ digest: string }>(
@@ -232,7 +252,8 @@ async function buildFixture(admin: Actor, key: string): Promise<Fixture> {
   await deleteTask(admin, deletedTask.id);
   const epic = await createEpic(admin, key, { title: "An epic" });
   await createComment(admin, task.id, { body: "A comment" });
-  return { project, spare, task, deletedTask, epic };
+  const label = await createLabel(admin, key, { name: "A label", colour: "red" });
+  return { project, spare, task, deletedTask, epic, label };
 }
 
 let admin: Actor;
