@@ -176,6 +176,7 @@ and operations (doc 0006), came right after WT-04 and is done.
 | [WI-106](work-items/WI-106-mcp-operator-guide.md)               | The MCP operator guide                                            | [WS-106](work-specs/WS-106-mcp-operator-guide.md)               |
 | [WI-107](work-items/WI-107-labels-api.md)                       | Labels in the data model and API                                  | [WS-107](work-specs/WS-107-labels-api.md)                       |
 | [WI-108](work-items/WI-108-labels-ui.md)                        | Labels in the UI                                                  | [WS-108](work-specs/WS-108-labels-ui.md)                        |
+| [WI-109](work-items/WI-109-backlog-page.md)                     | The Backlog page                                                  | [WS-109](work-specs/WS-109-backlog-page.md)                     |
 
 ## Follow-ups
 
