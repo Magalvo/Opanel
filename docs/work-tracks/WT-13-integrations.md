@@ -1,6 +1,8 @@
 # WT-13 — Integrations (optional add-ons)
 
-- Status: In progress (2026-11-20): WI-093 is done; the add-ons CI job has not run yet
+- Status: Done (2026-11-23, WI-093). The add-ons CI job first ran and passed on `main` on
+  2026-11-20 (run 44761999762), which met the last exit criterion. Further add-ons are
+  proposed as work-items of this track when wanted.
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (agent accounts,
   tokens, scopes, the bug report contract), [0004](../canonical/0004-api-conventions.md)
   (the API add-ons call)
@@ -52,6 +54,7 @@ account; Opanel works exactly the same with or without any of them.
 
 - [x] Removing `addons/` leaves the app's quality gate and its image build green
       (checked by hand in WI-093).
-- [ ] The add-ons' CI job runs separately from the app's, and passes.
+- [x] The add-ons' CI job runs separately from the app's, and passes (on `main` since
+      2026-11-20, run 44761999762).
 - [x] Every add-on has an operator guide covering its agent account, token, deployment and
       removal.

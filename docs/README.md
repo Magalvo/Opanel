@@ -15,12 +15,15 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-07 item E, priority and due date in the UI: on cards (priority as an icon
-  with an accessible name, the due date marked when overdue by text and not colour alone)
-  and edited in the task detail. It has no work-item yet: its number is reserved first,
-  then its work-spec is proposed. WT-11 is done (items A to E: WI-099, WI-100, WI-104,
-  WI-105, WI-106), and so are items A to D and F of WT-07 (WI-101, WI-102, WI-107, WI-109,
-  WI-108). Item G follows E. WT-08 to WT-10 follow, as planned below.
+- **Next:** WT-07 item G, the last of the track: the end-to-end flow, `docs/agents.md`,
+  the canonical amendments of proposals P1 to P3, and the exit check. It has no work-item
+  yet: its number is reserved first, then its work-spec is proposed. Items A to F of WT-07
+  are done (WI-101, WI-102, WI-107, WI-109, WI-110, WI-108), and so is WT-11 (items A to E:
+  WI-099, WI-100, WI-104, WI-105, WI-106). WT-08 to WT-10 follow, as planned below.
+- **In flight, from the project audit of 2026-11-23:** WI-112 (production refuses the
+  example session secret), WI-113 (a reorder within one column reaches an open board live)
+  and WI-114 (epic dates in the year `0000` are a `400`), each approved and on its own
+  branch. WI-111 (board moves without dragging) is done.
 - **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
   are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
 - **Planning gaps awaiting an owner decision** are listed first under
@@ -58,9 +61,8 @@ Planned next, not yet drafted:
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 come from canonical doc 0003; WT-07 is reserved above. WT-11, the MCP
-server (doc 0005), is outlined above and comes after WT-06. WT-12, production deployment
-and operations (doc 0006), came right after WT-04 and is done.
+WT-07 to WT-10 come from canonical doc 0003; WT-07 is listed above. WT-11, the MCP server
+(doc 0005), and WT-12, production deployment and operations (doc 0006), are done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
