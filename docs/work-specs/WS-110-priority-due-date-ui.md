@@ -1,6 +1,6 @@
 # WS-110 — Priority and due date in the UI
 
-- Status: Approved (approved by the owner on 2026-11-23, questions 1 to 5 as proposed)
+- Status: Done (approved by the owner on 2026-11-23, questions 1 to 5 as proposed; done on 2026-11-23)
 - Work-item: [WI-110](../work-items/WI-110-priority-due-date-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 4;
   [0004](../canonical/0004-api-conventions.md) section 3 (calendar dates);
@@ -206,3 +206,40 @@ Risks:
   catches it.
 
 ## Implementation record
+
+- Branch `claude/wi-110-priority-due-date-ui`, from the reservation on `main` (`26f95ea`).
+  No server change.
+- Red (`7f6088a`): the new modules failed to import (`due-date.ts`, `use-today.ts`,
+  `task-meta.tsx`); the card, board, backlog and task detail tests failed on the missing
+  icon, date, "Overdue" text and form fields.
+- Green (`6dc6673`): `task/due-date.ts`, `hooks/use-today.ts`, `task/task-meta.tsx`;
+  `CardBody` with `done`, passed from the column's category by `board-column.tsx` and by
+  the board's drag overlay; the read view's rows and the form's two fields in
+  `details-section.tsx`.
+- End to end (`7a0e6e8`): `tests/e2e/priority-due-date.spec.ts` (tests 11 and 12), the
+  accessibility check of test 10, and `taskHistory` in `tests/e2e/seed.ts`. Both new tests
+  passed three times in a row.
+- Gate on 2026-11-23: typecheck, lint and Prettier pass; Vitest 2165 of 2165. The first
+  two full `pnpm test:e2e` runs each had 2 failures. One was always
+  `projects.spec.ts`'s Viewer test (see deviation 4). The other was a different
+  `live-board.spec.ts` test each time, on a 2-second wait for a live event. The live-board
+  spec then passed 30 of 30 with one worker. After the fix of deviation 4, the full run
+  passed 111 of 111.
+
+## Deviations
+
+1. **The end-to-end test checks "Overdue" on the card, not in the task detail.** A Member
+   sees the edit form, which does not show the mark (section 4). The read view's mark is
+   covered by unit test 8.
+2. **The accessibility check runs as a Manager,** through the file's shared
+   `projectWithATask`, not as a Member. Both see the same board, backlog and edit form.
+3. **The end-to-end `save` waits for the `PATCH` answer.** "Saved." stays shown from the
+   previous save, so waiting for the text alone let the test read the history before the
+   last save had landed.
+4. **`projects.spec.ts`'s Viewer test now clicks "Load more"** until every page is shown,
+   as `people.spec.ts` does for accounts. The end-to-end database keeps every project of a
+   run, and the list is by name in pages of 50. With this item's four new projects, the run
+   reached 51 active projects, and "Viewed ‹key›" fell on page two. This is a test change
+   only, outside this item's files, and needed for the gate.
+5. **`formatDueDate` sets the UTC year after `Date.UTC`,** which maps years 0 to 99 to 1900
+   to 1999. Calendar dates start at year 1.
