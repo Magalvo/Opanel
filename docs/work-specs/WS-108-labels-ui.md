@@ -157,3 +157,37 @@ Risks:
   that merges second takes in the other.
 - **A board with many labels per card** grows taller. Chips wrap within the card's width;
   20 labels is the most a task can carry.
+
+## Implementation record
+
+- Branch `claude/wi-108-labels-ui`, from `main` after WI-107. No server change.
+- Red (`f867f52`): the chip test failed on the missing module; the card, board, detail and
+  settings tests on missing chips, the missing `labels` region, the missing picker and the
+  board's ignoring of `label.changed`.
+- Green (`95408e8`, `d25acba`): `components/labels` (`api.ts`, `label-chip.tsx`,
+  `label-picker.tsx`), chips on `CardBody`, `withLabels` in `board/live.ts` and the
+  board's `label.changed`, the picker and the "Labels" row in the task detail,
+  `canWriteLabels` in `task-access.ts`, and `projects/labels-section.tsx`.
+- End to end (`0f22fda`): `tests/e2e/labels.spec.ts` and the accessibility check of every
+  colour, in light and dark mode. Both passed at once with the shades of section 1.
+- Gate on 2026-11-23: typecheck, lint and Prettier pass; Vitest 2062 of 2062. The first
+  full `pnpm test:e2e` had 3 failures. Its output named only `toBeVisible` and not the
+  tests. The next full run passed 103 of 103. The label-related specs (labels,
+  accessibility, task detail, live pages) then passed three times each, 83 of 83, so the
+  failures could not be reproduced.
+
+## Deviations
+
+1. **The picker is not a `DropdownMenu`.** Section 3 named the existing `DropdownMenu`, but
+   a text box inside a Radix menu fights its typeahead. The picker is a disclosure instead:
+   a "Choose labels" button that opens a filter box and a list of native checkboxes. It is
+   keyboard operable with no extra code. The chosen labels stay outside the list as chips
+   with remove buttons.
+2. **Comparing drafts.** The task form's draft merge compared fields with `!==`. Label ids
+   are an array, so they are now compared as a set (`sameValue`).
+3. **A rename does not change a task's version.** On `label.changed` the task detail reads
+   the task again and takes only its `labels`. The usual version rule would ignore an
+   answer with the same version.
+4. **The settings section hides its buttons** on an archived project instead of disabling
+   them. Disabled buttons would also have no use there.
+5. **The page test of `task-access`** lists `canWriteLabels` for each role.
