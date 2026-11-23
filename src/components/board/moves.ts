@@ -88,3 +88,38 @@ export function moveRequest(before: Board, after: Board, taskId: string): MoveTa
   }
   return { columnId: to.columnId, version: task.version };
 }
+
+/** One entry of a card's menu (WS-111 section 2): where the card would go. */
+export interface MenuMove {
+  label: string;
+  columnId: string;
+  index: number;
+  disabled: boolean;
+}
+
+/**
+ * The moves a card's menu offers: to the top, up, down and to the bottom of its column,
+ * then to the end of each other column in board order. A move that would leave the card
+ * where it is is disabled. A task that is not on the board has none.
+ */
+export function menuMoves(board: Board, columns: readonly Column[], taskId: string): MenuMove[] {
+  const from = placeOf(board, taskId);
+  if (from === null) return [];
+  const { columnId, index } = from;
+  const last = (board[columnId]?.length ?? 1) - 1;
+  const within: MenuMove[] = [
+    { label: "Move to top", columnId, index: 0, disabled: index === 0 },
+    { label: "Move up", columnId, index: Math.max(index - 1, 0), disabled: index === 0 },
+    { label: "Move down", columnId, index: Math.min(index + 1, last), disabled: index === last },
+    { label: "Move to bottom", columnId, index: last, disabled: index === last },
+  ];
+  const others = columns
+    .filter((column) => column.id !== columnId)
+    .map((column) => ({
+      label: column.name,
+      columnId: column.id,
+      index: board[column.id]?.length ?? 0,
+      disabled: false,
+    }));
+  return [...within, ...others];
+}

@@ -572,11 +572,22 @@ describe("Board: moving without dragging (WS-111 section 1)", () => {
     await user.click(within(menu).getByRole("menuitem", { name: "Move down" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Actions for OPA-2" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Actions for OPA-2" })).toHaveAttribute(
+        "aria-disabled",
+        "true",
+      );
     });
+    // It keeps the focus, but opens nothing while the move is saved.
+    await user.click(screen.getByRole("button", { name: "Actions for OPA-2" }));
+    screen.getByRole("button", { name: "Actions for OPA-2" }).focus();
+    await user.keyboard("{Enter}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     await act(() => release(json(full({ ...t1, version: 2 }))));
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Actions for OPA-2" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Actions for OPA-2" })).toHaveAttribute(
+        "aria-disabled",
+        "false",
+      );
     });
   });
 });

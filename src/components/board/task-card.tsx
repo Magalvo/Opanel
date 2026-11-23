@@ -19,9 +19,13 @@ import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { isOverdue } from "@/components/task/due-date";
 import { DueDateText, PriorityIcon } from "@/components/task/task-meta";
 import { Badge } from "@/components/ui/badge";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useToday } from "@/hooks/use-today";
 import type { TaskSummary, TaskType } from "@/lib/schemas/tasks";
 import { cn } from "@/lib/utils";
+
+import { CardMenu } from "./card-menu";
+import type { MenuMove } from "./moves";
 
 export const TYPE_LABELS: Record<TaskType, string> = { task: "Task", bug: "Bug", story: "Story" };
 
@@ -137,13 +141,24 @@ export function StaticCard({ task, done }: Readonly<{ task: TaskSummary; done: b
 /**
  * A card that can be dragged (WS-037 section 5): with the pointer or by touch from anywhere
  * on it, and by keyboard from its handle, which carries the drag attributes and the
- * instructions (WS-038 section 4). The title stays a link.
+ * instructions (WS-038 section 4). The title stays a link. Its menu makes the same moves
+ * by clicks alone (WS-111 section 1). With reduced motion, cards do not slide into place
+ * (WS-111 section 3).
  */
 export function SortableCard({
   task,
   disabled,
   done,
-}: Readonly<{ task: TaskSummary; disabled: boolean; done: boolean }>) {
+  moves,
+  onMove,
+}: Readonly<{
+  task: TaskSummary;
+  disabled: boolean;
+  done: boolean;
+  moves: readonly MenuMove[];
+  onMove: (move: MenuMove) => void;
+}>) {
+  const reducedMotion = useReducedMotion();
   const {
     attributes,
     listeners,
@@ -155,6 +170,7 @@ export function SortableCard({
   } = useSortable({
     id: task.id,
     disabled: { draggable: disabled, droppable: false },
+    ...(reducedMotion ? { transition: null } : {}),
   });
 
   const handle = (
@@ -170,6 +186,19 @@ export function SortableCard({
     </button>
   );
 
+  const controls = (
+    <span className="flex items-center gap-1">
+      <CardMenu
+        taskId={task.id}
+        taskKey={task.key}
+        moves={moves}
+        disabled={disabled}
+        onMove={onMove}
+      />
+      {handle}
+    </span>
+  );
+
   return (
     <li>
       <div
@@ -178,7 +207,7 @@ export function SortableCard({
         {...listeners}
         className={cn(CARD, "cursor-grab touch-manipulation", isDragging && "opacity-50")}
       >
-        <CardBody task={task} handle={handle} done={done} />
+        <CardBody task={task} handle={controls} done={done} />
       </div>
     </li>
   );

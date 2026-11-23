@@ -25,12 +25,20 @@ import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import type { Column } from "@/lib/schemas/columns";
 
 import { SortableColumn, StaticColumn } from "./board-column";
 import { boardCollision } from "./collision";
 import { measureDroppable } from "./measure";
-import { applyDrop, type Board as BoardState, placeOf, targetOf } from "./moves";
+import {
+  applyDrop,
+  type Board as BoardState,
+  type MenuMove,
+  menuMoves,
+  placeOf,
+  targetOf,
+} from "./moves";
 import { NewTaskDialog } from "./new-task-dialog";
 import { OverlayCard } from "./task-card";
 import { useBoard } from "./use-board";
@@ -66,6 +74,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
   const archived = project.archivedAt !== null;
   const writable = canWriteTasks && !archived;
 
+  const reducedMotion = useReducedMotion();
   const [message, setMessage] = useState("");
   // The column a task is being added to, and the "Add task" button that gets the focus back.
   const [adding, setAdding] = useState<{ column: Column; opener: HTMLButtonElement } | null>(null);
@@ -208,6 +217,21 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     hold(false);
   }
 
+  /**
+   * A move chosen in a card's menu (WS-111 section 2): saved as a drop is, announced in the
+   * board's status region, and the keyboard is given back to the card's menu, also when the
+   * card was mounted anew in another column.
+   */
+  function onMenuMove(taskId: string, { columnId, index }: MenuMove) {
+    const result = applyDrop(board, taskId, columnId, index);
+    const key = keyOf(taskId);
+    setMessage(`${key} was moved to ${positionText(result, taskId)}.`);
+    void drop(taskId, columnId, index);
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-card-menu="${taskId}"]`)?.focus();
+    });
+  }
+
   const announcements: Announcements = {
     onDragStart: ({ active }) => {
       lastPlace.current = positionText(board, String(active.id));
@@ -304,9 +328,16 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
                   onAdd={(opener) => {
                     setAdding({ column, opener });
                   }}
+                  movesOf={(taskId) => menuMoves(shown, columns, taskId)}
+                  onMove={onMenuMove}
                 />
               ))}
-              <DragOverlay>
+              {/* With reduced motion the card neither glides between keyboard positions nor
+                  animates to where it is dropped (WS-111 section 3). */}
+              <DragOverlay
+                transition={reducedMotion ? "none" : undefined}
+                dropAnimation={reducedMotion ? null : undefined}
+              >
                 {activeTask === undefined ? null : (
                   <OverlayCard task={activeTask} done={activeDone} />
                 )}
