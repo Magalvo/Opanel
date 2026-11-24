@@ -467,7 +467,7 @@ const SORT_KEYS: Record<TaskSortField, SortKey[]> = {
   updated: [timestampKey(sql`t.updated_at`)],
 };
 
-/** The rows after a cursor, in an order whose last key is the id, always ascending. */
+/** The rows after a cursor, in an order whose last key is the id, in the sort's direction. */
 function afterCursor(keys: SortKey[], descending: boolean, values: string[], id: string): SQL {
   const ors: SQL[] = [];
   for (let index = 0; index <= keys.length; index += 1) {
@@ -485,7 +485,7 @@ function afterCursor(keys: SortKey[], descending: boolean, values: string[], id:
           : sql`${key.expression} > ${values[index]}${key.cast}`,
       );
     } else {
-      ands.push(sql`t.id > ${id}::uuid`);
+      ands.push(descending ? sql`t.id < ${id}::uuid` : sql`t.id > ${id}::uuid`);
     }
     ors.push(sql`(${sql.join(ands, sql` and `)})`);
   }
@@ -542,7 +542,7 @@ export async function listAllTasks(
           ? sql`${key.expression} desc`
           : sql`${key.expression}`,
       ),
-      sql`t.id`,
+      descending ? sql`t.id desc` : sql`t.id`,
     ],
     sql`, `,
   );

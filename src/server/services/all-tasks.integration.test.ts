@@ -188,7 +188,7 @@ function compare(sort: string) {
         order = flip(bytes(a.updatedAt, b.updatedAt));
         break;
     }
-    return order || bytes(a.id, b.id);
+    return order || (descending ? -1 : 1) * bytes(a.id, b.id);
   };
 }
 
