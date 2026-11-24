@@ -1,6 +1,6 @@
 # WI-116 — Task filters and text search on the project lists
 
-- Status: Approved (approved by the owner on 2026-11-24, with WS-116)
+- Status: In progress (approved by the owner on 2026-11-24, with WS-116)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item A)
 - Depends on: none
 - Work-spec: [WS-116](../work-specs/WS-116-task-filters-search.md)
