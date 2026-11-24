@@ -59,7 +59,7 @@ describe("GET /api/v1/projects/{projectId}/tasks with filters (WS-116)", () => {
       ["dueFrom=2030-02-01&dueTo=2030-01-01", "dueTo"],
       ["q=--", "q"],
       ["assigneeTeamId=me", "assigneeTeamId"],
-    ]) {
+    ] as const) {
       const response = await GET(
         apiRequest("GET", `/api/v1/projects/OPA/tasks?${query}`, { cookie }),
         project,

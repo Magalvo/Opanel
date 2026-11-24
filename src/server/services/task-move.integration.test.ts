@@ -36,7 +36,9 @@ async function failure(promise: Promise<unknown>): Promise<ApiError> {
 
 /** Task keys of a column, in board order. */
 async function column(actor: Awaited<ReturnType<typeof setup>>["actor"], columnId: string) {
-  return (await listTasks(actor, "OPA", { limit: 100, columnId })).items.map((task) => task.key);
+  return (await listTasks(actor, "OPA", { limit: 100, columnId: [columnId] })).items.map(
+    (task) => task.key,
+  );
 }
 
 async function movedEvents(taskId: string) {
