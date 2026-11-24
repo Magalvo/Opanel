@@ -1,6 +1,6 @@
 # WI-117 — Task activity: history and comments in one list
 
-- Status: In progress (approved by the owner on 2026-11-24, with WS-117)
+- Status: Done (approved by the owner on 2026-11-24, with WS-117; done on 2026-11-24)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item C)
 - Depends on: none
 - Work-spec: [WS-117](../work-specs/WS-117-task-activity.md)
@@ -15,23 +15,23 @@ to a task.
 
 ## Acceptance criteria
 
-- [ ] `GET /api/v1/tasks/{taskId}/activity` (`tasks:read`, the task's project within the
+- [x] `GET /api/v1/tasks/{taskId}/activity` (`tasks:read`, the task's project within the
       caller's reach) lists comments and history entries oldest first, paged with a keyset
       cursor; `commented` entries are left out. A deleted or unknown task is a `404`, a
       project outside a restricted agent's reach a `403`, as for the task itself.
-- [ ] Each item has a `kind`: a `comment` item is the `Comment` the comments endpoint
+- [x] Each item has a `kind`: a `comment` item is the `Comment` the comments endpoint
       answers; an `event` item has `id`, `type`, `field`, `oldValue`, `newValue`, `actor`
       (`AccountRef`, or `null` when no account acted) and `createdAt`.
-- [ ] In an event, assignee, assignee team, epic and column ids are answered as
+- [x] In an event, assignee, assignee team, epic and column ids are answered as
       `{ id, name }`, read at the time of the request, with `name: null` for a team or
       column that no longer exists; labels keep the `{ id, name }` the history stored.
-- [ ] Every event type and every field written today reads back in that shape: `created`,
+- [x] Every event type and every field written today reads back in that shape: `created`,
       each `field_changed` field, `moved` to and from the backlog, `deleted`, `restored`,
       `reported_again`, and the `labels` entries written when a label is deleted.
-- [ ] Pages hold no item twice and miss none, also when items share a timestamp and while
+- [x] Pages hold no item twice and miss none, also when items share a timestamp and while
       comments are added between pages.
-- [ ] The OpenAPI document describes the endpoint and its item shapes.
-- [ ] The full quality gate passes, with `pnpm openapi:generate` leaving no diff.
+- [x] The OpenAPI document describes the endpoint and its item shapes.
+- [x] The full quality gate passes, with `pnpm openapi:generate` leaving no diff.
 
 ## Notes
 

@@ -1,6 +1,7 @@
 # WS-117 — Task activity: history and comments in one list
 
-- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
+- Status: Done (approved by the owner on 2026-11-24, questions 1 and 2 as recommended; done on
+  2026-11-24)
 - Work-item: [WI-117](../work-items/WI-117-task-activity.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 9;
   [0004](../canonical/0004-api-conventions.md) section 5 (cursors with microsecond
@@ -177,3 +178,31 @@ Risks:
   avoids a double. Test 2 checks it.
 - **Raw SQL** (follow-up D08): the union and the name reads are raw `sql`; tests 3 to 5
   cover every column they read.
+
+## Implementation record
+
+- Red (89c566f): the schema, service, route and OpenAPI tests failed because
+  `@/lib/schemas/activity` and `./activity` did not exist; the coverage test named
+  `listActivity` before it was exported.
+- Green (8072b5b): `src/lib/schemas/activity.ts`, `src/server/services/activity.ts`, the
+  route, the activity cursor in `pagination.ts`, `readComments` in `comments.ts`, the
+  contract registered; `pnpm openapi:generate` adds the path and the three schemas.
+- Gate on 2026-11-24:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2214 of 2214 (216 files);
+  - `pnpm test:e2e` 115 of 115;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **`readComments` instead of exporting `COMMENT_SELECT` and `toComment`** (section 4
+   and Files). One exported function reads the page's comments by id; the coverage test of
+   WS-073 classifies it as internal, called by `listActivity`, which has checked.
+2. **`oldValue` and `newValue` are `z.unknown()`**, not `z.json()` (section 4).
+   `zod-openapi` 6.0.2 names the recursive JSON schema `__schema0` in the document; an
+   unknown value is `{}` there, still required, with the same per-field description.
+3. **No `403` in the contract** (API contract): every permission-checked operation gets
+   its `403` from the document builder, as `listCommentsContract` does.
+4. **`NamedRef` is a TypeScript type only**: no item schema references it (the values are
+   described in prose, question 2), so it is not a component of the document.
