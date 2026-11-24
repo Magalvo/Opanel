@@ -1,6 +1,7 @@
 # WS-116 — Task filters and text search on the project lists
 
-- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
+- Status: Done (approved by the owner on 2026-11-24, questions 1 and 2 as recommended; done on
+  2026-11-24)
 - Work-item: [WI-116](../work-items/WI-116-task-filters-search.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8;
   [0004](../canonical/0004-api-conventions.md) section 5 (filters, the `400` of a query);
@@ -276,8 +277,10 @@ service call, first page of 50, in ms:
   item, takes 155 ms. Selective filters, the key and every backlog case are under 50 ms.
   The synthetic words are deliberately common (every task has 16 of 20 words), which makes
   the two search cases match most of the board.
-- As section 6 says, no index outside section 5 was added; this goes back to the owner
-  (WI-116's measurement criterion stays open until then).
+- As section 6 says, no index outside section 5 was added, and this went back to the
+  owner. **The owner accepted the misses on 2026-11-24**: the cause is the board order,
+  which this item did not change, and a follow-up on `main` covers it (the board list on
+  large boards).
 
 ## Deviations
 

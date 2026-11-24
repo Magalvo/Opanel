@@ -1,6 +1,6 @@
 # WI-116 — Task filters and text search on the project lists
 
-- Status: In progress (approved by the owner on 2026-11-24, with WS-116)
+- Status: Done (approved by the owner on 2026-11-24, with WS-116; done on 2026-11-24)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item A)
 - Depends on: none
 - Work-spec: [WS-116](../work-specs/WS-116-task-filters-search.md)
@@ -32,8 +32,9 @@ B) later. Searching stays fast on a project with 50 000 tasks.
       configuration. A task's new words are found as soon as its write commits.
 - [x] A migration adds the generated search column, its GIN index and indexes on
       `due_date` and `reporter_account_id`; existing tasks are searchable after it.
-- [ ] The measurements of WS-116 section 6, with 50 000 tasks, are within its limits and
-      recorded in WS-116.
+- [x] The measurements of WS-116 section 6, with 50 000 tasks, are within its limits and
+      recorded in WS-116. The board list's misses were accepted by the owner on
+      2026-11-24, with a follow-up for the board order (WS-116 "Measurements").
 - [x] The OpenAPI document describes every new parameter, repeatable ones as arrays.
 - [x] The full quality gate passes, with `pnpm db:generate` and `pnpm openapi:generate`
       leaving no diff.
