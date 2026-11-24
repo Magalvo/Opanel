@@ -1,6 +1,7 @@
 # WT-08 — Search, filters, list view, activity timeline
 
-- Status: Proposed
+- Status: Approved by the owner on 2026-11-24: decisions 1 to 13, proposals P1 to P3
+  and questions 1 to 9 as recommended.
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 4: epics "filtered
   or grouped" on the board; section 8: search and filters; section 9: activity history;
   section 11: no saved filters), [0004](../canonical/0004-api-conventions.md) (section 5:
@@ -256,7 +257,7 @@ beside D.
 
 ## Risks and open questions
 
-For the owner to decide; each has a recommendation.
+Resolved by the owner on 2026-11-24, by approving each recommendation:
 
 1. **Search language.** The `english` configuration stems words ("failing" finds "fails")
    but mangles other languages; `simple` matches words as written in any language, and
