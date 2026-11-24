@@ -1,6 +1,6 @@
 # WS-117 — Task activity: history and comments in one list
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
 - Work-item: [WI-117](../work-items/WI-117-task-activity.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 9;
   [0004](../canonical/0004-api-conventions.md) section 5 (cursors with microsecond
