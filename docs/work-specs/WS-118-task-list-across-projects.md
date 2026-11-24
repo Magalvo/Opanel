@@ -214,7 +214,9 @@ the page after ten pages were read; a `q` list has fewer than 11 pages.
 - **The other five sorts with no filter, or with a filter that keeps a fifth of the tasks,
   miss the 100 ms limit** (up to 347 ms): no index serves them, so every matching task is
   sorted before the first page, as the board list does (the WI-116 follow-up). As section
-  7 says, no index outside this spec was added; this goes back to the owner.
+  7 says, no index outside this spec was added, and this went back to the owner. **The
+  owner accepted the misses on 2026-11-24**, with the follow-up on `main` widened to cover
+  them (task lists that no index orders).
 - Runs vary by up to half on this laptop (`title` measured 214 ms and 347 ms in two runs).
 
 ## Deviations

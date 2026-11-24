@@ -247,13 +247,19 @@ Other follow-ups:
   0 of 17 on the branch of WI-119. CI has not shown it yet. Needs a work-item: find whether
   the page misses the `task.moved` event or the move answer, rather than waiting longer.
 
-- **The board list is slow on large boards** (WI-116, accepted by the owner on
-  2026-11-24). With 50 000 tasks in one project, `GET /projects/{projectId}/tasks` takes
-  about 155 ms for a first page with no filter, and up to 209 ms with a filter that keeps
-  most of the board: the board order (the column's position, then the task's) comes from
-  two tables, so every matching task is sorted before the first page. The backlog and
-  selective filters are under 50 ms (WS-116 "Measurements"). Needs a work-item, for
-  example storing the column's position on the task so one index serves the order.
+- **Task lists are slow on large installs when no index serves their order** (WI-116 and
+  WI-118, accepted by the owner on 2026-11-24). With 50 000 tasks:
+  - `GET /projects/{projectId}/tasks` takes about 155 ms for a first page with no filter,
+    and up to 209 ms with a filter that keeps most of the board: the board order (the
+    column's position, then the task's) comes from two tables (WS-116 "Measurements");
+  - `GET /tasks` sorted by `key`, `title`, `priority`, `dueDate` or `created` takes
+    180 to 350 ms with no filter (WS-118 "Measurements"); the default `-updated` takes
+    17 ms, served by `tasks_updated_idx`.
+
+  In both, every matching task is sorted before the first page. The backlog, selective
+  filters and text search stay under 60 ms. Needs a work-item: for example the column's
+  position stored on the task for the board, and an index per sort the list view uses
+  most, each measured with `scripts/measure-task-search.ts`.
 
 - **Grouping the board by epic** (WT-08 question 6, approved 2026-11-24): WT-08 filters
   the board by epic; grouping it into epic swimlanes, with their own drag and drop and
