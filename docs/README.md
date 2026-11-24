@@ -55,15 +55,16 @@ an index commit when a work-track is approved or done, or when what comes next c
 | [WT-06](work-tracks/WT-06-bug-reports-and-triage.md)            | Bug reports and automated triage                        |
 | [WT-13](work-tracks/WT-13-integrations.md)                      | Integrations (optional add-ons)                         |
 | [WT-07](work-tracks/WT-07-backlog-priority-due-dates-labels.md) | Backlog, priority, due dates, labels                    |
+| [WT-08](work-tracks/WT-08-search-filters-list-timeline.md)      | Search, filters, list view, activity timeline           |
 
 Planned next, not yet drafted:
 
-- WT-08 Search, filters, list view, activity timeline
 - WT-09 Sub-tasks and task links
 - WT-10 Sprints and story points
 
-WT-07 to WT-10 come from canonical doc 0003; WT-07, listed above, is done. WT-11, the MCP server
-(doc 0005), and WT-12, production deployment and operations (doc 0006), are done.
+WT-07 to WT-10 come from canonical doc 0003; WT-07 and WT-08 are listed above, and WT-07
+is done. WT-11, the MCP server (doc 0005), and WT-12, production deployment and
+operations (doc 0006), are done.
 
 ## Work-items (`work-items/`) and work-specs (`work-specs/`)
 
