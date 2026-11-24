@@ -1,6 +1,6 @@
 # WI-120 — The filter bar on the board and the backlog
 
-- Status: In progress (approved by the owner on 2026-11-24, with WS-120)
+- Status: Done (approved by the owner on 2026-11-24, with WS-120; done on 2026-11-24)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item D)
 - Depends on: [WI-116](WI-116-task-filters-search.md) (item A, done)
 - Work-spec: [WS-120](../work-specs/WS-120-task-filter-bar.md)
@@ -15,25 +15,25 @@ still drag and move cards on a filtered page.
 
 ## Acceptance criteria
 
-- [ ] The board and the backlog have a filter bar: a search box (`q`) and menus for type,
+- [x] The board and the backlog have a filter bar: a search box (`q`) and menus for type,
       priority, severity, label, epic, team, assignee (me, unassigned, or a person on the
       page), reporter (people, agents, me) and due date (overdue, due in the next 7 days).
       Active filters show as chips that remove themselves, with "Clear filters".
-- [ ] The page shows only the tasks the filtered list of WI-116 returns, in the usual
+- [x] The page shows only the tasks the filtered list of WI-116 returns, in the usual
       order; every column stays, and a column with none says "No matching tasks". The bar
       says how many tasks match out of how many are shown unfiltered.
-- [ ] The filter is in the URL with the API's parameter names, and a link opens the same
+- [x] The filter is in the URL with the API's parameter names, and a link opens the same
       view; parameters the bar has no control for (a custom due range, `category`,
       `columnId`, a reporter) still apply and show as chips. A parameter the page cannot
       read is ignored, and the page says so.
-- [ ] A filtered page asks again for the matching tasks after a `task.*` or
+- [x] A filtered page asks again for the matching tasks after a `task.*` or
       `label.changed` event, at most once a second, so tasks appear and leave live.
-- [ ] Dragging and the card menu's moves work on a filtered page, placing a card among the
+- [x] Dragging and the card menu's moves work on a filtered page, placing a card among the
       cards shown.
-- [ ] Opening a task from a filtered page and closing it keeps the filter.
-- [ ] The accessibility checks pass for the filtered board and backlog in light and dark
+- [x] Opening a task from a filtered page and closing it keeps the filter.
+- [x] The accessibility checks pass for the filtered board and backlog in light and dark
       mode; every control has an accessible name and is reachable by keyboard.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

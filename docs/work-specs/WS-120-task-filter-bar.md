@@ -1,6 +1,7 @@
 # WS-120 — The filter bar on the board and the backlog
 
-- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
+- Status: Done (approved by the owner on 2026-11-24, questions 1 and 2 as recommended; done on
+  2026-11-24)
 - Work-item: [WI-120](../work-items/WI-120-task-filter-bar.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8 ("filters apply
   to the board"; "the current filter lives in the URL");
@@ -159,3 +160,34 @@ Risks:
   page checks that the anchor is a shown card.
 - **Large boards** read every matching page, as the board reads every task today (the
   follow-up on slow task lists).
+
+## Implementation record
+
+- Red (20c4fc7): the three filter modules did not exist; the board and backlog tests found
+  every card where the filter keeps one.
+- Green (4e5b9d3): `task-filter.ts`, `task-filter-bar.tsx`, `use-task-filter.ts`,
+  `use-url-task-filter.ts` in `src/components/filters/`; `board.tsx`,
+  `board-column.tsx` and `backlog.tsx` show the matching tasks and translate a move.
+- Fixes found by the end-to-end run (4d231a0): the menus are not modal, since Radix hid the
+  page while a menu was open and axe flagged `aria-hidden-focus`; two selectors became
+  exact.
+- Gate on 2026-11-24: typecheck, lint and Prettier pass (after 669e484, formatting
+  only); `pnpm db:generate` and `pnpm openapi:generate` leave no diff; Vitest 2341 of
+  2341 (225 files); `pnpm test:e2e` 123 of 123; Windows 11, pnpm 10.28.0, Compose
+  PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The filter is read from the URL once and kept in the page's state** (section 2): each
+   change writes the URL with `router.replace`, so there is no history to follow back and
+   forth, and a test needs no router that re-renders.
+2. **While a new filter is read, the page keeps the last answer** (section 4), so it does
+   not flash every task between two filters; before any answer it shows none.
+3. **A move's place is translated by `fullIndex`** (section 4): the drop's index on the
+   shown board becomes the index on the full board right after the shown task above, or
+   right before the one below. The keyboard drag of the backlog is checked through
+   `fullIndex`'s unit tests and the board's menu move, since dnd-kit measures nothing
+   in jsdom.
+4. **The menus are not modal** (section 3), as above.
+5. **The bar reads labels, epics and teams when their menu first opens**, not when the
+   page opens, so a page that is never filtered makes no extra request.
