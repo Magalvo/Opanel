@@ -1,6 +1,6 @@
 # WI-119 — The timeline on the task page
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, with WS-119)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item F)
 - Depends on: [WI-117](WI-117-task-activity.md) (item C, done)
 - Work-spec: [WS-119](../work-specs/WS-119-task-timeline.md)

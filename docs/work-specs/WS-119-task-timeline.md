@@ -1,6 +1,6 @@
 # WS-119 — The timeline on the task page
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
 - Work-item: [WI-119](../work-items/WI-119-task-timeline.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 9 ("the task page
   shows events and comments on one timeline"); [0002](../canonical/0002-realtime-sync.md)
