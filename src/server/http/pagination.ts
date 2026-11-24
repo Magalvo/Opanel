@@ -190,3 +190,41 @@ export function decodeActivityCursor(value: string): ActivityCursor {
   }
   return { createdAt: result.data.t, kind: result.data.k, id: result.data.i };
 }
+
+/**
+ * Where a page of the list across projects ended (WS-118): its sort, the last task's sort
+ * values as text, and its id. A cursor of another sort is refused.
+ */
+export interface TaskListCursor {
+  sort: string;
+  values: string[];
+  id: string;
+}
+
+const taskListCursorSchema = z.strictObject({
+  s: z.string().min(1).max(20),
+  v: z.array(z.string().max(2000)).min(1).max(2),
+  i: z.uuid(),
+});
+
+export function encodeTaskListCursor(cursor: TaskListCursor): string {
+  return Buffer.from(JSON.stringify({ s: cursor.sort, v: cursor.values, i: cursor.id })).toString(
+    "base64url",
+  );
+}
+
+/** Throws `400` naming `cursor` unless the value is a task list cursor for `sort`. */
+export function decodeTaskListCursor(value: string, sort: string, length: number): TaskListCursor {
+  const invalid = invalidRequest([{ path: "cursor", message: "Invalid cursor." }]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch {
+    throw invalid;
+  }
+  const result = taskListCursorSchema.safeParse(parsed);
+  if (!result.success || result.data.s !== sort || result.data.v.length !== length) {
+    throw invalid;
+  }
+  return { sort: result.data.s, values: result.data.v, id: result.data.i };
+}

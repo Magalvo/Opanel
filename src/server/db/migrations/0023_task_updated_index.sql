@@ -1,0 +1,1 @@
+CREATE INDEX "tasks_updated_idx" ON "tasks" USING btree ("updated_at","id");

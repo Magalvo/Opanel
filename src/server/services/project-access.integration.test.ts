@@ -126,7 +126,7 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
 };
 
 /** Lists that span projects: they leave out what the actor cannot reach (section 4). */
-const PROJECT_FILTERED = ["projects.listProjects"];
+const PROJECT_FILTERED = ["projects.listProjects", "tasks.listAllTasks"];
 
 /** Every other exported function, with the reason it is not project-scoped. */
 const NOT_PROJECT_SCOPED: Record<string, string> = {
@@ -184,6 +184,7 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "sign-in.summarize": "sign-in",
   "sign-in.signIn": "sign-in",
   "sign-in.signOut": "sign-in",
+  "projects.reachableBy": "internal: the condition the project-filtered lists use",
   "task-events.recordTaskEvent": "internal: called by a service that has checked",
   "task-filter.taskFilterWhere":
     "internal: called by listTasks and listBacklog, which have checked",

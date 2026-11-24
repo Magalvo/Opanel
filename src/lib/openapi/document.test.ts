@@ -441,6 +441,34 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("describes the list of tasks across projects and TaskListItem (WS-118)", () => {
+    const { schemas } = parsedDocument().components;
+    const { paths } = z
+      .object({
+        paths: z.record(
+          z.string(),
+          z.record(
+            z.string(),
+            z.object({
+              parameters: z
+                .array(z.object({ name: z.string(), schema: z.unknown().optional() }))
+                .optional(),
+            }),
+          ),
+        ),
+      })
+      .parse(documentAsJson());
+    const names = (paths["/api/v1/tasks"]?.get?.parameters ?? []).map((p) => p.name);
+
+    expect(names).toEqual(
+      expect.arrayContaining(["sort", "projectId", "q", "priority", "limit", "cursor"]) as unknown,
+    );
+    expect(names).not.toContain("columnId");
+    expect(schemas.TaskListItem).toMatchObject({
+      required: expect.arrayContaining(["key", "project", "column"]) as unknown,
+    });
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 
