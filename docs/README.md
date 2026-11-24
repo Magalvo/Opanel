@@ -15,9 +15,10 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-08 items B (`GET /tasks`, the list across projects, with `sort`) and F
-  (the timeline on the task page), which can run in parallel; each gets its number when it
-  starts. Items A and C are done (WI-116, WI-117). WT-07 and WT-11 are done.
+- **Next:** WT-08 item D (the filter bar on the board and the backlog, the filter in the
+  URL, live refresh of a filtered page), then E (the list view, which needs D) and G (the
+  end-to-end flow, the agents guide, proposals P1 to P3 and the exit check). Items A, B, C
+  and F are done (WI-116 to WI-119). WT-07 and WT-11 are done.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
   session secret), WI-113 (a reorder within one column reaches an open board live) and
   WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
