@@ -1,6 +1,6 @@
 # WI-121 — Task list cursors refuse impossible dates
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, with WS-121)
 - Work-track: none: follow-up C01 of the independent audit of 2026-11-24, confirmed in the
   code of `main`
 - Depends on: none

@@ -1,6 +1,6 @@
 # WS-121 — Task list cursors refuse impossible dates
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, as proposed)
 - Work-item: [WI-121](../work-items/WI-121-task-list-cursor-dates.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4 (invalid input is
   a `400` with field errors) and section 5 (cursors); [WS-051](WS-051-cursor-date-validation.md)
