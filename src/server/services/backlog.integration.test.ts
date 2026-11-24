@@ -122,7 +122,7 @@ describe("moveTask and the backlog", () => {
       expect(back).toMatchObject({ columnId: todo, version: 2 });
       expect(await backlog(actor)).toEqual(["OPA-3", "OPA-1", "OPA-4"]);
       expect(
-        (await listTasks(actor, "OPA", { limit: 100, columnId: todo })).items.map((t) => t.key),
+        (await listTasks(actor, "OPA", { limit: 100, columnId: [todo] })).items.map((t) => t.key),
       ).toEqual(["OPA-2"]);
 
       await listener.settle();

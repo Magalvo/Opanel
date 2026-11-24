@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  customType,
   date,
   index,
   integer,
@@ -17,6 +18,9 @@ import { columns } from "./columns";
 import { epics } from "./epics";
 import { projects } from "./projects";
 import { teams } from "./teams";
+
+/** PostgreSQL's `tsvector`, which Drizzle has no type for; only ever written by the database. */
+const tsvector = customType<{ data: string }>({ dataType: () => "tsvector" });
 
 // Tasks (canonical doc 0003 section 4, WS-030). The key is not stored: it is the project's
 // key and `number`, neither of which ever changes. The `restrict` references keep a team or
@@ -56,6 +60,10 @@ export const tasks = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     deletedBy: uuid("deleted_by").references(() => accounts.id, { onDelete: "restrict" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Text search over title and description, computed by the database (WS-116 section 4).
+    search: tsvector("search").generatedAlwaysAs(
+      sql`setweight(to_tsvector('simple', title), 'A') || setweight(to_tsvector('simple', description), 'B')`,
+    ),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -83,6 +91,9 @@ export const tasks = pgTable(
     index("tasks_assignee_team_idx").on(table.assigneeTeamId),
     index("tasks_assignee_account_idx").on(table.assigneeAccountId),
     index("tasks_epic_idx").on(table.epicId),
+    index("tasks_search_idx").using("gin", table.search),
+    index("tasks_due_date_idx").on(table.dueDate),
+    index("tasks_reporter_idx").on(table.reporterAccountId),
     // The triage pipeline's lookup; not unique: an advisory lock serialises it (WT-06
     // decision 6).
     index("tasks_project_fingerprint_idx")

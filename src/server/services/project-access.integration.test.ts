@@ -185,6 +185,8 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "sign-in.signIn": "sign-in",
   "sign-in.signOut": "sign-in",
   "task-events.recordTaskEvent": "internal: called by a service that has checked",
+  "task-filter.taskFilterWhere":
+    "internal: called by listTasks and listBacklog, which have checked",
   "tasks.findLiveTask": "internal: returns the task's project, which its callers check",
   "teams.listTeams": "teams are not project-scoped",
   "teams.getTeam": "teams are not project-scoped",

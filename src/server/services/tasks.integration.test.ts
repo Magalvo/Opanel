@@ -195,7 +195,7 @@ describe("listTasks", () => {
     await moveColumn(managerActor, done?.id ?? "", { afterColumnId: null, version: 1 });
     expect(await titles()).toEqual(["A", "B", "D", "C"]);
 
-    const filtered = await listTasks(actor, "OPA", { limit: 50, columnId: todo?.id ?? "" });
+    const filtered = await listTasks(actor, "OPA", { limit: 50, columnId: [todo?.id ?? ""] });
     expect(filtered.items.map((task) => task.title)).toEqual(["B", "D"]);
     expect(Object.keys(filtered.items[0] ?? {})).not.toContain("description");
   });
@@ -223,7 +223,8 @@ describe("listTasks", () => {
     expect(seen).toEqual(all);
     expect(seen).toHaveLength(5);
     expect(
-      (await failure(listTasks(actor, "OPA", { limit: 50, columnId: webColumn?.id ?? "" }))).status,
+      (await failure(listTasks(actor, "OPA", { limit: 50, columnId: [webColumn?.id ?? ""] })))
+        .status,
     ).toBe(400);
   });
 });
