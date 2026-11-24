@@ -90,9 +90,7 @@ export function isEmpty(filter: TaskFilter): boolean {
 
 function withList(filter: TaskFilter, key: FilterKey, values: readonly string[]): TaskFilter {
   const others = Object.entries(filter).filter(([name]) => name !== key);
-  return Object.fromEntries(
-    values.length === 0 ? others : [...others, [key, values]],
-  );
+  return Object.fromEntries(values.length === 0 ? others : [...others, [key, values]]);
 }
 
 export function withValue(filter: TaskFilter, key: FilterKey, value: string): TaskFilter {

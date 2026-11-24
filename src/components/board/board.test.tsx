@@ -23,7 +23,7 @@ import {
 
 const navigation = vi.hoisted(() => ({
   search: new URLSearchParams(),
-  replace: (() => undefined),
+  replace: () => undefined,
 }));
 
 vi.mock("next/navigation", () => ({
