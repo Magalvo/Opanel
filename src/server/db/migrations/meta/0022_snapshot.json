@@ -97,12 +97,8 @@
           "name": "account_tokens_account_id_accounts_id_fk",
           "tableFrom": "account_tokens",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -110,12 +106,8 @@
           "name": "account_tokens_created_by_accounts_id_fk",
           "tableFrom": "account_tokens",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -125,9 +117,7 @@
         "account_tokens_token_hash_unique": {
           "name": "account_tokens_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -277,12 +267,8 @@
           "name": "accounts_created_by_accounts_id_fk",
           "tableFrom": "accounts",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -292,9 +278,7 @@
         "accounts_email_unique": {
           "name": "accounts_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -376,12 +360,8 @@
           "name": "agent_projects_project_id_projects_id_fk",
           "tableFrom": "agent_projects",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -389,14 +369,8 @@
           "name": "agent_projects_account_fk",
           "tableFrom": "agent_projects",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id",
-            "account_kind"
-          ],
-          "columnsTo": [
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["account_id", "account_kind"],
+          "columnsTo": ["id", "kind"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -404,10 +378,7 @@
       "compositePrimaryKeys": {
         "agent_projects_account_id_project_id_pk": {
           "name": "agent_projects_account_id_project_id_pk",
-          "columns": [
-            "account_id",
-            "project_id"
-          ]
+          "columns": ["account_id", "project_id"]
         }
       },
       "uniqueConstraints": {},
@@ -450,14 +421,8 @@
           "name": "agent_scopes_account_fk",
           "tableFrom": "agent_scopes",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id",
-            "account_kind"
-          ],
-          "columnsTo": [
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["account_id", "account_kind"],
+          "columnsTo": ["id", "kind"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -465,10 +430,7 @@
       "compositePrimaryKeys": {
         "agent_scopes_account_id_scope_pk": {
           "name": "agent_scopes_account_id_scope_pk",
-          "columns": [
-            "account_id",
-            "scope"
-          ]
+          "columns": ["account_id", "scope"]
         }
       },
       "uniqueConstraints": {},
@@ -581,12 +543,8 @@
           "name": "api_tokens_created_by_accounts_id_fk",
           "tableFrom": "api_tokens",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -594,14 +552,8 @@
           "name": "api_tokens_account_fk",
           "tableFrom": "api_tokens",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id",
-            "account_kind"
-          ],
-          "columnsTo": [
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["account_id", "account_kind"],
+          "columnsTo": ["id", "kind"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -611,9 +563,7 @@
         "api_tokens_public_id_unique": {
           "name": "api_tokens_public_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
+          "columns": ["public_id"]
         }
       },
       "policies": {},
@@ -751,12 +701,8 @@
           "name": "audit_log_actor_account_id_accounts_id_fk",
           "tableFrom": "audit_log",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "actor_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -908,12 +854,8 @@
           "name": "bug_reports_project_id_projects_id_fk",
           "tableFrom": "bug_reports",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -921,12 +863,8 @@
           "name": "bug_reports_task_id_tasks_id_fk",
           "tableFrom": "bug_reports",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -934,14 +872,8 @@
           "name": "bug_reports_agent_account_fk",
           "tableFrom": "bug_reports",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "agent_account_id",
-            "account_kind"
-          ],
-          "columnsTo": [
-            "id",
-            "kind"
-          ],
+          "columnsFrom": ["agent_account_id", "account_kind"],
+          "columnsTo": ["id", "kind"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1066,12 +998,8 @@
           "name": "columns_project_id_projects_id_fk",
           "tableFrom": "columns",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1169,12 +1097,8 @@
           "name": "comments_task_id_tasks_id_fk",
           "tableFrom": "comments",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1182,12 +1106,8 @@
           "name": "comments_author_account_id_accounts_id_fk",
           "tableFrom": "comments",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "author_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1299,12 +1219,8 @@
           "name": "credentials_account_id_accounts_id_fk",
           "tableFrom": "credentials",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1314,10 +1230,7 @@
         "credentials_provider_unique": {
           "name": "credentials_provider_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "provider_id",
-            "provider_account_id"
-          ]
+          "columns": ["provider_id", "provider_account_id"]
         }
       },
       "policies": {},
@@ -1423,12 +1336,8 @@
           "name": "epics_project_id_projects_id_fk",
           "tableFrom": "epics",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1436,12 +1345,8 @@
           "name": "epics_created_by_accounts_id_fk",
           "tableFrom": "epics",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1544,12 +1449,8 @@
           "name": "labels_project_id_projects_id_fk",
           "tableFrom": "labels",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1668,12 +1569,8 @@
           "name": "projects_created_by_accounts_id_fk",
           "tableFrom": "projects",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1681,12 +1578,8 @@
           "name": "projects_triage_team_id_teams_id_fk",
           "tableFrom": "projects",
           "tableTo": "teams",
-          "columnsFrom": [
-            "triage_team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["triage_team_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1696,9 +1589,7 @@
         "projects_key_unique": {
           "name": "projects_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       },
       "policies": {},
@@ -1806,12 +1697,8 @@
           "name": "routing_rules_project_id_projects_id_fk",
           "tableFrom": "routing_rules",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1819,12 +1706,8 @@
           "name": "routing_rules_team_id_teams_id_fk",
           "tableFrom": "routing_rules",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1832,10 +1715,7 @@
       "compositePrimaryKeys": {
         "routing_rules_project_id_origin_layer_pk": {
           "name": "routing_rules_project_id_origin_layer_pk",
-          "columns": [
-            "project_id",
-            "origin_layer"
-          ]
+          "columns": ["project_id", "origin_layer"]
         }
       },
       "uniqueConstraints": {},
@@ -1926,12 +1806,8 @@
           "name": "sessions_account_id_accounts_id_fk",
           "tableFrom": "sessions",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1941,9 +1817,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -2049,12 +1923,8 @@
           "name": "task_events_task_id_tasks_id_fk",
           "tableFrom": "task_events",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2062,12 +1932,8 @@
           "name": "task_events_actor_account_id_accounts_id_fk",
           "tableFrom": "task_events",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "actor_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2122,12 +1988,8 @@
           "name": "task_labels_task_id_tasks_id_fk",
           "tableFrom": "task_labels",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2135,12 +1997,8 @@
           "name": "task_labels_label_id_labels_id_fk",
           "tableFrom": "task_labels",
           "tableTo": "labels",
-          "columnsFrom": [
-            "label_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["label_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2148,10 +2006,7 @@
       "compositePrimaryKeys": {
         "task_labels_task_id_label_id_pk": {
           "name": "task_labels_task_id_label_id_pk",
-          "columns": [
-            "task_id",
-            "label_id"
-          ]
+          "columns": ["task_id", "label_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2217,12 +2072,8 @@
           "name": "task_links_from_task_id_tasks_id_fk",
           "tableFrom": "task_links",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "from_task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["from_task_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2230,12 +2081,8 @@
           "name": "task_links_to_task_id_tasks_id_fk",
           "tableFrom": "task_links",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "to_task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["to_task_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2243,12 +2090,8 @@
           "name": "task_links_created_by_accounts_id_fk",
           "tableFrom": "task_links",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2256,11 +2099,7 @@
       "compositePrimaryKeys": {
         "task_links_from_task_id_to_task_id_type_pk": {
           "name": "task_links_from_task_id_to_task_id_type_pk",
-          "columns": [
-            "from_task_id",
-            "to_task_id",
-            "type"
-          ]
+          "columns": ["from_task_id", "to_task_id", "type"]
         }
       },
       "uniqueConstraints": {},
@@ -2621,12 +2460,8 @@
           "name": "tasks_project_id_projects_id_fk",
           "tableFrom": "tasks",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2634,12 +2469,8 @@
           "name": "tasks_column_id_columns_id_fk",
           "tableFrom": "tasks",
           "tableTo": "columns",
-          "columnsFrom": [
-            "column_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["column_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2647,12 +2478,8 @@
           "name": "tasks_assignee_team_id_teams_id_fk",
           "tableFrom": "tasks",
           "tableTo": "teams",
-          "columnsFrom": [
-            "assignee_team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assignee_team_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2660,12 +2487,8 @@
           "name": "tasks_assignee_account_id_accounts_id_fk",
           "tableFrom": "tasks",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "assignee_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assignee_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2673,12 +2496,8 @@
           "name": "tasks_epic_id_epics_id_fk",
           "tableFrom": "tasks",
           "tableTo": "epics",
-          "columnsFrom": [
-            "epic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["epic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2686,12 +2505,8 @@
           "name": "tasks_reporter_account_id_accounts_id_fk",
           "tableFrom": "tasks",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "reporter_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reporter_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2699,12 +2514,8 @@
           "name": "tasks_deleted_by_accounts_id_fk",
           "tableFrom": "tasks",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2786,12 +2597,8 @@
           "name": "team_members_team_id_teams_id_fk",
           "tableFrom": "team_members",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2799,12 +2606,8 @@
           "name": "team_members_account_id_accounts_id_fk",
           "tableFrom": "team_members",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2812,10 +2615,7 @@
       "compositePrimaryKeys": {
         "team_members_team_id_account_id_pk": {
           "name": "team_members_team_id_account_id_pk",
-          "columns": [
-            "team_id",
-            "account_id"
-          ]
+          "columns": ["team_id", "account_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2883,12 +2683,8 @@
           "name": "teams_created_by_accounts_id_fk",
           "tableFrom": "teams",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }

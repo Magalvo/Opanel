@@ -75,7 +75,7 @@ describe("task requests", () => {
   });
 
   it("list query: optional column filter and deleted flag, with pagination", () => {
-    expect(taskListQuerySchema.parse({ columnId: UUID })).toEqual({ limit: 50, columnId: UUID });
+    expect(taskListQuerySchema.parse({ columnId: UUID })).toEqual({ limit: 50, columnId: [UUID] });
     expect(taskListQuerySchema.parse({ deleted: "true" })).toEqual({ limit: 50, deleted: "true" });
     expect(taskListQuerySchema.safeParse({ columnId: "x" }).success).toBe(false);
     expect(taskListQuerySchema.safeParse({ deleted: "yes" }).success).toBe(false);
