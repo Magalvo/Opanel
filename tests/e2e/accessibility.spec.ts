@@ -103,7 +103,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     for (const [path, loaded] of [
       ["/projects", page.getByRole("table")],
       [`/projects/${key}`, page.getByRole("button", { name: /A card on the board/ })],
-      [`/projects/${key}/tasks/${key}-1`, page.getByRole("region", { name: "Comments" })],
+      [`/projects/${key}/tasks/${key}-1`, page.getByRole("region", { name: "Activity" })],
       [`/projects/${key}/settings`, page.getByRole("row", { name: /In progress/ })],
     ] as const) {
       await page.goto(path);
@@ -144,8 +144,33 @@ for (const colorScheme of ["light", "dark"] as const) {
     // The task as a dialog over the board (WS-038).
     await page.goto(`/projects/${key}`);
     await page.getByRole("link", { name: "A card on the board" }).click();
-    await expect(page.getByRole("dialog").getByRole("region", { name: "Comments" })).toBeVisible();
+    await expect(page.getByRole("dialog").getByRole("region", { name: "Activity" })).toBeVisible();
     expect(await violations(page), "task dialog").toEqual([]);
+  });
+
+  test(`a task's timeline with changes has no accessibility violations in ${colorScheme} mode (WS-119)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    await page.emulateMedia({ colorScheme });
+    const headers = { Origin: E2E_BASE_URL };
+    const task = (await (await page.request.get(`/api/v1/tasks/${key}-1`)).json()) as {
+      version: number;
+    };
+    expect(
+      (
+        await page.request.patch(`/api/v1/tasks/${key}-1`, {
+          headers,
+          data: { description: "A **new** description", priority: "high", version: task.version },
+        })
+      ).status(),
+    ).toBe(200);
+
+    await page.goto(`/projects/${key}/tasks/${key}-1`);
+    const timeline = page.getByRole("region", { name: "Activity" });
+    await timeline.getByRole("button", { name: "Show changes" }).click();
+    await expect(timeline.getByText("A **new** description")).toBeVisible();
+    expect(await violations(page), "timeline").toEqual([]);
   });
 
   test(`the Backlog page and a task over it have no accessibility violations in ${colorScheme} mode (WS-109)`, async ({
@@ -169,7 +194,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(await violations(page), "backlog").toEqual([]);
 
     await page.getByRole("link", { name: "A task in the backlog" }).click();
-    await expect(page.getByRole("dialog").getByRole("region", { name: "Comments" })).toBeVisible();
+    await expect(page.getByRole("dialog").getByRole("region", { name: "Activity" })).toBeVisible();
     expect(await violations(page), "task dialog over the backlog").toEqual([]);
   });
 }

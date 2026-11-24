@@ -194,7 +194,7 @@ test("an agent's report becomes a bug on every open board, routed by layer, and 
     await expect(admin.getByRole("textbox", { name: "Description" })).toHaveValue(
       /### Steps to reproduce[\s\S]*Press Place order[\s\S]*### HTTP/,
     );
-    const comments = admin.getByRole("region", { name: "Comments" });
+    const comments = admin.getByRole("region", { name: "Activity" });
     await expect(comments.getByRole("article")).toHaveCount(2);
     await expect(comments).toContainText(
       `Filed by ${botName} from a bug report: layer api, confidence 0.8, severity high. ` +

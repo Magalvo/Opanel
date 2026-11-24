@@ -23,6 +23,7 @@ import {
 } from "@/components/board/test-data";
 import { bodyOf, calls, fetchMock, hold, installFetch, on, problem } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
+import type { ActivityEvent } from "@/lib/schemas/activity";
 import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
 import type { ProjectEvent } from "@/lib/schemas/events";
@@ -94,9 +95,37 @@ function comment(n: number, body: string): Comment {
   };
 }
 
+/** A history entry by Ada, at minute `n`, after the comments' 10:00. */
+function change(
+  n: number,
+  fields: Partial<Pick<ActivityEvent, "type" | "field" | "oldValue" | "newValue">>,
+): ActivityEvent {
+  return {
+    kind: "event",
+    id: String(n),
+    type: "field_changed",
+    field: null,
+    oldValue: null,
+    newValue: null,
+    actor: { id: ada.id, name: "Ada Lovelace", kind: "human" },
+    createdAt: `2026-11-14T10:${String(n).padStart(2, "0")}:00.000Z`,
+    ...fields,
+  };
+}
+
+/** A page of activity: comments as comment items, events as they are. */
+function activity(items: (Comment | ActivityEvent)[], nextCursor: string | null = null) {
+  return json({
+    items: items.map((item) =>
+      "kind" in item && item.kind === "event" ? item : { kind: "comment", comment: item },
+    ),
+    nextCursor,
+  });
+}
+
 const TASK = "GET /api/v1/tasks/OPA-1";
 const COLUMNS = "GET /api/v1/projects/OPA/columns";
-const COMMENTS = "GET /api/v1/tasks/OPA-1/comments?limit=50";
+const ACTIVITY = "GET /api/v1/tasks/OPA-1/activity?limit=50";
 const TEAMS = "GET /api/v1/teams?limit=50";
 const EPICS = "GET /api/v1/projects/OPA/epics?limit=100";
 
@@ -142,7 +171,7 @@ async function renderTask(options: Options = {}) {
     </ProjectFrame>,
   );
   await screen.findByRole("heading", { level: 2, name: current.title });
-  await screen.findByRole("region", { name: "Comments" });
+  await screen.findByRole("region", { name: "Activity" });
   return user;
 }
 
@@ -155,7 +184,7 @@ function details() {
 }
 
 function comments() {
-  return screen.getByRole("region", { name: "Comments" });
+  return screen.getByRole("region", { name: "Activity" });
 }
 
 beforeEach(() => {
@@ -163,7 +192,7 @@ beforeEach(() => {
   router.back.mockReset();
   router.push.mockReset();
   on(COLUMNS, page([todo, doing, done]));
-  on(COMMENTS, page([comment(1, "First *comment*"), comment(2, "Second")]));
+  on(ACTIVITY, activity([comment(1, "First *comment*"), comment(2, "Second")]));
   on(TEAMS, page([web, api]));
   on(EPICS, page([launch]));
   on(LABELS, page([bugLabel, docsLabel, uiLabel]));
@@ -559,8 +588,8 @@ describe("TaskDetail: column, delete and the board", () => {
 
 describe("TaskDetail: comments", () => {
   it("lists comments oldest first as Markdown, and loads more", async () => {
-    on(COMMENTS, page([comment(1, "First *comment*")], "c1"));
-    on(`${COMMENTS}&cursor=c1`, page([comment(2, "Second")]));
+    on(ACTIVITY, activity([comment(1, "First *comment*")], "c1"));
+    on(`${ACTIVITY}&cursor=c1`, activity([comment(2, "Second")]));
     const user = await renderTask();
     const section = comments();
 
@@ -599,8 +628,8 @@ describe("TaskDetail: comments", () => {
   });
 
   it("shows one's own comment once, at the end, when Load more returns it (WS-080)", async () => {
-    on(COMMENTS, page([comment(1, "First *comment*")], "c1"));
-    on(`${COMMENTS}&cursor=c1`, page([comment(2, "Second"), comment(3, "Mine")]));
+    on(ACTIVITY, activity([comment(1, "First *comment*")], "c1"));
+    on(`${ACTIVITY}&cursor=c1`, activity([comment(2, "Second"), comment(3, "Mine")]));
     on("POST /api/v1/tasks/OPA-1/comments", json(comment(3, "Mine"), 201));
     const user = await renderTask();
     const section = comments();
@@ -623,8 +652,8 @@ describe("TaskDetail: comments", () => {
   });
 
   it("disables Load more while it loads, and asks once (WS-080)", async () => {
-    on(COMMENTS, page([comment(1, "First *comment*")], "c1"));
-    const release = hold(`${COMMENTS}&cursor=c1`);
+    on(ACTIVITY, activity([comment(1, "First *comment*")], "c1"));
+    const release = hold(`${ACTIVITY}&cursor=c1`);
     await renderTask();
     const more = within(comments()).getByRole("button", { name: "Load more" });
 
@@ -635,7 +664,7 @@ describe("TaskDetail: comments", () => {
       expect(more).toBeDisabled();
     });
     expect(calls("GET").filter(([url]) => url.includes("cursor=c1"))).toHaveLength(1);
-    await act(() => release(page([comment(2, "Second")])));
+    await act(() => release(activity([comment(2, "Second")])));
     expect(within(comments()).getAllByRole("article")).toHaveLength(2);
   });
 
@@ -675,8 +704,8 @@ describe("TaskDetail: agents (WS-074)", () => {
 
   it("badges an agent's comment only; a system comment is Opanel with no badge", async () => {
     on(
-      COMMENTS,
-      page([
+      ACTIVITY,
+      activity([
         { ...comment(1, "From the bot"), author: bot },
         comment(2, "From Ada"),
         { ...comment(3, "From Opanel"), kind: "system", author: null },
@@ -882,13 +911,13 @@ describe("TaskDetail: live (WS-049 section 3)", () => {
   it("shows a new comment once every page is loaded, and never twice", async () => {
     await renderLive();
     on(
-      COMMENTS,
-      page([comment(1, "First *comment*"), comment(2, "Second"), comment(3, "Third, theirs")]),
+      ACTIVITY,
+      activity([comment(1, "First *comment*"), comment(2, "Second"), comment(3, "Third, theirs")]),
     );
-    const before = reads("/api/v1/tasks/OPA-1/comments?limit=50");
+    const before = reads("/api/v1/tasks/OPA-1/activity?limit=50");
 
     send("comment.created", { entityId: comment(2, "").id, taskId: base.id });
-    expect(reads("/api/v1/tasks/OPA-1/comments?limit=50")).toBe(before);
+    expect(reads("/api/v1/tasks/OPA-1/activity?limit=50")).toBe(before);
 
     send("comment.created", { entityId: comment(3, "").id, taskId: base.id });
 
@@ -897,13 +926,13 @@ describe("TaskDetail: live (WS-049 section 3)", () => {
   });
 
   it("leaves a new comment to Load more when not every page is loaded", async () => {
-    on(COMMENTS, page([comment(1, "First *comment*")], "NEXT"));
+    on(ACTIVITY, activity([comment(1, "First *comment*")], "NEXT"));
     await renderLive();
-    const before = reads("/api/v1/tasks/OPA-1/comments?limit=50");
+    const before = reads("/api/v1/tasks/OPA-1/activity?limit=50");
 
     send("comment.created", { entityId: comment(3, "").id, taskId: base.id });
 
-    expect(reads("/api/v1/tasks/OPA-1/comments?limit=50")).toBe(before);
+    expect(reads("/api/v1/tasks/OPA-1/activity?limit=50")).toBe(before);
   });
 
   it("reads the columns and the open epics again when they change", async () => {
@@ -929,7 +958,10 @@ describe("TaskDetail: live (WS-049 section 3)", () => {
   it("loads the task and its comments again after a reconnect", async () => {
     await renderLive();
     on(TASK, json({ ...base, title: "After the gap", version: 6 }));
-    on(COMMENTS, page([comment(1, "First *comment*"), comment(2, "Second"), comment(4, "Missed")]));
+    on(
+      ACTIVITY,
+      activity([comment(1, "First *comment*"), comment(2, "Second"), comment(4, "Missed")]),
+    );
 
     act(() => {
       FakeSource.latest().drop();
@@ -938,6 +970,95 @@ describe("TaskDetail: live (WS-049 section 3)", () => {
 
     expect(await screen.findByRole("heading", { level: 2, name: "After the gap" })).toBeVisible();
     expect(await within(comments()).findByText("Missed")).toBeVisible();
+  });
+
+  it("reads the activity again on a change to this task once every page is shown (WS-119)", async () => {
+    await renderLive();
+    on(
+      ACTIVITY,
+      activity([
+        comment(1, "First *comment*"),
+        comment(2, "Second"),
+        change(30, { field: "priority", oldValue: "none", newValue: "high" }),
+      ]),
+    );
+    on(TASK, json({ ...base, version: 3 }));
+
+    send("task.updated", { version: 3 });
+
+    expect(
+      await within(comments()).findByText(/changed the priority from None to High/),
+    ).toBeVisible();
+  });
+
+  it("leaves a change to Load more when not every page is shown (WS-119)", async () => {
+    on(ACTIVITY, activity([comment(1, "First *comment*")], "NEXT"));
+    await renderLive();
+    const before = reads("/api/v1/tasks/OPA-1/activity?limit=50");
+    on(TASK, json({ ...base, version: 3 }));
+
+    send("task.moved", { version: 3 });
+
+    expect(reads("/api/v1/tasks/OPA-1/activity?limit=50")).toBe(before);
+  });
+});
+
+describe("TaskDetail: the timeline (WS-119)", () => {
+  it("shows comments and changes in order, each change as a sentence with its time", async () => {
+    on(
+      ACTIVITY,
+      activity([
+        change(0, {
+          type: "created",
+          newValue: { key: "OPA-1", column: { id: todo.id, name: "To do" } },
+        }),
+        comment(1, "First *comment*"),
+        change(30, { field: "priority", oldValue: "low", newValue: "high" }),
+      ]),
+    );
+    await renderTask();
+    const section = comments();
+
+    const lines = within(section).getAllByRole("listitem");
+    expect(lines.map((line) => line.textContent)).toEqual([
+      expect.stringMatching(/^Ada Lovelace created the task in To do/),
+      expect.stringContaining("First comment"),
+      expect.stringMatching(/^Ada Lovelace changed the priority from Low to High/),
+    ]);
+    const time = lines[2]?.querySelector("time");
+    expect(time).toHaveAttribute("datetime", "2026-11-14T10:30:00.000Z");
+    expect(time).toHaveAttribute("title", new Date("2026-11-14T10:30:00.000Z").toLocaleString());
+  });
+
+  it("hides the changes with Comments only, and shows them again", async () => {
+    on(
+      ACTIVITY,
+      activity([
+        comment(1, "First *comment*"),
+        change(30, { field: "title", oldValue: "A", newValue: "B" }),
+      ]),
+    );
+    const user = await renderTask();
+    const section = comments();
+    const only = within(section).getByRole("switch", { name: "Comments only" });
+
+    expect(only).not.toBeChecked();
+    await user.click(only);
+    expect(only).toBeChecked();
+    expect(within(section).queryByText(/changed the title/)).not.toBeInTheDocument();
+    expect(within(section).getByText("comment", { selector: "em" })).toBeInTheDocument();
+    await user.click(only);
+    expect(within(section).getByText(/changed the title/)).toBeVisible();
+  });
+
+  it("says there are no comments yet when Comments only hides everything", async () => {
+    on(ACTIVITY, activity([change(30, { field: "title", oldValue: "A", newValue: "B" })]));
+    const user = await renderTask();
+    const section = comments();
+
+    await user.click(within(section).getByRole("switch", { name: "Comments only" }));
+
+    expect(within(section).getByText("No comments yet.")).toBeVisible();
   });
 });
 

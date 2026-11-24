@@ -74,7 +74,7 @@ test("a comment and a title change made elsewhere appear in an open task detail"
     data: { body: "A comment from **A**" },
   });
   expect(comment.status()).toBe(201);
-  await expect(b.getByRole("region", { name: "Comments" }).getByText("A comment from")).toBeVisible(
+  await expect(b.getByRole("region", { name: "Activity" }).getByText("A comment from")).toBeVisible(
     { timeout: 2_000 },
   );
 
