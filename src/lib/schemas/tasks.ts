@@ -11,7 +11,7 @@ import { epicRefSchema } from "./epics";
 import { labelRefSchema, MAX_LABELS_PER_TASK } from "./labels";
 import { pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
-import { projectParamsSchema } from "./projects";
+import { projectKeySchema, projectParamsSchema, projectRefSchema } from "./projects";
 import { versionSchema } from "./version";
 
 export const taskTypeSchema = z.enum(["task", "bug", "story"]).meta({ id: "TaskType" });
@@ -220,6 +220,56 @@ export const backlogQuerySchema = paginationQuerySchema
 
 export type BacklogQuery = z.infer<typeof backlogQuerySchema>;
 
+/** The orders of the list across projects (WT-08 decision 4, WS-118 section 5). */
+export const TASK_SORTS = ["key", "title", "priority", "dueDate", "created", "updated"] as const;
+
+export type TaskSortField = (typeof TASK_SORTS)[number];
+
+export const taskSortSchema = z
+  .enum([...TASK_SORTS, ...TASK_SORTS.map((field) => `-${field}` as const)])
+  .meta({
+    description:
+      "A field, ascending, or `-` and a field, descending. Tasks with no due date come last " +
+      "either way.",
+  });
+
+export type TaskSort = z.infer<typeof taskSortSchema>;
+
+/** The list across projects (WS-118): a page, the filters, the projects and the order. */
+export const allTasksQuerySchema = paginationQuerySchema
+  .extend({
+    ...taskFilterShape,
+    projectId: oneOrMany(
+      projectRefSchema,
+      "Only the tasks of this project, by id or key; it may be archived.",
+    ),
+    sort: taskSortSchema.default("-updated"),
+  })
+  .refine(dueInOrder, DUE_ORDER);
+
+export type AllTasksQuery = z.infer<typeof allTasksQuerySchema>;
+
+/** A task in the list across projects: its summary, its project and its column (WS-118). */
+export const taskListItemSchema = taskSummarySchema
+  .extend({
+    project: z
+      .strictObject({ id: z.uuid(), key: projectKeySchema, name: z.string() })
+      .meta({ id: "TaskProject" }),
+    column: z
+      .strictObject({ id: z.uuid(), name: z.string(), category: columnCategorySchema })
+      .nullable()
+      .meta({ id: "TaskColumn", description: "`null` when the task is in the backlog." }),
+  })
+  .meta({ id: "TaskListItem" });
+
+export type TaskListItem = z.infer<typeof taskListItemSchema>;
+
+export const taskListItemPageSchema = pageSchema(taskListItemSchema).meta({
+  id: "TaskListItemPage",
+});
+
+export type TaskListItemPage = z.infer<typeof taskListItemPageSchema>;
+
 /**
  * A task's whole set of labels (WS-107): replaces the previous set. Sending it needs
  * `labels:write` as well as `tasks:write`.
@@ -374,6 +424,25 @@ export const listTasksContract = {
   responses: {
     200: { description: "A page of tasks.", schema: taskPageSchema },
     400: { description: "The path or the query string is not valid.", problem: true },
+    404: { description: "There is no such project.", problem: true },
+  },
+} satisfies EndpointContract;
+
+export const listAllTasksContract = {
+  method: "get",
+  path: "/api/v1/tasks",
+  summary: "List tasks across projects",
+  description:
+    "The live tasks of every project the caller may read, on the board and in the backlog, " +
+    "leaving out archived projects unless `projectId` names them, in the order `sort` " +
+    "gives, with keyset pagination. A task changed while you page may move to a page you " +
+    "have already read. Items leave out the description. " +
+    FILTERS_DESCRIPTION,
+  access: READ,
+  request: { query: allTasksQuerySchema },
+  responses: {
+    200: { description: "A page of tasks.", schema: taskListItemPageSchema },
+    400: { description: "The query string is not valid.", problem: true },
     404: { description: "There is no such project.", problem: true },
   },
 } satisfies EndpointContract;

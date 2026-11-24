@@ -2,9 +2,11 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { positionBetween } from "@/lib/position";
 import type { AccountKind } from "@/lib/schemas/account-ref";
+import type { ColumnCategory } from "@/lib/schemas/columns";
 import type { Severity } from "@/lib/schemas/bug-reports";
 import type { LabelRef } from "@/lib/schemas/labels";
 import {
+  type AllTasksQuery,
   type BacklogQuery,
   type CreateTaskRequest,
   type MoveTaskRequest,
@@ -12,8 +14,11 @@ import {
   type Priority,
   type Task,
   type TaskLink,
+  type TaskListItem,
+  type TaskListItemPage,
   type TaskListQuery,
   type TaskPage,
+  type TaskSortField,
   type TaskSummary,
   type TaskType,
   type UpdateTaskRequest,
@@ -36,13 +41,15 @@ import {
 import {
   decodeBacklogCursor,
   decodeBoardCursor,
+  decodeTaskListCursor,
   encodeBacklogCursor,
   encodeBoardCursor,
+  encodeTaskListCursor,
 } from "@/server/http/pagination";
 
 import { type ProjectEventInput, publishEvent } from "./events";
 import { isPerson } from "./people";
-import { claimTaskNumber, findProjectRef, lockWritableProject } from "./projects";
+import { claimTaskNumber, findProjectRef, lockWritableProject, reachableBy } from "./projects";
 import { recordTaskEvent } from "./task-events";
 import { taskFilterWhere } from "./task-filter";
 
@@ -57,8 +64,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * Every column of a task's API shape, plus the two positions for the board cursor. A task
  * in the backlog has no column (WS-101), so the join on columns is a left join.
  */
-const TASK_SELECT = sql`
-  select t.id, t.number, p.key as project_key, t.project_id, t.type, t.title, t.description,
+function taskSelect(extra: SQL = sql``): SQL {
+  return sql`
+  select ${extra} t.id, t.number, p.key as project_key, p.name as project_name,
+    c.name as column_name, c.category as column_category, t.project_id, t.type, t.title, t.description,
     t.column_id, t.assignee_team_id, t.assignee_account_id, t.epic_id,
     e.title as epic_title,
     tm.name as team_name,
@@ -83,11 +92,17 @@ const TASK_SELECT = sql`
   left join teams tm on tm.id = t.assignee_team_id
   left join accounts a on a.id = t.assignee_account_id
   left join epics e on e.id = t.epic_id`;
+}
+
+const TASK_SELECT = taskSelect();
 
 interface TaskRow extends Record<string, unknown> {
   id: string;
   number: number;
   project_key: string;
+  project_name: string;
+  column_name: string | null;
+  column_category: ColumnCategory | null;
   project_id: string;
   type: TaskType;
   title: string;
@@ -152,6 +167,17 @@ function toSummary(row: TaskRow): TaskSummary {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
+  };
+}
+
+function toListItem(row: TaskRow): TaskListItem {
+  return {
+    ...toSummary(row),
+    project: { id: row.project_id, key: row.project_key, name: row.project_name },
+    column:
+      row.column_id === null || row.column_name === null || row.column_category === null
+        ? null
+        : { id: row.column_id, name: row.column_name, category: row.column_category },
   };
 }
 
@@ -290,7 +316,7 @@ export async function listTasks(
   const project = await findProjectRef(db, actor, projectRef);
   if (!project) throw notFound("There is no such project.");
 
-  const filtered = await taskFilterWhere(db, query, { actor, projectId: project.id });
+  const filtered = await taskFilterWhere(db, query, { actor, projectIds: [project.id] });
   // Only the deleted list shows backlog tasks, after every column's: `~` sorts after every
   // byte of a position key, so the board cursor keeps its shape (WS-101 section 5).
   const columnOrder = sql`coalesce(c.position, ${BACKLOG_COLUMN_POSITION}) collate "C"`;
@@ -341,7 +367,7 @@ export async function listBacklog(
   requirePermission(actor, "tasks:read");
   const project = await findProjectRef(db, actor, projectRef);
   if (!project) throw notFound("There is no such project.");
-  const filtered = await taskFilterWhere(db, query, { actor, projectId: project.id });
+  const filtered = await taskFilterWhere(db, query, { actor, projectIds: [project.id] });
 
   const after =
     query.cursor === undefined
@@ -365,6 +391,179 @@ export async function listBacklog(
     nextCursor:
       rows.length > query.limit && last
         ? encodeBacklogCursor({ position: last.position, id: last.id })
+        : null,
+  };
+}
+
+const ISO_US = sql`'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`;
+const PRIORITY_RANK = sql`(case t.priority when 'none' then 0 when 'low' then 1
+  when 'medium' then 2 when 'high' then 3 else 4 end)`;
+const NO_DUE_DATE = sql`date '0001-01-01'`;
+
+/** One key of an order (WS-118 section 5): what to order by, as text, and back. */
+interface SortKey {
+  expression: SQL;
+  text: SQL;
+  cast: SQL;
+  /** What a value read back from a cursor must look like, so a bad one is a `400`. */
+  shape: RegExp;
+  /** The due date's "has none" key keeps tasks with no date last both ways. */
+  alwaysAscending?: true;
+}
+
+const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/;
+
+function timestampKey(column: SQL): SortKey {
+  return {
+    expression: column,
+    text: sql`to_char(${column} at time zone 'utc', ${ISO_US})`,
+    cast: sql`::timestamptz`,
+    shape: TIMESTAMP,
+  };
+}
+
+const SORT_KEYS: Record<TaskSortField, SortKey[]> = {
+  key: [
+    {
+      expression: sql`p.key collate "C"`,
+      text: sql`p.key`,
+      cast: sql`::text collate "C"`,
+      shape: /^[A-Z][A-Z0-9]{1,9}$/,
+    },
+    { expression: sql`t.number`, text: sql`t.number::text`, cast: sql`::int`, shape: /^\d{1,9}$/ },
+  ],
+  title: [
+    {
+      expression: sql`lower(t.title) collate "C"`,
+      text: sql`lower(t.title)`,
+      cast: sql`::text collate "C"`,
+      shape: /^[\s\S]{1,800}$/,
+    },
+  ],
+  priority: [
+    {
+      expression: PRIORITY_RANK,
+      text: sql`${PRIORITY_RANK}::text`,
+      cast: sql`::int`,
+      shape: /^[0-4]$/,
+    },
+  ],
+  dueDate: [
+    {
+      expression: sql`(t.due_date is null)`,
+      text: sql`(t.due_date is null)::text`,
+      cast: sql`::boolean`,
+      shape: /^(true|false)$/,
+      alwaysAscending: true,
+    },
+    {
+      expression: sql`coalesce(t.due_date, ${NO_DUE_DATE})`,
+      text: sql`to_char(coalesce(t.due_date, ${NO_DUE_DATE}), 'YYYY-MM-DD')`,
+      cast: sql`::date`,
+      shape: /^(?!0000)\d{4}-\d{2}-\d{2}$/,
+    },
+  ],
+  created: [timestampKey(sql`t.created_at`)],
+  updated: [timestampKey(sql`t.updated_at`)],
+};
+
+/** The rows after a cursor, in an order whose last key is the id, always ascending. */
+function afterCursor(keys: SortKey[], descending: boolean, values: string[], id: string): SQL {
+  const ors: SQL[] = [];
+  for (let index = 0; index <= keys.length; index += 1) {
+    const ands: SQL[] = [];
+    for (let before = 0; before < index; before += 1) {
+      const key = keys[before];
+      if (key) ands.push(sql`${key.expression} = ${values[before]}${key.cast}`);
+    }
+    const key = keys[index];
+    if (key) {
+      const down = descending && key.alwaysAscending !== true;
+      ands.push(
+        down
+          ? sql`${key.expression} < ${values[index]}${key.cast}`
+          : sql`${key.expression} > ${values[index]}${key.cast}`,
+      );
+    } else {
+      ands.push(sql`t.id > ${id}::uuid`);
+    }
+    ors.push(sql`(${sql.join(ands, sql` and `)})`);
+  }
+  return sql`and (${sql.join(ors, sql` or `)})`;
+}
+
+/**
+ * The live tasks of every project the actor may read, or of the projects named, in the
+ * order `sort` gives, with a keyset cursor (WS-118). The restriction is in the query, so
+ * a restricted agent's pages are full.
+ */
+export async function listAllTasks(
+  actor: Actor,
+  query: AllTasksQuery,
+  db: Database = getDb(),
+): Promise<TaskListItemPage> {
+  requirePermission(actor, "tasks:read");
+  let projectIds: string[] | null = null;
+  if (query.projectId !== undefined) {
+    projectIds = [];
+    for (const ref of query.projectId) {
+      const project = await findProjectRef(db, actor, ref);
+      if (!project) throw notFound("There is no such project.");
+      projectIds.push(project.id);
+    }
+  }
+  const scope =
+    projectIds === null
+      ? sql`p.archived_at is null ${reachableBy(actor)}`
+      : sql`t.project_id in (${sql.join(
+          [...new Set(projectIds)].map((id) => sql`${id}::uuid`),
+          sql`, `,
+        )})`;
+  const filtered = await taskFilterWhere(db, query, { actor, projectIds });
+
+  const descending = query.sort.startsWith("-");
+  const field = query.sort.replace(/^-/, "") as TaskSortField;
+  const keys = SORT_KEYS[field];
+  let after = sql``;
+  if (query.cursor !== undefined) {
+    const cursor = decodeTaskListCursor(query.cursor, query.sort, keys.length);
+    if (!keys.every((key, index) => key.shape.test(cursor.values[index] ?? ""))) {
+      throw invalidRequest(
+        [{ path: "cursor", message: "Invalid cursor." }],
+        "The query string is not valid.",
+      );
+    }
+    after = afterCursor(keys, descending, cursor.values, cursor.id);
+  }
+  const order = sql.join(
+    [
+      ...keys.map((key) =>
+        descending && key.alwaysAscending !== true
+          ? sql`${key.expression} desc`
+          : sql`${key.expression}`,
+      ),
+      sql`t.id`,
+    ],
+    sql`, `,
+  );
+  const sortValues = sql`array[${sql.join(
+    keys.map((key) => key.text),
+    sql`, `,
+  )}] as sort_values,`;
+
+  const rows = await db.execute<TaskRow & { sort_values: string[] }>(sql`
+    ${taskSelect(sortValues)}
+    where t.deleted_at is null and ${scope} ${filtered} ${after}
+    order by ${order}
+    limit ${query.limit + 1}`);
+
+  const page = rows.slice(0, query.limit);
+  const last = page.at(-1);
+  return {
+    items: page.map(toListItem),
+    nextCursor:
+      rows.length > query.limit && last
+        ? encodeTaskListCursor({ sort: query.sort, values: last.sort_values, id: last.id })
         : null,
   };
 }
