@@ -5,6 +5,8 @@ import type { Actor } from "@/server/auth/actor";
 import type { Database } from "@/server/db/client";
 import { invalidRequest } from "@/server/http/errors";
 
+import { reachableBy } from "./projects";
+
 // One builder for the filters of every task list (WS-116 section 3). Its conditions use the
 // aliases of `TASK_SELECT` in `tasks.ts`: `t` tasks, `p` projects, `c` columns (a left
 // join) and `r` the reporter.
@@ -58,11 +60,22 @@ function search(q: string): SQL {
     : sql`t.search @@ (plainto_tsquery('simple', ${rest}) && ${prefix})`;
 }
 
+/** The projects a list covers: some named ones, or every one the actor may read (WS-118). */
+export interface TaskListScope {
+  actor: Actor;
+  projectIds: readonly string[] | null;
+}
+
 /**
- * Throws `400` naming the field when a column, label or epic is not the project's, as an
- * unknown `columnId` always did (WS-116 section 3).
+ * Throws `400` naming the field when a column, label or epic is outside the list's
+ * projects, as an unknown `columnId` always did (WS-116 section 3, WS-118 section 4).
  */
-async function checkOwned(executor: Executor, filter: TaskListFilter, projectId: string) {
+async function checkOwned(executor: Executor, filter: TaskListFilter, scope: TaskListScope) {
+  const inScope =
+    scope.projectIds === null
+      ? sql`project_id in (select p.id from projects p where true ${reachableBy(scope.actor)})`
+      : sql`project_id in (${list([...new Set(scope.projectIds)], sql`::uuid`)})`;
+  const where = scope.projectIds?.length === 1 ? "this project" : "the projects listed";
   const checks: [keyof TaskListFilter, string, string[]][] = [
     ["columnId", "columns", (filter.columnId ?? []).filter((id) => id !== "backlog")],
     ["labelId", "labels", filter.labelId ?? []],
@@ -74,10 +87,10 @@ async function checkOwned(executor: Executor, filter: TaskListFilter, projectId:
     const unique = [...new Set(ids)];
     const [row] = await executor.execute<{ found: number }>(sql`
       select count(*)::int as found from ${sql.identifier(table)}
-      where project_id = ${projectId} and id in (${list(unique, sql`::uuid`)})`);
+      where ${inScope} and id in (${list(unique, sql`::uuid`)})`);
     if ((row?.found ?? 0) !== unique.length) {
       throw invalidRequest(
-        [{ path: field, message: `Not a ${nouns[field] ?? "thing"} of this project.` }],
+        [{ path: field, message: `Not a ${nouns[field] ?? "thing"} of ${where}.` }],
         "The query string is not valid.",
       );
     }
@@ -85,15 +98,15 @@ async function checkOwned(executor: Executor, filter: TaskListFilter, projectId:
 }
 
 /**
- * The `and ...` conditions of a filter, for a list of one project's tasks. Every value is a
+ * The `and ...` conditions of a filter, for a list of the scope's tasks. Every value is a
  * bound parameter.
  */
 export async function taskFilterWhere(
   executor: Executor,
   filter: TaskListFilter,
-  context: { actor: Actor; projectId: string },
+  context: TaskListScope,
 ): Promise<SQL> {
-  await checkOwned(executor, filter, context.projectId);
+  await checkOwned(executor, filter, context);
   const { actor } = context;
   const conditions: SQL[] = [];
 

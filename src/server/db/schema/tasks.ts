@@ -94,6 +94,8 @@ export const tasks = pgTable(
     index("tasks_search_idx").using("gin", table.search),
     index("tasks_due_date_idx").on(table.dueDate),
     index("tasks_reporter_idx").on(table.reporterAccountId),
+    // The default order of the list across projects (WS-118 section 7).
+    index("tasks_updated_idx").on(table.updatedAt, table.id),
     // The triage pipeline's lookup; not unique: an advisory lock serialises it (WT-06
     // decision 6).
     index("tasks_project_fingerprint_idx")

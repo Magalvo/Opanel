@@ -11,7 +11,7 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { backlogQuerySchema, taskListQuerySchema } from "@/lib/schemas/tasks";
+import { allTasksQuerySchema, backlogQuerySchema, taskListQuerySchema } from "@/lib/schemas/tasks";
 import { humanActor } from "@/server/auth/actor";
 import { MIGRATIONS_FOLDER, runMigrations } from "@/server/db/migrate";
 import * as schema from "@/server/db/schema";
@@ -20,7 +20,7 @@ import { loadEnvFiles } from "@/server/env-files";
 import { createEpic } from "@/server/services/epics";
 import { createLabel } from "@/server/services/labels";
 import { createProject } from "@/server/services/projects";
-import { listBacklog, listTasks } from "@/server/services/tasks";
+import { listAllTasks, listBacklog, listTasks } from "@/server/services/tasks";
 
 const TASKS = 50_000;
 const RUNS = 5;
@@ -168,6 +168,52 @@ async function main(): Promise<void> {
       say(
         `${label.padEnd(28)} ${boardMs.toFixed(1).padStart(8)}  ${backlogMs.toFixed(1).padStart(10)}`,
       );
+    }
+
+    // The list across projects (WS-118 section 7): the tasks spread over 5 projects.
+    for (const key of ["WEB", "API", "OPS", "DOC"]) {
+      await createProject(actor, { key, name: key }, db);
+    }
+    await db.execute(sql`
+      with targets as (
+        select p.id as project_id, row_number() over (order by p.key) as n,
+          (select c.id from columns c where c.project_id = p.id order by c.position limit 1)
+            as column_id
+        from projects p where p.key <> 'OPA'
+      )
+      update tasks t set project_id = targets.project_id,
+        column_id = case when t.column_id is null then null else targets.column_id end
+      from targets where targets.n = t.number % 5 and t.number % 5 <> 0`);
+    await db.execute(sql`analyze`);
+
+    say("\nAcross projects               first ms  11th page ms");
+    const sorts = ["key", "title", "priority", "dueDate", "created", "updated"].flatMap((field) => [
+      field,
+      `-${field}`,
+    ]);
+    const filters: [string, Record<string, string>][] = [
+      ["", {}],
+      [" priority", { priority: "urgent" }],
+      [" q", { q: "login" }],
+    ];
+    for (const sort of sorts) {
+      for (const [suffix, filter] of filters) {
+        const query = (cursor?: string) =>
+          allTasksQuerySchema.parse({ sort, ...filter, ...(cursor ? { cursor } : {}) });
+        const firstMs = await time(() => listAllTasks(actor, query(), db));
+        let cursor: string | undefined;
+        for (let page = 0; page < 10; page += 1) {
+          cursor = (await listAllTasks(actor, query(cursor), db)).nextCursor ?? undefined;
+          if (cursor === undefined) break;
+        }
+        const middleMs =
+          cursor === undefined
+            ? Number.NaN
+            : await time(() => listAllTasks(actor, query(cursor), db));
+        say(
+          `${(sort + suffix).padEnd(28)} ${firstMs.toFixed(1).padStart(8)}  ${middleMs.toFixed(1).padStart(12)}`,
+        );
+      }
     }
   } finally {
     rmSync(before, { recursive: true, force: true });

@@ -147,7 +147,8 @@ export async function claimTaskNumber(
 }
 
 /** The projects a restricted agent may list; nothing for anyone else (WS-073 section 4). */
-function reachableBy(actor: Actor): SQL {
+/** `and p.id in (...)` for a restricted agent, nothing for anyone else (WS-073, WS-118). */
+export function reachableBy(actor: Actor): SQL {
   if (actor.projectIds === null) return sql``;
   if (actor.projectIds.size === 0) return sql`and false`;
   const ids = [...actor.projectIds].map((id) => sql`${id}::uuid`);
