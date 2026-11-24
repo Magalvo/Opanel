@@ -241,6 +241,12 @@ Other follow-ups:
   `GET /tasks/{taskId}/activity`, in the same WT-11 work-item as the three tools above
   and below, once WT-08 items B and C are done.
 
+- **`planning-flow.spec.ts` fails now and then** (found in WI-119, 2026-11-24). After
+  "Move to board", the open backlog sometimes still lists the task after 5 s (line 101).
+  Repeated five times with `backlog.spec.ts`: 1 of 17 failed on `main`, and 3 of 17 then
+  0 of 17 on the branch of WI-119. CI has not shown it yet. Needs a work-item: find whether
+  the page misses the `task.moved` event or the move answer, rather than waiting longer.
+
 - **The board list is slow on large boards** (WI-116, accepted by the owner on
   2026-11-24). With 50 000 tasks in one project, `GET /projects/{projectId}/tasks` takes
   about 155 ms for a first page with no filter, and up to 209 ms with a filter that keeps
