@@ -294,10 +294,9 @@ Other follow-ups:
   it to the tables that grow in `docs/operations.md`, and let `maintenance` thin old
   repeats if installs need it.
 
-- Let end-to-end runs choose their port and database (`E2E_PORT`, already
-  `E2E_DATABASE_URL`), so that parallel sessions can each run Playwright: today port 3100
-  is fixed and a second run tests the first one's server (found in WI-072). To be answered by
-  WI-095.
+- **Answered by WI-095 (2026-11-21): let end-to-end runs choose their port and database**
+  (found in WI-072). `E2E_PORT` and `E2E_DATABASE_URL` are set per worktree, and
+  `playwright.config.ts` refuses a port already in use.
 
 - Lower findings of the development-flow review of 2026-11-20, each needing a work-item:
   - D08: most service SQL is raw `sql` strings (185 calls against 64 query-builder
@@ -322,8 +321,8 @@ Other follow-ups:
 - Give WS-009, WS-010 and WS-012 the "Implementation record" and "Deviations" sections that
   every other finished work-spec has (audit of 2026-11-13). Format only.
 
-- Make `pnpm typecheck` independent of a stale `.next` directory (for example by
-  generating route types first). Until then see the note in `CONTRIBUTING.md`.
+- **Answered by WI-103 (2026-11-22): make `pnpm typecheck` independent of a stale
+  `.next` directory.** `pnpm typecheck` runs `next typegen` before `tsc --noEmit`.
 - The activity timeline (WT-08) returns each event's actor as `AccountRef` and renders it
   with `AccountName`, so agents carry the "Agent" badge there too (WS-074 section 6). The
   reporter of a bug report (WT-06) is the task's `reporter`, already an `AccountRef`.
@@ -378,7 +377,7 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B08 (owner decision): an Admin can issue a reset link for another, active Admin and sign
   in as them. It is audited (`account.reset_link_created` with the issuer as actor).
   Decide whether the API should refuse Admin targets, leaving `recover-admin` as the way.
-- B09: `postgres:18-alpine` is a floating tag in `compose.production.yaml` and
+- B09: `postgres:18-alpine` is a floating tag in `docker/production/services.yaml` and
   `compose.yaml`, while the Node and Caddy images are pinned by digest. Pin it in the
   production file, and say how to upgrade it in `docs/operations.md`.
 - B10: `engines.node` is `>=22` but CI, `.nvmrc` and the image use 22, and Node 25 no
@@ -412,15 +411,16 @@ Optimisations found by the same audit, none urgent:
   `onDragOver` re-renders every card; the first load is a waterfall (project, then the
   stream, then columns and task pages in turn); `react-markdown` loads eagerly.
 - Database: `listTasks` orders across a join and cannot use an index; no index on
-  `tasks.reporter_account_id`, `tasks.deleted_by`, `task_events.actor_account_id`,
+  `tasks.deleted_by` (`tasks.reporter_account_id` has one since WI-116), `task_events.actor_account_id`,
   `comments.author_account_id`, `credentials.account_id`, `sessions.expires_at`; each task
   write runs the six-join task select two or three times.
 - Position keys grow by a character about every six moves into the same gap and are never
   renumbered. A board cursor carries two positions and must fit the `cursor` parameter
   (2048 characters since WI-081), so after several thousand such moves "Load more" on that
   column fails with `400` (WS-081, question 3).
-- CI: one serial job; Playwright browsers and `.next/cache` are not cached; the image build
-  has no BuildKit cache.
+- CI: Playwright browsers and `.next/cache` are not cached; the image build has no
+  BuildKit cache. (The serial job is answered by WI-103: static checks, Vitest and
+  end-to-end run as parallel jobs.)
 
 From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none urgent:
 
@@ -433,3 +433,33 @@ From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none u
   second line.
 - The loading skeleton's `animate-pulse` ignores reduced motion; the shadcn/ui `Skeleton`
   is shared by every page.
+
+Findings of the independent audit of 2026-11-24 (of `9424427`, now on `main`; C01 to C06
+are its A01 to A06), each needing a work-item. It also found B06, B07, B09 and B15 above still present, and D11's
+per-task column cleanup.
+
+- C01: a `GET /tasks` cursor (WI-118) checks its dates by shape only
+  (`src/server/services/tasks.ts`, `TIMESTAMP` and the due-date key), so `2026-02-30`, a
+  month 13 or the year `0000` in a `created` or `updated` cursor reach a PostgreSQL cast
+  and answer `500`, not `400`. Use the shared calendar-date and timestamp rules (WI-051,
+  WI-114) per sort key, with tests for each impossible date and a leap day.
+- C02: on reconnect the project frame refreshes the board but not the project
+  (`project-events.tsx`, `onOpen`), so a rename or archive made while the stream was down
+  stays unseen until a reload. Read the project again on reconnect, applied only if its
+  version is newer; one item with B15.
+- C03: a column read started by one task's refresh replaces the whole column when it
+  returns (`use-board.ts`, `placeTask` and `replaceColumn`), so an older read can undo a
+  newer change to another card in that column. Coalesce column reads and drop a read that a
+  later event or local move has overtaken. Related to the in-flight refresh under a drag
+  above.
+- C04: the board's loaders append each page (`src/components/board/api.ts`) without
+  removing repeats, so a task moved during the load can appear twice, in two columns.
+  `usePagedList` (WI-080) does not cover them. Keep one card per task id, the newest
+  version.
+- C05: the shared task select (`taskSelect` in `tasks.ts`) reads `t.description` for
+  every list, which `toSummary` drops: up to 50 000 characters per task read and
+  discarded. Give lists a summary projection.
+- C06: the event stream's heartbeat writes without the `desiredSize` check events have,
+  and `setInterval` starts a new authentication while the last one may still run
+  (`src/server/http/event-stream.ts`). Check backpressure in `write` and keep one heartbeat
+  check in flight.
