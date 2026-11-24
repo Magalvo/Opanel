@@ -5,6 +5,7 @@ import {
   revokeInvitationContract,
   updateAccountContract,
 } from "@/lib/schemas/accounts";
+import { listActivityContract } from "@/lib/schemas/activity";
 import {
   createAgentContract,
   createApiTokenContract,
@@ -137,6 +138,7 @@ export const contracts: readonly EndpointContract[] = [
   updateEpicContract,
   listCommentsContract,
   createCommentContract,
+  listActivityContract,
   projectEventsContract,
   listAgentsContract,
   createAgentContract,

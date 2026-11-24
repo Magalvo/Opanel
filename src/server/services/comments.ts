@@ -59,6 +59,24 @@ function toComment(row: CommentRow): Comment {
   };
 }
 
+/**
+ * The comments with these ids, in no particular order (WS-117). For `listActivity`, which
+ * has checked the task and its project.
+ */
+export async function readComments(
+  executor: Pick<Database, "execute">,
+  ids: string[],
+): Promise<Comment[]> {
+  if (ids.length === 0) return [];
+  const rows = await executor.execute<CommentRow>(sql`
+    ${COMMENT_SELECT}
+    where c.id in (${sql.join(
+      ids.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )})`);
+  return rows.map(toComment);
+}
+
 function taskNotFound() {
   return notFound("There is no such task.");
 }

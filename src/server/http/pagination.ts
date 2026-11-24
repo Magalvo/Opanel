@@ -150,3 +150,43 @@ export function decodeBacklogCursor(value: string): BacklogCursor {
   }
   return { position: result.data.p, id: result.data.i };
 }
+
+/**
+ * Where a page of a task's activity ended (WS-117): the last item's time with microseconds,
+ * its kind and its id as text, the order of the list.
+ */
+export interface ActivityCursor {
+  createdAt: string;
+  kind: "comment" | "event";
+  id: string;
+}
+
+const activityCursorSchema = z.strictObject({
+  t: z.iso.datetime({ precision: 6 }).refine((value) => !value.startsWith("0000-")),
+  k: z.enum(["comment", "event"]),
+  i: z
+    .string()
+    .regex(/^(?:\d{1,19}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/),
+});
+
+export function encodeActivityCursor(cursor: ActivityCursor): string {
+  return Buffer.from(
+    JSON.stringify({ t: cursor.createdAt, k: cursor.kind, i: cursor.id }),
+  ).toString("base64url");
+}
+
+/** Throws `400` naming the field `cursor` if the value is not an activity cursor of this API. */
+export function decodeActivityCursor(value: string): ActivityCursor {
+  const invalid = invalidRequest([{ path: "cursor", message: "Invalid cursor." }]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch {
+    throw invalid;
+  }
+  const result = activityCursorSchema.safeParse(parsed);
+  if (!result.success) {
+    throw invalid;
+  }
+  return { createdAt: result.data.t, kind: result.data.k, id: result.data.i };
+}

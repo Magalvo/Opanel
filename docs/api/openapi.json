@@ -6532,6 +6532,136 @@
         }
       }
     },
+    "/api/v1/tasks/{taskId}/activity": {
+      "get": {
+        "summary": "List a task's activity",
+        "description": "The task's history and its comments, oldest first, with keyset pagination. Accounts, teams, epics and columns are named as they are now.\n\nRequires the `tasks:read` permission.",
+        "x-opanel-permission": "tasks:read",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                }
+              ],
+              "description": "The task's id or its key, such as `OPA-12`."
+            },
+            "required": true,
+            "description": "The task's id or its key, such as `OPA-12`."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of the task's activity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskActivityPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The path or the query string is not valid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid credentials were sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The actor lacks the permission or scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no such task.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The API token made too many requests (code `rate_limited`).",
+            "headers": {
+              "Retry-After": {
+                "required": true,
+                "description": "Whole seconds to wait before trying again.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Whole seconds to wait before trying again."
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectId}/events": {
       "get": {
         "summary": "Stream a project's events",
@@ -10824,6 +10954,124 @@
           "user",
           "system"
         ]
+      },
+      "TaskActivityPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TaskActivityComment"
+                },
+                {
+                  "$ref": "#/components/schemas/TaskActivityEvent"
+                }
+              ],
+              "type": "object",
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "comment": "#/components/schemas/TaskActivityComment",
+                  "event": "#/components/schemas/TaskActivityEvent"
+                }
+              }
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "TaskActivityComment": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "comment"
+          },
+          "comment": {
+            "$ref": "#/components/schemas/Comment"
+          }
+        },
+        "required": [
+          "kind",
+          "comment"
+        ],
+        "additionalProperties": false
+      },
+      "TaskActivityEvent": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "event"
+          },
+          "id": {
+            "type": "string",
+            "description": "The history entry's id."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "created",
+              "field_changed",
+              "moved",
+              "deleted",
+              "restored",
+              "reported_again"
+            ]
+          },
+          "field": {
+            "description": "The changed field, for `field_changed`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "oldValue": {
+            "description": "Depends on `type` and `field`. `field_changed`: `assigneeAccountId` is an `AccountRef`, `assigneeTeamId` and `epicId` are `NamedRef`s (an epic's name is its title), `labels` is a list of `{ id, name }`, and every other field is its value. `moved`: `{ column: NamedRef | null }`, `null` for the backlog. `created`: the new task's fields, with `column` as for `moved`. `reported_again`: `{ reportId, occurrences }`. `null` when there is none."
+          },
+          "newValue": {
+            "description": "Depends on `type` and `field`. `field_changed`: `assigneeAccountId` is an `AccountRef`, `assigneeTeamId` and `epicId` are `NamedRef`s (an epic's name is its title), `labels` is a list of `{ id, name }`, and every other field is its value. `moved`: `{ column: NamedRef | null }`, `null` for the backlog. `created`: the new task's fields, with `column` as for `moved`. `reported_again`: `{ reportId, occurrences }`. `null` when there is none."
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who acted; `null` when no account did."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "type",
+          "field",
+          "oldValue",
+          "newValue",
+          "actor",
+          "createdAt"
+        ],
+        "additionalProperties": false
       },
       "ProjectEvent": {
         "oneOf": [
