@@ -70,6 +70,9 @@ function FilterMenu({
   const values = filter[filterKey] ?? [];
   return (
     <DropdownMenu
+      // Not modal: a menu of checkboxes leaves the page readable, and Radix would hide it
+      // from assistive technology while focusable (axe aria-hidden-focus, WS-120).
+      modal={false}
       onOpenChange={(open) => {
         if (open) onOpen?.();
       }}
@@ -300,7 +303,7 @@ export function TaskFilterBar({
             ...people.map((person) => ({ value: person.id, label: person.name })),
           ]}
         />
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" aria-label="Reporter">
               Reporter
@@ -330,7 +333,7 @@ export function TaskFilterBar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" aria-label="Due">
               Due

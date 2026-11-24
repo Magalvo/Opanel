@@ -184,7 +184,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       const bar = page.getByRole("search", { name: "Filter tasks" });
       await expect(bar.getByRole("button", { name: "Clear filters" })).toBeVisible();
       expect(await violations(page), path).toEqual([]);
-      await bar.getByRole("button", { name: "Type" }).click();
+      await bar.getByRole("button", { name: "Type", exact: true }).click();
       await expect(page.getByRole("menu")).toBeVisible();
       expect(await violations(page), `${path}, menu open`).toEqual([]);
       await page.keyboard.press("Escape");

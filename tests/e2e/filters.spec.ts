@@ -63,7 +63,7 @@ test("a filtered board writes its filter to the URL, and the link shows the same
   await a.goto(`/projects/${key}`);
   await expect.poll(() => titles(a)).toHaveLength(3);
   const bar = a.getByRole("search", { name: "Filter tasks" });
-  await bar.getByRole("button", { name: "Label" }).click();
+  await bar.getByRole("button", { name: "Label", exact: true }).click();
   await a.getByRole("menuitemcheckbox", { name: "release" }).click();
   await a.keyboard.press("Escape");
   await bar.getByLabel("Search tasks").fill("login");
