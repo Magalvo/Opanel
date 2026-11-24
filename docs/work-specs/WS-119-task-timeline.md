@@ -1,6 +1,7 @@
 # WS-119 — The timeline on the task page
 
-- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
+- Status: Done (approved by the owner on 2026-11-24, questions 1 and 2 as recommended; done on
+  2026-11-24)
 - Work-item: [WI-119](../work-items/WI-119-task-timeline.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 9 ("the task page
   shows events and comments on one timeline"); [0002](../canonical/0002-realtime-sync.md)
@@ -151,3 +152,31 @@ Risks:
 - **Sentences for every field** grow with each field a later track adds (WT-09 sub-tasks
   and links, WT-10 sprints and points). The fallback "changed the ‹field›" keeps an unknown
   field readable until its sentence is added.
+
+## Implementation record
+
+- Red (fa85e37): `activity-text.test.tsx` failed on the missing module; 89 of the task page's
+  tests failed because the page still read `/comments`, which the tests no longer answer.
+- Green (4537619): `activity-text.tsx`, `activity-section.tsx`, `switch.tsx`,
+  `listActivity` in `api.ts`, `task-detail.tsx`; `comments-section.tsx` deleted.
+- fd24f53: "Show changes" took the primary colour, 3.77:1 on the dark background (axe,
+  test 11); it now uses the text colour, underlined.
+- b70ae41: took in `main` after WI-118 merged.
+- Gate on 2026-11-24, on b70ae41:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2315 of 2315 (222 files);
+  - `pnpm test:e2e` 118 of 118;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+- Seen while checking: `planning-flow.spec.ts` (WI-115) failed once in an earlier run,
+  waiting for "Move to board" to leave the backlog. Repeated five times on this branch it
+  failed 3 of 17 once and 0 of 17 twice; on `main`, without this item, 0 of 17 and 1 of 17. It is not caused by this item; a follow-up on `main` records it.
+
+## Deviations
+
+1. **Comments stay `article` cards inside the list items**, and changes are plain lines,
+   so the comment tests that count articles kept their meaning.
+2. **With nothing shown and the switch off, the list says "No activity yet."**; "No
+   comments yet." is kept for "Comments only". A real task always has its `created` entry.
+3. **The time of a comment card** keeps today's exact local time; only change lines show
+   the relative time of section 4.
