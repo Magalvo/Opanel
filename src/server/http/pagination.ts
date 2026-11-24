@@ -12,10 +12,17 @@ export interface Cursor {
   id: string;
 }
 
+/**
+ * A real instant with microseconds, as a cursor carries it (WS-051): queries cast it to
+ * timestamptz, so an impossible date would fail there. Zod checks the calendar; PostgreSQL
+ * also refuses year 0000, which Zod allows. The task list cursor uses it too (WS-121).
+ */
+export const cursorInstantSchema = z.iso
+  .datetime({ precision: 6 })
+  .refine((value) => !value.startsWith("0000-"));
+
 const cursorSchema = z.strictObject({
-  // A real instant (WS-051): the query casts it to timestamptz, so an impossible date would
-  // fail there. Zod checks the calendar; PostgreSQL also refuses year 0000, which Zod allows.
-  t: z.iso.datetime({ precision: 6 }).refine((value) => !value.startsWith("0000-")),
+  t: cursorInstantSchema,
   i: z.uuid(),
 });
 
