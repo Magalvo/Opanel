@@ -1,6 +1,6 @@
 # WI-120 — The filter bar on the board and the backlog
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, with WS-120)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item D)
 - Depends on: [WI-116](WI-116-task-filters-search.md) (item A, done)
 - Work-spec: [WS-120](../work-specs/WS-120-task-filter-bar.md)

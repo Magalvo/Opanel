@@ -1,6 +1,6 @@
 # WS-120 — The filter bar on the board and the backlog
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
 - Work-item: [WI-120](../work-items/WI-120-task-filter-bar.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8 ("filters apply
   to the board"; "the current filter lives in the URL");
