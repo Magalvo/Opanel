@@ -183,6 +183,7 @@ operations (doc 0006), are done.
 | [WI-113](work-items/WI-113-board-live-reorder.md)               | A reorder within one column reaches an open board live            | [WS-113](work-specs/WS-113-board-live-reorder.md)               |
 | [WI-114](work-items/WI-114-epic-date-year-zero.md)              | Epic dates in the year 0000 are refused with 400                  | [WS-114](work-specs/WS-114-epic-date-year-zero.md)              |
 | [WI-115](work-items/WI-115-planning-exit-check.md)              | WT-07 end-to-end flow, agents guide and exit check                | [WS-115](work-specs/WS-115-planning-exit-check.md)              |
+| [WI-116](work-items/WI-116-task-filters-search.md)              | Task filters and text search on the project lists                 | [WS-116](work-specs/WS-116-task-filters-search.md)              |
 
 ## Follow-ups
 
