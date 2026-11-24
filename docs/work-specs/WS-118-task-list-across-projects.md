@@ -1,6 +1,6 @@
 # WS-118 — The list of tasks across projects, with sort
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
 - Work-item: [WI-118](../work-items/WI-118-task-list-across-projects.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8;
   [0004](../canonical/0004-api-conventions.md) section 5 (cursors, `sort=field` and

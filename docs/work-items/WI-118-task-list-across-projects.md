@@ -1,6 +1,6 @@
 # WI-118 — The list of tasks across projects, with sort
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-24, with WS-118)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item B)
 - Depends on: [WI-116](WI-116-task-filters-search.md) (item A, done)
 - Work-spec: [WS-118](../work-specs/WS-118-task-list-across-projects.md)
