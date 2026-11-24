@@ -2,8 +2,8 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { positionBetween } from "@/lib/position";
 import type { AccountKind } from "@/lib/schemas/account-ref";
-import type { ColumnCategory } from "@/lib/schemas/columns";
 import type { Severity } from "@/lib/schemas/bug-reports";
+import type { ColumnCategory } from "@/lib/schemas/columns";
 import type { LabelRef } from "@/lib/schemas/labels";
 import {
   type AllTasksQuery,
