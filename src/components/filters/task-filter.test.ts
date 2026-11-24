@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  BOARD_KEYS,
   BACKLOG_KEYS,
+  BOARD_KEYS,
   chipsOf,
   filterQuery,
   fullIndex,
   isEmpty,
   readFilter,
-  withValue,
   withoutValue,
+  withValue,
   writeFilter,
 } from "./task-filter";
 

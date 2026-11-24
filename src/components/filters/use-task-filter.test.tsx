@@ -1,8 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { calls, hold, installFetch, on } from "@/components/fake-api";
 import { json, opa, page, PROJECT, task, todo } from "@/components/board/test-data";
+import { calls, hold, installFetch, on } from "@/components/fake-api";
 import { FakeSource } from "@/hooks/fake-event-source";
 
 import type { TaskFilter } from "./task-filter";
@@ -92,7 +92,7 @@ describe("useTaskFilter (WS-120 test 5)", () => {
 
   it("reads the filtered list once, and again at most once a second over a burst", async () => {
     renderProbe({ type: ["bug"] });
-    expect(await screen.findByTestId("matching")).toHaveTextContent(t1.id);
+    expect(await screen.findByText(t1.id)).toBeInTheDocument();
     expect(reads(BUGS)).toBe(1);
 
     for (let index = 0; index < 5; index += 1) send("task.updated");

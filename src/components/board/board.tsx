@@ -18,8 +18,12 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 
+import { BOARD_KEYS, fullIndex } from "@/components/filters/task-filter";
+import { TaskFilterBar } from "@/components/filters/task-filter-bar";
+import { useTaskFilter } from "@/components/filters/use-task-filter";
+import { useUrlTaskFilter } from "@/components/filters/use-url-task-filter";
 import { getProject } from "@/components/projects/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
@@ -89,6 +93,38 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     onArchived: refreshProject,
   });
 
+  // The filter (WS-120): the board shows the tasks the filtered list returns, in its order.
+  const { filter, ignored, setFilter } = useUrlTaskFilter(BOARD_KEYS);
+  const matching = useTaskFilter({ projectKey, place: "board", filter });
+  const filtered = matching !== "all";
+  const visible = useMemo<BoardState>(() => {
+    if (matching === "all") return board;
+    const keep = matching === "loading" ? new Set<string>() : matching;
+    return Object.fromEntries(
+      Object.entries(board).map(([columnId, tasks]) => [
+        columnId,
+        tasks.filter((task) => keep.has(task.id)),
+      ]),
+    );
+  }, [board, matching]);
+  const people = useMemo(() => {
+    const byId = new Map<string, { id: string; name: string }>();
+    for (const tasks of Object.values(board)) {
+      for (const task of tasks) {
+        if (task.assignee !== null) byId.set(task.assignee.id, task.assignee);
+      }
+    }
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [board]);
+  const count = (state: BoardState) =>
+    Object.values(state).reduce((total, tasks) => total + tasks.length, 0);
+
+  /** A place on the shown board, as the full board's index (WS-120 section 4). */
+  function fullPlace(taskId: string, columnId: string, index: number): number {
+    if (!filtered) return index;
+    return fullIndex(board[columnId] ?? [], visible[columnId] ?? [], taskId, index);
+  }
+
   // Someone archived or unarchived the project: the frame read it again (WS-049 section 2).
   // Only a change that follows a `project.changed` event is announced, since it changes what
   // the viewer may do (WS-048 section 6).
@@ -118,7 +154,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
   const lastDrop = useRef<string>("");
   // The place last announced while dragging.
   const lastPlace = useRef<string>("");
-  const shown = preview ?? board;
+  const shown = preview ?? visible;
 
   function setPreview(next: BoardState | null) {
     previewRef.current = next;
@@ -136,7 +172,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
   }
 
   function keyOf(id: UniqueIdentifier): string {
-    const current = previewRef.current ?? board;
+    const current = previewRef.current ?? visible;
     const place = placeOf(current, String(id));
     return place === null
       ? "The card"
@@ -153,13 +189,13 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
   const collisionDetection: CollisionDetection = (args) =>
     boardCollision(
       args,
-      (taskId) => placeOf(previewRef.current ?? board, taskId)?.columnId ?? null,
+      (taskId) => placeOf(previewRef.current ?? visible, taskId)?.columnId ?? null,
     );
 
   function onDragStart(event: DragStartEvent) {
     hold(true);
     setActiveId(String(event.active.id));
-    setPreview(board);
+    setPreview(visible);
   }
 
   function onDragOver({ active, over }: DragOverEvent) {
@@ -186,14 +222,14 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    const current = previewRef.current ?? board;
+    const current = previewRef.current ?? visible;
     const id = String(active.id);
     setPreview(null);
     setActiveId(null);
     keepFocus(event);
     const result = over === null ? null : dropResult(current, id, String(over.id));
     const place = result === null ? null : placeOf(result, id);
-    const was = placeOf(board, id);
+    const was = placeOf(visible, id);
     if (
       result === null ||
       place === null ||
@@ -206,7 +242,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     lastDrop.current = `${result[place.columnId]?.[place.index]?.key ?? "The card"} was moved to ${positionText(result, id)}.`;
     // The move holds the events itself until it is saved, so it starts before the drag's
     // hold ends and no held event lands between the drop and the move.
-    void drop(id, place.columnId, place.index);
+    void drop(id, place.columnId, fullPlace(id, place.columnId, place.index));
     hold(false);
   }
 
@@ -223,10 +259,10 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
    * card was mounted anew in another column.
    */
   function onMenuMove(taskId: string, { columnId, index }: MenuMove) {
-    const result = applyDrop(board, taskId, columnId, index);
+    const result = applyDrop(visible, taskId, columnId, index);
     const key = keyOf(taskId);
     setMessage(`${key} was moved to ${positionText(result, taskId)}.`);
-    void drop(taskId, columnId, index);
+    void drop(taskId, columnId, fullPlace(taskId, columnId, index));
     requestAnimationFrame(() => {
       document.querySelector<HTMLElement>(`[data-card-menu="${taskId}"]`)?.focus();
     });
@@ -234,11 +270,11 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
 
   const announcements: Announcements = {
     onDragStart: ({ active }) => {
-      lastPlace.current = positionText(board, String(active.id));
+      lastPlace.current = positionText(visible, String(active.id));
       return `Picked up ${keyOf(active.id)}.`;
     },
     onDragOver: ({ active, over }) => {
-      const current = previewRef.current ?? board;
+      const current = previewRef.current ?? visible;
       if (over === null) return `${keyOf(active.id)} is not over a column.`;
       const result = dropResult(current, String(active.id), String(over.id));
       if (result === null) return undefined;
@@ -273,6 +309,17 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
         <p role="status" aria-label="Live updates" className="text-sm text-muted-foreground">
           Live updates are paused. Reconnecting…
         </p>
+      )}
+
+      {phase === "ready" && (
+        <TaskFilterBar
+          filter={filter}
+          onChange={setFilter}
+          people={people}
+          shown={count(visible)}
+          total={count(board)}
+          ignored={ignored}
+        />
       )}
 
       {phase === "loading" && (
@@ -324,6 +371,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
                   key={column.id}
                   column={column}
                   tasks={shown[column.id] ?? []}
+                  filtered={filtered}
                   dragDisabled={moving}
                   onAdd={(opener) => {
                     setAdding({ column, opener });
@@ -342,7 +390,12 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
             </DndContext>
           ) : (
             columns.map((column) => (
-              <StaticColumn key={column.id} column={column} tasks={shown[column.id] ?? []} />
+              <StaticColumn
+                key={column.id}
+                column={column}
+                tasks={shown[column.id] ?? []}
+                filtered={filtered}
+              />
             ))
           )}
         </div>
