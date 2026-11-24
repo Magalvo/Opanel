@@ -188,6 +188,7 @@ operations (doc 0006), are done.
 | [WI-118](work-items/WI-118-task-list-across-projects.md)        | The list of tasks across projects, with sort                      | [WS-118](work-specs/WS-118-task-list-across-projects.md)        |
 | [WI-119](work-items/WI-119-task-timeline.md)                    | The timeline on the task page                                     | [WS-119](work-specs/WS-119-task-timeline.md)                    |
 | [WI-120](work-items/WI-120-task-filter-bar.md)                  | The filter bar on the board and the backlog                       | [WS-120](work-specs/WS-120-task-filter-bar.md)                  |
+| [WI-121](work-items/WI-121-task-list-cursor-dates.md)           | Task list cursors refuse impossible dates                         | [WS-121](work-specs/WS-121-task-list-cursor-dates.md)           |
 
 ## Follow-ups
 
@@ -442,7 +443,8 @@ per-task column cleanup.
   (`src/server/services/tasks.ts`, `TIMESTAMP` and the due-date key), so `2026-02-30`, a
   month 13 or the year `0000` in a `created` or `updated` cursor reach a PostgreSQL cast
   and answer `500`, not `400`. Use the shared calendar-date and timestamp rules (WI-051,
-  WI-114) per sort key, with tests for each impossible date and a leap day.
+  WI-114) per sort key, with tests for each impossible date and a leap day. To be answered
+  by WI-121.
 - C02: on reconnect the project frame refreshes the board but not the project
   (`project-events.tsx`, `onOpen`), so a rename or archive made while the stream was down
   stays unseen until a reload. Read the project again on reconnect, applied only if its
