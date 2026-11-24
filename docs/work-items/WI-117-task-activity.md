@@ -1,6 +1,6 @@
 # WI-117 — Task activity: history and comments in one list
 
-- Status: Approved (approved by the owner on 2026-11-24, with WS-117)
+- Status: In progress (approved by the owner on 2026-11-24, with WS-117)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item C)
 - Depends on: none
 - Work-spec: [WS-117](../work-specs/WS-117-task-activity.md)

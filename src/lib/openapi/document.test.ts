@@ -372,6 +372,33 @@ describe("buildOpenApiDocument", () => {
     expect(paths["/api/v1/labels/{labelId}"]?.patch?.responses["409"]?.content).toBeDefined();
   });
 
+  it("describes a task's activity and both kinds of item (WS-117)", () => {
+    const { schemas } = parsedDocument().components;
+    const { paths } = parsedDocument();
+    const operation = paths["/api/v1/tasks/{taskId}/activity"]?.get;
+
+    expect(operation?.["x-opanel-permission"]).toBe("tasks:read");
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(
+      expect.arrayContaining(["200", "400", "403", "404"]) as unknown,
+    );
+    expect(schemas.TaskActivityComment).toMatchObject({
+      required: expect.arrayContaining(["kind", "comment"]) as unknown,
+    });
+    expect(schemas.TaskActivityEvent).toMatchObject({
+      required: expect.arrayContaining([
+        "kind",
+        "id",
+        "type",
+        "field",
+        "oldValue",
+        "newValue",
+        "actor",
+        "createdAt",
+      ]) as unknown,
+    });
+    expect(schemas.NamedRef).toMatchObject({ required: ["id", "name"] });
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 
