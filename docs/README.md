@@ -240,6 +240,14 @@ Other follow-ups:
   `GET /tasks/{taskId}/activity`, in the same WT-11 work-item as the three tools above
   and below, once WT-08 items B and C are done.
 
+- **The board list is slow on large boards** (WI-116, accepted by the owner on
+  2026-11-24). With 50 000 tasks in one project, `GET /projects/{projectId}/tasks` takes
+  about 155 ms for a first page with no filter, and up to 209 ms with a filter that keeps
+  most of the board: the board order (the column's position, then the task's) comes from
+  two tables, so every matching task is sorted before the first page. The backlog and
+  selective filters are under 50 ms (WS-116 "Measurements"). Needs a work-item, for
+  example storing the column's position on the task so one index serves the order.
+
 - **Grouping the board by epic** (WT-08 question 6, approved 2026-11-24): WT-08 filters
   the board by epic; grouping it into epic swimlanes, with their own drag and drop and
   keyboard rules, needs its own work-item. Doc 0003 section 4 says so once WT-08 item G
