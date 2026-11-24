@@ -15,12 +15,10 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-08 (search, filters, list view, activity timeline), the first of WT-08 to
-  WT-10 as planned below. It is not drafted yet: its work-track is drafted and proposed
-  for owner approval before any work-item. WT-07 is done (items A to G: WI-101, WI-102,
-  WI-107, WI-109, WI-110, WI-108, WI-115), and so is WT-11 (items A to E: WI-099, WI-100,
-  WI-104, WI-105, WI-106). The MCP tools for the backlog and labels, under
-  [Follow-ups](#follow-ups), are no longer blocked.
+- **Next:** WT-08 (search, filters, list view, activity timeline), approved by the owner
+  on 2026-11-24 (pull request #119). Items A (the filter schema and text search) and C
+  (the activity endpoint) start first, in parallel; each gets its number when it starts.
+  WT-07 and WT-11 are done.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
   session secret), WI-113 (a reorder within one column reaches an open board live) and
   WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
@@ -230,8 +228,20 @@ Other follow-ups:
   a small work-item if it recurs in CI.
 
 - **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
-  WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels` once WT-07 items A and
-  C are done. The existing tools gain priority, due date and the backlog move on their own.
+  WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels`; WT-07 is done, so
+  they are no longer blocked. The existing tools gain priority, due date and the backlog
+  move on their own. WT-08 question 8 (approved 2026-11-24) puts them in one work-item
+  with `opanel_list_epics` below and WT-08's two tools, after WT-08 item B.
+
+- **MCP tools for WT-08's search and activity** (WT-08 question 8, approved 2026-11-24):
+  `opanel_search_tasks` over `GET /tasks` and `opanel_get_task_activity` over
+  `GET /tasks/{taskId}/activity`, in the same WT-11 work-item as the three tools above
+  and below, once WT-08 items B and C are done.
+
+- **Grouping the board by epic** (WT-08 question 6, approved 2026-11-24): WT-08 filters
+  the board by epic; grouping it into epic swimlanes, with their own drag and drop and
+  keyboard rules, needs its own work-item. Doc 0003 section 4 says so once WT-08 item G
+  applies proposal P3.
 
 - **No MCP tool lists a project's epics** (WI-104, WS-104 question 2).
   `opanel_create_task` and `opanel_update_task` take `epicId`, but an assistant sees an
