@@ -10,6 +10,7 @@ import {
   createTestToken,
   signInCookie,
 } from "@/server/auth/testing";
+import { encodeTaskListCursor } from "@/server/http/pagination";
 
 import { POST as createTask } from "../projects/[projectId]/tasks/route";
 import { POST as createProject } from "../projects/route";
@@ -87,5 +88,24 @@ describe("GET /api/v1/tasks (WS-118)", () => {
     expect(problemSchema.parse(await badSort.json()).errors?.[0]?.path).toBe("sort");
     expect(unknown.status).toBe(404);
     expect(anonymous.status).toBe(401);
+  });
+
+  it("answers 400, not 500, for a cursor whose date is no real instant (WS-121 test 4)", async () => {
+    const { cookie } = await setup();
+    const cursor = encodeTaskListCursor({
+      sort: "-updated",
+      values: ["2026-02-30T12:00:00.000000Z"],
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000001",
+    });
+
+    const response = await GET(
+      apiRequest("GET", `/api/v1/tasks?sort=-updated&cursor=${cursor}`, { cookie }),
+      undefined,
+    );
+
+    expect(response.status).toBe(400);
+    expect(problemSchema.parse(await response.json()).errors).toEqual([
+      { path: "cursor", message: "Invalid cursor." },
+    ]);
   });
 });

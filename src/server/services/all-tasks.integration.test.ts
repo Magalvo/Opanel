@@ -6,6 +6,7 @@ import { type Actor, agentActor } from "@/server/auth/actor";
 import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { ApiError } from "@/server/http/errors";
+import { decodeTaskListCursor, encodeTaskListCursor } from "@/server/http/pagination";
 
 import { listColumns } from "./columns";
 import { createLabel } from "./labels";
@@ -250,6 +251,81 @@ describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
 
     expect(other.errors).toEqual([{ path: "cursor", message: "Invalid cursor." }]);
     expect(tampered.status).toBe(400);
+  });
+
+  // WS-121 tests 1 and 2: a real cursor with only its date changed.
+  async function withDate(actor: Actor, sort: string, date: string): Promise<string> {
+    const page = await listAllTasks(actor, allTasksQuerySchema.parse({ sort, limit: "1" }));
+    const field = sort.replace(/^-/, "");
+    const cursor = decodeTaskListCursor(page.nextCursor ?? "", sort, field === "dueDate" ? 2 : 1);
+    const values = field === "dueDate" ? ["false", date] : [date];
+    return encodeTaskListCursor({ ...cursor, values });
+  }
+
+  it("refuses a created or updated cursor that is no real instant with 400 (WS-121)", async () => {
+    const { mia } = await sortable();
+    for (const sort of ["created", "-created", "updated", "-updated"]) {
+      for (const instant of [
+        "2026-02-30T12:00:00.000000Z",
+        "2026-13-01T12:00:00.000000Z",
+        "2026-11-32T12:00:00.000000Z",
+        "2026-11-12T24:00:00.000000Z",
+        "2026-11-12T25:00:00.000000Z",
+        "2026-11-12T10:60:00.000000Z",
+        "2026-11-12T10:00:60.000000Z",
+        "0000-01-01T00:00:00.000000Z",
+      ]) {
+        const cursor = await withDate(mia, sort, instant);
+        const error = await failure(
+          listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "1", cursor })),
+        );
+        expect(error.status, `${sort} ${instant}`).toBe(400);
+        expect(error.errors, `${sort} ${instant}`).toEqual([
+          { path: "cursor", message: "Invalid cursor." },
+        ]);
+      }
+    }
+  });
+
+  it("refuses a dueDate cursor that is no calendar date with 400 (WS-121)", async () => {
+    const { mia } = await sortable();
+    for (const sort of ["dueDate", "-dueDate"]) {
+      for (const date of ["2026-02-30", "2026-13-01", "2026-11-32", "2026-02-29", "0000-01-01"]) {
+        const cursor = await withDate(mia, sort, date);
+        const error = await failure(
+          listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "1", cursor })),
+        );
+        expect(error.status, `${sort} ${date}`).toBe(400);
+        expect(error.errors, `${sort} ${date}`).toEqual([
+          { path: "cursor", message: "Invalid cursor." },
+        ]);
+      }
+    }
+  });
+
+  it("pages over a leap day and over tasks with no due date (WS-121 test 3)", async () => {
+    const { mia } = await setup();
+    await updateTask(mia, "OPA-1", { dueDate: "2028-02-29", version: 1 });
+    await getDb().execute(sql`update tasks set
+      created_at = timestamptz '2028-02-29 12:00:00.123456+00' + (number * interval '1 second'),
+      updated_at = timestamptz '2028-02-29 23:59:59.999999+00' - (number * interval '1 hour')`);
+
+    for (const sort of ["created", "-created", "updated", "-updated", "dueDate", "-dueDate"]) {
+      const whole = await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "100" }));
+      const ids: string[] = [];
+      let cursor: string | undefined;
+      do {
+        const page = await listAllTasks(
+          mia,
+          allTasksQuerySchema.parse({ sort, limit: "1", ...(cursor ? { cursor } : {}) }),
+        );
+        ids.push(...page.items.map((task) => task.id));
+        cursor = page.nextCursor ?? undefined;
+      } while (cursor !== undefined);
+
+      expect(ids, sort).toEqual(whole.items.map((task) => task.id));
+      expect(ids, sort).toHaveLength(3);
+    }
   });
 
   it("gives a restricted agent full pages of its projects only", async () => {
