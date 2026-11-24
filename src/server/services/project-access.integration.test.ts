@@ -18,6 +18,7 @@ import { createTestAccount, createTestAgent, testActor } from "@/server/auth/tes
 import { getDb } from "@/server/db/client";
 import { ApiError } from "@/server/http/errors";
 
+import { listActivity } from "./activity";
 import { loadAgentActor } from "./agents";
 import { fileBugReport, listBugReports } from "./bug-reports";
 import { createColumn, deleteColumn, listColumns, moveColumn, updateColumn } from "./columns";
@@ -108,6 +109,7 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
   "labels.updateLabel": (actor, f) =>
     updateLabel(actor, f.label.id, { name: "Renamed", version: f.label.version }),
   "labels.deleteLabel": (actor, f) => deleteLabel(actor, f.label.id),
+  "activity.listActivity": (actor, f) => listActivity(actor, f.task.key, { limit: 50 }),
   "comments.listComments": (actor, f) => listComments(actor, f.task.key, { limit: 50 }),
   "comments.createComment": (actor, f) => createComment(actor, f.task.id, { body: "Hello" }),
   "bug-reports.fileBugReport": (actor, f) =>
@@ -157,6 +159,7 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "bug-reports.placeNewBug": "internal: called by fileBugReport, which has checked",
   "bug-reports.routeBugReport": "internal: called by fileBugReport, which has checked",
   "comments.addSystemComment": "internal: called by a service that has checked",
+  "comments.readComments": "internal: called by listActivity, which has checked",
   "event-hub.createEventHub": "infrastructure: the events stream checks (section 6)",
   "event-hub.getEventHub": "infrastructure: the events stream checks (section 6)",
   "event-hub.closeEventHub": "infrastructure: the events stream checks (section 6)",
@@ -339,6 +342,7 @@ describe("the order of refusals (WS-073 section 3)", () => {
       () => updateColumn(restricted, UNKNOWN, { name: "X", version: 1 }),
       () => getEpic(restricted, UNKNOWN),
       () => listComments(restricted, UNKNOWN, { limit: 50 }),
+      () => listActivity(restricted, UNKNOWN, { limit: 50 }),
     ];
     for (const call of unknownIds) {
       expect((await failure(call())).status).toBe(404);

@@ -372,6 +372,31 @@ describe("buildOpenApiDocument", () => {
     expect(paths["/api/v1/labels/{labelId}"]?.patch?.responses["409"]?.content).toBeDefined();
   });
 
+  it("describes a task's activity and both kinds of item (WS-117)", () => {
+    const { schemas } = parsedDocument().components;
+    const { paths } = parsedDocument();
+    const operation = paths["/api/v1/tasks/{taskId}/activity"]?.get;
+
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(
+      expect.arrayContaining(["200", "400", "403", "404"]) as unknown,
+    );
+    expect(schemas.TaskActivityComment).toMatchObject({
+      required: expect.arrayContaining(["kind", "comment"]) as unknown,
+    });
+    expect(schemas.TaskActivityEvent).toMatchObject({
+      required: expect.arrayContaining([
+        "kind",
+        "id",
+        "type",
+        "field",
+        "oldValue",
+        "newValue",
+        "actor",
+        "createdAt",
+      ]) as unknown,
+    });
+  });
+
   it("describes the task lists' filters, repeatable ones as arrays (WS-116)", () => {
     const parameterSchema = z.object({
       name: z.string(),
