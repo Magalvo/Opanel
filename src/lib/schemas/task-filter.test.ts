@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { backlogQuerySchema, taskListQuerySchema } from "./tasks";
+import { allTasksQuerySchema, backlogQuerySchema, taskListQuerySchema } from "./tasks";
 
 // The filters of the task lists (WS-116 section 2, test 1).
 
@@ -76,5 +76,26 @@ describe("taskListQuerySchema filters (WS-116)", () => {
       q: "login",
     });
     expect(backlogQuerySchema.safeParse({ columnId: TEAM }).success).toBe(false);
+  });
+});
+
+describe("allTasksQuerySchema (WS-118 test 1)", () => {
+  it("reads sort with and without a minus, and defaults to -updated", () => {
+    expect(allTasksQuerySchema.parse({}).sort).toBe("-updated");
+    expect(allTasksQuerySchema.parse({ sort: "dueDate" }).sort).toBe("dueDate");
+    expect(allTasksQuerySchema.parse({ sort: "-key" }).sort).toBe("-key");
+    expect(allTasksQuerySchema.parse({ projectId: ["OPA", TEAM] }).projectId).toEqual([
+      "OPA",
+      TEAM,
+    ]);
+  });
+
+  it("refuses an unknown sort, columnId, and dueFrom after dueTo", () => {
+    expect(paths(allTasksQuerySchema.safeParse({ sort: "status" }))).toEqual(["sort"]);
+    expect(paths(allTasksQuerySchema.safeParse({ sort: "--key" }))).toEqual(["sort"]);
+    expect(allTasksQuerySchema.safeParse({ columnId: TEAM }).success).toBe(false);
+    expect(
+      paths(allTasksQuerySchema.safeParse({ dueFrom: "2030-02-01", dueTo: "2030-01-01" })),
+    ).toEqual(["dueTo"]);
   });
 });
