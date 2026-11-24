@@ -3,8 +3,9 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
-import { accountRefSchema } from "./account-ref";
+import { accountKindSchema, accountRefSchema } from "./account-ref";
 import { severitySchema, TASK_LINK_TYPES } from "./bug-reports";
+import { columnCategorySchema } from "./columns";
 import { calendarDateSchema } from "./dates";
 import { epicRefSchema } from "./epics";
 import { labelRefSchema, MAX_LABELS_PER_TASK } from "./labels";
@@ -116,22 +117,106 @@ export const taskPageSchema = pageSchema(taskSummarySchema).meta({ id: "TaskPage
 
 export type TaskPage = z.infer<typeof taskPageSchema>;
 
-export const taskListQuerySchema = paginationQuerySchema.extend({
-  columnId: z.uuid().optional().meta({ description: "Only the tasks of this column." }),
-  deleted: z
-    .enum(["true", "false"])
+/** At most this many values of one filter (WT-08 decision 1). */
+export const MAX_FILTER_VALUES = 20;
+
+/**
+ * A filter given once or repeated (`priority=high&priority=urgent`), read as an array: a
+ * task matches any of its values (WS-116 section 2).
+ */
+function oneOrMany<Value extends z.ZodType>(value: Value, description: string) {
+  return z
+    .union([value, z.array(value).min(1).max(MAX_FILTER_VALUES)])
+    .transform((given): z.output<Value>[] =>
+      Array.isArray(given) ? (given as z.output<Value>[]) : [given as z.output<Value>],
+    )
+    .optional()
+    .meta({ description: `${description} Repeat it for any of several values.` });
+}
+
+const noneOrId = z.union([z.uuid(), z.literal("none")]);
+
+/**
+ * The filters every task list takes (WT-08 decision 1, WS-116). Different filters must all
+ * hold; a filter only leaves tasks out.
+ */
+export const taskFilterShape = {
+  q: z
+    .string()
+    .trim()
+    .min(1, { abort: true })
+    .max(200)
+    .refine((text) => /[\p{L}\p{N}]/u.test(text), { message: "Use at least one letter or digit." })
     .optional()
     .meta({
       description:
-        "`true` lists only deleted tasks, and needs the `tasks:delete_any` permission (Managers " +
-        "and Admins).",
+        "Text search: a task key such as `OPA-12` finds that task; otherwise every word must " +
+        "be a word of the title or description, the last one as a prefix.",
     }),
-});
+  type: oneOrMany(taskTypeSchema, "Only tasks of this type."),
+  category: oneOrMany(columnCategorySchema, "Only tasks in a column of this category."),
+  done: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional()
+    .meta({ description: "`true`: in a `done` column; `false`: anywhere else, the backlog too." }),
+  assigneeTeamId: oneOrMany(noneOrId, "Only tasks assigned to this team; `none` for no team."),
+  assigneeAccountId: oneOrMany(
+    z.union([z.uuid(), z.enum(["none", "me"])]),
+    "Only tasks assigned to this person; `none` for nobody, `me` for the caller.",
+  ),
+  reporterAccountId: oneOrMany(
+    z.union([z.uuid(), z.literal("me")]),
+    "Only tasks reported by this account; `me` for the caller.",
+  ),
+  reporterKind: accountKindSchema
+    .optional()
+    .meta({ description: "Only tasks reported by people (`human`) or by agents (`agent`)." }),
+  labelId: oneOrMany(z.uuid(), "Only tasks with this label of the project."),
+  epicId: oneOrMany(noneOrId, "Only tasks of this epic of the project; `none` for no epic."),
+  priority: oneOrMany(prioritySchema, "Only tasks of this priority."),
+  severity: oneOrMany(severitySchema, "Only bugs of this severity."),
+  dueFrom: calendarDateSchema
+    .optional()
+    .meta({ description: "Only tasks due on this date or later." }),
+  dueTo: calendarDateSchema
+    .optional()
+    .meta({ description: "Only tasks due on this date or earlier." }),
+};
+
+export type TaskFilter = z.output<z.ZodObject<typeof taskFilterShape>>;
+
+function dueInOrder(query: { dueFrom?: string | undefined; dueTo?: string | undefined }): boolean {
+  return query.dueFrom === undefined || query.dueTo === undefined || query.dueFrom <= query.dueTo;
+}
+
+const DUE_ORDER = { path: ["dueTo"], message: "Not before dueFrom." };
+
+export const taskListQuerySchema = paginationQuerySchema
+  .extend({
+    ...taskFilterShape,
+    columnId: oneOrMany(
+      z.union([z.uuid(), z.literal("backlog")]),
+      "Only the tasks of this column; `backlog` for tasks with none, which only the deleted " +
+        "list shows.",
+    ),
+    deleted: z
+      .enum(["true", "false"])
+      .optional()
+      .meta({
+        description:
+          "`true` lists only deleted tasks, and needs the `tasks:delete_any` permission (Managers " +
+          "and Admins).",
+      }),
+  })
+  .refine(dueInOrder, DUE_ORDER);
 
 export type TaskListQuery = z.infer<typeof taskListQuerySchema>;
 
-/** The backlog's query (WS-101): a page, nothing else. */
-export const backlogQuerySchema = paginationQuerySchema;
+/** The backlog's query (WS-101): a page and the filters (WS-116), no column. */
+export const backlogQuerySchema = paginationQuerySchema
+  .extend(taskFilterShape)
+  .refine(dueInOrder, DUE_ORDER);
 
 export type BacklogQuery = z.infer<typeof backlogQuerySchema>;
 
@@ -270,6 +355,11 @@ const WRITE = { kind: "permission", permission: "tasks:write" } as const;
 const NO_TASK = { description: "There is no such task.", problem: true } as const;
 const NOT_JSON = { description: "The body is not JSON.", problem: true } as const;
 
+const FILTERS_DESCRIPTION =
+  "Filters only leave tasks out: a repeated parameter keeps tasks matching any of its " +
+  "values, and different parameters must all hold. A column, label or epic of another " +
+  "project is a `400`.";
+
 export const listTasksContract = {
   method: "get",
   path: "/api/v1/projects/{projectId}/tasks",
@@ -277,7 +367,8 @@ export const listTasksContract = {
   description:
     "Tasks in board order: by column, then by their place in the column, with keyset " +
     "pagination. Items leave out the description. Tasks in the backlog are not on the " +
-    "board and are listed only with `deleted=true`, after every column's.",
+    "board and are listed only with `deleted=true`, after every column's. " +
+    FILTERS_DESCRIPTION,
   access: READ,
   request: { params: projectParamsSchema, query: taskListQuerySchema },
   responses: {
@@ -293,7 +384,8 @@ export const listBacklogContract = {
   summary: "List a project's backlog",
   description:
     "The tasks that are not on the board, in the backlog's order (the team's ranking), with " +
-    "keyset pagination. Items leave out the description.",
+    "keyset pagination. Items leave out the description. " +
+    FILTERS_DESCRIPTION,
   access: READ,
   request: { params: projectParamsSchema, query: backlogQuerySchema },
   responses: {

@@ -44,6 +44,7 @@ import { type ProjectEventInput, publishEvent } from "./events";
 import { isPerson } from "./people";
 import { claimTaskNumber, findProjectRef, lockWritableProject } from "./projects";
 import { recordTaskEvent } from "./task-events";
+import { taskFilterWhere } from "./task-filter";
 
 type Executor = Pick<Database, "execute">;
 
@@ -289,19 +290,7 @@ export async function listTasks(
   const project = await findProjectRef(db, actor, projectRef);
   if (!project) throw notFound("There is no such project.");
 
-  let inColumn = sql``;
-  if (query.columnId !== undefined) {
-    const [column] = await db.execute(
-      sql`select 1 from columns where id = ${query.columnId} and project_id = ${project.id}`,
-    );
-    if (!column) {
-      throw invalidRequest(
-        [{ path: "columnId", message: "Not a column of this project." }],
-        "The query string is not valid.",
-      );
-    }
-    inColumn = sql`and t.column_id = ${query.columnId}`;
-  }
+  const filtered = await taskFilterWhere(db, query, { actor, projectId: project.id });
   // Only the deleted list shows backlog tasks, after every column's: `~` sorts after every
   // byte of a position key, so the board cursor keeps its shape (WS-101 section 5).
   const columnOrder = sql`coalesce(c.position, ${BACKLOG_COLUMN_POSITION}) collate "C"`;
@@ -320,7 +309,7 @@ export async function listTasks(
   const rows = await db.execute<TaskRow>(sql`
     ${TASK_SELECT}
     where t.project_id = ${project.id} and ${live}
-      ${inColumn} ${after}
+      ${filtered} ${after}
     order by ${columnOrder}, t.position, t.id
     limit ${query.limit + 1}`);
 
@@ -352,6 +341,7 @@ export async function listBacklog(
   requirePermission(actor, "tasks:read");
   const project = await findProjectRef(db, actor, projectRef);
   if (!project) throw notFound("There is no such project.");
+  const filtered = await taskFilterWhere(db, query, { actor, projectId: project.id });
 
   const after =
     query.cursor === undefined
@@ -364,7 +354,7 @@ export async function listBacklog(
   const rows = await db.execute<TaskRow>(sql`
     ${TASK_SELECT}
     where t.project_id = ${project.id} and t.column_id is null and t.deleted_at is null
-      ${after}
+      ${filtered} ${after}
     order by t.position, t.id
     limit ${query.limit + 1}`);
 

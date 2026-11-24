@@ -372,6 +372,50 @@ describe("buildOpenApiDocument", () => {
     expect(paths["/api/v1/labels/{labelId}"]?.patch?.responses["409"]?.content).toBeDefined();
   });
 
+  it("describes the task lists' filters, repeatable ones as arrays (WS-116)", () => {
+    const parameterSchema = z.object({
+      name: z.string(),
+      in: z.string(),
+      schema: z
+        .object({
+          type: z.string().optional(),
+          anyOf: z.array(z.object({ type: z.string().optional() })).optional(),
+        })
+        .optional(),
+    });
+    const { paths } = z
+      .object({
+        paths: z.record(
+          z.string(),
+          z.record(z.string(), z.object({ parameters: z.array(parameterSchema).optional() })),
+        ),
+      })
+      .parse(documentAsJson());
+    for (const path of [
+      "/api/v1/projects/{projectId}/tasks",
+      "/api/v1/projects/{projectId}/backlog",
+    ]) {
+      const parameters = paths[path]?.get?.parameters ?? [];
+      const names = parameters.filter((p) => p.in === "query").map((p) => p.name);
+      expect(names, path).toEqual(
+        expect.arrayContaining([
+          "q",
+          "type",
+          "priority",
+          "labelId",
+          "dueFrom",
+          "dueTo",
+          "done",
+        ]) as unknown,
+      );
+      for (const name of ["priority", "labelId"]) {
+        const schema = parameters.find((p) => p.name === name)?.schema;
+        const types = [schema?.type, ...(schema?.anyOf ?? []).map((s) => s.type)];
+        expect(types, `${path} ${name}`).toContain("array");
+      }
+    }
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

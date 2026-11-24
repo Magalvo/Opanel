@@ -99,3 +99,39 @@ describe("GET /api/v1/projects/{projectId}/backlog (WS-101)", () => {
     expect(refused.status).toBe(403);
   });
 });
+
+describe("GET /api/v1/projects/{projectId}/backlog with filters (WS-116 test 10)", () => {
+  it("applies repeated filters and q, and answers 400 on the field", async () => {
+    const { cookie } = await setup();
+    for (const [title, priority] of [
+      ["Logout button", "high"],
+      ["Notes", "low"],
+      ["Later", "none"],
+    ] as const) {
+      await createTask(
+        apiRequest("POST", "/api/v1/projects/OPA/tasks", {
+          cookie,
+          body: { title, priority, columnId: null },
+        }),
+        project,
+      );
+    }
+    const keys = async (query: string) => {
+      const response = await backlog(
+        apiRequest("GET", `/api/v1/projects/OPA/backlog?${query}`, { cookie }),
+        project,
+      );
+      expect(response.status, query).toBe(200);
+      return taskPageSchema.parse(await response.json()).items.map((t) => t.key);
+    };
+
+    expect(await keys("priority=high&priority=low")).toEqual(["OPA-1", "OPA-2"]);
+    expect(await keys("q=logo")).toEqual(["OPA-1"]);
+    const bad = await backlog(
+      apiRequest("GET", "/api/v1/projects/OPA/backlog?priority=huge", { cookie }),
+      project,
+    );
+    expect(bad.status).toBe(400);
+    expect(((await bad.json()) as { errors: { path: string }[] }).errors[0]?.path).toBe("priority");
+  });
+});

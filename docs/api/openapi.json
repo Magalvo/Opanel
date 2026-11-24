@@ -4625,7 +4625,7 @@
     "/api/v1/projects/{projectId}/tasks": {
       "get": {
         "summary": "List a project's tasks",
-        "description": "Tasks in board order: by column, then by their place in the column, with keyset pagination. Items leave out the description. Tasks in the backlog are not on the board and are listed only with `deleted=true`, after every column's.\n\nRequires the `tasks:read` permission.",
+        "description": "Tasks in board order: by column, then by their place in the column, with keyset pagination. Items leave out the description. Tasks in the backlog are not on the board and are listed only with `deleted=true`, after every column's. Filters only leave tasks out: a repeated parameter keeps tasks matching any of its values, and different parameters must all hold. A column, label or epic of another project is a `400`.\n\nRequires the `tasks:read` permission.",
         "x-opanel-permission": "tasks:read",
         "security": [
           {
@@ -4677,14 +4677,378 @@
           },
           {
             "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Text search: a task key such as `OPA-12` finds that task; otherwise every word must be a word of the title or description, the last one as a prefix.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Text search: a task key such as `OPA-12` finds that task; otherwise every word must be a word of the title or description, the last one as a prefix."
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "description": "Only tasks of this type. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TaskType"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskType"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this type. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "description": "Only tasks in a column of this category. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ColumnCategory"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ColumnCategory"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks in a column of this category. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "done",
+            "schema": {
+              "description": "`true`: in a `done` column; `false`: anywhere else, the backlog too.",
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "`true`: in a `done` column; `false`: anywhere else, the backlog too."
+          },
+          {
+            "in": "query",
+            "name": "assigneeTeamId",
+            "schema": {
+              "description": "Only tasks assigned to this team; `none` for no team. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks assigned to this team; `none` for no team. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "assigneeAccountId",
+            "schema": {
+              "description": "Only tasks assigned to this person; `none` for nobody, `me` for the caller. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "me"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "me"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks assigned to this person; `none` for nobody, `me` for the caller. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "reporterAccountId",
+            "schema": {
+              "description": "Only tasks reported by this account; `me` for the caller. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "me"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "me"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks reported by this account; `me` for the caller. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "reporterKind",
+            "schema": {
+              "description": "Only tasks reported by people (`human`) or by agents (`agent`).",
+              "$ref": "#/components/schemas/AccountKind"
+            },
+            "description": "Only tasks reported by people (`human`) or by agents (`agent`)."
+          },
+          {
+            "in": "query",
+            "name": "labelId",
+            "schema": {
+              "description": "Only tasks with this label of the project. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks with this label of the project. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "epicId",
+            "schema": {
+              "description": "Only tasks of this epic of the project; `none` for no epic. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this epic of the project; `none` for no epic. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "schema": {
+              "description": "Only tasks of this priority. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Priority"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Priority"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this priority. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "severity",
+            "schema": {
+              "description": "Only bugs of this severity. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Severity"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Severity"
+                  }
+                }
+              ]
+            },
+            "description": "Only bugs of this severity. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "dueFrom",
+            "schema": {
+              "description": "Only tasks due on this date or later.",
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "description": "Only tasks due on this date or later."
+          },
+          {
+            "in": "query",
+            "name": "dueTo",
+            "schema": {
+              "description": "Only tasks due on this date or earlier.",
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "description": "Only tasks due on this date or earlier."
+          },
+          {
+            "in": "query",
             "name": "columnId",
             "schema": {
-              "description": "Only the tasks of this column.",
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              "description": "Only the tasks of this column; `backlog` for tasks with none, which only the deleted list shows. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "backlog"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "backlog"
+                      }
+                    ]
+                  }
+                }
+              ]
             },
-            "description": "Only the tasks of this column."
+            "description": "Only the tasks of this column; `backlog` for tasks with none, which only the deleted list shows. Repeat it for any of several values."
           },
           {
             "in": "query",
@@ -4928,7 +5292,7 @@
     "/api/v1/projects/{projectId}/backlog": {
       "get": {
         "summary": "List a project's backlog",
-        "description": "The tasks that are not on the board, in the backlog's order (the team's ranking), with keyset pagination. Items leave out the description.\n\nRequires the `tasks:read` permission.",
+        "description": "The tasks that are not on the board, in the backlog's order (the team's ranking), with keyset pagination. Items leave out the description. Filters only leave tasks out: a repeated parameter keeps tasks matching any of its values, and different parameters must all hold. A column, label or epic of another project is a `400`.\n\nRequires the `tasks:read` permission.",
         "x-opanel-permission": "tasks:read",
         "security": [
           {
@@ -4977,6 +5341,340 @@
               "minLength": 1,
               "maxLength": 2048
             }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Text search: a task key such as `OPA-12` finds that task; otherwise every word must be a word of the title or description, the last one as a prefix.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Text search: a task key such as `OPA-12` finds that task; otherwise every word must be a word of the title or description, the last one as a prefix."
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "description": "Only tasks of this type. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TaskType"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskType"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this type. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "description": "Only tasks in a column of this category. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ColumnCategory"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ColumnCategory"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks in a column of this category. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "done",
+            "schema": {
+              "description": "`true`: in a `done` column; `false`: anywhere else, the backlog too.",
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "`true`: in a `done` column; `false`: anywhere else, the backlog too."
+          },
+          {
+            "in": "query",
+            "name": "assigneeTeamId",
+            "schema": {
+              "description": "Only tasks assigned to this team; `none` for no team. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks assigned to this team; `none` for no team. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "assigneeAccountId",
+            "schema": {
+              "description": "Only tasks assigned to this person; `none` for nobody, `me` for the caller. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "me"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "me"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks assigned to this person; `none` for nobody, `me` for the caller. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "reporterAccountId",
+            "schema": {
+              "description": "Only tasks reported by this account; `me` for the caller. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "me"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "me"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks reported by this account; `me` for the caller. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "reporterKind",
+            "schema": {
+              "description": "Only tasks reported by people (`human`) or by agents (`agent`).",
+              "$ref": "#/components/schemas/AccountKind"
+            },
+            "description": "Only tasks reported by people (`human`) or by agents (`agent`)."
+          },
+          {
+            "in": "query",
+            "name": "labelId",
+            "schema": {
+              "description": "Only tasks with this label of the project. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks with this label of the project. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "epicId",
+            "schema": {
+              "description": "Only tasks of this epic of the project; `none` for no epic. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this epic of the project; `none` for no epic. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "schema": {
+              "description": "Only tasks of this priority. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Priority"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Priority"
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this priority. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "severity",
+            "schema": {
+              "description": "Only bugs of this severity. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Severity"
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Severity"
+                  }
+                }
+              ]
+            },
+            "description": "Only bugs of this severity. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "dueFrom",
+            "schema": {
+              "description": "Only tasks due on this date or later.",
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "description": "Only tasks due on this date or later."
+          },
+          {
+            "in": "query",
+            "name": "dueTo",
+            "schema": {
+              "description": "Only tasks due on this date or earlier.",
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "description": "Only tasks due on this date or earlier."
           }
         ],
         "responses": {
@@ -8046,6 +8744,31 @@
         ],
         "additionalProperties": false
       },
+      "TaskType": {
+        "type": "string",
+        "enum": [
+          "task",
+          "bug",
+          "story"
+        ]
+      },
+      "AccountKind": {
+        "type": "string",
+        "enum": [
+          "human",
+          "agent"
+        ]
+      },
+      "Priority": {
+        "type": "string",
+        "enum": [
+          "none",
+          "low",
+          "medium",
+          "high",
+          "urgent"
+        ]
+      },
       "CreateTaskRequest": {
         "type": "object",
         "properties": {
@@ -8119,24 +8842,6 @@
           "title"
         ],
         "additionalProperties": false
-      },
-      "TaskType": {
-        "type": "string",
-        "enum": [
-          "task",
-          "bug",
-          "story"
-        ]
-      },
-      "Priority": {
-        "type": "string",
-        "enum": [
-          "none",
-          "low",
-          "medium",
-          "high",
-          "urgent"
-        ]
       },
       "UpdateTaskRequest": {
         "type": "object",
@@ -8722,13 +9427,6 @@
           "role"
         ],
         "additionalProperties": false
-      },
-      "AccountKind": {
-        "type": "string",
-        "enum": [
-          "human",
-          "agent"
-        ]
       },
       "Me": {
         "oneOf": [
