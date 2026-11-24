@@ -1,6 +1,6 @@
 # WS-116 — Task filters and text search on the project lists
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
 - Work-item: [WI-116](../work-items/WI-116-task-filters-search.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8;
   [0004](../canonical/0004-api-conventions.md) section 5 (filters, the `400` of a query);
