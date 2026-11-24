@@ -1,6 +1,7 @@
 # WS-118 — The list of tasks across projects, with sort
 
-- Status: In progress (approved by the owner on 2026-11-24, questions 1 and 2 as recommended)
+- Status: Done (approved by the owner on 2026-11-24, questions 1 and 2 as recommended; done on
+  2026-11-24)
 - Work-item: [WI-118](../work-items/WI-118-task-list-across-projects.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8;
   [0004](../canonical/0004-api-conventions.md) section 5 (cursors, `sort=field` and
@@ -169,3 +170,59 @@ Risks:
   use; WI-116's tests run unchanged and guard them.
 - **Raw SQL** (follow-up D08): the sort expressions are a fixed table in the service, never
   built from input.
+
+## Implementation record
+
+- Red (ff824b6): 25 of 188 tests failed, every one on the missing `allTasksQuerySchema`,
+  `listAllTasks`, route and contract; the coverage test named `tasks.listAllTasks` and
+  `projects.reachableBy` before they were exported.
+- Green (4b1c572, ae21da4): the query, sorts and `TaskListItem` in
+  `src/lib/schemas/tasks.ts`; `listAllTasks` with `taskSelect` naming the project and
+  column; the task list cursor; `TaskListScope` in `task-filter.ts`; `reachableBy`
+  exported; the route and contract; migration `0023_task_updated_index`.
+- 9424427 (perf): the id follows the sort's direction (deviation 1).
+- Gate on 2026-11-24:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2276 of 2276 (221 files);
+  - `pnpm test:e2e` 115 of 115;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+### Measurements (section 7), 2026-11-24
+
+`scripts/measure-task-search.ts`, the data of WS-116 spread over 5 projects (about
+10 000 tasks each). Median of 5 runs of the service call, a page of 50, in ms; "11th" is
+the page after ten pages were read; a `q` list has fewer than 11 pages.
+
+| Sort        | first | 11th | with `priority` first | with `q` first |
+| ----------- | ----: | ---: | --------------------: | -------------: |
+| `key`       |   184 |  185 |                    63 |             15 |
+| `-key`      |   282 |  226 |                   100 |             19 |
+| `title`     |   347 |  238 |                   131 |             18 |
+| `-title`    |   252 |  305 |                   101 |             16 |
+| `priority`  |   208 |  141 |                    65 |             21 |
+| `-priority` |   198 |  128 |                    69 |             15 |
+| `dueDate`   |   213 |  149 |                    67 |             12 |
+| `-dueDate`  |   212 |  155 |                    67 |             13 |
+| `created`   |   210 |  215 |                    66 |             12 |
+| `-created`  |   212 |  217 |                    72 |             12 |
+| `updated`   |    16 |   19 |                    18 |             60 |
+| `-updated`  |    17 |   18 |                    17 |             55 |
+
+- **The default order, `-updated`, is within the limit** (17 ms), served by
+  `tasks_updated_idx`; so is every list with `q`.
+- **The other five sorts with no filter, or with a filter that keeps a fifth of the tasks,
+  miss the 100 ms limit** (up to 347 ms): no index serves them, so every matching task is
+  sorted before the first page, as the board list does (the WI-116 follow-up). As section
+  7 says, no index outside this spec was added; this goes back to the owner.
+- Runs vary by up to half on this laptop (`title` measured 214 ms and 347 ms in two runs).
+
+## Deviations
+
+1. **The id follows the sort's direction** (section 5 said "always ascending"). With
+   `updated_at desc, id asc` PostgreSQL cannot read `tasks_updated_idx` backwards, and
+   the default order took 234 ms; with `id desc` it takes 17 ms. Ties are still broken one
+   way, and test 6 checks every sort both ways.
+2. **A cursor's values are checked against each key's shape** before they reach SQL, so a
+   tampered value is a `400` and never a database error.
+3. **The item's project and column have schema ids** `TaskProject` and `TaskColumn`.
