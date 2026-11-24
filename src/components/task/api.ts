@@ -1,5 +1,6 @@
 import { call, callNoContent, jsonBody } from "@/lib/api-client";
-import { commentPageSchema, commentSchema } from "@/lib/schemas/comments";
+import { activityPageSchema } from "@/lib/schemas/activity";
+import { commentSchema } from "@/lib/schemas/comments";
 import { type Epic, epicPageSchema } from "@/lib/schemas/epics";
 import { MAX_PAGE_LIMIT } from "@/lib/schemas/pagination";
 import { bugReportPageSchema } from "@/lib/schemas/task-bug-reports";
@@ -8,8 +9,8 @@ import { taskSchema, type UpdateTaskRequest } from "@/lib/schemas/tasks";
 export { listColumns } from "@/components/projects/api";
 export { listAllTeams, searchPeople } from "@/components/teams/api";
 
-/** Comments per page (WS-034). */
-export const COMMENT_PAGE_SIZE = 50;
+/** Activity items per page (WS-119). */
+export const ACTIVITY_PAGE_SIZE = 50;
 
 function cursorQuery(cursor: string | undefined): string {
   return cursor === undefined ? "" : `&cursor=${encodeURIComponent(cursor)}`;
@@ -39,11 +40,12 @@ export function deleteTask(key: string): Promise<void> {
   return callNoContent(`/api/v1/tasks/${key}`, { method: "DELETE" });
 }
 
-export function listComments(key: string, cursor?: string) {
+/** A task's comments and changes, oldest first (WS-117, WS-119). */
+export function listActivity(key: string, cursor?: string) {
   return call(
-    `/api/v1/tasks/${key}/comments?limit=${String(COMMENT_PAGE_SIZE)}${cursorQuery(cursor)}`,
+    `/api/v1/tasks/${key}/activity?limit=${String(ACTIVITY_PAGE_SIZE)}${cursorQuery(cursor)}`,
     {},
-    commentPageSchema,
+    activityPageSchema,
   );
 }
 

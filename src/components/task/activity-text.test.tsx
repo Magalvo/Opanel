@@ -30,7 +30,7 @@ function event(fields: Partial<ActivityEvent>): ActivityEvent {
 
 function sentence(fields: Partial<ActivityEvent>): string {
   const { container } = render(<ActivityLine event={event(fields)} now={NOW} />);
-  const text = container.textContent ?? "";
+  const text = container.textContent;
   return text.replace(/\s*·.*$/, "");
 }
 

@@ -23,26 +23,26 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiFailure } from "@/lib/api-client";
 import type { Page } from "@/lib/paged-list";
+import type { ActivityPage } from "@/lib/schemas/activity";
 import type { Column } from "@/lib/schemas/columns";
-import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
 import type { Label } from "@/lib/schemas/labels";
 import type { BugReport } from "@/lib/schemas/task-bug-reports";
 import type { Task } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
 
+import { ActivitySection } from "./activity-section";
 import {
   deleteTask,
   getTask,
+  listActivity,
   listAllTeams,
   listBugReports,
   listColumns,
-  listComments,
   listOpenEpics,
   moveTaskTo,
 } from "./api";
 import { BugSection } from "./bug-section";
-import { CommentsSection } from "./comments-section";
 import { currentOf, DetailsSection } from "./details-section";
 import { announceTaskChanged, announceTaskDeleted } from "./events";
 
@@ -64,8 +64,7 @@ interface Loaded {
   epics: Epic[];
   /** The project's labels, read only for someone who edits (WS-108). */
   labels: Label[];
-  comments: Comment[];
-  commentsCursor: string | null;
+  activity: ActivityPage;
   /** The first page of reports, read only for a task that has some (WS-091 section 5). */
   reports: Page<BugReport> | null;
 }
@@ -126,9 +125,9 @@ export function TaskDetail({
       throw failure;
     }
     if (task.projectId !== project.id) return "missing";
-    const [columns, comments, teams, epics, labels, reports] = await Promise.all([
+    const [columns, activity, teams, epics, labels, reports] = await Promise.all([
       listColumns(project.key),
-      listComments(taskKey),
+      listActivity(taskKey),
       canWriteTasks ? listAllTeams() : Promise.resolve([]),
       canWriteTasks ? listOpenEpics(project.key) : Promise.resolve([]),
       canWriteTasks ? listLabels(project.key).then((list) => list.items) : Promise.resolve([]),
@@ -140,8 +139,7 @@ export function TaskDetail({
       teams,
       epics,
       labels,
-      comments: comments.items,
-      commentsCursor: comments.nextCursor,
+      activity,
       reports,
     };
   }, [taskKey, project.id, project.key, canWriteTasks]);
@@ -497,11 +495,10 @@ export function TaskDetail({
         onDirtyChange={setDirty}
       />
       <BugSection key={task.id} task={task} reports={data.reports} />
-      <CommentsSection
+      <ActivitySection
         taskKey={task.key}
         taskId={task.id}
-        initial={data.comments}
-        initialCursor={data.commentsCursor}
+        initial={data.activity}
         canComment={canComment && !archived && !deleted}
         busy={busy}
         setBusy={setWriting}
