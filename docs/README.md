@@ -185,6 +185,7 @@ operations (doc 0006), are done.
 | [WI-116](work-items/WI-116-task-filters-search.md)              | Task filters and text search on the project lists                 | [WS-116](work-specs/WS-116-task-filters-search.md)              |
 | [WI-117](work-items/WI-117-task-activity.md)                    | Task activity: history and comments in one list                   | [WS-117](work-specs/WS-117-task-activity.md)                    |
 | [WI-118](work-items/WI-118-task-list-across-projects.md)        | The list of tasks across projects, with sort                      | [WS-118](work-specs/WS-118-task-list-across-projects.md)        |
+| [WI-119](work-items/WI-119-task-timeline.md)                    | The timeline on the task page                                     | [WS-119](work-specs/WS-119-task-timeline.md)                    |
 
 ## Follow-ups
 
