@@ -1,6 +1,6 @@
 # WS-121 — Task list cursors refuse impossible dates
 
-- Status: In progress (approved by the owner on 2026-11-24, as proposed)
+- Status: Done (approved by the owner on 2026-11-24, as proposed; done on 2026-11-24)
 - Work-item: [WI-121](../work-items/WI-121-task-list-cursor-dates.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 4 (invalid input is
   a `400` with field errors) and section 5 (cursors); [WS-051](WS-051-cursor-date-validation.md)
@@ -106,8 +106,19 @@ the API issues is still accepted, as test 3 checks.
 
 ## Deviations from the approved spec
 
-None yet.
+None.
 
 ## Implementation record
 
-Not started.
+- Red: tests 1 and 2 failed with PostgreSQL's "date/time field value out of range" for
+  `2026-02-30T12:00:00.000000Z` and `2026-02-30`; test 4 failed with `expected 500 to be
+400`, which confirmed the defect end to end. Test 3 passed already, as a guard that valid
+  cursors keep working (commit `fce0927`).
+- Green: `cursorInstantSchema` is exported from `pagination.ts` and used by `cursorSchema`;
+  each sort key in `tasks.ts` checks its value with a Zod schema, `cursorInstantSchema` for
+  `created` and `updated` and `calendarDateSchema` for the due date (commit `8aaa5e2`). No
+  date or time regular expression is left in `tasks.ts`.
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2345 of 2345 (225 files);
+  `test:e2e` 123 of 123.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.

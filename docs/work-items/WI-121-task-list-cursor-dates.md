@@ -1,6 +1,6 @@
 # WI-121 — Task list cursors refuse impossible dates
 
-- Status: In progress (approved by the owner on 2026-11-24, with WS-121)
+- Status: Done (approved by the owner on 2026-11-24, with WS-121; done on 2026-11-24)
 - Work-track: none: follow-up C01 of the independent audit of 2026-11-24, confirmed in the
   code of `main`
 - Depends on: none
@@ -17,16 +17,16 @@ API answers `500 internal_error`. A timestamp in the year `0000` gets through th
 
 ## Acceptance criteria
 
-- [ ] A `created` or `updated` cursor (either direction) whose value is not a real instant
+- [x] A `created` or `updated` cursor (either direction) whose value is not a real instant
       (February 30, month 13, day 32, hour 24 or 25, minute or second 60, year `0000`) is
       a `400 invalid_request` with the field error `cursor`, "Invalid cursor.".
-- [ ] A `dueDate` cursor (either direction) whose date is not a calendar date (February 30,
+- [x] A `dueDate` cursor (either direction) whose date is not a calendar date (February 30,
       month 13, day 32, February 29 of a common year, year `0000`) is the same `400`.
-- [ ] A valid cursor still pages as today, including one on a leap day (`2028-02-29`) and
+- [x] A valid cursor still pages as today, including one on a leap day (`2028-02-29`) and
       the `dueDate` cursor of a task with no due date (`0001-01-01`).
-- [ ] The rules are the shared ones: the paged-list cursor's instant rule (WS-051) and
+- [x] The rules are the shared ones: the paged-list cursor's instant rule (WS-051) and
       `calendarDateSchema` (WS-102, WS-114), not new regular expressions.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 
