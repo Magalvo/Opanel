@@ -126,7 +126,7 @@ test("an agent set up in the UI works with its token alone, within its scopes an
   // 3. The Admin sees the agent's comment as the agent's.
   await page.goto(`/projects/${mine}`);
   await page.getByRole("link", { name: "Checkout returns 500" }).click();
-  const comments = page.getByRole("dialog").getByRole("region", { name: "Comments" });
+  const comments = page.getByRole("dialog").getByRole("region", { name: "Activity" });
   await expect(comments.getByRole("article")).toHaveCount(1);
   await expect(comments.getByRole("article").first()).toContainText(`${botName}Agent`);
 });

@@ -196,7 +196,7 @@ test("Markdown renders safely in descriptions and comments", async ({ page, brow
 
   await page.goto(`/projects/${key}/tasks/${key}-1`);
   await page.getByRole("button", { name: "Preview" }).first().click();
-  const comments = page.getByRole("region", { name: "Comments" });
+  const comments = page.getByRole("region", { name: "Activity" });
   await comments.getByLabel("New comment").fill(`A *comment*.\n\n${hostile}`);
   await comments.getByRole("button", { name: "Add comment" }).click();
   await expect(messages(page)).toContainText("Comment added.");
@@ -298,7 +298,7 @@ test("at phone width the task page has no horizontal page scroll", async ({ page
   await signInAs(page, "member");
 
   await page.goto(`/projects/${key}/tasks/${key}-1`);
-  await expect(page.getByRole("region", { name: "Comments" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Activity" })).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

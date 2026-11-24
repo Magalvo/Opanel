@@ -49,7 +49,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.goto(`/projects/${key}`);
     await page.getByRole("link", { name: "Found by the bot" }).click();
     const dialog = page.getByRole("dialog");
-    const comments = dialog.getByRole("region", { name: "Comments" });
+    const comments = dialog.getByRole("region", { name: "Activity" });
     await expect(comments.getByRole("article")).toHaveCount(2);
 
     const details = dialog.getByRole("region", { name: "Details" });
