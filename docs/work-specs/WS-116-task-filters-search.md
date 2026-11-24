@@ -223,3 +223,73 @@ Risks:
   records it.
 - **`me` in a link** shows each viewer their own work (WT-08 decision 8); for an agent,
   `me` is the agent. Recorded for item D.
+
+## Implementation record
+
+- Red (e8760a9): 34 of 84 tests failed, every one
+  on the missing filters (the strict query refused them with `400`, or the schema had no
+  such field); the 50 already passing are the earlier tests of the same files.
+- Green: `taskFilterShape` and the two query schemas in `src/lib/schemas/tasks.ts`,
+  `src/server/services/task-filter.ts`, `listTasks` and `listBacklog` using it, the
+  `search` column and three indexes, migration `0022_task_search`, the contract
+  descriptions; `pnpm openapi:generate` adds the parameters.
+- Gate on 2026-11-24:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2235 of 2235 (216 files);
+  - `pnpm test:e2e` 115 of 115;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+### Measurements (section 6), 2026-11-24
+
+`scripts/measure-task-search.ts` on a developer laptop: one project, 50 000 tasks (90%
+on the board over three columns, 10% in the backlog), titles of 4 and descriptions of 12
+words drawn from 20, 20 labels (one on every fifth task), 5 epics. Median of 5 runs of the
+service call, first page of 50, in ms:
+
+| List                   | Board | Backlog |
+| ---------------------- | ----: | ------: |
+| no filter              |   155 |      19 |
+| type                   |    72 |      17 |
+| priority, repeated     |   129 |      18 |
+| category               |    69 |      18 |
+| done=false             |   118 |      17 |
+| assignee none          |   153 |      17 |
+| reporter me            |   151 |      16 |
+| reporterKind           |    16 |      20 |
+| label                  |    69 |      35 |
+| epic                   |    45 |      21 |
+| due range              |    31 |      18 |
+| q, a common word       |    15 |      14 |
+| q, two words           |   209 |      45 |
+| q, a two-letter prefix |   204 |      42 |
+| q, no match            |    12 |      13 |
+| q and filters          |    12 |      12 |
+| a key                  |    11 |      11 |
+
+- Migration `0022` on the 50 000 tasks: 1.9 s (limit 60 s). The table with its indexes:
+  33 MB.
+- **The 100 ms limit is missed on the board list** in seven cases, and they share a cause:
+  each matches tens of thousands of board tasks, and the board order
+  (`coalesce(c.position, '~'), t.position, t.id`, from `listTasks` before this item) sorts
+  them all before the first page. The board list with no filter at all, unchanged by this
+  item, takes 155 ms. Selective filters, the key and every backlog case are under 50 ms.
+  The synthetic words are deliberately common (every task has 16 of 20 words), which makes
+  the two search cases match most of the board.
+- As section 6 says, no index outside section 5 was added; this goes back to the owner
+  (WI-116's measurement criterion stays open until then).
+
+## Deviations
+
+1. **Wall time of the service call, not `explain (analyze, buffers)`** (section 6): what a
+   caller waits for, including the ownership checks; the plans were not printed.
+2. **`taskFilterWhere(executor, filter, context)`** takes the executor first, for the
+   ownership query of section 3.
+3. **`columnId` became a list in five existing tests** (`tasks.test.ts`,
+   `tasks.integration.test.ts` twice, `backlog.integration.test.ts`,
+   `task-move.integration.test.ts`): the parsed query now holds an array; what they check
+   is unchanged.
+4. **An empty `q` gives one error, not two**: `min(1, { abort: true })` stops before the
+   letter-or-digit check.
+5. **`task-filter.taskFilterWhere` is classified** in the coverage test of WS-073 as
+   internal, called by `listTasks` and `listBacklog`, which have checked.
