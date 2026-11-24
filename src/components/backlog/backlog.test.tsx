@@ -19,9 +19,12 @@ import { FakeSource } from "@/hooks/fake-event-source";
 import type { Project } from "@/lib/schemas/projects";
 import type { TaskSummary } from "@/lib/schemas/tasks";
 
+const navigation = vi.hoisted(() => ({ search: new URLSearchParams() }));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
   usePathname: () => "/projects/OPA/backlog",
+  useSearchParams: () => navigation.search,
 }));
 
 const { ProjectFrame } = await import("@/components/projects/project-frame");
@@ -304,5 +307,30 @@ describe("Backlog: priority and due date (WS-110)", () => {
 
     expect(screen.getByRole("img", { name: "Priority: Urgent" })).toBeInTheDocument();
     expect(rows()[0]).toHaveTextContent("Overdue, due Nov 1, 2026");
+  });
+});
+
+describe("Backlog: filtered (WS-120 test 7)", () => {
+  const STORIES = "GET /api/v1/projects/OPA/backlog?limit=100&type=story&type=bug";
+
+  afterEach(() => {
+    navigation.search = new URLSearchParams();
+  });
+
+  it("shows only matching rows, in backlog order, with the count", async () => {
+    navigation.search = new URLSearchParams("type=story&type=bug");
+    on(STORIES, page([t2, t3]));
+    await renderBacklog();
+
+    await waitFor(() => {
+      expect(screen.queryByText("Plan the release")).not.toBeInTheDocument();
+    });
+    expect(rows().map((row) => row.textContent)).toEqual([
+      expect.stringContaining("Fix the login"),
+      expect.stringContaining("A story"),
+    ]);
+    expect(screen.getByRole("status", { name: "Filter results" })).toHaveTextContent(
+      "2 of 3 tasks match.",
+    );
   });
 });

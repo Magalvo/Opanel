@@ -21,9 +21,15 @@ import {
   todo,
 } from "./test-data";
 
+const navigation = vi.hoisted(() => ({
+  search: new URLSearchParams(),
+  replace: () => undefined,
+}));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace: navigation.replace, refresh: vi.fn(), push: vi.fn() }),
   usePathname: () => "/projects/OPA",
+  useSearchParams: () => navigation.search,
 }));
 
 const { ProjectFrame } = await import("@/components/projects/project-frame");
@@ -58,6 +64,8 @@ function columnRegion(name: string) {
 
 beforeEach(() => {
   installFetch();
+  navigation.search = new URLSearchParams();
+  navigation.replace = vi.fn();
   FakeSource.all = [];
   FakeSource.autoOpen = true;
   vi.stubGlobal("EventSource", FakeSource);
@@ -588,6 +596,58 @@ describe("Board: moving without dragging (WS-111 section 1)", () => {
         "aria-disabled",
         "false",
       );
+    });
+  });
+});
+
+describe("Board: filtered (WS-120 test 6)", () => {
+  const BUGS = "GET /api/v1/projects/OPA/tasks?limit=100&type=bug";
+
+  it("shows only matching cards, every column, and says when one has none", async () => {
+    navigation.search = new URLSearchParams("type=bug");
+    on(BUGS, page([t2]));
+    await renderBoard();
+
+    await waitFor(() => {
+      expect(within(columnRegion("To do")).queryByText("Write the board")).not.toBeInTheDocument();
+    });
+    expect(within(columnRegion("To do")).getByText("Fix the login")).toBeVisible();
+    expect(within(columnRegion("In progress")).getByText("No matching tasks")).toBeVisible();
+    expect(screen.getByRole("status", { name: "Filter results" })).toHaveTextContent(
+      "1 of 3 tasks match.",
+    );
+  });
+
+  it("writes a change of filter to the URL", async () => {
+    const user = await renderBoard();
+
+    await user.click(await screen.findByRole("button", { name: "Type" }));
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Bug" }));
+
+    expect(navigation.replace).toHaveBeenLastCalledWith("/projects/OPA?type=bug", {
+      scroll: false,
+    });
+  });
+
+  it("moves a card among the cards shown, with a shown card as its anchor", async () => {
+    const t4 = task(4, todo.id, { title: "Another bug", type: "bug" });
+    on(TASKS, page([t1, t2, t4, t3]));
+    navigation.search = new URLSearchParams("type=bug");
+    on(BUGS, page([t2, t4]));
+    on(`POST /api/v1/tasks/${t4.id}/move`, json(full({ ...t4, version: 2 })));
+    const user = await renderBoard();
+    await waitFor(() => {
+      expect(within(columnRegion("To do")).queryByText("Write the board")).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: `Actions for ${t4.key}` }));
+    await user.click(screen.getByRole("menuitem", { name: "Move up" }));
+
+    // t4 goes above t2, the card shown above it, and stays below the hidden t1.
+    expect(bodyOf(calls("POST")[0]?.[1])).toEqual({
+      columnId: todo.id,
+      afterTaskId: t1.id,
+      version: t4.version,
     });
   });
 });

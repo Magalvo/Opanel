@@ -60,19 +60,24 @@ function ColumnFrame({
   );
 }
 
-function NoTasks() {
-  return <p className="px-1 py-2 text-sm text-muted-foreground">No tasks</p>;
+function NoTasks({ filtered = false }: Readonly<{ filtered?: boolean }>) {
+  return (
+    <p className="px-1 py-2 text-sm text-muted-foreground">
+      {filtered ? "No matching tasks" : "No tasks"}
+    </p>
+  );
 }
 
 /** A column nobody can change (WS-037 section 1). */
 export function StaticColumn({
   column,
   tasks,
-}: Readonly<{ column: Column; tasks: readonly TaskSummary[] }>) {
+  filtered = false,
+}: Readonly<{ column: Column; tasks: readonly TaskSummary[]; filtered?: boolean }>) {
   return (
     <ColumnFrame column={column} tasks={tasks} onAdd={null}>
       {tasks.length === 0 ? (
-        <NoTasks />
+        <NoTasks filtered={filtered} />
       ) : (
         <ul className="grid gap-2">
           {tasks.map((task) => (
@@ -92,9 +97,12 @@ export function SortableColumn({
   onAdd,
   movesOf,
   onMove,
+  filtered = false,
 }: Readonly<{
   column: Column;
   tasks: readonly TaskSummary[];
+  /** A filter hides some of the column's tasks (WS-120). */
+  filtered?: boolean;
   dragDisabled: boolean;
   onAdd: (opener: HTMLButtonElement) => void;
   /** The moves each card's menu offers (WS-111 section 2). */
@@ -111,7 +119,7 @@ export function SortableColumn({
       >
         <div ref={setNodeRef} className="min-h-16">
           {tasks.length === 0 ? (
-            <NoTasks />
+            <NoTasks filtered={filtered} />
           ) : (
             <ul className="grid gap-2">
               {tasks.map((task) => (

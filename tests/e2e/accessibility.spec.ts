@@ -173,6 +173,24 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(await violations(page), "timeline").toEqual([]);
   });
 
+  test(`the filtered board and backlog have no accessibility violations in ${colorScheme} mode (WS-120)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    await page.emulateMedia({ colorScheme });
+
+    for (const path of [`/projects/${key}?type=bug&q=card`, `/projects/${key}/backlog?type=bug`]) {
+      await page.goto(path);
+      const bar = page.getByRole("search", { name: "Filter tasks" });
+      await expect(bar.getByRole("button", { name: "Clear filters" })).toBeVisible();
+      expect(await violations(page), path).toEqual([]);
+      await bar.getByRole("button", { name: "Type", exact: true }).click();
+      await expect(page.getByRole("menu")).toBeVisible();
+      expect(await violations(page), `${path}, menu open`).toEqual([]);
+      await page.keyboard.press("Escape");
+    }
+  });
+
   test(`the Backlog page and a task over it have no accessibility violations in ${colorScheme} mode (WS-109)`, async ({
     page,
   }) => {

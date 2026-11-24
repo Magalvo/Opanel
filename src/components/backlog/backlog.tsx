@@ -22,10 +22,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { PlusIcon } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { measureDroppable } from "@/components/board/measure";
 import { NewTaskDialog } from "@/components/board/new-task-dialog";
+import { BACKLOG_KEYS, fullIndex } from "@/components/filters/task-filter";
+import { TaskFilterBar } from "@/components/filters/task-filter-bar";
+import { useTaskFilter } from "@/components/filters/use-task-filter";
+import { useUrlTaskFilter } from "@/components/filters/use-url-task-filter";
 import { getProject } from "@/components/projects/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
@@ -71,8 +75,35 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
     getProject(projectKey).then(setProject, () => undefined);
   }, [projectKey, setProject]);
 
-  const { phase, tasks, moving, sending, live, reload, added, drop, moveToBoard, hold } =
-    useBacklog({ projectKey, announce: setMessage, onArchived: refreshProject });
+  const {
+    phase,
+    tasks: allTasks,
+    moving,
+    sending,
+    live,
+    reload,
+    added,
+    drop,
+    moveToBoard,
+    hold,
+  } = useBacklog({ projectKey, announce: setMessage, onArchived: refreshProject });
+
+  // The filter (WS-120): the backlog shows the tasks the filtered list returns, in its order.
+  const { filter, ignored, setFilter } = useUrlTaskFilter(BACKLOG_KEYS);
+  const matching = useTaskFilter({ projectKey, place: "backlog", filter });
+  const filtered = matching !== "all";
+  const tasks = useMemo(() => {
+    if (matching === "all") return allTasks;
+    const keep = matching === "loading" ? new Set<string>() : matching;
+    return allTasks.filter((task) => keep.has(task.id));
+  }, [allTasks, matching]);
+  const people = useMemo(() => {
+    const byId = new Map<string, { id: string; name: string }>();
+    for (const task of allTasks) {
+      if (task.assignee !== null) byId.set(task.assignee.id, task.assignee);
+    }
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allTasks]);
 
   // Someone archived or unarchived the project: the frame read it again (WS-049 section 2).
   // Only a change that follows a `project.changed` event is announced (WS-048 section 6).
@@ -171,7 +202,7 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
     lastDrop.current = `${keyOf(id)} was moved to ${positionText(to)}.`;
     // The move holds the events itself until it is saved, so it starts before the drag's
     // hold ends and no held event lands between the drop and the move.
-    void drop(id, to);
+    void drop(id, filtered ? fullIndex(allTasks, tasks, id, to) : to);
     hold(false);
   }
 
@@ -204,7 +235,9 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
 
   const list =
     tasks.length === 0 ? (
-      <p className="px-1 py-2 text-sm text-muted-foreground">The backlog is empty.</p>
+      <p className="px-1 py-2 text-sm text-muted-foreground">
+        {filtered ? "No matching tasks" : "The backlog is empty."}
+      </p>
     ) : writable ? (
       <DndContext
         id={dndId}
@@ -261,6 +294,17 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
         <p role="status" aria-label="Live updates" className="text-sm text-muted-foreground">
           Live updates are paused. Reconnecting…
         </p>
+      )}
+
+      {phase === "ready" && (
+        <TaskFilterBar
+          filter={filter}
+          onChange={setFilter}
+          people={people}
+          shown={tasks.length}
+          total={allTasks.length}
+          ignored={ignored}
+        />
       )}
 
       {phase === "loading" && (
