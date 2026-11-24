@@ -15,10 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-08 (search, filters, list view, activity timeline), approved by the owner
-  on 2026-11-24 (pull request #119). Items A (the filter schema and text search) and C
-  (the activity endpoint) start first, in parallel; each gets its number when it starts.
-  WT-07 and WT-11 are done.
+- **Next:** WT-08 items B (`GET /tasks`, the list across projects, with `sort`) and F
+  (the timeline on the task page), which can run in parallel; each gets its number when it
+  starts. Items A and C are done (WI-116, WI-117). WT-07 and WT-11 are done.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
   session secret), WI-113 (a reorder within one column reaches an open board live) and
   WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
