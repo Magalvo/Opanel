@@ -195,6 +195,7 @@ operations (doc 0006), are done.
 | [WI-125](work-items/WI-125-failed-token-limit.md)               | Failed API token attempts are limited per address                 | [WS-125](work-specs/WS-125-failed-token-limit.md)               |
 | [WI-126](work-items/WI-126-pin-postgres-image.md)               | The production database image is pinned by digest                 | [WS-126](work-specs/WS-126-pin-postgres-image.md)               |
 | [WI-127](work-items/WI-127-node-image-pin.md)                   | The Node.js base image pin is current                             | [WS-127](work-specs/WS-127-node-image-pin.md)                   |
+| [WI-128](work-items/WI-128-live-e2e-readiness.md)               | The live end-to-end tests wait for what they measure              | [WS-128](work-specs/WS-128-live-e2e-readiness.md)               |
 
 ## Follow-ups
 
@@ -255,13 +256,14 @@ Other follow-ups:
   Repeated five times with `backlog.spec.ts`: 1 of 17 failed on `main`, and 3 of 17 then
   0 of 17 on the branch of WI-119. CI has not shown it yet. Needs a work-item: find whether
   the page misses the `task.moved` event or the move answer, rather than waiting longer.
+  To be answered by WI-128.
 
 - **`live-board.spec.ts:144` fails now and then** (found in WI-123, 2026-11-25). "A
   deleted task disappears from the other board" sometimes still shows the task on the
   other board after 2 s: once in five repeats of the spec on the branch of WI-123, and once
   in ten on `main` (`83c5272`), under parallel workers; never when run alone (10 of 10 on
   each). Needs a work-item with the `planning-flow.spec.ts` one above: find whether the
-  page misses the event, rather than waiting longer.
+  page misses the event, rather than waiting longer. To be answered by WI-128.
 
 - **Task lists are slow on large installs when no index serves their order** (WI-116 and
   WI-118, accepted by the owner on 2026-11-24). With 50 000 tasks:
