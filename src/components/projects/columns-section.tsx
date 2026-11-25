@@ -63,6 +63,14 @@ export function ColumnsSection({
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Column | null>(null);
   const [deleting, setDeleting] = useState<Column | null>(null);
+  // Where the focus goes when a dialog closes: the button that opened it, or "Add column"
+  // once that button is gone (WS-129 section 2). One dialog is open at a time.
+  const addButton = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const returnFocus = useCallback(
+    () => (opener.current?.isConnected === true ? opener.current : addButton.current),
+    [],
+  );
 
   const reload = useCallback(async () => {
     try {
@@ -131,9 +139,11 @@ export function ColumnsSection({
           Columns
         </h2>
         <Button
+          ref={addButton}
           variant="outline"
           disabled={readOnly || columns === null}
-          onClick={() => {
+          onClick={(event) => {
+            opener.current = event.currentTarget;
             setAdding(true);
           }}
         >
@@ -180,7 +190,8 @@ export function ColumnsSection({
                           size="icon-sm"
                           aria-label={`Edit ${column.name}`}
                           disabled={readOnly}
-                          onClick={() => {
+                          onClick={(event) => {
+                            opener.current = event.currentTarget;
                             setEditing(column);
                           }}
                         >
@@ -217,7 +228,8 @@ export function ColumnsSection({
                           size="icon-sm"
                           aria-label={`Delete ${column.name}`}
                           disabled={readOnly}
-                          onClick={() => {
+                          onClick={(event) => {
+                            opener.current = event.currentTarget;
                             setDeleting(column);
                           }}
                         >
@@ -237,6 +249,7 @@ export function ColumnsSection({
         <ColumnDialog
           open
           onOpenChange={setAdding}
+          returnFocusTo={returnFocus}
           title="Add a column"
           submitLabel="Add column"
           initial={{ name: "", category: "todo" }}
@@ -256,6 +269,7 @@ export function ColumnsSection({
           onOpenChange={(open) => {
             if (!open) setEditing(null);
           }}
+          returnFocusTo={returnFocus}
           title="Edit column"
           submitLabel="Save"
           initial={{ name: editing.name, category: editing.category }}
@@ -276,7 +290,12 @@ export function ColumnsSection({
         }}
       >
         {deleting !== null && (
-          <AlertDialogContent>
+          <AlertDialogContent
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              returnFocus()?.focus();
+            }}
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>Delete {deleting.name}?</AlertDialogTitle>
               <AlertDialogDescription>Only an empty column can be deleted.</AlertDialogDescription>
@@ -287,6 +306,8 @@ export function ColumnsSection({
                 variant="destructive"
                 onClick={() => {
                   const column = deleting;
+                  // The row goes away: the focus goes to "Add column".
+                  opener.current = addButton.current;
                   setDeleting(null);
                   void change(
                     () => deleteColumn(column.id),

@@ -217,3 +217,46 @@ test("at phone width the projects pages have no horizontal page scroll", async (
     expect(overflow, path).toBeLessThanOrEqual(0);
   }
 });
+
+test("closing a settings dialog returns the focus to the button that opened it (WS-129)", async ({
+  page,
+}) => {
+  await signInAs(page, "manager");
+  const key = uniqueKey();
+  await createProjectThroughApi(page, key);
+  await page.goto(`/projects/${key}/settings`);
+  const columns = page.getByRole("region", { name: "Columns" });
+  await expect(columns.getByRole("row", { name: /Done/ })).toBeVisible();
+  const addColumn = columns.getByRole("button", { name: "Add column" });
+
+  await addColumn.focus();
+  await page.keyboard.press("Enter");
+  const add = page.getByRole("dialog", { name: "Add a column" });
+  await expect(add).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(add).toBeHidden();
+  await expect(addColumn).toBeFocused();
+
+  await page.keyboard.press("Enter");
+  await add.getByLabel("Name").fill("Review");
+  await page.keyboard.press("Enter");
+  await expect(columns.getByRole("row", { name: /Review/ })).toBeVisible();
+  await expect(addColumn).toBeFocused();
+
+  const editReview = page.getByRole("button", { name: "Edit Review" });
+  await editReview.focus();
+  await page.keyboard.press("Enter");
+  const edit = page.getByRole("dialog", { name: "Edit column" });
+  await edit.getByLabel("Name").fill("Code review");
+  await page.keyboard.press("Enter");
+  await expect(columns.getByRole("row", { name: /Code review/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit Code review" })).toBeFocused();
+
+  await page.getByRole("button", { name: "Delete Code review" }).focus();
+  await page.keyboard.press("Enter");
+  const confirmation = page.getByRole("alertdialog");
+  await confirmation.getByRole("button", { name: "Delete" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(columns.getByRole("row", { name: /Code review/ })).toHaveCount(0);
+  await expect(addColumn).toBeFocused();
+});

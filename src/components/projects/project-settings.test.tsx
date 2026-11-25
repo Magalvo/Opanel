@@ -983,3 +983,205 @@ describe("ProjectSettings: labels (WS-108)", () => {
     expect(await within(labels()).findByRole("row", { name: /Defect/ })).toBeVisible();
   });
 });
+
+describe("ProjectSettings: the focus returns to the opener (WS-129)", () => {
+  function labels() {
+    return section("Labels");
+  }
+
+  function addColumn() {
+    return within(section("Columns")).getByRole("button", { name: "Add column" });
+  }
+
+  it("returns from Add column to Add column, on Escape and after a save (test 2)", async () => {
+    const review = column("66666666-6666-4666-8666-666666666666", "Review", "todo");
+    on("POST /api/v1/projects/OPA/columns", json(review, 201));
+    const user = await renderSettings();
+
+    await user.click(addColumn());
+    expect(screen.getByRole("dialog", { name: "Add a column" })).toBeVisible();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(addColumn()).toHaveFocus();
+    });
+
+    await user.click(addColumn());
+    const dialog = screen.getByRole("dialog", { name: "Add a column" });
+    await user.type(within(dialog).getByLabelText("Name"), "Review");
+    on(COLUMNS, columns([todo, doing, done, review]));
+    await user.click(within(dialog).getByRole("button", { name: "Add column" }));
+    await screen.findByRole("row", { name: /Review/ });
+    await waitFor(() => {
+      expect(addColumn()).toHaveFocus();
+    });
+  });
+
+  it("returns from Edit column to the row's Edit button, on Escape and after a save (test 2)", async () => {
+    const renamed = { ...doing, name: "Doing", version: 3 };
+    on(`PATCH /api/v1/columns/${doing.id}`, json(renamed));
+    const user = await renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "Edit In progress" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Edit In progress" })).toHaveFocus();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Edit In progress" }));
+    const dialog = screen.getByRole("dialog", { name: "Edit column" });
+    await user.clear(within(dialog).getByLabelText("Name"));
+    await user.type(within(dialog).getByLabelText("Name"), "Doing");
+    on(COLUMNS, columns([todo, renamed, done]));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    await screen.findByRole("row", { name: /Doing/ });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Edit Doing" })).toHaveFocus();
+    });
+  });
+
+  it("returns from a cancelled column delete to Delete, and from a confirmed one to Add column (test 3)", async () => {
+    on(`DELETE /api/v1/columns/${doing.id}`, () => new Response(null, { status: 204 }));
+    const user = await renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "Delete In progress" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Cancel" }),
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Delete In progress" })).toHaveFocus();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Delete In progress" }));
+    on(COLUMNS, columns([todo, done]));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+    );
+    await vi.waitFor(() => {
+      expect(screen.queryByRole("row", { name: /In progress/ })).not.toBeInTheDocument();
+    });
+    expect(addColumn()).toHaveFocus();
+  });
+
+  it("returns from Add label, Edit label and Delete label to their openers (test 4)", async () => {
+    on(`DELETE /api/v1/labels/${ui.id}`, () => new Response(null, { status: 204 }));
+    const user = await renderSettings();
+    const add = within(labels()).getByRole("button", { name: "Add label" });
+
+    await user.click(add);
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(add).toHaveFocus();
+    });
+
+    await user.click(within(labels()).getByRole("button", { name: "Edit Bug" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(within(labels()).getByRole("button", { name: "Edit Bug" })).toHaveFocus();
+    });
+
+    await user.click(within(labels()).getByRole("button", { name: "Delete UI" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(within(labels()).getByRole("button", { name: "Delete UI" })).toHaveFocus();
+    });
+
+    await user.click(within(labels()).getByRole("button", { name: "Delete UI" }));
+    on(LABELS, json({ items: [bug], nextCursor: null }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+    );
+    await vi.waitFor(() => {
+      expect(within(labels()).queryByRole("row", { name: /UI/ })).not.toBeInTheDocument();
+    });
+    expect(within(labels()).getByRole("button", { name: "Add label" })).toHaveFocus();
+  });
+
+  it("returns from Edit label to the row's Edit button after a save (test 4)", async () => {
+    on(`PATCH /api/v1/labels/${bug.id}`, json({ ...bug, colour: "pink", version: 3 }));
+    const user = await renderSettings();
+
+    await user.click(within(labels()).getByRole("button", { name: "Edit Bug" }));
+    const dialog = screen.getByRole("dialog", { name: "Edit label" });
+    await user.click(within(dialog).getByRole("radio", { name: "Pink" }));
+    on(LABELS, json({ items: [{ ...bug, colour: "pink", version: 3 }, ui], nextCursor: null }));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await within(labels()).findByRole("row", { name: /Pink/ });
+    await waitFor(() => {
+      expect(within(labels()).getByRole("button", { name: "Edit Bug" })).toHaveFocus();
+    });
+  });
+
+  it("returns to Add column when the edited column was deleted meanwhile (test 5)", async () => {
+    const user = await renderSettings();
+    act(() => {
+      FakeSource.latest().open();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Edit In progress" }));
+    on(COLUMNS, columns([todo, done]));
+    act(() => {
+      FakeSource.latest().send("column.changed", {
+        id: crypto.randomUUID(),
+        type: "column.changed",
+        projectId: PROJECT_ID,
+        entity: "column",
+        entityId: doing.id,
+        version: 3,
+        actorAccountId: "55555555-5555-4555-8555-555555555555",
+        at: "2026-11-18T10:00:00.000Z",
+      });
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Delete In progress" })).not.toBeInTheDocument();
+    });
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(addColumn()).toHaveFocus();
+    });
+  });
+
+  it("returns from Archive to its button, then to Unarchive and back (test 6)", async () => {
+    const archived = { ...opa, archivedAt: "2026-11-16T10:00:00.000Z", version: 4 };
+    on("POST /api/v1/projects/OPA/archive", json(archived));
+    on("POST /api/v1/projects/OPA/unarchive", json({ ...opa, version: 5 }));
+    const user = await renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "Archive project" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Cancel" }),
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Archive project" })).toHaveFocus();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Archive project" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }),
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Unarchive project" })).toHaveFocus();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Unarchive project" }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Archive project" })).toHaveFocus();
+    });
+  });
+
+  it("keeps the focus on Archive project when archiving fails (test 6)", async () => {
+    on("POST /api/v1/projects/OPA/archive", problem(500, "internal_error"));
+    const user = await renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "Archive project" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }),
+    );
+
+    await waitFor(() => {
+      expect(status().textContent).not.toBe("");
+    });
+    expect(screen.getByRole("button", { name: "Archive project" })).toHaveFocus();
+  });
+});
