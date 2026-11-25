@@ -148,7 +148,14 @@ test("a deleted task disappears from the other board, and comes back when restor
 
   await a.getByRole("link", { name: "Echo" }).click();
   await a.getByRole("dialog").getByRole("button", { name: "Delete task" }).click();
+  // The 2 s start once the delete is saved, as the move test's start once its move has
+  // answered (WS-128).
+  const deleted = a.waitForResponse(
+    (response) =>
+      response.request().method() === "DELETE" && response.url().endsWith(`/tasks/${key}-1`),
+  );
   await a.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+  expect((await deleted).status()).toBe(204);
 
   await expect.poll(() => titlesIn(b, "To do"), { timeout: 2_000 }).toEqual(["Foxtrot"]);
 
