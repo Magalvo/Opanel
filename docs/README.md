@@ -377,11 +377,9 @@ Other follow-ups:
 Lower findings of the audit of 2026-11-19, each to become a work-item when the owner
 chooses. B01 to B05 are WI-079 to WI-083.
 
-- B06: the event stream's heartbeat check refreshes the session (Better Auth extends a
-  session older than `updateAge` on each `getSession`), so an open board tab keeps its
-  session from expiring. Pass `disableRefresh` on the heartbeat's check
-  (`src/server/http/event-stream.ts`, `src/server/auth/authenticate.ts`). To be answered by
-  WI-124.
+- B06: answered by WI-124 (2026-11-25): the event stream's heartbeat checks the session
+  without extending it (`disableRefresh`); requests a person makes still extend it, and
+  revocation, expiry and loss of permission still end the stream.
 - B07: failed bearer-token attempts are not rate limited (the per-token limiter runs after
   authentication), and the example Caddyfile adds no limit, although WS-072 hands
   unauthenticated limiting to the proxy. Add a per-IP limit for failed token
@@ -457,7 +455,6 @@ per-task column cleanup.
 - C05: answered by WI-122 (2026-11-25): the three task lists read no description; a
   100-task page of 50 000-character descriptions reads about 80 000 characters instead of
   about 5.1 million (WS-122 "Implementation record").
-- C06: the event stream's heartbeat writes without the `desiredSize` check events have,
-  and `setInterval` starts a new authentication while the last one may still run
-  (`src/server/http/event-stream.ts`). Check backpressure in `write` and keep one heartbeat
-  check in flight. To be answered by WI-124.
+- C06: answered by WI-124 (2026-11-25): a heartbeat counts against the 64 KiB a reader may
+  leave unread, as events do (no chunk is queued past it), and one heartbeat check runs at
+  a time.
