@@ -390,10 +390,11 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B08 (owner decision): an Admin can issue a reset link for another, active Admin and sign
   in as them. It is audited (`account.reset_link_created` with the issuer as actor).
   Decide whether the API should refuse Admin targets, leaving `recover-admin` as the way.
-- B09: `postgres:18-alpine` is a floating tag in `docker/production/services.yaml` and
-  `compose.yaml`, while the Node and Caddy images are pinned by digest. Pin it in the
-  production file, and say how to upgrade it in `docs/operations.md`. To be answered by
-  WI-126.
+- B09: answered by WI-126 (2026-11-25): the example install's database is
+  `postgres:18-alpine` pinned by digest (PostgreSQL 18.7), and a test fails on any pulled
+  image without one; `compose.yaml` keeps the tag floating on purpose. `docs/operations.md`
+  says how to update it ("Updating PostgreSQL"), and a weekly check of the audit workflow
+  fails once a pinned tag moves.
 - B10: `engines.node` is `>=22` but CI, `.nvmrc` and the image use 22, and Node 25 no
   longer bundles corepack, which the `Dockerfile` uses. Narrow it to `^22` until the
   Node 24 upgrade above.
