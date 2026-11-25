@@ -981,3 +981,146 @@ describe("useBoard: the board stays consistent (WS-082)", () => {
     },
   );
 });
+
+describe("useBoard: the newest state wins (WS-123)", () => {
+  function columnReads(columnId: string): number {
+    return calls("GET").filter(([url]) => url.includes(`columnId=${columnId}`)).length;
+  }
+
+  /** OPA-1's move within "To do" starts a column read that the test answers later. */
+  async function staleColumnRead() {
+    const mounted = await renderBoard();
+    const moved = { ...t1, version: 2 };
+    on(`GET /api/v1/tasks/${t1.id}`, json(full(moved)));
+    const answer = deferNext(COLUMN_TASKS(todo.id));
+    send("task.moved", t1.id, 2);
+    await waitFor(() => {
+      expect(columnReads(todo.id)).toBe(1);
+    });
+    return { ...mounted, moved, answer };
+  }
+
+  it("does not apply a column read that a newer change overtook (test 4)", async () => {
+    const { result, moved, answer } = await staleColumnRead();
+    const renamed = { ...t2, title: "Renamed", version: 5 };
+    on(`GET /api/v1/tasks/${t2.id}`, json(full(renamed)));
+    send("task.updated", t2.id, 5);
+    await waitFor(() => {
+      expect(result.current.board[todo.id]?.[1]).toMatchObject({ version: 5 });
+    });
+
+    on(COLUMN_TASKS(todo.id), page([renamed, moved]));
+    await answer(page([t2, moved]));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2", "OPA-1"]);
+    expect(result.current.board[todo.id]?.[0]).toMatchObject({ title: "Renamed", version: 5 });
+    expect(columnReads(todo.id)).toBe(2);
+  });
+
+  it("does not bring back a card deleted before the old read returns (test 5)", async () => {
+    const { result, moved, answer } = await staleColumnRead();
+    send("task.deleted", t2.id, 5);
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1"]);
+
+    on(COLUMN_TASKS(todo.id), page([moved]));
+    await answer(page([t2, moved]));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1"]);
+  });
+
+  it("does not bring back a card moved to another column before the old read returns (test 5)", async () => {
+    const { result, moved, answer } = await staleColumnRead();
+    const t2Elsewhere = { ...t2, columnId: doing.id, version: 5 };
+    on(`GET /api/v1/tasks/${t2.id}`, json(full(t2Elsewhere)));
+    on(COLUMN_TASKS(doing.id), page([t2Elsewhere, t3]));
+    send("task.moved", t2.id, 5);
+    await waitFor(() => {
+      expect(keys(result.current.board, doing.id)).toEqual(["OPA-2", "OPA-3"]);
+    });
+
+    on(COLUMN_TASKS(todo.id), page([moved]));
+    await answer(page([t2, moved]));
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1"]);
+    expect(keys(result.current.board, doing.id)).toEqual(["OPA-2", "OPA-3"]);
+  });
+
+  it("applies no column read under a drag, and reads the column once it ends (test 6)", async () => {
+    const { result, moved, answer } = await staleColumnRead();
+    act(() => {
+      result.current.hold(true);
+    });
+
+    await answer(page([t2, moved]));
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+
+    on(COLUMN_TASKS(todo.id), page([t2, moved]));
+    act(() => {
+      result.current.hold(false);
+    });
+
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-2", "OPA-1"]);
+    });
+    expect(columnReads(todo.id)).toBe(2);
+  });
+
+  it("applies no card fetched under a drag, and fetches it again once it ends (test 7)", async () => {
+    const { result } = await renderBoard();
+    const answer = deferNext(`GET /api/v1/tasks/${t2.id}`);
+    send("task.updated", t2.id, 5);
+    act(() => {
+      result.current.hold(true);
+    });
+
+    const renamed = { ...t2, title: "Renamed", version: 5 };
+    await answer(json(full(renamed)));
+    expect(result.current.board[todo.id]?.[1]).toMatchObject({ title: t2.title, version: 4 });
+
+    on(`GET /api/v1/tasks/${t2.id}`, json(full(renamed)));
+    act(() => {
+      result.current.hold(false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.board[todo.id]?.[1]).toMatchObject({ title: "Renamed", version: 5 });
+    });
+    expect(taskGets().filter((url) => url === `/api/v1/tasks/${t2.id}`)).toHaveLength(2);
+  });
+
+  it("shows a task listed twice during the load once, where its newest version is (test 8)", async () => {
+    const t1Done = { ...t1, columnId: done.id, version: 2 };
+    on(TASKS, page([t1, t2], "c1"));
+    on(`${TASKS}&cursor=c1`, page([t3, t1Done]));
+
+    const { result } = await renderBoard();
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+    expect(keys(result.current.board, done.id)).toEqual(["OPA-1"]);
+    expect(result.current.board[done.id]?.[0]).toMatchObject({ version: 2 });
+  });
+
+  it("keeps the later of two equal versions listed during the load (test 8)", async () => {
+    on(TASKS, page([t1, t2], "c1"));
+    on(`${TASKS}&cursor=c1`, page([t3, { ...t1, columnId: done.id }]));
+
+    const { result } = await renderBoard();
+
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-2"]);
+    expect(keys(result.current.board, done.id)).toEqual(["OPA-1"]);
+  });
+
+  it("shows a task listed twice by a column read once (test 9)", async () => {
+    const { result } = await renderBoard();
+    const moved = { ...t1, version: 2 };
+    on(`GET /api/v1/tasks/${t1.id}`, json(full(moved)));
+    on(COLUMN_TASKS(todo.id), page([t2, moved], "c1"));
+    on(`${COLUMN_TASKS(todo.id)}&cursor=c1`, page([moved]));
+
+    send("task.moved", t1.id, 2);
+
+    await waitFor(() => {
+      expect(keys(result.current.board, todo.id)).toEqual(["OPA-2", "OPA-1"]);
+    });
+  });
+});
