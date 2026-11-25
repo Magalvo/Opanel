@@ -381,11 +381,11 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B06: answered by WI-124 (2026-11-25): the event stream's heartbeat checks the session
   without extending it (`disableRefresh`); requests a person makes still extend it, and
   revocation, expiry and loss of permission still end the stream.
-- B07: failed bearer-token attempts are not rate limited (the per-token limiter runs after
-  authentication), and the example Caddyfile adds no limit, although WS-072 hands
-  unauthenticated limiting to the proxy. Add a per-IP limit for failed token
-  authentication, or a limit in the example proxy and `docs/operations.md`. To be answered
-  by WI-125.
+- B07: answered by WI-125 (2026-11-25): with `CLIENT_IP_HEADER` set, each client address
+  (an IPv6 one per `/64`) may fail API token authentication 30 times a minute; past that
+  its token requests answer `429` with `Retry-After` before any token lookup. Without the
+  header there is no such limit, and the start-up warning says so. The example Caddyfile
+  is unchanged (its standard build has no rate limiter).
 - B08 (owner decision): an Admin can issue a reset link for another, active Admin and sign
   in as them. It is audited (`account.reset_link_created` with the issuer as actor).
   Decide whether the API should refuse Admin targets, leaving `recover-admin` as the way.
