@@ -67,7 +67,8 @@ const envFieldsSchema = z.object({
     .refine(isHttpUrl, { error: "must be an http:// or https:// URL" }),
   // Name of the request header in which Opanel's own reverse proxy puts the client address,
   // for example `x-forwarded-for`. Optional: when it is not set, the sign-in limiter works
-  // per email only, because no header is trusted to be genuine.
+  // per email only, and failed API token attempts are not limited per address (WS-125),
+  // because no header is trusted to be genuine.
   CLIENT_IP_HEADER: z
     .string()
     .optional()
@@ -187,8 +188,8 @@ export function productionWarnings(env: Pick<Env, "NODE_ENV" | "CLIENT_IP_HEADER
   if (env.CLIENT_IP_HEADER === undefined) {
     warnings.push(
       "CLIENT_IP_HEADER is not set: sign-in attempts are limited per email only, not per " +
-        "client address. Run Opanel behind a reverse proxy and set CLIENT_IP_HEADER to the " +
-        "header in which that proxy puts the client address. See .env.example.",
+        "client address, and failed API token attempts are not limited. Run Opanel behind a " +
+        "reverse proxy and set CLIENT_IP_HEADER to the header in which that proxy puts the client address. See .env.example.",
     );
   }
   return warnings;

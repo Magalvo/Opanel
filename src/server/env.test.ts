@@ -351,6 +351,12 @@ describe("productionWarnings", () => {
     expect(warnings[0]).toContain("per email only");
   });
 
+  it("says that failed API token attempts are then not limited per address (WS-125)", () => {
+    const [warning] = productionWarnings({ NODE_ENV: "production", CLIENT_IP_HEADER: undefined });
+
+    expect(warning).toContain("failed API token attempts are not limited");
+  });
+
   it("is silent when the header is configured", () => {
     expect(
       productionWarnings({ NODE_ENV: "production", CLIENT_IP_HEADER: "x-forwarded-for" }),

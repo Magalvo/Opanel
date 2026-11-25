@@ -106,7 +106,9 @@ or the listed ones, even when the list is empty (`all_projects`, WI-071).
   it, after an unknown id's `404` and before any other refusal (such as an archived
   project's `409`), so it learns nothing of that project's state; lists of projects leave
   the others out (WS-073).
-- Token-authenticated requests are rate limited per token.
+- Token-authenticated requests are rate limited per token. Failed token attempts are also
+  limited per client address, before the token is looked up, when the operator names a
+  trusted client-address header (WS-125); past the limit they get `429` with `Retry-After`.
 
 ### Humans: session cookie
 

@@ -81,8 +81,9 @@ Whatever proxy you use, it must:
 1. **Forward to the one app process**, and put the client's address in a header that
    overwrites anything the client sent. Set `CLIENT_IP_HEADER` to that header's name (for
    example `x-forwarded-for`): the sign-in limiter then counts attempts per client
-   address as well as per email. Without it the app warns at start-up that attempts are
-   limited per email only. Never set it when no proxy overwrites the header: clients
+   address as well as per email, and failed API token attempts are limited per client
+   address. Without it the app warns at start-up that sign-in attempts are limited per
+   email only and failed token attempts not at all. Never set it when no proxy overwrites the header: clients
    could then choose their own address.
 2. **Not buffer the events stream**, `GET /api/v1/projects/{projectId}/events`, and let
    its responses stay open far longer than the 25-second heartbeat. Opanel sends
@@ -300,8 +301,13 @@ While the database is down, every other request answers `500` with no detail. Th
 keeps running and recovers by itself when the database returns.
 
 Requests made with an agent's API token are limited to 600 a minute per token, counted in
-the app process; above that they answer `429` with `Retry-After` (WS-072). Restarting the
-app resets the counts.
+the app process; above that they answer `429` with `Retry-After` (WS-072). With
+`CLIENT_IP_HEADER` set, each client address may also fail token authentication 30 times a
+minute (an IPv6 client counts per `/64`); its further token requests that minute answer
+`429` with `Retry-After` before the token is looked up, and the app logs one line naming the
+address, never the token (WS-125). Without `CLIENT_IP_HEADER` failed attempts are not
+limited; a limit in your proxy is optional defence in depth (the example Caddy has none:
+its standard build has no rate limiter). Restarting the app resets the counts.
 
 ## Storage
 

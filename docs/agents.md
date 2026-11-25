@@ -107,6 +107,10 @@ problem; the response's `X-Request-Id` header carries the same value.
 
 - **`401` never says why.** An unknown, expired or revoked token, and a disabled agent, all
   get the same answer.
+- **A token that keeps failing slows its address down.** When the install trusts a
+  client-address header, an address may fail token authentication 30 times a minute; its
+  further token requests that minute get `429 rate_limited`, even with a valid token. Fix
+  the token, then wait the `Retry-After` seconds.
 - **Retrying.** Writes are not idempotent, except a `DELETE`: before retrying a create
   after a timeout, check whether it happened.
 
