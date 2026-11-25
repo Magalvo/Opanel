@@ -110,11 +110,28 @@ export function useBoard({
   // events that asked for it may have changed the task's order (WS-113).
   const fetching = useRef(new Set<string>());
   const again = useRef(new Map<string, boolean>());
+  // Each column's epoch, one more for every change to it, and the column reads running,
+  // with the tasks that asked for each and their versions (WS-123 section 3).
+  const epochs = useRef(new Map<string, number>());
+  const columnReads = useRef(new Map<string, { again: boolean; triggers: Map<string, number> }>());
+  // Results that came back during a drag or a move: read again once it ends (section 4).
+  const staleColumns = useRef(new Map<string, Map<string, number>>());
+  const staleTasks = useRef(new Map<string, boolean>());
 
+  /** Every change to the board passes here, so each changed column's epoch moves on. */
   const setBoard = useCallback((next: Board) => {
+    const before = current.current;
+    for (const [columnId, tasks] of Object.entries(next)) {
+      if (before[columnId] !== tasks) {
+        epochs.current.set(columnId, (epochs.current.get(columnId) ?? 0) + 1);
+      }
+    }
     current.current = next;
     setBoardState(next);
   }, []);
+
+  /** Whether a drag or a move is in progress, read through a function after an `await`. */
+  const isHeld = useCallback(() => held.current.dragging || held.current.moving, []);
 
   useEffect(() => {
     mounted.current = true;
@@ -210,14 +227,67 @@ export function useBoard({
   }, [fallbackMs, reload]);
 
   /**
+   * Reads a column again and shows it (WS-123 section 3): one read per column at a time, one
+   * more if asked for meanwhile. A read that a change to the column or a load overtook is
+   * read again; one that returns during a drag or a move (other than the board's own move)
+   * waits for it to end. Applied, it takes the tasks that asked for it out of other columns,
+   * unless the board holds a newer version of them there.
+   */
+  const readColumn = useCallback(
+    async (columnId: string, triggers: ReadonlyMap<string, number>, own = false) => {
+      const running = columnReads.current.get(columnId);
+      if (running !== undefined) {
+        running.again = true;
+        for (const [id, version] of triggers) running.triggers.set(id, version);
+        return;
+      }
+      const state = { again: false, triggers: new Map(triggers) };
+      columnReads.current.set(columnId, state);
+      try {
+        for (;;) {
+          state.again = false;
+          const epoch = epochs.current.get(columnId) ?? 0;
+          const generation = loader.current.generation;
+          const tasks = await listColumnTasks(projectKey, columnId);
+          if (!isMounted(mounted)) return;
+          if (!own && isHeld()) {
+            const stale = staleColumns.current.get(columnId) ?? new Map<string, number>();
+            for (const [id, version] of state.triggers) stale.set(id, version);
+            staleColumns.current.set(columnId, stale);
+            return;
+          }
+          const overtaken =
+            epoch !== (epochs.current.get(columnId) ?? 0) ||
+            generation !== loader.current.generation;
+          if (overtaken || askedAgain(state)) continue;
+          let next = current.current;
+          for (const [id, version] of state.triggers) {
+            const heldNow = heldVersion(next, id);
+            if (heldNow !== null && heldNow <= version) next = removeTask(next, id);
+          }
+          setBoard(replaceColumn(next, columnId, tasks));
+          return;
+        }
+      } finally {
+        columnReads.current.delete(columnId);
+      }
+    },
+    [isHeld, projectKey, setBoard],
+  );
+
+  /**
    * Shows a task in the column its `columnId` names, unless the board holds as new a
    * version: in place when it is there and its order cannot have changed, otherwise taken
    * out of wherever it is and that column read again (WS-048 section 4, WS-082, WS-113).
    * `ordered` is for another person's move, which may have reordered the column; the
-   * board's own move is already in its place.
+   * board's own move is already in its place, and `own` lets its column read land while
+   * the move is still held (WS-123 section 3).
    */
   const placeTask = useCallback(
-    async (task: TaskSummary, { ordered = false }: { ordered?: boolean } = {}) => {
+    async (
+      task: TaskSummary,
+      { ordered = false, own = false }: { ordered?: boolean; own?: boolean } = {},
+    ) => {
       if (!isNewer(heldVersion(current.current, task.id), task.version)) return;
       // A task in the backlog is not on the board (WS-101 section 7).
       const columnId = task.columnId;
@@ -230,11 +300,9 @@ export function useBoard({
         setBoard(inPlace);
         return;
       }
-      const tasks = await listColumnTasks(projectKey, columnId);
-      if (!isMounted(mounted)) return;
-      setBoard(replaceColumn(removeTask(current.current, task.id), columnId, tasks));
+      await readColumn(columnId, new Map([[task.id, task.version]]), own);
     },
-    [projectKey, setBoard],
+    [readColumn, setBoard],
   );
 
   /** Reads a task again and puts it where it now is (WS-048 section 4). */
@@ -249,13 +317,18 @@ export function useBoard({
         task = null;
       }
       if (!isMounted(mounted)) return;
+      // Nothing changes under a drag or a move: fetched again once it ends (WS-123 section 4).
+      if (isHeld()) {
+        staleTasks.current.set(taskId, (staleTasks.current.get(taskId) ?? false) || ordered);
+        return;
+      }
       if (task === null) {
         setBoard(removeTask(current.current, taskId));
         return;
       }
       await placeTask(task, { ordered });
     },
-    [placeTask, setBoard],
+    [isHeld, placeTask, setBoard],
   );
 
   /**
@@ -337,15 +410,24 @@ export function useBoard({
     const queue = state.queue;
     const whole =
       state.overflow || state.reload || queue.some((event) => event.type === "column.changed");
+    const columns = [...staleColumns.current];
+    const tasks = [...staleTasks.current];
     state.queue = [];
     state.overflow = false;
     state.reload = false;
+    staleColumns.current.clear();
+    staleTasks.current.clear();
     if (whole) {
       void reload();
       return;
     }
     for (const event of queue) apply(event);
-  }, [apply, reload]);
+    // What came back during the drag or the move (WS-123 section 4).
+    for (const [taskId, ordered] of tasks) void refreshTask(taskId, ordered);
+    for (const [columnId, triggers] of columns) {
+      void readColumn(columnId, triggers).catch(() => reload());
+    }
+  }, [apply, readColumn, refreshTask, reload]);
 
   useEffect(() => {
     flushHeld.current = flush;
@@ -477,7 +559,7 @@ export function useBoard({
         const moved = summaryOf(await moveTask(taskId, request));
         try {
           // In its own column, whatever the board did meanwhile (WS-082).
-          await placeTask(moved);
+          await placeTask(moved, { own: true });
         } catch {
           held.current.reload = true;
         }

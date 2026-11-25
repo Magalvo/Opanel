@@ -921,7 +921,7 @@ describe("useBoard: events during a load (WS-082)", () => {
 });
 
 describe("useBoard: the board stays consistent (WS-082)", () => {
-  it("puts a move's answer in the column it names, even after a refresh put the card back (test 9)", async () => {
+  it("puts a move's answer in the column it names, even when a refresh answers during the move (test 9)", async () => {
     const t2v5 = { ...t2, version: 5 };
     const t2v6 = { ...t2, columnId: doing.id, version: 6 };
     on(COLUMN_TASKS(todo.id), page([t1, t2v5]));
@@ -932,7 +932,11 @@ describe("useBoard: the board stays consistent (WS-082)", () => {
 
     const answer = pendingMove(result);
     await refreshed(json(full(t2v5)));
-    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+    // Nothing changes under the move (WS-123 section 4): the card stays where it was dropped.
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1"]);
+    expect(keys(result.current.board, doing.id)).toEqual(["OPA-2", "OPA-3"]);
+    // The refresh is fetched again after the move, and the server now holds the move.
+    on(`GET /api/v1/tasks/${t2.id}`, json(full(t2v6)));
     await answer(json(full(t2v6)));
     await act(settle);
 
