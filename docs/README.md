@@ -197,6 +197,7 @@ operations (doc 0006), are done.
 | [WI-127](work-items/WI-127-node-image-pin.md)                   | The Node.js base image pin is current                             | [WS-127](work-specs/WS-127-node-image-pin.md)                   |
 | [WI-128](work-items/WI-128-live-e2e-readiness.md)               | The live end-to-end tests wait for what they measure              | [WS-128](work-specs/WS-128-live-e2e-readiness.md)               |
 | [WI-129](work-items/WI-129-a11y-contrast-focus-motion.md)       | Destructive contrast, settings dialog focus, still skeletons      | [WS-129](work-specs/WS-129-a11y-contrast-focus-motion.md)       |
+| [WI-130](work-items/WI-130-task-list-view.md)                   | The list view of tasks, with sortable headers                     | [WS-130](work-specs/WS-130-task-list-view.md)                   |
 
 ## Follow-ups
 
