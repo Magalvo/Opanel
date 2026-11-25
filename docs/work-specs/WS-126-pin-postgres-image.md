@@ -64,9 +64,9 @@ advisories (WS-061), a script fails once a pinned tag has moved on:
   (its service has `build:`).
 - `stalePins(pins, resolved)` (pure): each pin whose tag now resolves to another digest,
   with both digests.
-- `main()`: runs the `imagetools inspect` command above for each pin's `repository:tag`, validates the output with Zod (`{ digest }`), and
-  prints for each stale pin: the tag, the pinned digest, the current one, and "see
-  CONTRIBUTING.md, Image pins". Exit code 1 if any is stale, 0 otherwise, naming the pins
+- `main()`: runs the `imagetools inspect` command above for each pin's `repository:tag`,
+  validates the output with Zod (`{ digest }`), and prints for each stale pin: the tag,
+  the pinned digest, the current one, and "see CONTRIBUTING.md, Image pins". Exit code 1 if any is stale, 0 otherwise, naming the pins
   it checked.
 
 It runs as a new step of `.github/workflows/audit.yml` (weekly, Monday 06:17, and by hand),
