@@ -1,6 +1,7 @@
 # WI-128 — The live end-to-end tests wait for what they measure
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-128 and the recommended
+  answers to its open questions)
 - Work-track: none: the two follow-ups "`planning-flow.spec.ts` fails now and then" (found
   in WI-119) and "`live-board.spec.ts:144` fails now and then" (found in WI-123), recorded
   on `main` and marked "To be answered by WI-128" in `ce1ac26`

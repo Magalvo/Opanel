@@ -1,6 +1,7 @@
 # WS-128 — The live end-to-end tests wait for what they measure
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to
+  its open questions)
 - Work-item: [WI-128](../work-items/WI-128-live-e2e-readiness.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (events are not replayed; a
   page reloads on open and after a reconnect); WS-048 (the live board and its end-to-end
