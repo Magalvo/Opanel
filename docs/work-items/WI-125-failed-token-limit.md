@@ -12,7 +12,7 @@ A client that keeps sending API tokens that do not authenticate is slowed down b
 itself, per client address, before each attempt reaches the database.
 
 Today the per-token limit (600 a minute, WS-072) counts only after a token has
-authenticated. A well-formed but wrong token (`opa_<public id>_<secret>`) costs an indexed
+authenticated. A well-formed but wrong token (`opk_<public id>_<secret>`) costs an indexed
 lookup of `api_tokens` every time and consumes no limit at all; WS-072 handed this to the
 reverse proxy, but the example Caddyfile sets no limit. It is an availability concern, not a
 way to guess a token: the secret is random. The audit asks for it to be fixed before any
