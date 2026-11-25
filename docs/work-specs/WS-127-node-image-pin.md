@@ -1,7 +1,7 @@
 # WS-127 — The Node.js base image pin is current
 
-- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to
-  its open questions)
+- Status: Done (approved by the owner on 2026-11-25, with the recommended answers to
+  its open questions; done on 2026-11-25)
 - Work-item: [WI-127](../work-items/WI-127-node-image-pin.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) section 3 (every image pinned by
   digest, a weekly check); WS-062 (the image, its Node.js base pinned by digest), WS-126
@@ -142,4 +142,6 @@ pinned sha256:e9f565d3…`.
   caddy:2-alpine, node:22-bookworm-slim." The guard's red fixture (plan test 1) is the
   assertion that tag `22-bookworm-slim` and `.nvmrc` `24` differ in major version.
 - Gate on the branch: `pnpm check` passed; `pnpm test` 2413/2413; `pnpm test:e2e` 123/123.
-- Plan test 5 (the PR's `Production image` workflow) is recorded on the pull request.
+- Plan test 5: on PR #131 the `Production image smoke test` job passed (3m45s; install,
+  migrations, proxy, backup restored into a new install, on the new base), with every other
+  check. `check-image-pins.ts` was run again before the merge: every pin current.
