@@ -448,6 +448,21 @@ Optimisations found by the same audit, none urgent:
 - CI: Playwright browsers and `.next/cache` are not cached; the image build has no
   BuildKit cache. (The serial job is answered by WI-103: static checks, Vitest and
   end-to-end run as parallel jobs.)
+- **Dialogs outside the project settings drop the focus on close** (found in WI-129,
+  2026-11-25; WS-129, question 2). Opened without a `DialogTrigger` and with no
+  `onCloseAutoFocus`: the People page's confirmations and its link dialog
+  (`people-page.tsx`, `link-dialog.tsx`, opened from a row's menu), a team's "Delete team"
+  confirmation (`team-page.tsx`) and an agent's confirmations (`agent-detail.tsx`). Needs a
+  work-item, which also decides where the focus goes after a menu item opened the dialog.
+- **Dialog animations ignore reduced motion** (found in WI-129, 2026-11-25; WS-129, question
+  5). `tw-animate-css` 1.4.0 has no `prefers-reduced-motion` rule, so every dialog's fade
+  and zoom (100 ms) runs when the person asks for reduced motion.
+- **`mcp/e2e/write-tools.spec.ts` fails now and then** (found in WI-129, 2026-11-25). Once in
+  a full run the task history came back as `field_changed`, `created` instead of `created`,
+  `field_changed`; alone, 10 of 10 passed. The check orders by `created_at, id`
+  (`mcp/e2e/agent.ts`), and ids are random, so two events with the same `created_at` come
+  back in either order. Needs a work-item: find why the two instants tie, and order by
+  something that cannot.
 
 From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none urgent:
 
