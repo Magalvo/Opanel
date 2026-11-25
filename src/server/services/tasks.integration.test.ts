@@ -10,7 +10,16 @@ import { ApiError } from "@/server/http/errors";
 
 import { createColumn, deleteColumn, listColumns, moveColumn } from "./columns";
 import { archiveProject, createProject } from "./projects";
-import { createTask, getTask, listTasks, updateTask } from "./tasks";
+import { recordingDb } from "./recording-db-testing";
+import {
+  createTask,
+  deleteTask,
+  getTask,
+  listTasks,
+  moveTask,
+  restoreTask,
+  updateTask,
+} from "./tasks";
 import { addTeamMember, createTeam, deleteTeam } from "./teams";
 
 const UNKNOWN = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
@@ -399,5 +408,45 @@ describe("team_in_use and column_not_empty", () => {
     );
     await deleteTeam(managerActor, free.id);
     await deleteColumn(managerActor, empty.id);
+  });
+});
+
+describe("what the task reads take from the database (WS-122)", () => {
+  it("listTasks reads no description, filtered, searched, paged or deleted (test 1)", async () => {
+    const { actor, managerActor, columns } = await setup();
+    for (const title of ["Alpha", "Beta", "Gamma"]) {
+      await createTask(actor, "OPA", { title, description: `About ${title}` });
+    }
+    await createTask(actor, "OPA", { title: "Gone", description: "Deleted" });
+    await deleteTask(managerActor, "OPA-4");
+    const recording = recordingDb();
+
+    const first = await listTasks(actor, "OPA", { limit: 2 }, recording.db);
+    await listTasks(actor, "OPA", { limit: 2, cursor: first.nextCursor ?? "" }, recording.db);
+    await listTasks(
+      actor,
+      "OPA",
+      { limit: 50, columnId: [columns[0]?.id ?? ""], q: "alpha" },
+      recording.db,
+    );
+    await listTasks(managerActor, "OPA", { limit: 50, deleted: "true" }, recording.db);
+
+    expect(recording.taskRows()).not.toHaveLength(0);
+    for (const row of recording.taskRows()) expect(Object.keys(row)).not.toContain("description");
+  });
+
+  it("one task's answers still carry its description (test 4)", async () => {
+    const { actor, managerActor, columns } = await setup();
+
+    const created = await createTask(actor, "OPA", { title: "A", description: "Kept" });
+    const read = await getTask(actor, "OPA-1");
+    const updated = await updateTask(actor, "OPA-1", { title: "B", version: 1 });
+    const moved = await moveTask(actor, "OPA-1", { columnId: columns[1]?.id ?? "", version: 2 });
+    await deleteTask(managerActor, "OPA-1");
+    const restored = await restoreTask(managerActor, "OPA-1");
+
+    for (const task of [created, read, updated, moved, restored]) {
+      expect(task.description).toBe("Kept");
+    }
   });
 });

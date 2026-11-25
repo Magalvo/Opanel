@@ -65,12 +65,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Every column of a task's API shape, plus the two positions for the board cursor. A task
- * in the backlog has no column (WS-101), so the join on columns is a left join.
+ * in the backlog has no column (WS-101), so the join on columns is a left join. Lists leave
+ * the description out: their answer has none, and it can be 50 000 characters (WS-122).
  */
-function taskSelect(extra: SQL = sql``): SQL {
+function taskSelect(extra: SQL = sql``, { description = false } = {}): SQL {
   return sql`
   select ${extra} t.id, t.number, p.key as project_key, p.name as project_name,
-    c.name as column_name, c.category as column_category, t.project_id, t.type, t.title, t.description,
+    c.name as column_name, c.category as column_category, t.project_id, t.type, t.title,
+    ${description ? sql`t.description,` : sql``}
     t.column_id, t.assignee_team_id, t.assignee_account_id, t.epic_id,
     e.title as epic_title,
     tm.name as team_name,
@@ -97,9 +99,13 @@ function taskSelect(extra: SQL = sql``): SQL {
   left join epics e on e.id = t.epic_id`;
 }
 
-const TASK_SELECT = taskSelect();
+/** One task, with its description. */
+const TASK_SELECT = taskSelect(sql``, { description: true });
+/** A list's tasks, without (WS-122). */
+const SUMMARY_SELECT = taskSelect();
 
-interface TaskRow extends Record<string, unknown> {
+/** A row of `SUMMARY_SELECT`: what a list reads. */
+interface SummaryRow extends Record<string, unknown> {
   id: string;
   number: number;
   project_key: string;
@@ -109,7 +115,6 @@ interface TaskRow extends Record<string, unknown> {
   project_id: string;
   type: TaskType;
   title: string;
-  description: string;
   column_id: string | null;
   assignee_team_id: string | null;
   assignee_account_id: string | null;
@@ -136,7 +141,12 @@ interface TaskRow extends Record<string, unknown> {
   deleted_at: string | null;
 }
 
-function toSummary(row: TaskRow): TaskSummary {
+/** A row of `TASK_SELECT`: one task. */
+interface TaskRow extends SummaryRow {
+  description: string;
+}
+
+function toSummary(row: SummaryRow): TaskSummary {
   return {
     id: row.id,
     key: `${row.project_key}-${String(row.number)}`,
@@ -173,7 +183,7 @@ function toSummary(row: TaskRow): TaskSummary {
   };
 }
 
-function toListItem(row: TaskRow): TaskListItem {
+function toListItem(row: SummaryRow): TaskListItem {
   return {
     ...toSummary(row),
     project: { id: row.project_id, key: row.project_key, name: row.project_name },
@@ -335,8 +345,8 @@ export async function listTasks(
     ? sql`t.deleted_at is not null`
     : sql`t.deleted_at is null and t.column_id is not null`;
 
-  const rows = await db.execute<TaskRow>(sql`
-    ${TASK_SELECT}
+  const rows = await db.execute<SummaryRow>(sql`
+    ${SUMMARY_SELECT}
     where t.project_id = ${project.id} and ${live}
       ${filtered} ${after}
     order by ${columnOrder}, t.position, t.id
@@ -380,8 +390,8 @@ export async function listBacklog(
           return sql`and (t.position, t.id) > (${cursor.position}::text collate "C", ${cursor.id}::uuid)`;
         })();
 
-  const rows = await db.execute<TaskRow>(sql`
-    ${TASK_SELECT}
+  const rows = await db.execute<SummaryRow>(sql`
+    ${SUMMARY_SELECT}
     where t.project_id = ${project.id} and t.column_id is null and t.deleted_at is null
       ${filtered} ${after}
     order by t.position, t.id
@@ -560,7 +570,7 @@ export async function listAllTasks(
     sql`, `,
   )}] as sort_values,`;
 
-  const rows = await db.execute<TaskRow & { sort_values: string[] }>(sql`
+  const rows = await db.execute<SummaryRow & { sort_values: string[] }>(sql`
     ${taskSelect(sortValues)}
     where t.deleted_at is null and ${scope} ${filtered} ${after}
     order by ${order}
