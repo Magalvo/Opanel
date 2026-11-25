@@ -251,19 +251,16 @@ Other follow-ups:
   `GET /tasks/{taskId}/activity`, in the same WT-11 work-item as the three tools above
   and below, once WT-08 items B and C are done.
 
-- **`planning-flow.spec.ts` fails now and then** (found in WI-119, 2026-11-24). After
-  "Move to board", the open backlog sometimes still lists the task after 5 s (line 101).
-  Repeated five times with `backlog.spec.ts`: 1 of 17 failed on `main`, and 3 of 17 then
-  0 of 17 on the branch of WI-119. CI has not shown it yet. Needs a work-item: find whether
-  the page misses the `task.moved` event or the move answer, rather than waiting longer.
-  To be answered by WI-128.
+- **Answered by WI-128 (2026-11-25): `planning-flow.spec.ts` failed now and then** (found
+  in WI-119). The test clicked "Move to board" before the open backlog showed the change
+  saved in the other tab, so the move sent a stale version and was refused with `409`, as
+  WS-109 designs it. It now waits for the backlog row to show that change, and checks
+  that the move answers `200`.
 
-- **`live-board.spec.ts:144` fails now and then** (found in WI-123, 2026-11-25). "A
-  deleted task disappears from the other board" sometimes still shows the task on the
-  other board after 2 s: once in five repeats of the spec on the branch of WI-123, and once
-  in ten on `main` (`83c5272`), under parallel workers; never when run alone (10 of 10 on
-  each). Needs a work-item with the `planning-flow.spec.ts` one above: find whether the
-  page misses the event, rather than waiting longer. To be answered by WI-128.
+- **Answered by WI-128 (2026-11-25): `live-board.spec.ts:144` failed now and then** (found
+  in WI-123). No event was missed: the test started its 2 s on the other board at the
+  click, while under load the `DELETE` itself took up to more than 2 s. It now waits for
+  the `DELETE` to answer first.
 
 - **An open board needs two reads to show a created, restored or moved task** (found in
   WI-128, 2026-11-25). A thin task event makes the board read the task, then its column,
