@@ -196,6 +196,7 @@ operations (doc 0006), are done.
 | [WI-126](work-items/WI-126-pin-postgres-image.md)               | The production database image is pinned by digest                 | [WS-126](work-specs/WS-126-pin-postgres-image.md)               |
 | [WI-127](work-items/WI-127-node-image-pin.md)                   | The Node.js base image pin is current                             | [WS-127](work-specs/WS-127-node-image-pin.md)                   |
 | [WI-128](work-items/WI-128-live-e2e-readiness.md)               | The live end-to-end tests wait for what they measure              | [WS-128](work-specs/WS-128-live-e2e-readiness.md)               |
+| [WI-129](work-items/WI-129-a11y-contrast-focus-motion.md)       | Destructive contrast, settings dialog focus, still skeletons      | [WS-129](work-specs/WS-129-a11y-contrast-focus-motion.md)       |
 
 ## Follow-ups
 
@@ -351,14 +352,14 @@ Other follow-ups:
 - Give the shared `destructive` button style enough contrast in light mode: red text on its
   pale red background is 4:1, below the 4.5:1 of WCAG AA (found by axe in WI-035). It
   affects the confirmation buttons of the People and Teams pages; the Agents page avoids it
-  (WS-077, deviation 2).
+  (WS-077, deviation 2). To be answered by WI-129.
 - **Answered by WI-083 (2026-11-19): document every `409` of the operations that check
   `version`** (WS-036, question 4). The six versioned writes document `anyOf` their
   version conflict and `Problem`, and name each other code they answer.
 - The project settings dialogs (Add column, Edit column) have no `DialogTrigger`, so on
   close Radix moves the focus to the page body instead of the button that opened them
   (seen in a browser while checking WI-037; the board's "Add task" dialog returns it
-  explicitly, see WS-037 "Deviations"). Needs its own work-item.
+  explicitly, see WS-037 "Deviations"). Needs its own work-item. To be answered by WI-129.
 - Delete the superseded remote branches `claude/wi-038-task-detail`,
   `claude/wi-038-task-detail-spec` and `claude/wi-041-security-headers` (owner's decision
   in WS-038, question 6), `claude/wi-044-request-body-limit` (WS-044, question 5) and
@@ -458,7 +459,7 @@ From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none u
 - A column's category badge often repeats its name and pushes the task count onto a
   second line.
 - The loading skeleton's `animate-pulse` ignores reduced motion; the shadcn/ui `Skeleton`
-  is shared by every page.
+  is shared by every page. To be answered by WI-129.
 
 Findings of the independent audit of 2026-11-24 (of `9424427`, now on `main`; C01 to C06
 are its A01 to A06), each needing a work-item. It also found B06, B07, B09 and B15 above still present, and D11's
