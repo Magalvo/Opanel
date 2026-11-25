@@ -60,8 +60,7 @@ function reading(account: string): () => Promise<{ actor: Actor }> {
 /** A check that settles only when the test says so, one per call. */
 function heldChecks(account: string) {
   const actor = humanActor({ accountId: account, role: "member" });
-  const pending: { resolve: (value: { actor: Actor }) => void; reject: (e: Error) => void }[] =
-    [];
+  const pending: { resolve: (value: { actor: Actor }) => void; reject: (e: Error) => void }[] = [];
   const authenticate = vi.fn(
     () =>
       new Promise<{ actor: Actor }>((resolve, reject) => {
