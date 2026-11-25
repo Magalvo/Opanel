@@ -180,7 +180,9 @@ describe("the repository's images (WS-126)", () => {
       "Dockerfile, NODE_IMAGE",
     ]);
     for (const pin of pins) {
-      expect(pin.digest ?? "no digest", `${pin.source}: ${pin.reference}`).toMatch(/^sha256:[0-9a-f]{64}$/);
+      expect(pin.digest ?? "no digest", `${pin.source}: ${pin.reference}`).toMatch(
+        /^sha256:[0-9a-f]{64}$/,
+      );
     }
   });
 

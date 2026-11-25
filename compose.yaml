@@ -3,6 +3,9 @@ name: opanel
 
 services:
   db:
+    # Floating on purpose (WS-126): development and CI meet each PostgreSQL 18 patch release
+    # before production's pin (docker/production/services.yaml) moves to it. The tag must
+    # stay the one production pins; scripts/check-image-pins.test.ts checks it.
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
