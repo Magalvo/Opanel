@@ -1,7 +1,7 @@
 # WS-128 — The live end-to-end tests wait for what they measure
 
-- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to
-  its open questions)
+- Status: Done (approved by the owner on 2026-11-25, with the recommended answers to its
+  open questions; done on 2026-11-25)
 - Work-item: [WI-128](../work-items/WI-128-live-e2e-readiness.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) (events are not replayed; a
   page reloads on open and after a reconnect); WS-048 (the live board and its end-to-end
@@ -208,6 +208,9 @@ the first load", WS-109's refused move that reloads and explains).
 
 ## Risks and open questions
 
+Both questions were answered by the owner on 2026-11-25 as recommended: the restore step is
+left to a follow-up, and the archive test is left alone.
+
 1. **The restore step at heavier load than configured.** At 6 workers it failed 3 of 15
    because board `b` reads the task, then its column, before showing it (section 1). It is
    not seen at 4 workers. Recommended: leave it, and record the measurements as a
@@ -218,3 +221,41 @@ the first load", WS-109's refused move that reloads and explains).
 2. **Other tests with the same shape.** The archive test of `live-board.spec.ts` also
    starts its 2 s at a click, without waiting for the answer; it did not fail in runs 1 to 3. Recommended: leave it (one work-item, the two follow-ups); if the owner prefers, it
    gets the same `waitForResponse` here, under the same criterion as section 3.
+
+## Deviations from the approved spec
+
+None. The comments of the two tests say why each wait is there and name WS-128.
+
+## Implementation record
+
+- Red, deterministic (plan tests 1 and 3, 2026-11-25, temporary `page.route` delays as in
+  section 4, never committed): both tests failed at the follow-ups' lines. Planning: "Plan
+  the release" still in the backlog after 5 s, and its trace shows the `PATCH` answering
+  `200`, then `POST …/move` answering `409`. Delete: board `b` still showed "Echo" after
+  2 s.
+- Green (plan tests 2 and 4): with sections 2 and 3 and the same delays, both passed. The
+  delays were then removed.
+- Under load (plan test 5), `live-board.spec.ts`, `planning-flow.spec.ts` and
+  `backlog.spec.ts` with `--repeat-each=15` (167 tests):
+
+  | Workers | Result               | The two checks of this item | Other failures                                    |
+  | ------- | -------------------- | --------------------------- | ------------------------------------------------- |
+  | 4       | 166 passed, 1 failed | 0 of 15 each                | "a task created through the API…", line 141       |
+  | 6       | 165 passed, 2 failed | 0 of 15 each                | the restore step (line 166); a `500` on `/events` |
+  - **The create test at 4 workers.** Its `POST /tasks` answered `201`; board `b` read the
+    task at once, then its column (`GET …/tasks?columnId=…`, 1.2 s under load), and the card
+    showed about 2 s after the answer. It is question 1's two reads, here at the configured 4
+    workers and in another test, so the follow-up records it.
+  - **The restore step at 6 workers**: 1 of 15 (3 of 15 in run 3), question 1.
+  - **The `500` at 6 workers**: `backlog.spec.ts:75`, the stream of `openBacklog`; the
+    server logged `AggregateError code=ETIMEDOUT`, a database connection to `localhost:5433`
+    not made in time, so overload of this machine's Docker PostgreSQL above the configured
+    workers.
+
+  The logs and traces are in the session notes folder (`WI-128-traces`, `after-*`).
+
+- Gate on the branch: `pnpm check` passed; `pnpm test` 2413 of 2413 (229 files);
+  `pnpm test:e2e` 123 of 123.
+- Follow-up recorded on `main`: a task event that names its column, so a board shows a
+  created, restored or moved task with one read instead of two (question 1, with the
+  measurements above).

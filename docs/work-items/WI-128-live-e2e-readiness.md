@@ -1,7 +1,7 @@
 # WI-128 — The live end-to-end tests wait for what they measure
 
-- Status: In progress (approved by the owner on 2026-11-25, with WS-128 and the recommended
-  answers to its open questions)
+- Status: Done (approved by the owner on 2026-11-25, with WS-128 and the recommended
+  answers to its open questions; done on 2026-11-25)
 - Work-track: none: the two follow-ups "`planning-flow.spec.ts` fails now and then" (found
   in WI-119) and "`live-board.spec.ts:144` fails now and then" (found in WI-123), recorded
   on `main` and marked "To be answered by WI-128" in `ce1ac26`
@@ -28,20 +28,20 @@ The investigation (WS-128 section 1) found no missed event and no app defect:
 
 ## Acceptance criteria
 
-- [ ] `planning-flow.spec.ts` clicks "Move to board" only once the open backlog shows the
+- [x] `planning-flow.spec.ts` clicks "Move to board" only once the open backlog shows the
       change saved in the task detail (the row's "Priority: High"), and that move answers
       `200`.
-- [ ] `live-board.spec.ts`, "a deleted task disappears from the other board…", starts its
+- [x] `live-board.spec.ts`, "a deleted task disappears from the other board…", starts its
       2 s check on the other board once the `DELETE` has answered `204`, as the move test
       starts its own once `/move` has answered.
-- [ ] Each fix is shown red first by a deterministic reproduction: with the matching
+- [x] Each fix is shown red first by a deterministic reproduction: with the matching
       request delayed by `page.route` (not committed), the test as it is fails at the line
       of the follow-up, and the changed test passes with the same delay.
-- [ ] No timeout is raised and no retry is added; the application code does not change.
-- [ ] Under load (`--repeat-each=15` of `live-board.spec.ts`, `planning-flow.spec.ts` and
+- [x] No timeout is raised and no retry is added; the application code does not change.
+- [x] Under load (`--repeat-each=15` of `live-board.spec.ts`, `planning-flow.spec.ts` and
       `backlog.spec.ts`, at the configured 4 workers), neither of the two checks fails; the
       counts are recorded in WS-128.
-- [ ] The quality gate passes.
+- [x] The quality gate passes.
 
 ## Notes
 
