@@ -7,7 +7,7 @@ doc [0006](canonical/0006-operations.md).
 
 Every command given for the example install is one that CI runs on every change to the
 image, through the scripts of the image workflow (`scripts/smoke-production.sh`,
-`scripts/smoke-proxy.sh`, `scripts/rehearse-backup.sh`). The two procedures CI does not
+`scripts/smoke-proxy.sh`, `scripts/rehearse-backup.sh`). The three procedures CI does not
 rehearse say so where they appear.
 
 ## Before you start
@@ -26,10 +26,17 @@ rehearse say so where they appear.
 The example install, [`compose.production.yaml`](../compose.production.yaml), is an
 example, not the only supported setup. It runs:
 
-- `db`: PostgreSQL 18, its data in the `db-data` volume;
+- `db`: PostgreSQL 18 (the `postgres:18-alpine` image), its data in the `db-data` volume;
 - `migrate`: applies pending migrations once, then exits;
 - `app`: Opanel, started only after `migrate` succeeded, published on `127.0.0.1:3000`;
 - `proxy`: the example HTTPS proxy (Caddy), only with `--profile proxy`.
+
+Every image the example pulls, and the base of Opanel's image, is pinned by digest
+(`repository:tag@sha256:…` in [`docker/production/services.yaml`](../docker/production/services.yaml)
+and the `Dockerfile`), so a revision of this repository always installs the same images.
+The repository moves the pins when an image has a patch or security release; an install
+picks them up when it upgrades to that revision. To update the database's image yourself
+in between, see "Updating PostgreSQL" under "Upgrade".
 
 The database has two roles. `opanel` owns the schema; `migrate` and backups use it.
 `opanel_app` is what the app connects as: it can read and write the application's data,
@@ -197,6 +204,63 @@ If the app and the database do not match, the app stops at start-up and its log 
 sides, for example "The database schema is behind this version of Opanel: its last
 migration is …, this version needs …. Run migrate first." A database newer than the app
 means the app is the older version: start the version that migrated it, or restore.
+
+### Updating PostgreSQL
+
+The `db` image is pinned by digest, so it never changes by itself: security and bug fixes
+of PostgreSQL and of its Alpine base arrive when the pin moves. Opanel's repository moves
+it (an upgrade to a newer revision brings it); to move it sooner, do as below. Watch the
+[PostgreSQL release announcements](https://www.postgresql.org/support/versioning/): patch
+releases come out at least once a quarter.
+
+A **patch update within 18** (18.7 to 18.8, or a rebuild of the same version) keeps the
+on-disk format: the new image runs on the existing volume.
+
+1. Read the release notes of every version you skip: some ask for a step after updating,
+   such as a `REINDEX`.
+2. Resolve the digest the tag now points to (this reads the manifest from the registry,
+   it pulls no image), and put it in place of the old one in
+   `docker/production/services.yaml`, with the comment above it:
+
+   ```bash
+   docker buildx imagetools inspect postgres:18-alpine
+   ```
+
+   The first `Digest:` printed is the one to pin: it covers every platform.
+
+3. Rehearse it on any machine with Docker (and Node.js for the second script), before
+   touching the install. These are the scripts CI runs on every change to a pin: install
+   and migrations, then a backup restored into a new install:
+
+   ```bash
+   bash scripts/smoke-production.sh
+   bash scripts/rehearse-backup.sh
+   ```
+
+4. Back up (see "Backup and restore"), then recreate only the database on the new image;
+   the volume stays. Check it, then the app:
+
+   ```bash
+   docker compose -f compose.production.yaml up -d db
+   docker compose -f compose.production.yaml exec -T db pg_isready -h 127.0.0.1 -U opanel -d opanel
+   docker compose -f compose.production.yaml exec -T db postgres --version
+   curl -fsS http://127.0.0.1:3000/api/v1/health
+   ```
+
+5. To go back, put the old digest back and run `up -d db` again: within one major version
+   the data directory works both ways. If the database is not healthy, restore the backup
+   into a new install.
+
+Steps 4 and 5 are not rehearsed by CI: it installs each pinned image new and never swaps
+the image under an existing volume.
+
+A **new major version** (19) is not an image swap. Never change `18` in the tag of an
+existing install: the 18 image keeps its data in `/var/lib/postgresql/18/docker` of the
+volume, and a 19 image finds no cluster of its own there, so it creates a new, empty one
+beside it, and Opanel starts on an empty database. A major upgrade is a backup with the old
+image restored into a new volume with the new one ("Restoring into a new install"), and
+only once a version of Opanel moves to that major: its development, CI and example install
+move first. `pg_upgrade` is neither rehearsed nor described here.
 
 ## Backup and restore
 

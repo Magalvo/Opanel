@@ -46,6 +46,11 @@ implements it.
   one-shot `migrate` service, and PostgreSQL with a named volume. `compose.yaml` stays the
   development and CI file. The operator fills in one env file; each service receives only
   its own variables from it (section 5, amended by WS-079).
+- Every image the example install pulls, and the base of the `Dockerfile`, is pinned by
+  digest (`repository:tag@sha256:…`; WS-062, WS-067, WS-126), so a revision always installs
+  the same images; a weekly check of the audit workflow fails once a pinned tag has moved,
+  so a pin does not hold back security updates. `compose.yaml` keeps the database's tag
+  without a digest, so development and CI meet a PostgreSQL patch release first.
 - One app process (doc 0002: the event hub lives in memory). Scaling out is out of scope
   for v1 and is refused in the docs, not silently allowed.
 - Configuration stays the validated environment of `src/server/env.ts`; the image adds no
@@ -96,6 +101,9 @@ WI-041).
   start the new app, check `GET /api/v1/health`. A failed migration leaves the old schema
   in place (each migration runs in a transaction); the operator restores the backup to go
   back to the previous version.
+- PostgreSQL: a patch update within one major version is a new image on the same volume;
+  a new major version is a backup restored into a new volume, never a tag change on an
+  existing one (WS-126, `docs/operations.md`).
 - The app refuses to start when the database has migrations it does not know (a newer
   schema) or lacks ones it needs (an older one), with a message naming both.
 

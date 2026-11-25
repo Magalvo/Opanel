@@ -2,7 +2,8 @@ name: Dependency audit
 
 # Reports known advisories in production dependencies (WS-053). Its own workflow, so that an
 # advisory published today does not fail unrelated pull requests: it runs weekly, by hand,
-# and on any change to the dependencies. What to do when it fails: see CONTRIBUTING.md.
+# and on any change to the dependencies. Weekly and by hand, it also checks that the pinned
+# images are current (WS-126). What to do when it fails: see CONTRIBUTING.md.
 on:
   schedule:
     - cron: "17 6 * * 1"
@@ -58,3 +59,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: pnpm exec tsx scripts/check-ignored-advisories.ts
+
+      # Every image the example install pulls, and the Dockerfile's base, is pinned by
+      # digest; this fails once a pinned tag resolves to another digest, so a pin does not
+      # hold back security updates (WS-126). Weekly and by hand only: an image release must
+      # not fail an unrelated pull request.
+      - name: Pinned images are current
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: pnpm exec tsx scripts/check-image-pins.ts
