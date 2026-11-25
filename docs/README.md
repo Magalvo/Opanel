@@ -367,6 +367,10 @@ Other follow-ups:
   page, a candidate for the production deployment track (WS-055, question 3). It belongs
   with the last-Admin recovery command above.
 - Upgrade Node.js from 22 to 24 LTS (`engines`, `.nvmrc`, `@types/node`, CI).
+- **The Node.js base image pin of the `Dockerfile` is stale** (found in WI-126,
+  2026-11-25): `node:22-bookworm-slim` resolves to `sha256:be979e55…`, the `Dockerfile`
+  pins `sha256:e9f565d3…`, so the weekly `scripts/check-image-pins.ts` of the audit workflow
+  fails until it moves. Move it as `CONTRIBUTING.md` "Image pins" says.
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
 - Add Firefox and WebKit to the end-to-end tests once there is real UI to protect.
