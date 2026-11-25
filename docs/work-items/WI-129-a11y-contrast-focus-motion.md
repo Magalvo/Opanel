@@ -1,6 +1,7 @@
 # WI-129 — Destructive contrast, settings dialog focus, still skeletons
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-129 and the recommended
+  answers to its open questions)
 - Work-track: none: three accessibility follow-ups of `docs/README.md`, scheduled after the
   independent audit of 2026-11-24
 - Depends on: none

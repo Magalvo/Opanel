@@ -1,6 +1,7 @@
 # WS-129 — Destructive contrast, settings dialog focus, still skeletons
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to its
+  open questions)
 - Work-item: [WI-129](../work-items/WI-129-a11y-contrast-focus-motion.md)
 - Canonical docs: none changes. Earlier specs this follows: WS-035 and WS-077 deviation 2
   (the contrast workaround), WS-037 "Deviations" (the board's "Add task" dialog returns the
