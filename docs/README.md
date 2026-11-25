@@ -192,6 +192,7 @@ operations (doc 0006), are done.
 | [WI-122](work-items/WI-122-task-list-summary-select.md)         | Task lists stop reading descriptions                              | [WS-122](work-specs/WS-122-task-list-summary-select.md)         |
 | [WI-123](work-items/WI-123-live-board-consistency.md)           | The live board keeps the newest state                             | [WS-123](work-specs/WS-123-live-board-consistency.md)           |
 | [WI-124](work-items/WI-124-stream-heartbeat.md)                 | Stream heartbeats keep the queue cap and renew no session         | [WS-124](work-specs/WS-124-stream-heartbeat.md)                 |
+| [WI-125](work-items/WI-125-failed-token-limit.md)               | Failed API token attempts are limited per address                 | [WS-125](work-specs/WS-125-failed-token-limit.md)               |
 
 ## Follow-ups
 
@@ -383,7 +384,8 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B07: failed bearer-token attempts are not rate limited (the per-token limiter runs after
   authentication), and the example Caddyfile adds no limit, although WS-072 hands
   unauthenticated limiting to the proxy. Add a per-IP limit for failed token
-  authentication, or a limit in the example proxy and `docs/operations.md`.
+  authentication, or a limit in the example proxy and `docs/operations.md`. To be answered
+  by WI-125.
 - B08 (owner decision): an Admin can issue a reset link for another, active Admin and sign
   in as them. It is audited (`account.reset_link_created` with the issuer as actor).
   Decide whether the API should refuse Admin targets, leaving `recover-admin` as the way.
