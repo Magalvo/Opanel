@@ -8,6 +8,8 @@ import {
   type TaskSummary,
 } from "@/lib/schemas/tasks";
 
+import { uniqueTasks } from "./live";
+
 export { listColumns } from "@/components/projects/api";
 
 /** Every task of the project, in board order: the board loads every page (WT-03 decision 11). */
@@ -24,7 +26,8 @@ export async function listAllTasks(projectKey: string): Promise<TaskSummary[]> {
     tasks.push(...page.items);
     cursor = page.nextCursor;
   } while (cursor !== null);
-  return tasks;
+  // A task moved during the load can be listed twice (WS-123 section 5).
+  return uniqueTasks(tasks);
 }
 
 export function createTask(projectKey: string, body: CreateTaskRequest) {
@@ -56,5 +59,6 @@ export async function listColumnTasks(
     tasks.push(...page.items);
     cursor = page.nextCursor;
   } while (cursor !== null);
-  return tasks;
+  // A task moved during the load can be listed twice (WS-123 section 5).
+  return uniqueTasks(tasks);
 }

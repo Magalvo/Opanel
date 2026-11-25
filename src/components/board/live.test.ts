@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { heldVersion, isNewer, removeTask, replaceColumn, replaceInPlace } from "./live";
+import {
+  heldVersion,
+  isNewer,
+  removeTask,
+  replaceColumn,
+  replaceInPlace,
+  uniqueTasks,
+} from "./live";
 import { doing, done, task, todo } from "./test-data";
 
 const t1 = task(1, todo.id, { version: 3 });
@@ -74,5 +81,41 @@ describe("replaceColumn", () => {
 
   it("ignores a column the board does not have", () => {
     expect(replaceColumn(board, "99999999-9999-4999-8999-999999999999", [t1])).toBe(board);
+  });
+});
+
+describe("uniqueTasks: one item per task (WS-123 test 3)", () => {
+  it("keeps the newest version of a repeated task, at its place", () => {
+    const old = task(1, todo.id, { version: 1 });
+    const moved = task(1, done.id, { version: 2 });
+    const t4 = task(4, done.id);
+
+    const unique = uniqueTasks([old, t2, moved, t4]);
+
+    expect(unique.map((item) => [item.key, item.columnId])).toEqual([
+      ["OPA-2", todo.id],
+      ["OPA-1", done.id],
+      ["OPA-4", done.id],
+    ]);
+  });
+
+  it("keeps the earlier place when the newer version comes first", () => {
+    const newer = task(1, todo.id, { version: 3 });
+    const older = task(1, done.id, { version: 2 });
+
+    expect(uniqueTasks([newer, t2, older])).toEqual([newer, t2]);
+  });
+
+  it("keeps the later one on a tie", () => {
+    const first = task(1, todo.id, { version: 2 });
+    const later = task(1, done.id, { version: 2 });
+
+    expect(uniqueTasks([first, t2, later])).toEqual([t2, later]);
+  });
+
+  it("leaves a list without repeats as it is", () => {
+    const list = [t1, t2, t3];
+
+    expect(uniqueTasks(list)).toEqual(list);
   });
 });
