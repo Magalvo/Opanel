@@ -22,18 +22,18 @@ workflow rehearse it. The Node.js major version (22, of `.nvmrc`) does not chang
 
 ## Acceptance criteria
 
-- [ ] `ARG NODE_IMAGE` in the `Dockerfile` is `node:22-bookworm-slim@sha256:<digest>`, the
+- [x] `ARG NODE_IMAGE` in the `Dockerfile` is `node:22-bookworm-slim@sha256:<digest>`, the
       multi-platform index digest the tag resolves to on the day of implementation.
-- [ ] The comment above it names the Node.js version the digest is (from the image's
+- [x] The comment above it names the Node.js version the digest is (from the image's
       configuration), the date it was resolved, WS-127, and how to update it
       (`CONTRIBUTING.md`, "Image pins").
-- [ ] `pnpm exec tsx scripts/check-image-pins.ts` reports every pin current (exit 0), where
+- [x] `pnpm exec tsx scripts/check-image-pins.ts` reports every pin current (exit 0), where
       before the change it named the Node.js pin as stale (exit 1).
-- [ ] A test fails if the major version of the `Dockerfile`'s Node.js tag differs from
+- [x] A test fails if the major version of the `Dockerfile`'s Node.js tag differs from
       `.nvmrc` (WS-127, question 2).
-- [ ] The pull request's `Production image` workflow passes on the new digest: build,
+- [x] The pull request's `Production image` workflow passes on the new digest: build,
       install and migrations, the proxy, and a backup restored into a new install.
-- [ ] The quality gate passes.
+- [x] The quality gate passes.
 
 ## Notes
 

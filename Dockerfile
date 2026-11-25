@@ -5,8 +5,10 @@
 # (WS-066). Every
 # setting comes from the environment at run time; nothing secret is built in.
 
-# Node.js of .nvmrc, pinned by digest. Update both together.
-ARG NODE_IMAGE=node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
+# Node.js 22.23.5, the major version of .nvmrc, pinned by digest on 2026-11-25 (WS-127):
+# the same revision always builds on the same base. Update it with CONTRIBUTING.md,
+# "Image pins"; change the major version only together with .nvmrc.
+ARG NODE_IMAGE=node:22-bookworm-slim@sha256:be979e5523c76fa4d5ca4ebd3099078f220aa47ec39c48ad5b5df9314debd6eb
 
 FROM ${NODE_IMAGE} AS base
 ENV NEXT_TELEMETRY_DISABLED=1

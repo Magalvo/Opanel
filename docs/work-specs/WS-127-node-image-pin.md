@@ -123,3 +123,23 @@ Risks:
   so the app has met recent 22 patches there.
 - The tag can move again between resolving and merging; the check is run again before the
   merge (section 2, step 5), and otherwise next Monday's audit says so.
+
+## Implementation record
+
+- Red, guard (commit `2bfd407`): the three new tests of `check-image-pins.test.ts` failed
+  with "`nvmrcMajor` is not a function"; the other 15 passed.
+- Red, pin (plan test 2, 2026-11-25): `pnpm exec tsx scripts/check-image-pins.ts` exited 1:
+  `node:22-bookworm-slim (Dockerfile, NODE_IMAGE) now resolves to sha256:be979e55…,
+  pinned sha256:e9f565d3…`.
+- Digest (question 1, resolved on 2026-11-25 with `docker buildx imagetools inspect`):
+  `node:22-bookworm-slim` is the OCI index
+  `sha256:be979e5523c76fa4d5ca4ebd3099078f220aa47ec39c48ad5b5df9314debd6eb`, Node.js
+  22.23.5 (`NODE_VERSION` of its image configuration), the digest the follow-up named. No
+  image was pulled or built locally.
+- Green: the pin and its comment in the `Dockerfile`, and `nvmrcMajor` in
+  `scripts/check-image-pins.ts` (`22`, `v22.1.0` → 22, an alias such as `lts/*` → null).
+  `check-image-pins.ts` then exited 0: "Pinned images are current: postgres:18-alpine,
+  caddy:2-alpine, node:22-bookworm-slim." The guard's red fixture (plan test 1) is the
+  assertion that tag `22-bookworm-slim` and `.nvmrc` `24` differ in major version.
+- Gate on the branch: `pnpm check` passed; `pnpm test` 2413/2413; `pnpm test:e2e` 123/123.
+- Plan test 5 (the PR's `Production image` workflow) is recorded on the pull request.
