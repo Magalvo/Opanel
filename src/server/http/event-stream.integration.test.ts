@@ -175,6 +175,54 @@ describe("openEventStream (WS-047)", () => {
   });
 });
 
+describe("openEventStream and session renewal (WS-124)", () => {
+  /** A stream on a session past its one-day renewal age: five of its seven days left. */
+  async function agedStream() {
+    const { member, project, request } = await setup();
+    const expiresAt = new Date(Date.now() + 5 * 86_400_000);
+    await getDb().update(sessions).set({ expiresAt }).where(eq(sessions.accountId, member.id));
+    const reader = await stream({
+      request,
+      projectId: project.id,
+      account: member.id,
+      heartbeatMs: 50,
+    });
+    await reader.next();
+    return { member, reader, expiresAt };
+  }
+
+  it("extends no session over its heartbeats", async () => {
+    const { member, reader, expiresAt } = await agedStream();
+
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+
+    const [row] = await getDb().select().from(sessions).where(eq(sessions.accountId, member.id));
+    expect(row?.expiresAt.getTime()).toBe(expiresAt.getTime());
+  });
+
+  it("ends at the next heartbeat once the session has expired", async () => {
+    const { member, reader } = await agedStream();
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+
+    await getDb()
+      .update(sessions)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(sessions.accountId, member.id));
+
+    await reader.closed();
+  });
+
+  it("ends at the next heartbeat once the session is revoked", async () => {
+    const { member, reader } = await agedStream();
+    expect(await reader.next()).toMatchObject({ comments: ["heartbeat"] });
+
+    await getDb().delete(sessions).where(eq(sessions.accountId, member.id));
+
+    await reader.closed();
+  });
+});
+
 describe("openEventStream with an API token (WS-072)", () => {
   async function agentStream() {
     const manager = await createTestAccount({ email: "manager@example.com", role: "manager" });

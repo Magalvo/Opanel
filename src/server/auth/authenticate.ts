@@ -39,6 +39,11 @@ export interface AuthenticateOptions {
   /** Records a token's use (section 5 of WS-072); replaced in tests. */
   recordTokenUse?: (db: Database, tokenId: string, accountId: string) => Promise<void>;
   logError?: (line: string) => void;
+  /**
+   * `false` checks a session without extending it, for the event stream's heartbeats
+   * (WS-124): only requests a person makes keep a session alive. A token is never renewed.
+   */
+  refreshSession?: boolean;
 }
 
 /**
@@ -59,6 +64,7 @@ export async function authenticate(
 
   const { headers, response } = await getAuth().api.getSession({
     headers: request.headers,
+    query: { disableRefresh: options.refreshSession === false },
     returnHeaders: true,
   });
   if (response === null) {

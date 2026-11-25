@@ -1,9 +1,6 @@
 import type { ProjectEvent } from "@/lib/schemas/events";
-import { can, canAccessProject } from "@/server/auth/actor";
-import {
-  authenticate as authenticateRequest,
-  type Authenticated,
-} from "@/server/auth/authenticate";
+import { type Actor, can, canAccessProject } from "@/server/auth/actor";
+import { authenticate as authenticateRequest } from "@/server/auth/authenticate";
 import { type EventHub, getEventHub } from "@/server/services/event-hub";
 
 import { tooManyStreams } from "./errors";
@@ -15,7 +12,8 @@ export interface EventStreamOptions {
   /** The account the stream counts against (decision 7). */
   account: string;
   hub?: EventHub;
-  authenticate?: (request: Request) => Promise<Authenticated>;
+  /** The heartbeat's credential check; by default one that extends no session (WS-124). */
+  authenticate?: (request: Request) => Promise<{ actor: Actor }>;
   heartbeatMs?: number;
   maxStreamsPerAccount?: number;
   logError?: (message: string) => void;
@@ -30,9 +28,15 @@ const HIGH_WATER_MARK = 64 * 1024;
 const openStreams = new Map<string, number>();
 
 const encoder = new TextEncoder();
+const HEARTBEAT = encoder.encode(": heartbeat\n\n");
 
 function frameOf(event: ProjectEvent): Uint8Array {
   return encoder.encode(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+}
+
+/** Watching a board is not using the app: a heartbeat extends no session (WS-124). */
+function checkWithoutRenewal(request: Request): Promise<{ actor: Actor }> {
+  return authenticateRequest(request, { refreshSession: false });
 }
 
 /**
@@ -41,14 +45,15 @@ function frameOf(event: ProjectEvent): Uint8Array {
  * client has the response reaches it. The stream ends, and gives its place back exactly
  * once, when the client goes away, the reader falls 64 KiB behind, the hub resets, or a
  * heartbeat finds the credentials no longer valid, without `tasks:read`, or without the
- * project (WS-073).
+ * project (WS-073). Heartbeats count against the 64 KiB as events do, and one heartbeat
+ * check runs at a time (WS-124).
  */
 export async function openEventStream({
   request,
   projectId,
   account,
   hub = getEventHub(),
-  authenticate = authenticateRequest,
+  authenticate = checkWithoutRenewal,
   heartbeatMs = HEARTBEAT_MS,
   maxStreamsPerAccount = MAX_STREAMS_PER_ACCOUNT,
   logError = console.error,
@@ -61,13 +66,13 @@ export async function openEventStream({
   let finished = false;
   let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
   let unsubscribe: (() => void) | undefined;
-  const timer: { heartbeat?: ReturnType<typeof setInterval> } = {};
+  const timer: { heartbeat?: ReturnType<typeof setTimeout> } = {};
 
   function finish(): void {
     if (finished) return;
     finished = true;
     unsubscribe?.();
-    clearInterval(timer.heartbeat);
+    clearTimeout(timer.heartbeat);
     request.signal.removeEventListener("abort", finish);
     try {
       controller?.close();
@@ -79,20 +84,24 @@ export async function openEventStream({
     else openStreams.delete(account);
   }
 
-  function write(chunk: Uint8Array): void {
-    if (finished || !controller) return;
+  /**
+   * Queues a chunk, or ends the stream when the chunk would take what the reader has left
+   * unread past 64 KiB: drop a reader that has fallen too far behind rather than queue more.
+   * Answers whether the chunk was queued.
+   */
+  function write(chunk: Uint8Array): boolean {
+    if (finished || !controller) return false;
+    if ((controller.desiredSize ?? 0) < chunk.byteLength) {
+      finish();
+      return false;
+    }
     controller.enqueue(chunk);
+    return true;
   }
 
   try {
     unsubscribe = await hub.subscribe(projectId, {
       event(event) {
-        if (finished || !controller) return;
-        // The reader has fallen too far behind: drop it rather than queue more.
-        if ((controller.desiredSize ?? 0) <= 0) {
-          finish();
-          return;
-        }
         write(frameOf(event));
       },
       reset: finish,
@@ -115,16 +124,21 @@ export async function openEventStream({
     new ByteLengthQueuingStrategy({ highWaterMark: HIGH_WATER_MARK }),
   );
 
-  timer.heartbeat = setInterval(() => {
+  // Each heartbeat schedules the next once its check has settled: never two checks at once.
+  function scheduleHeartbeat(): void {
+    if (!finished) timer.heartbeat = setTimeout(heartbeat, heartbeatMs);
+  }
+
+  function heartbeat(): void {
+    if (finished) return;
     authenticate(request).then(
       ({ actor }) => {
-        if (can(actor, "tasks:read") && canAccessProject(actor, projectId)) {
-          write(encoder.encode(": heartbeat\n\n"));
-        } else {
-          finish();
-        }
+        if (finished) return;
+        if (!can(actor, "tasks:read") || !canAccessProject(actor, projectId)) finish();
+        else if (write(HEARTBEAT)) scheduleHeartbeat();
       },
       (error: unknown) => {
+        if (finished) return;
         // An expired or revoked session is ordinary; anything else is worth a line.
         if (!(error instanceof Error && "status" in error && error.status === 401)) {
           logError(`An event stream's credential check failed: ${describeError(error)}`);
@@ -132,7 +146,9 @@ export async function openEventStream({
         finish();
       },
     );
-  }, heartbeatMs);
+  }
+
+  scheduleHeartbeat();
 
   if (request.signal.aborted) finish();
   else request.signal.addEventListener("abort", finish);
