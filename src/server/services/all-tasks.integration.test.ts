@@ -11,6 +11,7 @@ import { decodeTaskListCursor, encodeTaskListCursor } from "@/server/http/pagina
 import { listColumns } from "./columns";
 import { createLabel } from "./labels";
 import { archiveProject, createProject } from "./projects";
+import { recordingDb } from "./recording-db-testing";
 import { createTask, deleteTask, listAllTasks, updateTask } from "./tasks";
 
 // The list of tasks across projects (WS-118 tests 2 to 9).
@@ -348,5 +349,31 @@ describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
 
     expect([...projects]).toEqual(["OPA"]);
     expect(sizes).toEqual([2, 2, 1]);
+  });
+});
+
+describe("what listAllTasks takes from the database (WS-122 test 3)", () => {
+  it("reads no description, for every sort, on either page", async () => {
+    const { mia } = await sortable();
+    await updateTask(mia, "OPA-1", { description: "A long description", version: 1 });
+    const recording = recordingDb();
+
+    for (const field of ["key", "title", "priority", "dueDate", "created", "updated"]) {
+      for (const sort of [field, `-${field}`]) {
+        const first = await listAllTasks(
+          mia,
+          allTasksQuerySchema.parse({ sort, limit: "2" }),
+          recording.db,
+        );
+        await listAllTasks(
+          mia,
+          allTasksQuerySchema.parse({ sort, limit: "2", cursor: first.nextCursor ?? "" }),
+          recording.db,
+        );
+      }
+    }
+
+    expect(recording.taskRows()).not.toHaveLength(0);
+    for (const row of recording.taskRows()) expect(Object.keys(row)).not.toContain("description");
   });
 });

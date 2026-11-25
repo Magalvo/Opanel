@@ -13,6 +13,7 @@ import { createComment } from "./comments";
 import { createEpic, getEpic } from "./epics";
 import { listenForEvents } from "./events-testing";
 import { archiveProject, createProject } from "./projects";
+import { recordingDb } from "./recording-db-testing";
 import {
   createTask,
   deleteTask,
@@ -336,5 +337,22 @@ describe("epic progress and the backlog", () => {
     await createTask(actor, "OPA", { title: "Later", columnId: null, epicId: epic.id });
 
     expect((await getEpic(actor, epic.id)).progress).toEqual({ doneTasks: 1, totalTasks: 3 });
+  });
+});
+
+describe("what listBacklog takes from the database (WS-122 test 2)", () => {
+  it("reads no description, on either page or with a filter", async () => {
+    const { actor } = await setup();
+    for (const title of ["Alpha", "Beta", "Gamma"]) {
+      await createTask(actor, "OPA", { title, columnId: null, description: `About ${title}` });
+    }
+    const recording = recordingDb();
+
+    const first = await listBacklog(actor, "OPA", { limit: 2 }, recording.db);
+    await listBacklog(actor, "OPA", { limit: 2, cursor: first.nextCursor ?? "" }, recording.db);
+    await listBacklog(actor, "OPA", { limit: 50, q: "beta" }, recording.db);
+
+    expect(recording.taskRows()).not.toHaveLength(0);
+    for (const row of recording.taskRows()) expect(Object.keys(row)).not.toContain("description");
   });
 });
