@@ -193,6 +193,7 @@ operations (doc 0006), are done.
 | [WI-123](work-items/WI-123-live-board-consistency.md)           | The live board keeps the newest state                             | [WS-123](work-specs/WS-123-live-board-consistency.md)           |
 | [WI-124](work-items/WI-124-stream-heartbeat.md)                 | Stream heartbeats keep the queue cap and renew no session         | [WS-124](work-specs/WS-124-stream-heartbeat.md)                 |
 | [WI-125](work-items/WI-125-failed-token-limit.md)               | Failed API token attempts are limited per address                 | [WS-125](work-specs/WS-125-failed-token-limit.md)               |
+| [WI-126](work-items/WI-126-pin-postgres-image.md)               | The production database image is pinned by digest                 | [WS-126](work-specs/WS-126-pin-postgres-image.md)               |
 
 ## Follow-ups
 
@@ -391,7 +392,8 @@ chooses. B01 to B05 are WI-079 to WI-083.
   Decide whether the API should refuse Admin targets, leaving `recover-admin` as the way.
 - B09: `postgres:18-alpine` is a floating tag in `docker/production/services.yaml` and
   `compose.yaml`, while the Node and Caddy images are pinned by digest. Pin it in the
-  production file, and say how to upgrade it in `docs/operations.md`.
+  production file, and say how to upgrade it in `docs/operations.md`. To be answered by
+  WI-126.
 - B10: `engines.node` is `>=22` but CI, `.nvmrc` and the image use 22, and Node 25 no
   longer bundles corepack, which the `Dockerfile` uses. Narrow it to `^22` until the
   Node 24 upgrade above.
