@@ -91,8 +91,8 @@ export function CardBody({
         {task.severity !== null && (
           <Badge
             variant="outline"
-            // Red text on the card's own background: the `destructive` badge's tinted
-            // background leaves too little contrast in light mode (WS-091, deviation 1).
+            // Red text on the card's own background, for the card's look (WS-091, deviation
+            // 1). The `destructive` badge passes contrast too since WS-129.
             className={cn(
               (task.severity === "high" || task.severity === "critical") &&
                 "border-destructive/60 text-destructive",

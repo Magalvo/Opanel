@@ -1,7 +1,7 @@
 "use client";
 
 import { PencilIcon, Trash2Icon } from "lucide-react";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import {
   COLOUR_NAMES,
@@ -79,6 +79,14 @@ export function LabelsSection({
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Label | null>(null);
   const [deleting, setDeleting] = useState<Label | null>(null);
+  // Where the focus goes when a dialog closes: the button that opened it, or "Add label"
+  // once that button is gone (WS-129 section 2). One dialog is open at a time.
+  const addButton = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const returnFocus = useCallback(
+    () => (opener.current?.isConnected === true ? opener.current : addButton.current),
+    [],
+  );
 
   const reload = useCallback(async () => {
     try {
@@ -149,9 +157,11 @@ export function LabelsSection({
         </h2>
         {!readOnly && (
           <Button
+            ref={addButton}
             variant="outline"
             disabled={labels === null}
-            onClick={() => {
+            onClick={(event) => {
+              opener.current = event.currentTarget;
               setAdding(true);
             }}
           >
@@ -198,7 +208,8 @@ export function LabelsSection({
                         variant="ghost"
                         size="icon-sm"
                         aria-label={`Edit ${label.name}`}
-                        onClick={() => {
+                        onClick={(event) => {
+                          opener.current = event.currentTarget;
                           setEditing(label);
                         }}
                       >
@@ -208,7 +219,8 @@ export function LabelsSection({
                         variant="ghost"
                         size="icon-sm"
                         aria-label={`Delete ${label.name}`}
-                        onClick={() => {
+                        onClick={(event) => {
+                          opener.current = event.currentTarget;
                           setDeleting(label);
                         }}
                       >
@@ -228,6 +240,7 @@ export function LabelsSection({
           onClose={() => {
             setAdding(false);
           }}
+          returnFocusTo={returnFocus}
           title="Add a label"
           submitLabel="Add label"
           initial={{ name: "", colour: "gray" }}
@@ -245,6 +258,7 @@ export function LabelsSection({
           onClose={() => {
             setEditing(null);
           }}
+          returnFocusTo={returnFocus}
           title="Edit label"
           submitLabel="Save"
           initial={{ name: editing.name, colour: editing.colour }}
@@ -269,7 +283,12 @@ export function LabelsSection({
         }}
       >
         {deleting !== null && (
-          <AlertDialogContent>
+          <AlertDialogContent
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              returnFocus()?.focus();
+            }}
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>Delete label {deleting.name}?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -282,6 +301,8 @@ export function LabelsSection({
                 variant="destructive"
                 onClick={() => {
                   const label = deleting;
+                  // The row goes away: the focus goes to "Add label".
+                  opener.current = addButton.current;
                   setDeleting(null);
                   void remove(label);
                 }}
@@ -302,12 +323,15 @@ export function LabelsSection({
  */
 function LabelDialog({
   onClose,
+  returnFocusTo,
   title,
   submitLabel,
   initial,
   onSubmit,
 }: Readonly<{
   onClose: () => void;
+  /** Where the focus goes when the dialog closes, asked at that moment (WS-129). */
+  returnFocusTo: () => HTMLElement | null;
   title: string;
   submitLabel: string;
   initial: LabelDraft;
@@ -345,7 +369,13 @@ function LabelDialog({
         if (!open) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          // Opened without a trigger, so Radix would move the focus to the body.
+          event.preventDefault();
+          returnFocusTo()?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>Everyone who can apply labels sees it on tasks.</DialogDescription>

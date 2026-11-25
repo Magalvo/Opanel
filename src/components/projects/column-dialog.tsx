@@ -32,6 +32,7 @@ export function ColumnDialog({
   submitLabel,
   initial,
   onSubmit,
+  returnFocusTo,
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,6 +40,8 @@ export function ColumnDialog({
   submitLabel: string;
   initial: ColumnDraft;
   onSubmit: (draft: ColumnDraft) => Promise<void>;
+  /** Where the focus goes when the dialog closes, asked at that moment (WS-129). */
+  returnFocusTo: () => HTMLElement | null;
 }>) {
   const id = useId();
   const [name, setName] = useState(initial.name);
@@ -65,7 +68,13 @@ export function ColumnDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          // Opened without a trigger, so Radix would move the focus to the body.
+          event.preventDefault();
+          returnFocusTo()?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>Tasks in a Done column count as finished.</DialogDescription>

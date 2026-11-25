@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -38,6 +38,18 @@ export function DetailsSection({ announce }: Readonly<{ announce: (message: stri
   const [nameError, setNameError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [confirmingArchive, setConfirmingArchive] = useState(false);
+
+  // Archiving swaps "Archive project" for "Unarchive project" and back. When the swap comes
+  // from this page, the focus moves to the button that replaced the one used, instead of
+  // falling to the body (WS-129 section 2); a live update from someone else moves nothing.
+  const archiveButton = useRef<HTMLButtonElement>(null);
+  const unarchiveButton = useRef<HTMLButtonElement>(null);
+  const focusAfterSwap = useRef(false);
+  useEffect(() => {
+    if (!focusAfterSwap.current) return;
+    focusAfterSwap.current = false;
+    (archived ? unarchiveButton : archiveButton).current?.focus();
+  }, [archived]);
 
   // Live (WS-049 section 5): the frame sets a project someone else changed. The form takes
   // it unless it has unsaved edits; then it keeps them and its version, so the next save
@@ -101,7 +113,9 @@ export function DetailsSection({ announce }: Readonly<{ announce: (message: stri
 
   async function archive(to: boolean) {
     try {
-      show(await setArchived(project.key, to));
+      const current = await setArchived(project.key, to);
+      focusAfterSwap.current = (current.archivedAt !== null) !== archived;
+      show(current);
       announce(`${project.key} was ${to ? "archived" : "unarchived"}.`);
     } catch {
       announce(`Could not ${to ? "archive" : "unarchive"} the project. Try again.`);
@@ -157,14 +171,19 @@ export function DetailsSection({ announce }: Readonly<{ announce: (message: stri
             Save
           </Button>
           {archived ? (
-            <Button type="button" variant="outline" onClick={() => void archive(false)}>
+            <Button
+              ref={unarchiveButton}
+              type="button"
+              variant="outline"
+              onClick={() => void archive(false)}
+            >
               Unarchive project
             </Button>
           ) : (
-            // Outline, not destructive: the destructive style lacks contrast (WS-035).
             <Button
+              ref={archiveButton}
               type="button"
-              variant="outline"
+              variant="destructive"
               onClick={() => {
                 setConfirmingArchive(true);
               }}
@@ -175,7 +194,14 @@ export function DetailsSection({ announce }: Readonly<{ announce: (message: stri
         </div>
       </form>
       <AlertDialog open={confirmingArchive} onOpenChange={setConfirmingArchive}>
-        <AlertDialogContent>
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            // Opened without a trigger: back to "Archive project", or to "Unarchive project"
+            // if the archive was answered before the dialog finished closing.
+            event.preventDefault();
+            (unarchiveButton.current ?? archiveButton.current)?.focus();
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Archive {project.key}?</AlertDialogTitle>
             <AlertDialogDescription>

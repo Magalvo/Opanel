@@ -174,9 +174,8 @@ export function TeamPage({
                   initialName={team.name}
                   onSubmit={rename}
                 />
-                {/* Outline, not destructive: the destructive style lacks contrast in light mode. */}
                 <Button
-                  variant="outline"
+                  variant="destructive"
                   onClick={() => {
                     setConfirmingDelete(true);
                   }}

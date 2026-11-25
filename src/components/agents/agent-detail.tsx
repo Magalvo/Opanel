@@ -200,9 +200,7 @@ export function AgentDetail({ agentId }: Readonly<{ agentId: string }>) {
               }}
             />
             <Button
-              // Not `destructive`: its light-mode contrast is below WCAG AA (a Follow-up of
-              // docs/README.md). The confirmation says what disabling does.
-              variant="outline"
+              variant={active ? "destructive" : "outline"}
               onClick={() => {
                 setConfirmation({ kind: active ? "disable" : "reenable" });
               }}
