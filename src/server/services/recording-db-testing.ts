@@ -1,6 +1,6 @@
 // Integration-test helper (WS-122 section 3): the real database, keeping the rows each
 // `execute` returned, so a test can see what a service read and not only what it answered.
-import { getDb, type Database } from "@/server/db/client";
+import { type Database, getDb } from "@/server/db/client";
 
 export interface RecordingDb {
   /** Pass it as a service's `db` argument. */
