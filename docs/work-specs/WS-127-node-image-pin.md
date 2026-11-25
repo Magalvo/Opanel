@@ -130,7 +130,7 @@ Risks:
   with "`nvmrcMajor` is not a function"; the other 15 passed.
 - Red, pin (plan test 2, 2026-11-25): `pnpm exec tsx scripts/check-image-pins.ts` exited 1:
   `node:22-bookworm-slim (Dockerfile, NODE_IMAGE) now resolves to sha256:be979e55…,
-  pinned sha256:e9f565d3…`.
+pinned sha256:e9f565d3…`.
 - Digest (question 1, resolved on 2026-11-25 with `docker buildx imagetools inspect`):
   `node:22-bookworm-slim` is the OCI index
   `sha256:be979e5523c76fa4d5ca4ebd3099078f220aa47ec39c48ad5b5df9314debd6eb`, Node.js
