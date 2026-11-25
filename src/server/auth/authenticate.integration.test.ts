@@ -233,3 +233,40 @@ describe("recording a token's use (WS-072 section 5)", () => {
     expect(logged[0]).not.toContain(token);
   });
 });
+
+describe("authenticate and session renewal (WS-124)", () => {
+  const DAY_MS = 86_400_000;
+
+  /** A session past its one-day renewal age: five of its seven days left. */
+  async function agedSession() {
+    const account = await createTestAccount();
+    const cookie = await signInCookie();
+    const expiresAt = new Date(Date.now() + 5 * DAY_MS);
+    await getDb().update(sessions).set({ expiresAt }).where(eq(sessions.accountId, account.id));
+    return { account, cookie, expiresAt };
+  }
+
+  async function expiryOf(accountId: string): Promise<number | undefined> {
+    const [row] = await getDb().select().from(sessions).where(eq(sessions.accountId, accountId));
+    return row?.expiresAt.getTime();
+  }
+
+  it("checks a session without extending it when refreshSession is false", async () => {
+    const { account, cookie, expiresAt } = await agedSession();
+
+    const result = await authenticate(request({ Cookie: cookie }), { refreshSession: false });
+
+    expect(result.actor).toMatchObject({ kind: "human", accountId: account.id });
+    expect(result.headers.get("Set-Cookie")).toBeNull();
+    expect(await expiryOf(account.id)).toBe(expiresAt.getTime());
+  });
+
+  it("still extends a session by default, and returns its cookie", async () => {
+    const { account, cookie } = await agedSession();
+
+    const result = await authenticate(request({ Cookie: cookie }));
+
+    expect(result.headers.get("Set-Cookie")).not.toBeNull();
+    expect(await expiryOf(account.id)).toBeGreaterThan(Date.now() + 6.9 * DAY_MS);
+  });
+});
