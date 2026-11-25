@@ -1,6 +1,6 @@
 # WS-123 — The live board keeps the newest state
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, questions 1 to 3 as recommended)
 - Work-item: [WI-123](../work-items/WI-123-live-board-consistency.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4 (after a reconnect,
   read again what you show); [WS-048](WS-048-live-board.md) sections 4 and 5 (applying

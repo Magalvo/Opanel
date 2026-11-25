@@ -1,6 +1,6 @@
 # WI-123 — The live board keeps the newest state
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-123)
 - Work-track: none: follow-ups C02, C03 and C04 of the independent audit of 2026-11-24,
   with the version check of B15 (audit of 2026-11-19), confirmed in the code of `main`
 - Depends on: none
