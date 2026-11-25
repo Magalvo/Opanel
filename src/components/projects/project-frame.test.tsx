@@ -1,8 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { installFetch, on, problem } from "@/components/fake-api";
+import { fetchMock, installFetch, on, problem } from "@/components/fake-api";
+import { FakeSource } from "@/hooks/fake-event-source";
+import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Project } from "@/lib/schemas/projects";
 
 let pathname = "/projects/OPA";
@@ -12,7 +14,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
 }));
 
-const { ProjectFrame } = await import("./project-frame");
+const { ProjectFrame, useProject } = await import("./project-frame");
 
 const opa: Project = {
   id: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
@@ -229,5 +231,106 @@ describe("ProjectFrame", () => {
     await user.click(screen.getByRole("button", { name: "Retry" }));
 
     expect(await screen.findByRole("heading", { level: 1, name: "Opanel" })).toBeVisible();
+  });
+});
+
+describe("ProjectFrame keeps the newest project (WS-123)", () => {
+  function Probe({ offers }: { offers: Project[] }) {
+    const { project, setProject } = useProject();
+    return (
+      <>
+        <p>
+          {project.name}, version {String(project.version)}
+          {project.archivedAt === null ? "" : ", archived"}
+        </p>
+        {offers.map((offer, index) => (
+          <button
+            key={String(index)}
+            type="button"
+            onClick={() => {
+              setProject(offer);
+            }}
+          >
+            {`offer ${String(index)}`}
+          </button>
+        ))}
+      </>
+    );
+  }
+
+  it("never replaces a project with an older version of it (test 1)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    const three = { ...opa, name: "Three", version: 3 };
+    const two = { ...opa, name: "Two", version: 2 };
+    const threeAgain = { ...opa, name: "Three again", version: 3 };
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        <Probe offers={[three, two, threeAgain]} />
+      </ProjectFrame>,
+    );
+    expect(await screen.findByText("Opanel, version 1")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "offer 0" }));
+    expect(screen.getByText("Three, version 3")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "offer 1" }));
+    expect(screen.getByText("Three, version 3")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "offer 2" }));
+    expect(screen.getByText("Three again, version 3")).toBeVisible();
+  });
+
+  it("reads the project again after a reconnect, and a late older read cannot undo it (test 2)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        <Probe offers={[]} />
+      </ProjectFrame>,
+    );
+    expect(await screen.findByText("Opanel, version 1")).toBeVisible();
+    act(() => {
+      FakeSource.latest().open();
+    });
+
+    // A project.changed read that answers late, with version 2.
+    let answerLate: (response: Response) => void = () => undefined;
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          answerLate = resolve;
+        }),
+    );
+    const changed = {
+      id: crypto.randomUUID(),
+      type: "project.changed",
+      projectId: opa.id,
+      entity: "project",
+      entityId: opa.id,
+      version: 2,
+      actorAccountId: "55555555-5555-4555-8555-555555555555",
+      at: "2026-11-25T10:00:00.000Z",
+    } as ProjectEvent;
+    act(() => {
+      FakeSource.latest().send("project.changed", changed);
+    });
+
+    // The stream drops; meanwhile the project was renamed and archived (version 3), and
+    // the reconnect brings no event.
+    const renamed = {
+      ...opa,
+      name: "Renamed",
+      archivedAt: "2026-11-25T10:01:00.000Z",
+      version: 3,
+    };
+    on("GET /api/v1/projects/OPA", () => Response.json(renamed));
+    act(() => {
+      FakeSource.latest().drop();
+      FakeSource.latest().open();
+    });
+    expect(await screen.findByText("Renamed, version 3, archived")).toBeVisible();
+
+    await act(async () => {
+      answerLate(Response.json({ ...opa, name: "Two", version: 2 }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.getByText("Renamed, version 3, archived")).toBeVisible();
   });
 });

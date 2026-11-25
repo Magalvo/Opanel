@@ -133,4 +133,24 @@ describe("ProjectEventsProvider (WS-049 section 2)", () => {
     expect(calls("GET")).toEqual([]);
     expect(setProject).not.toHaveBeenCalled();
   });
+
+  it("reads the project again on every reconnect, and sets it (WS-123 test 2)", async () => {
+    const renamed = { ...opa, name: "Renamed", version: 2 };
+    on(PROJECT, json(renamed));
+    const setProject = vi.fn<(project: Project) => void>();
+    renderHook(() => useProjectEventListener({}), { wrapper: wrapperFor(setProject) });
+    act(() => {
+      FakeSource.latest().open();
+    });
+    expect(calls("GET")).toEqual([]);
+
+    act(() => {
+      FakeSource.latest().drop();
+      FakeSource.latest().open();
+    });
+
+    await waitFor(() => {
+      expect(setProject).toHaveBeenCalledWith(renamed);
+    });
+  });
 });
