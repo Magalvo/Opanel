@@ -189,6 +189,7 @@ operations (doc 0006), are done.
 | [WI-119](work-items/WI-119-task-timeline.md)                    | The timeline on the task page                                     | [WS-119](work-specs/WS-119-task-timeline.md)                    |
 | [WI-120](work-items/WI-120-task-filter-bar.md)                  | The filter bar on the board and the backlog                       | [WS-120](work-specs/WS-120-task-filter-bar.md)                  |
 | [WI-121](work-items/WI-121-task-list-cursor-dates.md)           | Task list cursors refuse impossible dates                         | [WS-121](work-specs/WS-121-task-list-cursor-dates.md)           |
+| [WI-122](work-items/WI-122-task-list-summary-select.md)         | Task lists stop reading descriptions                              | [WS-122](work-specs/WS-122-task-list-summary-select.md)         |
 
 ## Follow-ups
 
@@ -457,7 +458,7 @@ per-task column cleanup.
   version.
 - C05: the shared task select (`taskSelect` in `tasks.ts`) reads `t.description` for
   every list, which `toSummary` drops: up to 50 000 characters per task read and
-  discarded. Give lists a summary projection.
+  discarded. Give lists a summary projection. To be answered by WI-122.
 - C06: the event stream's heartbeat writes without the `desiredSize` check events have,
   and `setInterval` starts a new authentication while the last one may still run
   (`src/server/http/event-stream.ts`). Check backpressure in `write` and keep one heartbeat
