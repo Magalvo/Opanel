@@ -439,12 +439,9 @@ Findings of the independent audit of 2026-11-24 (of `9424427`, now on `main`; C0
 are its A01 to A06), each needing a work-item. It also found B06, B07, B09 and B15 above still present, and D11's
 per-task column cleanup.
 
-- C01: a `GET /tasks` cursor (WI-118) checks its dates by shape only
-  (`src/server/services/tasks.ts`, `TIMESTAMP` and the due-date key), so `2026-02-30`, a
-  month 13 or the year `0000` in a `created` or `updated` cursor reach a PostgreSQL cast
-  and answer `500`, not `400`. Use the shared calendar-date and timestamp rules (WI-051,
-  WI-114) per sort key, with tests for each impossible date and a leap day. To be answered
-  by WI-121.
+- C01: answered by WI-121 (2026-11-24): a `GET /tasks` cursor whose `created`,
+  `updated` or `dueDate` value is no real instant or calendar date is a `400` naming
+  `cursor`, not a `500`; the sort keys use the shared rules of WI-051 and WI-114.
 - C02: on reconnect the project frame refreshes the board but not the project
   (`project-events.tsx`, `onOpen`), so a rename or archive made while the stream was down
   stays unseen until a reload. Read the project again on reconnect, applied only if its
