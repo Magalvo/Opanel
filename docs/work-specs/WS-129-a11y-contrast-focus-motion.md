@@ -1,7 +1,7 @@
 # WS-129 — Destructive contrast, settings dialog focus, still skeletons
 
-- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to its
-  open questions)
+- Status: Done (approved by the owner on 2026-11-25, with the recommended answers to its open
+  questions; done on 2026-11-25)
 - Work-item: [WI-129](../work-items/WI-129-a11y-contrast-focus-motion.md)
 - Canonical docs: none changes. Earlier specs this follows: WS-035 and WS-077 deviation 2
   (the contrast workaround), WS-037 "Deviations" (the board's "Add task" dialog returns the
@@ -175,3 +175,37 @@ behind the colour choice; axe is its test.
    destructive button with Playwright before running axe again. A focused menu item is
    checked the same way. Pressed (`:active`) is not checked; its colours are the hover
    ones.
+
+## Deviations from the approved spec
+
+1. **The People menu is checked by axe on the menu alone** (test 7). While a Radix menu is
+   open, the page behind it is `aria-hidden` and keeps focusable elements, which axe reports
+   as `aria-hidden-focus` in both themes, whatever the colours. The colour check of the
+   focused "Deactivate" item is unchanged; the rest of each step checks the whole page.
+2. **The opener is kept in one ref per section, not in state with what is open.** One
+   dialog is open at a time, and Radix asks for the focus target while the dialog unmounts,
+   when a ref is simplest to read. A confirmed delete sets the ref to the Add button.
+3. **The archive confirmation returns the focus to whichever of the two buttons is
+   mounted**, so that an archive answered before the dialog finished closing still lands on
+   "Unarchive project". Cancelling lands on "Archive project", as the spec says.
+
+## Implementation record
+
+- Red (2026-11-25): the eight unit tests of the focus (tests 2 to 6) failed with the focus
+  on the body, and test 1 on the bare `animate-pulse`. In the browser, test 7 failed in light
+  mode on `color-contrast` (with `aria-hidden-focus`, deviation 1), and in dark mode on
+  `aria-hidden-focus`; test 8 found `pulse` running with reduced motion; test 9 found the
+  focus not back on "Add column" after Escape.
+- Green: sections 1 to 3 as specified, with deviations 1 to 3. The task card's comment
+  says the `destructive` badge now passes too (question 3).
+- Gate on the branch:
+  - `pnpm check` passed (typecheck, lint, format:check);
+  - `pnpm test` 2422 of 2422 (230 files);
+  - `pnpm test:e2e` 127 of 128 with `--retries=0`. The failure was
+    `mcp/e2e/write-tools.spec.ts` (WS-104), outside this item: the task history came back
+    as `field_changed`, `created` instead of `created`, `field_changed`. Alone with
+    `--repeat-each=10` it passed 10 of 10. Recorded as a follow-up.
+  - Windows, Node 24, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+- Follow-ups recorded on `main`: the same focus gap outside the project settings (question
+  2), the dialog animations under reduced motion (question 5), and the ordering of the MCP
+  write-tools history check.

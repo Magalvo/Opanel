@@ -1,7 +1,7 @@
 # WI-129 — Destructive contrast, settings dialog focus, still skeletons
 
-- Status: In progress (approved by the owner on 2026-11-25, with WS-129 and the recommended
-  answers to its open questions)
+- Status: Done (approved by the owner on 2026-11-25, with WS-129 and the recommended answers
+  to its open questions; done on 2026-11-25)
 - Work-track: none: three accessibility follow-ups of `docs/README.md`, scheduled after the
   independent audit of 2026-11-24
 - Depends on: none
@@ -31,34 +31,34 @@ Three accessibility defects that every page shares are gone:
 
 Destructive contrast:
 
-- [ ] In light and in dark mode, a `destructive` button, a focused `destructive` menu item
+- [x] In light and in dark mode, a `destructive` button, a focused `destructive` menu item
       and a `destructive` badge have text contrast of at least 4.5:1 against their own
       background, at rest and on hover (button) or focus (menu item).
-- [ ] axe (WCAG 2.2 AA tags) reports no violation, in both themes, on: the People page
+- [x] axe (WCAG 2.2 AA tags) reports no violation, in both themes, on: the People page
       with a person's menu open on "Deactivate", and its confirmation; a team's page and
       its "Delete team" confirmation; an agent's page and its "Disable agent" confirmation;
       the project settings with the "Delete column" confirmation open, and the details with
       "Archive project". The same checks pass with the pointer over each destructive
       button.
-- [ ] "Disable agent", "Delete team" and "Archive project" use the `destructive` style; the
+- [x] "Disable agent", "Delete team" and "Archive project" use the `destructive` style; the
       comments that explained the workaround are gone.
 
 Settings dialog focus:
 
-- [ ] Closing the Add column or Add label dialog (Escape, the close button, or after a save)
+- [x] Closing the Add column or Add label dialog (Escape, the close button, or after a save)
       puts the focus on the "Add column" or "Add label" button.
-- [ ] Closing the Edit dialog of a column or label, in any of those ways, puts the focus on
+- [x] Closing the Edit dialog of a column or label, in any of those ways, puts the focus on
       that row's "Edit …" button.
-- [ ] Cancelling the delete confirmation of a column or label puts the focus on that row's
+- [x] Cancelling the delete confirmation of a column or label puts the focus on that row's
       "Delete …" button; confirming it puts the focus on the section's "Add column" or
       "Add label" button, since the row goes away.
-- [ ] Cancelling "Archive project" puts the focus back on it; confirming it puts the focus
+- [x] Cancelling "Archive project" puts the focus back on it; confirming it puts the focus
       on "Unarchive project" once the project is archived, and "Unarchive project" puts the
       focus on "Archive project" once it is unarchived.
 
 Reduced motion:
 
-- [ ] With `prefers-reduced-motion: reduce`, a loading skeleton runs no animation; without
+- [x] With `prefers-reduced-motion: reduce`, a loading skeleton runs no animation; without
       it, the skeleton pulses as before.
 
 ## Notes
