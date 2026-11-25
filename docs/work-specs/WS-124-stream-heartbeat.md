@@ -1,6 +1,6 @@
 # WS-124 — Stream heartbeats keep the queue cap and renew no session
 
-- Status: In progress (approved by the owner on 2026-11-25, as proposed)
+- Status: Done (approved by the owner on 2026-11-25, as proposed; done on 2026-11-25)
 - Work-item: [WI-124](../work-items/WI-124-stream-heartbeat.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 3 (the heartbeat);
   [0004](../canonical/0004-api-conventions.md) section 7 (sessions are extended by use);
@@ -172,3 +172,26 @@ ends. The full quality gate covers criterion 7.
    database is that slow.
 3. **B07** also changes `authenticate.ts` (its token path). Whichever lands second takes
    in `main` and keeps both changes; they do not overlap in lines.
+
+## Implementation record
+
+- Red, C06: tests 1, 2, 4 and the "fails" case of 5 failed for the right reasons: the
+  quiet unread stream kept its place, an event took the queue to 65 543 bytes, five checks
+  ran across five held intervals, and a check failing after the stream ended was logged.
+  Test 3 and the "resolves" case of 5 passed, as guards (commits `6ec0a87`, `5bb2c26`:
+  the fake event gained `id` and `at` for the typecheck; still red against the old code).
+- Green, C06: `write` checks `desiredSize` against the chunk's size and ends the stream
+  when it does not fit; the hub's `event` callback only calls `write`; the heartbeat is a
+  `setTimeout` that schedules the next one after its check settles and does nothing once
+  the stream has finished (commit `33a6821`). Fake timers (risk 1) ran the 5 100 intervals
+  of test 1 in well under a second, so no short `heartbeatMs` was needed.
+- Red, B06: tests 6 and 8 failed (a `Set-Cookie` came back; the session row's
+  `expiresAt` moved two days on at the first heartbeat); tests 7 and 9 passed, as guards
+  (commit `38301de`).
+- Green, B06: `authenticate` takes `refreshSession`, passed to Better Auth 1.7.22 as
+  `query: { disableRefresh }`; the stream's default check passes `false` (commit
+  `d8f49ec`). Canonical docs 0002 section 3 and 0004 section 7 updated (commit `694a819`).
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2375 of 2375 (226 files);
+  `test:e2e` 123 of 123.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.

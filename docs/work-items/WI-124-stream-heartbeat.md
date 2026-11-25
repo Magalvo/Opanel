@@ -1,6 +1,6 @@
 # WI-124 — Stream heartbeats keep the queue cap and renew no session
 
-- Status: In progress (approved by the owner on 2026-11-25, with WS-124)
+- Status: Done (approved by the owner on 2026-11-25, with WS-124; done on 2026-11-25)
 - Work-track: none: follow-ups C06 (independent audit of 2026-11-24) and B06 (audit of
   2026-11-19), both confirmed in the code of `main` (`0461e5b`)
 - Depends on: none
@@ -26,20 +26,20 @@ WS-047) obeys the same rules as the events it carries, and only checks the calle
 
 ## Acceptance criteria
 
-- [ ] A stream nobody reads, with no events, is closed once its heartbeats would take the
+- [x] A stream nobody reads, with no events, is closed once its heartbeats would take the
       unread bytes past 64 KiB, and its place in the account's cap is given back.
-- [ ] No chunk is queued that would take a stream's unread bytes past 64 KiB, for
+- [x] No chunk is queued that would take a stream's unread bytes past 64 KiB, for
       heartbeats and events alike; a stream that is read keeps its heartbeats and events.
-- [ ] While a heartbeat check has not finished, no other one starts, however many
+- [x] While a heartbeat check has not finished, no other one starts, however many
       intervals pass; the next starts one interval after it finishes.
-- [ ] A check that finishes after its stream has ended writes nothing and starts no other
+- [x] A check that finishes after its stream has ended writes nothing and starts no other
       check.
-- [ ] A heartbeat check of a session older than its renewal age leaves the session's
+- [x] A heartbeat check of a session older than its renewal age leaves the session's
       expiry unchanged, while a request through the API still extends it, as today.
-- [ ] A heartbeat still ends the stream when the session is revoked, has expired, or its
+- [x] A heartbeat still ends the stream when the session is revoked, has expired, or its
       account is deactivated, when an agent's token is revoked, and when the caller loses
       `tasks:read` or the project, as today.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 
