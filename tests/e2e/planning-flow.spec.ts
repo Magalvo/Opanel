@@ -96,8 +96,18 @@ test("a Member plans in the UI; an agent reads and changes the plan through the 
   await expect(detail.getByRole("status", { name: "Task messages" })).toHaveText("Saved.");
   await detail.close();
 
-  // To the board, from the backlog page, which stays open from here on.
+  // To the board, from the backlog page, which stays open from here on. The backlog shows
+  // what the detail saved first, so its move sends the version it holds now (WS-128):
+  // clicked earlier, the move is refused as a stale write.
+  await expect(
+    backlog(member)
+      .getByRole("listitem")
+      .filter({ hasText: "Plan the release" })
+      .getByRole("img", { name: "Priority: High" }),
+  ).toBeVisible();
+  const sent = member.waitForResponse((response) => response.url().endsWith("/move"));
   await member.getByRole("button", { name: `Move to board ${key}-1` }).click();
+  expect((await sent).status()).toBe(200);
   await expect.poll(() => titles(member)).toEqual(["Write the notes"]);
   await member.evaluate(() => {
     (window as unknown as { notReloaded: boolean }).notReloaded = true;
