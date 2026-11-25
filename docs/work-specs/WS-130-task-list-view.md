@@ -1,6 +1,7 @@
 # WS-130 — The list view of tasks, with sortable headers
 
-- Status: Approved (approved by the owner on 2026-11-25, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-25, questions 1 to 3 as recommended; done on
+  2026-11-25)
 - Work-item: [WI-130](../work-items/WI-130-task-list-view.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8 (the list view,
   "the current filter lives in the URL"); [0004](../canonical/0004-api-conventions.md)
@@ -196,3 +197,34 @@ Risks:
   tests run unchanged apart from the props and guard them.
 - **A `projectId` in a board link becomes an ignored parameter** with the page's notice
   (section 2), where it was silently dropped before. No link the app writes carries one.
+
+## Implementation record
+
+- Red (199eedc): the filter tests failed on the missing `LIST_KEYS`, `readSort` and
+  `writeSort`; the bar's list tests on `useProject` outside a project frame; the sidebar
+  and the project frame on their missing links; the three list modules did not exist.
+- Green (4d56a44): `projectId`, `LIST_KEYS`, `readSort`, `writeSort` and the project
+  chip in `task-filter.ts`; the bar's `projectKey`, `projects` and `status` props; the
+  board and the backlog pass them; `src/components/task-list/` (`api.ts`,
+  `use-url-task-list.ts`, `task-list-table.tsx`, `task-list.tsx`); the `/tasks` route;
+  "Tasks" in the sidebar and "List" in each project.
+- Found by the end-to-end run (3d63d8d): a link's label chip said "an unknown label"
+  until the Label menu was opened (deviation 1).
+- Gate on 2026-11-25:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2463 of 2463 (233 files);
+  - `pnpm test:e2e` 133 of 133;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The bar reads the names of the labels, epics and teams a filter holds when it opens**,
+   not only when their menu first opens (WS-120 deviation 5): a shared link's chips named
+   "an unknown label" otherwise, on the board as on the list. A filter that names none
+   (`none` included) still reads nothing, and each list is asked for once. Test: the bar's
+   "names of a link's filters" tests, and test 10.
+2. **The empty state is a region named "No tasks"**, so its "Clear filters" is told apart
+   from the bar's.
+3. **The project chip reads a project's key from its id** through the Project menu's
+   projects, so a link that names a project by id shows its key.
