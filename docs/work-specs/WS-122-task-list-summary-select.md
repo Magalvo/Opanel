@@ -1,6 +1,6 @@
 # WS-122 — Task lists stop reading descriptions
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, as proposed)
 - Work-item: [WI-122](../work-items/WI-122-task-list-summary-select.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (a task and its summary);
   [0004](../canonical/0004-api-conventions.md) section 5 (lists);

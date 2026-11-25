@@ -1,6 +1,6 @@
 # WI-122 — Task lists stop reading descriptions
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-122)
 - Work-track: none: follow-up C05 of the independent audit of 2026-11-24, confirmed in the
   code of `main`
 - Depends on: none
