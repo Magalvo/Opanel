@@ -1,7 +1,7 @@
 # WS-126 — The production database image is pinned by digest
 
-- Status: Approved (approved by the owner on 2026-11-25, with the recommended answers to its
-  open questions)
+- Status: Done (approved by the owner on 2026-11-25, with the recommended answers to its
+  open questions; done on 2026-11-25)
 - Work-item: [WI-126](../work-items/WI-126-pin-postgres-image.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) (packaging, upgrades, backup);
   WS-062 (the image, its Node.js base pinned by digest, question 3), WS-067 (Caddy pinned
@@ -218,3 +218,36 @@ Risks:
 - Going back within 18 relies on PostgreSQL's promise that minor releases keep the data
   format; a release note may still require a step. The guide says to read the notes and
   keeps the backup as the way back.
+
+## Implementation record
+
+- Digest (question 3, resolved on 2026-11-25 with `docker buildx imagetools inspect`):
+  `postgres:18-alpine` was the OCI index
+  `sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71`, PostgreSQL
+  18.7 (`PG_VERSION` of its image configuration).
+- Red, quality gate (commit `4e90684`): `check-image-pins.test.ts` first failed on the
+  missing module; with the module written, only the repository test failed, on
+  "`docker/production/services.yaml, db: postgres:18-alpine`: expected 'no digest' to
+  match `/^sha256:[0-9a-f]{64}$/`". The `compose.yaml` and guide checks passed at once, as
+  guards.
+- Green (commit `3755ed7`): the pin and its comment, the comment in `compose.yaml`, and
+  `scripts/check-image-pins.ts`. Plan tests 1 to 7 are 15 `it` blocks in one file; the
+  reader follows a `<<: *anchor` merge, since `migrate` and `app` take `image:` and
+  `build:` from `x-app`, and an image reference without a tag reads as `latest`.
+- Smoke (commit `5713288`): with the old, floating `services.yaml`, `smoke-production.sh`
+  failed with "docker/production/services.yaml pins no digest for the database"; on the
+  pin it passed every check and printed `postgres (PostgreSQL) 18.7`. The same commit
+  holds the docs, `CONTRIBUTING.md` ("Image pins"), canonical doc 0006 and the audit
+  workflow step. `smoke-proxy.sh` and `rehearse-backup.sh` were not run locally: the PR's
+  `Production image` workflow runs them on the pin (plan test 10).
+- `scripts/check-image-pins.ts` run by hand on 2026-11-25: PostgreSQL and Caddy current;
+  **the Node.js pin of the `Dockerfile` is stale** (`node:22-bookworm-slim` now resolves to
+  `sha256:be979e55…`, pinned `sha256:e9f565d3…`). So the first scheduled audit after the
+  merge fails, by design, until that pin is moved: a follow-up, outside this item.
+- Deviation: the guide's introduction now counts three procedures CI does not rehearse
+  (the image swap under an existing volume, section 6). The guide links PostgreSQL's
+  versioning page for release dates.
+- Gate on the branch: `pnpm check` passed; `pnpm test` 2410/2410; `pnpm test:e2e` 123/123.
+- Follow-up for the index: move the Node.js base image pin of the `Dockerfile` to the
+  digest `node:22-bookworm-slim` resolves to (Node.js 22 of `.nvmrc`), as
+  `CONTRIBUTING.md` "Image pins" says.

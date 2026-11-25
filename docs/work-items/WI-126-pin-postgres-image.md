@@ -1,6 +1,6 @@
 # WI-126 — The production database image is pinned by digest
 
-- Status: In progress (approved by the owner on 2026-11-25, with WS-126)
+- Status: Done (approved by the owner on 2026-11-25, with WS-126; done on 2026-11-25)
 - Work-track: none: follow-up B09 (audit of 2026-11-19), confirmed again by the independent
   audit of 2026-11-24 and in the files of `main` (`3c2a01a`)
 - Depends on: none
@@ -25,20 +25,20 @@ security updates, a weekly check fails when a pinned tag has moved on.
 
 ## Acceptance criteria
 
-- [ ] Every image the example install pulls, and the base image of the `Dockerfile`, is
+- [x] Every image the example install pulls, and the base image of the `Dockerfile`, is
       named as `repository:tag@sha256:<64 hex digits>`; the check fails on a floating tag.
-- [ ] The production database image is `postgres:18-alpine` pinned by a digest that the
+- [x] The production database image is `postgres:18-alpine` pinned by a digest that the
       image workflow's three scripts (`smoke-production.sh`, `smoke-proxy.sh`,
       `rehearse-backup.sh`) passed on, and the smoke test checks that the running `db`
       container is that digest.
-- [ ] `compose.yaml` (development and CI) keeps the same repository and tag as production,
+- [x] `compose.yaml` (development and CI) keeps the same repository and tag as production,
       without a digest, and says why; a check fails if the two tags differ.
-- [ ] The major version `docs/operations.md` gives for the database matches the pinned tag.
-- [ ] `docs/operations.md` describes the pinned images and, in "Upgrade", how to move to a
+- [x] The major version `docs/operations.md` gives for the database matches the pinned tag.
+- [x] `docs/operations.md` describes the pinned images and, in "Upgrade", how to move to a
       newer PostgreSQL image: resolving the digest, rehearsing backup, restore and
       migrations on it, applying it, going back, and why a new major version is a dump and
       restore, never a tag change on an existing volume.
-- [ ] A weekly, non-blocking check names each pinned tag that now resolves to another
+- [x] A weekly, non-blocking check names each pinned tag that now resolves to another
       digest, and `CONTRIBUTING.md` says what to do when it fails.
 
 ## Notes
