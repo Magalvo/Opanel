@@ -170,6 +170,11 @@ export function ProjectFrame({
               >
                 Backlog
               </Link>
+              {/* The list across projects, for this project (WS-130): it leaves the project's
+                  pages, so it is never the current tab. */}
+              <Link href={`/tasks?projectId=${project.key}`} className={tabClass(false)}>
+                List
+              </Link>
               <Link
                 href={epicsHref}
                 aria-current={pathname === epicsHref ? "page" : undefined}

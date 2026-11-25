@@ -5,7 +5,6 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { TYPE_LABELS } from "@/components/board/task-card";
 import { listLabels } from "@/components/labels/api";
-import { useProject } from "@/components/projects/project-frame";
 import { listOpenEpics } from "@/components/task/api";
 import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { localDate } from "@/components/task/due-date";
@@ -16,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,12 @@ interface Option {
   label: string;
 }
 
+/** A project of the Project menu: its key is the value a link carries. */
+interface ProjectOption extends Option {
+  /** Its id, so a link that names it by id gets a chip with its key. */
+  id?: string;
+}
+
 interface Person {
   id: string;
   name: string;
@@ -59,6 +65,7 @@ function FilterMenu({
   filter,
   onChange,
   onOpen,
+  unavailable,
 }: Readonly<{
   name: string;
   filterKey: FilterKey;
@@ -66,6 +73,8 @@ function FilterMenu({
   filter: TaskFilter;
   onChange: (filter: TaskFilter) => void;
   onOpen?: () => void;
+  /** Why the menu offers no more than `options` here (WS-130 section 3). */
+  unavailable?: string | undefined;
 }>) {
   const values = filter[filterKey] ?? [];
   return (
@@ -85,7 +94,7 @@ function FilterMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        {options.length === 0 ? (
+        {options.length === 0 && unavailable === undefined ? (
           <p className="px-2 py-1.5 text-sm text-muted-foreground">Nothing to choose yet.</p>
         ) : (
           options.map((option) => (
@@ -107,35 +116,43 @@ function FilterMenu({
             </DropdownMenuCheckboxItem>
           ))
         )}
+        {unavailable !== undefined && <DropdownMenuItem disabled>{unavailable}</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 /**
- * The filter bar of the board and the backlog (WS-120 section 3): a search box, a menu per
- * field, the active filters as chips, and how many tasks match.
+ * The filter bar of the board, the backlog (WS-120 section 3) and the list view (WS-130
+ * section 3): a search box, a menu per field, the active filters as chips, and a status.
  */
 export function TaskFilterBar({
   filter,
   onChange,
+  projectKey,
+  projects,
   people,
-  shown,
-  total,
+  status,
   ignored,
 }: Readonly<{
   filter: TaskFilter;
   onChange: (filter: TaskFilter) => void;
+  /** The project whose labels and epics the menus offer; `null` for several projects. */
+  projectKey: string | null;
+  /** The projects to choose from, by key: only the list across projects has this menu. */
+  projects?: readonly ProjectOption[];
   /** The people assigned to a task on the page. */
   people: readonly Person[];
-  shown: number;
-  total: number;
-  ignored: readonly FilterKey[];
+  /** Shown with the active filters, such as "12 of 140 tasks match.". */
+  status?: string;
+  ignored: readonly string[];
 }>) {
   const id = useId();
-  const { project } = useProject();
-  const [labels, setLabels] = useState<Option[] | null>(null);
-  const [epics, setEpics] = useState<Option[] | null>(null);
+  // Labels and epics belong to one project: read again when the project changes.
+  const [labelsOf, setLabels] = useState<{ key: string; options: Option[] } | null>(null);
+  const [epicsOf, setEpics] = useState<{ key: string; options: Option[] } | null>(null);
+  const labels = labelsOf !== null && labelsOf.key === projectKey ? labelsOf.options : null;
+  const epics = epicsOf !== null && epicsOf.key === projectKey ? epicsOf.options : null;
   const [teams, setTeams] = useState<Option[] | null>(null);
 
   const [text, setText] = useState(filter.q?.[0] ?? "");
@@ -172,20 +189,25 @@ export function TaskFilterBar({
   }
 
   function loadLabels() {
-    if (labels !== null) return;
-    listLabels(project.key).then(
+    if (labels !== null || projectKey === null) return;
+    const key = projectKey;
+    listLabels(key).then(
       (page) => {
-        setLabels(page.items.map((label) => ({ value: label.id, label: label.name })));
+        setLabels({
+          key,
+          options: page.items.map((label) => ({ value: label.id, label: label.name })),
+        });
       },
       () => undefined,
     );
   }
 
   function loadEpics() {
-    if (epics !== null) return;
-    listOpenEpics(project.key).then(
+    if (epics !== null || projectKey === null) return;
+    const key = projectKey;
+    listOpenEpics(key).then(
       (list) => {
-        setEpics(list.map((epic) => ({ value: epic.id, label: epic.title })));
+        setEpics({ key, options: list.map((epic) => ({ value: epic.id, label: epic.title })) });
       },
       () => undefined,
     );
@@ -202,6 +224,11 @@ export function TaskFilterBar({
   }
 
   const names: FilterNames = {
+    projects: new Map(
+      (projects ?? []).flatMap((option) =>
+        option.id === undefined ? [] : [[option.id, option.value] as const],
+      ),
+    ),
     labels: new Map((labels ?? []).map((option) => [option.value, option.label])),
     epics: new Map((epics ?? []).map((option) => [option.value, option.label])),
     teams: new Map((teams ?? []).map((option) => [option.value, option.label])),
@@ -247,6 +274,15 @@ export function TaskFilterBar({
             }}
           />
         </div>
+        {projects !== undefined && (
+          <FilterMenu
+            name="Project"
+            filterKey="projectId"
+            filter={filter}
+            onChange={onChange}
+            options={projects}
+          />
+        )}
         <FilterMenu
           name="Type"
           filterKey="type"
@@ -275,6 +311,7 @@ export function TaskFilterBar({
           onChange={onChange}
           onOpen={loadLabels}
           options={labels ?? []}
+          unavailable={projectKey === null ? "Choose one project to filter by label" : undefined}
         />
         <FilterMenu
           name="Epic"
@@ -283,6 +320,7 @@ export function TaskFilterBar({
           onChange={onChange}
           onOpen={loadEpics}
           options={[{ value: "none", label: "No epic" }, ...(epics ?? [])]}
+          unavailable={projectKey === null ? "Choose one project to filter by epic" : undefined}
         />
         <FilterMenu
           name="Team"
@@ -411,9 +449,11 @@ export function TaskFilterBar({
           >
             Clear filters
           </Button>
-          <p role="status" aria-label="Filter results" className="text-sm text-muted-foreground">
-            {`${String(shown)} of ${String(total)} tasks match.`}
-          </p>
+          {status !== undefined && (
+            <p role="status" aria-label="Filter results" className="text-sm text-muted-foreground">
+              {status}
+            </p>
+          )}
         </div>
       )}
     </div>

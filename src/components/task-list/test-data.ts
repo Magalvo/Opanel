@@ -1,6 +1,6 @@
 // Items of the list across projects (WS-130), for the list view's tests.
 import { doing, done, opa, task, todo } from "@/components/board/test-data";
-import type { Column } from "@/lib/schemas/projects";
+import type { Column } from "@/lib/schemas/columns";
 import type { TaskListItem, TaskSummary } from "@/lib/schemas/tasks";
 
 export const OPS_ID = "1f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";

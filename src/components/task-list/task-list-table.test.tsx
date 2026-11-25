@@ -20,6 +20,18 @@ function renderTable(items: TaskListItem[], sort: TaskSort = "-updated", onSort 
   return { onSort, user: userEvent.setup() };
 }
 
+/** The table's rows below the header. */
+function bodyRows(): HTMLElement[] {
+  return screen.getAllByRole("row").slice(1);
+}
+
+/** The first row below the header. */
+function firstRow(): HTMLElement {
+  const [row] = bodyRows();
+  if (row === undefined) throw new Error("no row");
+  return row;
+}
+
 function cells(row: HTMLElement): string[] {
   return within(row)
     .getAllByRole("cell")
@@ -45,8 +57,8 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
         .getAllByRole("columnheader")
         .map((header) => header.textContent),
     ).toEqual(["Key", "Title", "Type", "Status", "Priority", "Assignee", "Due", "Updated"]);
-    const [, row] = within(table).getAllByRole("row");
-    expect(cells(row!)).toEqual([
+    const row = firstRow();
+    expect(cells(row)).toEqual([
       "OPA-7",
       "Login fails",
       "Bug",
@@ -56,11 +68,11 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
       "Due Dec 1, 2026",
       "3 hours ago",
     ]);
-    expect(within(row!).getByRole("link", { name: "OPA-7" })).toHaveAttribute(
+    expect(within(row).getByRole("link", { name: "OPA-7" })).toHaveAttribute(
       "href",
       "/projects/OPA/tasks/OPA-7",
     );
-    expect(within(row!).getByText("3 hours ago")).toHaveAttribute(
+    expect(within(row).getByText("3 hours ago")).toHaveAttribute(
       "datetime",
       "2026-11-25T09:00:00.000Z",
     );
@@ -69,9 +81,9 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
   it("says Backlog for a task with no column, and links another project's task", () => {
     renderTable([item(3, null, {}, ops)]);
 
-    const [, row] = screen.getAllByRole("row");
-    expect(cells(row!)[3]).toBe("Backlog");
-    expect(within(row!).getByRole("link", { name: "OPS-3" })).toHaveAttribute(
+    const row = firstRow();
+    expect(cells(row)[3]).toBe("Backlog");
+    expect(within(row).getByRole("link", { name: "OPS-3" })).toHaveAttribute(
       "href",
       "/projects/OPS/tasks/OPS-3",
     );
@@ -85,7 +97,7 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
       item(4, todo, { assignee: { ...ada, active: false } }),
     ]);
 
-    const rows = screen.getAllByRole("row").slice(1);
+    const rows = bodyRows();
     expect(rows.map((row) => cells(row)[5])).toEqual([
       "Ada Lovelace",
       "Frontend",
@@ -103,7 +115,7 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
       item(5, todo),
     ]);
 
-    const rows = screen.getAllByRole("row").slice(1);
+    const rows = bodyRows();
     expect(rows.map((row) => cells(row)[6])).toEqual([
       "Overdue, due Nov 24, 2026",
       "Due Nov 24, 2026",

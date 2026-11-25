@@ -24,7 +24,7 @@ function rowKeys(): string[] {
   return within(table)
     .getAllByRole("row")
     .slice(1)
-    .map((row) => within(row).getAllByRole("cell")[0]!.textContent);
+    .map((row) => within(row).getAllByRole("cell").at(0)?.textContent ?? "");
 }
 
 function listReads(): string[] {
@@ -150,8 +150,9 @@ describe("TaskList: empty and failed (WS-130 test 8)", () => {
     const user = userEvent.setup();
     render(<TaskList />);
 
-    const empty = await screen.findByText("No tasks match these filters.");
-    await user.click(within(empty.parentElement!).getByRole("button", { name: "Clear filters" }));
+    const empty = await screen.findByRole("region", { name: "No tasks" });
+    expect(empty).toHaveTextContent("No tasks match these filters.");
+    await user.click(within(empty).getByRole("button", { name: "Clear filters" }));
 
     await waitFor(() => {
       expect(rowKeys()).toEqual(["OPA-1"]);

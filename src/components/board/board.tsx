@@ -316,8 +316,8 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
           filter={filter}
           onChange={setFilter}
           people={people}
-          shown={count(visible)}
-          total={count(board)}
+          projectKey={project.key}
+          status={`${String(count(visible))} of ${String(count(board))} tasks match.`}
           ignored={ignored}
         />
       )}
