@@ -27,7 +27,7 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-function fakeHub(): { hub: EventHub; emit(count: number): void } {
+function fakeHub(): { hub: EventHub; emit: (count: number) => void } {
   const subscribers = new Set<EventSubscriber>();
   return {
     hub: {
@@ -36,15 +36,17 @@ function fakeHub(): { hub: EventHub; emit(count: number): void } {
         return Promise.resolve(() => subscribers.delete(subscriber));
       },
     },
-    emit(count) {
+    emit: (count) => {
       for (let version = 1; version <= count; version++) {
         const event: ProjectEvent = {
+          id: randomUUID(),
           type: "task.updated",
           entity: "task",
           projectId: PROJECT_ID,
           entityId: randomUUID(),
           version,
           actorAccountId: randomUUID(),
+          at: new Date().toISOString(),
         };
         for (const subscriber of [...subscribers]) subscriber.event(event);
       }
