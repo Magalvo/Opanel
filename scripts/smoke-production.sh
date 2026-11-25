@@ -67,6 +67,15 @@ for _ in $(seq 1 30); do
 done
 [[ "$health" == "healthy" ]] || fail "the container's health check says ${health}"
 
+echo "== the database runs the image pinned in services.yaml (WS-126)"
+pinned="$(grep -oE '^ +image: postgres:[^@ ]+@sha256:[0-9a-f]{64}' docker/production/services.yaml |
+  sed 's/.*@//' || true)"
+[[ -n "$pinned" ]] || fail "docker/production/services.yaml pins no digest for the database"
+db_image="$(docker inspect --format '{{.Image}}' "$(compose ps -q db)")"
+digests="$(docker image inspect --format '{{join .RepoDigests " "}}' "$db_image")"
+[[ " ${digests} " == *"@${pinned} "* ]] || fail "the db container runs ${digests}, not ${pinned}"
+compose exec -T db postgres --version
+
 echo "== each service holds only its own secrets (WS-079)"
 # Reads variable names only, never a value, so the CI log holds no secret.
 env_names() { docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$1" | cut -d= -f1; }

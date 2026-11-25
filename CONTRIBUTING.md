@@ -192,6 +192,28 @@ weekly and on every change to the dependencies. When it fails:
    in a work-spec and with a comment naming it. The audit workflow fails as soon as such
    an advisory has a fix (WS-061).
 
+## Image pins
+
+Every image the example install pulls (`docker/production/services.yaml`) and the base of
+the `Dockerfile` is named `repository:tag@sha256:<digest>`, so a revision always installs
+the same images; `scripts/check-image-pins.test.ts` fails on a floating tag. Weekly and by
+hand, the `Dependency audit` workflow runs `scripts/check-image-pins.ts`, which fails once a
+pinned tag resolves to another digest: a patch or security release of PostgreSQL, Caddy,
+Node.js or their Alpine or Debian base (WS-126). When it fails:
+
+1. Resolve the new digest: `docker buildx imagetools inspect <repository:tag>` prints it
+   first (the multi-platform index digest; it reads the manifest only).
+2. Put it in place of the old one in a pull request, with the comment above the pin updated
+   (the version it is, the date). For PostgreSQL, read the release notes for steps after
+   updating; the Node.js pin follows the version of `.nvmrc` (WS-062).
+3. The pull request's `Production image` workflow is the rehearsal: install, migrations,
+   the proxy, a backup restored into a new install, all on the new image.
+
+Never change a major version this way: a new PostgreSQL major needs a dump and a restore
+(`docs/operations.md`, "Updating PostgreSQL") and is a work-item of its own, moving
+`compose.yaml` and CI first. `compose.yaml` keeps the database's tag without a digest on
+purpose, so development and CI meet a patch release before production does.
+
 ## Content Security Policy
 
 Every page is served with a Content Security Policy (WS-041), built in
