@@ -34,6 +34,11 @@ function frameOf(event: ProjectEvent): Uint8Array {
   return encoder.encode(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
 }
 
+/** Watching a board is not using the app: a heartbeat extends no session (WS-124). */
+function checkWithoutRenewal(request: Request): Promise<{ actor: Actor }> {
+  return authenticateRequest(request, { refreshSession: false });
+}
+
 /**
  * The events of one project as Server-Sent Events (WS-047). Takes a place in the account's
  * cap, subscribes to the hub, and only then answers, so every event committed after the
@@ -48,7 +53,7 @@ export async function openEventStream({
   projectId,
   account,
   hub = getEventHub(),
-  authenticate = authenticateRequest,
+  authenticate = checkWithoutRenewal,
   heartbeatMs = HEARTBEAT_MS,
   maxStreamsPerAccount = MAX_STREAMS_PER_ACCOUNT,
   logError = console.error,
