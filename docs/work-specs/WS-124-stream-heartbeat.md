@@ -1,6 +1,6 @@
 # WS-124 — Stream heartbeats keep the queue cap and renew no session
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, as proposed)
 - Work-item: [WI-124](../work-items/WI-124-stream-heartbeat.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 3 (the heartbeat);
   [0004](../canonical/0004-api-conventions.md) section 7 (sessions are extended by use);

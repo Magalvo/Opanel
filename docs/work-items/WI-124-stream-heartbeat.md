@@ -1,6 +1,6 @@
 # WI-124 — Stream heartbeats keep the queue cap and renew no session
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-124)
 - Work-track: none: follow-ups C06 (independent audit of 2026-11-24) and B06 (audit of
   2026-11-19), both confirmed in the code of `main` (`0461e5b`)
 - Depends on: none
