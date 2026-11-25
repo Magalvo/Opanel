@@ -162,6 +162,12 @@ export function tagMajor(tag: string): number | null {
   return match?.[1] ? Number(match[1]) : null;
 }
 
+/** The major version of `.nvmrc` (`22`, `v22.1.0` → 22), or null for an alias such as `lts/*`. */
+export function nvmrcMajor(nvmrc: string): number | null {
+  const match = /^v?(\d+)/.exec(nvmrc.trim());
+  return match?.[1] ? Number(match[1]) : null;
+}
+
 /** The major version of the guide's line "- `db`: PostgreSQL NN …", or null. */
 export function guideDatabaseMajor(guide: string): number | null {
   const match = /^- `db`: PostgreSQL (\d+)\b/m.exec(guide);
