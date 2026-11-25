@@ -5,6 +5,7 @@ import {
   guideDatabaseMajor,
   imagePins,
   manifestDigest,
+  nvmrcMajor,
   parseImage,
   repositoryPins,
   stalePins,
@@ -169,6 +170,18 @@ describe("the major version of PostgreSQL (WS-126)", () => {
   });
 });
 
+describe("the major version of Node.js (WS-127)", () => {
+  it("reads it from .nvmrc", () => {
+    expect(nvmrcMajor("22\n")).toBe(22);
+    expect(nvmrcMajor("v24.11.1")).toBe(24);
+    expect(nvmrcMajor("lts/*")).toBeNull();
+  });
+
+  it("tells a base image tag of another major version from .nvmrc's", () => {
+    expect(tagMajor("22-bookworm-slim")).not.toBe(nvmrcMajor("24\n"));
+  });
+});
+
 describe("the repository's images (WS-126)", () => {
   const pins = repositoryPins();
   const db = pins.find((pin) => pin.source === "docker/production/services.yaml, db");
@@ -196,5 +209,12 @@ describe("the repository's images (WS-126)", () => {
 
   it("names in docs/operations.md the major version the production database runs", () => {
     expect(guideDatabaseMajor(read("docs/operations.md"))).toBe(tagMajor(db?.tag ?? ""));
+  });
+
+  it("builds on the Node.js major version of .nvmrc (WS-127)", () => {
+    const node = pins.find((pin) => pin.source === "Dockerfile, NODE_IMAGE");
+
+    expect(node?.repository).toBe("node");
+    expect(tagMajor(node?.tag ?? "")).toBe(nvmrcMajor(read(".nvmrc")));
   });
 });

@@ -1,6 +1,7 @@
 # WI-127 — The Node.js base image pin is current
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-127 and the recommended
+  answers to its open questions)
 - Work-track: none: the follow-up "The Node.js base image pin of the `Dockerfile` is stale"
   (found in WI-126, recorded on `main` in `923dee6`)
 - Depends on: WI-126 (the weekly pin check and `CONTRIBUTING.md`, "Image pins")

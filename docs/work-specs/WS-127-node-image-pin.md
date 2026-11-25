@@ -1,6 +1,7 @@
 # WS-127 — The Node.js base image pin is current
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to
+  its open questions)
 - Work-item: [WI-127](../work-items/WI-127-node-image-pin.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) section 3 (every image pinned by
   digest, a weekly check); WS-062 (the image, its Node.js base pinned by digest), WS-126
