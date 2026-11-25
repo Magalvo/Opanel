@@ -265,6 +265,14 @@ Other follow-ups:
   each). Needs a work-item with the `planning-flow.spec.ts` one above: find whether the
   page misses the event, rather than waiting longer. To be answered by WI-128.
 
+- **An open board needs two reads to show a created, restored or moved task** (found in
+  WI-128, 2026-11-25). A thin task event makes the board read the task, then its column,
+  one after the other; under load the card shows up to about 2 s after the change
+  answered. `live-board.spec.ts` failed on it once in 15 at the configured 4 workers
+  ("a task created through the API…") and 1 to 3 in 15 at 6 workers (the restore step).
+  Candidate: a task event that names its column, so one read is enough (doc 0002, an event
+  contract change). WS-128 has the measurements.
+
 - **Task lists are slow on large installs when no index serves their order** (WI-116 and
   WI-118, accepted by the owner on 2026-11-24). With 50 000 tasks:
   - `GET /projects/{projectId}/tasks` takes about 155 ms for a first page with no filter,
