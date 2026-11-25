@@ -1,6 +1,7 @@
 # WS-123 — The live board keeps the newest state
 
-- Status: In progress (approved by the owner on 2026-11-25, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-25, questions 1 to 3 as recommended; done on
+  2026-11-25)
 - Work-item: [WI-123](../work-items/WI-123-live-board-consistency.md)
 - Canonical docs: [0002](../canonical/0002-realtime-sync.md) section 4 (after a reconnect,
   read again what you show); [WS-048](WS-048-live-board.md) sections 4 and 5 (applying
@@ -159,8 +160,40 @@ the ordering.
 
 ## Deviations from the approved spec
 
-None yet.
+1. **One existing test changed.** WS-082 test 9 ("puts a move's answer in the column it
+   names…") asserted, part-way, that a task refresh answering during a move puts the card
+   back on the board. Criterion 5 of this item forbids exactly that, so the intermediate
+   assertion now checks that the card stays where it was dropped, and the fake server
+   answers the refetch after the move with the task as it now is. Its final assertions,
+   the point of that test, are unchanged.
+2. **The board's own move reads its column while the move is held** (`placeTask(moved, {
+own: true })`). Section 3 holds every column read that returns during a move; the move's
+   own read is the one that shows its result, so holding it would cost a second read for
+   every cross-column move.
+3. **A read takes a triggering task out of other columns only if the board holds that
+   task at the triggering version or older.** Section 3 said "the triggering tasks removed
+   from other columns"; once reads are coalesced and repeated, a newer version of the task
+   placed elsewhere meanwhile must not be removed.
+4. **Test 2 is a frame test**, rendering `ProjectFrame` with its provider, since the
+   version check lives in the frame; the provider test adds the plain reconnect read.
 
 ## Implementation record
 
-Not started.
+- Red: tests 1 and 2 failed (the frame took an older version; no read on reconnect)
+  (commit `f3905e5`); tests 3 to 9 failed: `uniqueTasks` did not exist, the stale column
+  read restored old, deleted and moved cards, results landed under a drag, and loads showed
+  a task twice (commit `ea67ab8`).
+- Green, in two steps: the version-aware `setProject`, the reconnect read and `uniqueTasks`
+  in both loaders (commit `80797c5`); the column epochs in `setBoard`, `readColumn`, and
+  results held during a drag or a move, read again by `flush` (commit `a4dff8e`).
+- The board hook and frame tests passed three times in a row in shuffled order.
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2364 of 2364 (225 files);
+  `test:e2e` 123 of 123.
+- The first full `test:e2e` run had two failures. `planning-flow.spec.ts` is the known
+  intermittent failure in the index. `live-board.spec.ts:144` ("a deleted task disappears
+  from the other board…", the other board still showing the task after 2 s) failed once in
+  five repeats of that spec on this branch, and also once in ten on `main` (`83c5272`) under
+  the same parallel load, never when run alone (10 of 10 on each). It is an existing
+  intermittent failure, not caused by this item; a follow-up records it.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.
