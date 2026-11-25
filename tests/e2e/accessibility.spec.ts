@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { type Page } from "@playwright/test";
+import { type Locator, type Page } from "@playwright/test";
 
 import { expect, test } from "./base";
 import { E2E_BASE_URL } from "./environment";
@@ -355,5 +355,155 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.getByRole("link", { name: "Urgent and overdue" }).click();
     await expect(page.getByRole("dialog").getByLabel("Due date")).toHaveValue("2030-06-01");
     expect(await violations(page), "task dialog").toEqual([]);
+  });
+}
+
+/** axe on the page as it is, then again with the pointer over `hovered` (WS-129, test 7). */
+async function checkAtRestAndHovered(page: Page, hovered: Locator, where: string) {
+  await expect(hovered).toBeVisible();
+  expect(await violations(page), where).toEqual([]);
+  await hovered.hover();
+  expect(await violations(page), `${where}, hovered`).toEqual([]);
+}
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`destructive buttons and menu items have no accessibility violations in ${colorScheme} mode (WS-129)`, async ({
+    page,
+  }) => {
+    test.slow();
+    const email = `a11y-destructive-${crypto.randomUUID()}@example.com`;
+    const password = "an e2e accessibility password";
+    await seedAccount({ email, password, role: "admin", name: "Axe Admin" });
+    const headers = { Origin: E2E_BASE_URL };
+    expect(
+      (
+        await page.request.post("/api/v1/auth/sign-in", { headers, data: { email, password } })
+      ).status(),
+    ).toBe(200);
+    const team = await page.request.post("/api/v1/teams", {
+      headers,
+      data: { name: `Axe ${crypto.randomUUID()}` },
+    });
+    expect(team.status()).toBe(201);
+    const teamId = ((await team.json()) as { id: string }).id;
+    const agent = await page.request.post("/api/v1/agents", {
+      headers,
+      data: { name: `Axe bot ${crypto.randomUUID()}`, role: "worker_agent", projectIds: null },
+    });
+    expect(agent.status()).toBe(201);
+    const agentId = ((await agent.json()) as { id: string }).id;
+    const key = `D${crypto.randomUUID().replace(/-/g, "").slice(0, 7).toUpperCase()}`;
+    expect(
+      (await page.request.post("/api/v1/projects", { headers, data: { key, name: key } })).status(),
+    ).toBe(201);
+    await page.emulateMedia({ colorScheme });
+    const confirmation = page.getByRole("alertdialog");
+
+    // People: a person's menu, focused on "Deactivate", then its confirmation.
+    await page.goto("/people");
+    const row = page
+      .getByRole("row")
+      .filter({ has: page.getByRole("button", { name: /^Actions for/ }) })
+      .filter({ hasNotText: "Deactivated" })
+      .first();
+    await row.getByRole("button", { name: /^Actions for/ }).click();
+    const deactivate = page.getByRole("menuitem", { name: "Deactivate" });
+    await deactivate.hover();
+    await expect(deactivate).toBeFocused();
+    // The menu only: while a Radix menu is open the page behind it is `aria-hidden`, which
+    // axe reports as `aria-hidden-focus` whatever the colours (WS-129, implementation).
+    const menu = await new AxeBuilder({ page }).include('[role="menu"]').withTags(TAGS).analyze();
+    expect(
+      menu.violations.map((violation) => violation.id),
+      "People, menu",
+    ).toEqual([]);
+    await deactivate.click();
+    await checkAtRestAndHovered(
+      page,
+      confirmation.getByRole("button", { name: "Deactivate" }),
+      "People, confirmation",
+    );
+    await confirmation.getByRole("button", { name: "Cancel" }).click();
+
+    // A team: "Delete team" and its confirmation.
+    await page.goto(`/teams/${teamId}`);
+    await checkAtRestAndHovered(page, page.getByRole("button", { name: "Delete team" }), "team");
+    await page.getByRole("button", { name: "Delete team" }).click();
+    await checkAtRestAndHovered(
+      page,
+      confirmation.getByRole("button", { name: "Delete" }),
+      "team, confirmation",
+    );
+    await confirmation.getByRole("button", { name: "Cancel" }).click();
+
+    // An agent: "Disable agent" and its confirmation.
+    await page.goto(`/agents/${agentId}`);
+    const disable = page.getByRole("button", { name: "Disable agent" });
+    await checkAtRestAndHovered(page, disable, "agent");
+    await disable.click();
+    await checkAtRestAndHovered(
+      page,
+      confirmation.getByRole("button", { name: /^Disable/ }),
+      "agent, confirmation",
+    );
+    await confirmation.getByRole("button", { name: "Cancel" }).click();
+
+    // A project's settings: "Archive project", and the confirmation to delete a column.
+    await page.goto(`/projects/${key}/settings`);
+    const columns = page.getByRole("region", { name: "Columns" });
+    await expect(columns.getByRole("row", { name: /Done/ })).toBeVisible();
+    await checkAtRestAndHovered(
+      page,
+      page.getByRole("button", { name: "Archive project" }),
+      "settings",
+    );
+    await page.getByRole("button", { name: "Delete Done" }).click();
+    await checkAtRestAndHovered(
+      page,
+      confirmation.getByRole("button", { name: "Delete" }),
+      "settings, delete column",
+    );
+    await confirmation.getByRole("button", { name: "Cancel" }).click();
+  });
+}
+
+for (const reducedMotion of ["reduce", "no-preference"] as const) {
+  test(`a loading skeleton ${reducedMotion === "reduce" ? "is still" : "pulses"} with reducedMotion "${reducedMotion}" (WS-129)`, async ({
+    page,
+  }) => {
+    const email = `a11y-skeleton-${crypto.randomUUID()}@example.com`;
+    const password = "an e2e accessibility password";
+    await seedAccount({ email, password, role: "manager", name: "Axe Manager" });
+    expect(
+      (
+        await page.request.post("/api/v1/auth/sign-in", {
+          headers: { Origin: E2E_BASE_URL },
+          data: { email, password },
+        })
+      ).status(),
+    ).toBe(200);
+    // Holds the teams list back, so the page stays on its skeleton.
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route(/\/api\/v1\/teams\?/, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.emulateMedia({ reducedMotion });
+
+    await page.goto("/teams");
+    const skeleton = page.locator('[data-slot="skeleton"]').first();
+    await expect(skeleton).toBeVisible();
+    const animation = await skeleton.evaluate((element) => ({
+      name: getComputedStyle(element).animationName,
+      running: element.getAnimations().length,
+    }));
+    release();
+
+    expect(animation).toEqual(
+      reducedMotion === "reduce" ? { name: "none", running: 0 } : { name: "pulse", running: 1 },
+    );
   });
 }
