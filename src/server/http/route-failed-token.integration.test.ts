@@ -174,10 +174,15 @@ describe("route() limits failed API token attempts per address (WS-125)", () => 
     const { handler } = setup({ clientIpHeader: null });
     const real = await validToken();
     const publicId = /^opk_([a-z2-7]{12})_/.exec(real)?.[1] ?? "";
-    const agent = await createTestAgent({ role: "worker_agent", scopes: ["tasks:read"] });
+    const agent = await createTestAgent({
+      name: "Second bot",
+      role: "worker_agent",
+      scopes: ["tasks:read"],
+    });
     const revoked = await createTestToken(agent.id, { revokedAt: new Date() });
     const expired = await createTestToken(agent.id, { expiresAt: new Date(Date.now() - 1000) });
     const disabledAgent = await createTestAgent({
+      name: "Disabled bot",
       role: "worker_agent",
       scopes: ["tasks:read"],
       disabled: true,
@@ -236,7 +241,8 @@ describe("route() limits failed API token attempts per address (WS-125)", () => 
     const line = logError.mock.calls[0]?.[0] ?? "";
     expect(line).toContain("203.0.113.9");
     for (const token of tokens) {
-      const [, publicId = "", secret = ""] = /^opk_([a-z2-7]{12})_([0-9a-f]{64})$/.exec(token) ?? [];
+      const [, publicId = "", secret = ""] =
+        /^opk_([a-z2-7]{12})_([0-9a-f]{64})$/.exec(token) ?? [];
       for (const part of [publicId, secret, secret.slice(0, 8)]) {
         expect(line).not.toContain(part);
         for (const key of failedTokenLimiter.keys()) expect(key).not.toContain(part);

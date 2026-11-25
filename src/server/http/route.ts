@@ -9,6 +9,11 @@ import {
   type Authenticated,
   type SessionAuthenticated,
 } from "@/server/auth/authenticate";
+import {
+  type FailedTokenLimiter,
+  failedTokenKey,
+  getFailedTokenLimiter,
+} from "@/server/auth/failed-token-limit";
 import { assertSameOrigin } from "@/server/auth/origin";
 import { getTokenRateLimiter, type TokenRateLimiter } from "@/server/auth/token-rate-limit";
 import { getEnv } from "@/server/env";
@@ -53,6 +58,13 @@ export interface ContractRoute<Context> {
 export interface RouteOptions {
   /** Counts requests per API token (WS-072). Defaults to the process's limiter. */
   tokenRateLimiter?: TokenRateLimiter;
+  /** Counts failed token attempts per client address (WS-125). Defaults to the process's. */
+  failedTokenLimiter?: FailedTokenLimiter;
+  /**
+   * The header holding the client address; `null` when none is trusted. Defaults to
+   * `CLIENT_IP_HEADER`, read per request.
+   */
+  clientIpHeader?: string | null;
   /** Receives a description of an unexpected failure. Never part of the response. */
   logError?: (message: string) => void;
   /** The app's own origin, for the same-origin check. Defaults to `APP_URL`, read per request. */
@@ -141,7 +153,13 @@ function withSharedBehaviour<Context>(
 export function route<const Contract extends EndpointContract, Context = unknown>(
   contract: Contract,
   handler: ContractHandler<Contract, Context>,
-  { logError = console.error, appUrl, tokenRateLimiter }: RouteOptions = {},
+  {
+    logError = console.error,
+    appUrl,
+    tokenRateLimiter,
+    failedTokenLimiter,
+    clientIpHeader,
+  }: RouteOptions = {},
 ): ContractRoute<Context> {
   const wrapped = withSharedBehaviour<Context>(
     async (request, context) => {
@@ -155,7 +173,11 @@ export function route<const Contract extends EndpointContract, Context = unknown
         return handler(request, context, undefined as AuthFor<Contract>);
       }
 
-      const auth = await authenticate(request);
+      const auth = await authenticateLimited(request, {
+        limiter: failedTokenLimiter ?? getFailedTokenLimiter(),
+        headerName: clientIpHeader === undefined ? getEnv().CLIENT_IP_HEADER : clientIpHeader,
+        logError,
+      });
       if (auth.via === "token") {
         // Per token, after authentication (WT-05 decision 8, WS-072 question 3).
         const decision = (tokenRateLimiter ?? getTokenRateLimiter()).hit(auth.tokenId);
@@ -178,6 +200,50 @@ export function route<const Contract extends EndpointContract, Context = unknown
   );
 
   return Object.assign(wrapped, { contract });
+}
+
+/**
+ * `authenticate()`, with failed token attempts limited per trusted client address (WS-125):
+ * past the limit, a token request is refused with `429` before its token is looked up. Only
+ * a `401` stays counted. Session requests are not counted, nor are the event stream's
+ * heartbeat checks, which call `authenticate()` directly.
+ */
+async function authenticateLimited(
+  request: Request,
+  {
+    limiter,
+    headerName,
+    logError,
+  }: {
+    limiter: FailedTokenLimiter;
+    headerName: string | null | undefined;
+    logError: (message: string) => void;
+  },
+): Promise<Authenticated> {
+  const key = request.headers.has("Authorization")
+    ? failedTokenKey(request, headerName ?? undefined)
+    : null;
+  if (key === null) return authenticate(request);
+
+  const decision = limiter.begin(key);
+  if (!decision.allowed) {
+    if (decision.firstRefusal) {
+      const source = key.startsWith("ip") ? key.slice(key.indexOf(":") + 1) : `"${key}"`;
+      logError(
+        `Failed API token attempts from ${source} reached the limit; refusing them for ` +
+          `${String(decision.retryAfterSeconds)} s.`,
+      );
+    }
+    throw rateLimited(decision.retryAfterSeconds);
+  }
+  try {
+    const auth = await authenticate(request);
+    decision.succeeded();
+    return auth;
+  } catch (error) {
+    if (!(error instanceof ApiError && error.status === 401)) decision.succeeded();
+    throw error;
+  }
 }
 
 /**

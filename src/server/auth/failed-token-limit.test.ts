@@ -119,13 +119,14 @@ describe("failedTokenKey (WS-125)", () => {
   });
 
   it("keys an IPv4-mapped IPv6 address as its IPv4 address", () => {
-    expect(failedTokenKey(request({ "X-Forwarded-For": "::ffff:203.0.113.9" }), "x-forwarded-for")).toBe(
-      "ip:203.0.113.9",
-    );
+    expect(
+      failedTokenKey(request({ "X-Forwarded-For": "::ffff:203.0.113.9" }), "x-forwarded-for"),
+    ).toBe("ip:203.0.113.9");
   });
 
   it("keys an IPv6 address by its /64", () => {
-    const key = (ip: string) => failedTokenKey(request({ "X-Forwarded-For": ip }), "x-forwarded-for");
+    const key = (ip: string) =>
+      failedTokenKey(request({ "X-Forwarded-For": ip }), "x-forwarded-for");
     expect(key("2001:db8:1:2::1")).toBe("ip6:2001:0db8:0001:0002::/64");
     expect(key("2001:db8:1:2:aaaa:bbbb:cccc:dddd")).toBe("ip6:2001:0db8:0001:0002::/64");
     expect(key("2001:db8:1:3::1")).toBe("ip6:2001:0db8:0001:0003::/64");
