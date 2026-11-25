@@ -252,6 +252,13 @@ Other follow-ups:
   0 of 17 on the branch of WI-119. CI has not shown it yet. Needs a work-item: find whether
   the page misses the `task.moved` event or the move answer, rather than waiting longer.
 
+- **`live-board.spec.ts:144` fails now and then** (found in WI-123, 2026-11-25). "A
+  deleted task disappears from the other board" sometimes still shows the task on the
+  other board after 2 s: once in five repeats of the spec on the branch of WI-123, and once
+  in ten on `main` (`83c5272`), under parallel workers; never when run alone (10 of 10 on
+  each). Needs a work-item with the `planning-flow.spec.ts` one above: find whether the
+  page misses the event, rather than waiting longer.
+
 - **Task lists are slow on large installs when no index serves their order** (WI-116 and
   WI-118, accepted by the owner on 2026-11-24). With 50 000 tasks:
   - `GET /projects/{projectId}/tasks` takes about 155 ms for a first page with no filter,
@@ -396,14 +403,12 @@ chooses. B01 to B05 are WI-079 to WI-083.
   `CREATE` on `public` to `PUBLIC`. Revoke it explicitly, or name 15 as the minimum.
 - B14: answered by WI-083 (2026-11-19): `docs/agents.md` lists `409 account_inactive` and
   `429 too_many_streams`, and doc 0004 sections 4 to 6 are corrected.
-- B15: the project frame applies project updates without a version check
-  (`project-events.tsx`, `board.tsx`), and the board shows no "paused" banner while the
-  browser retries the stream on its own (`use-project-events.ts`). One small item (WS-082,
-  question 4); the version check of the task detail's changes in `use-board.ts` is done
-  (WI-082). Seen once in a full E2E run of WI-080: `projects.spec.ts:34` showed "Someone
-  else changed this project" after the Manager's own save; it passed on every rerun.
-- A card refresh already in flight when a drag starts can still change the board under
-  the drag; only the moved card is corrected after the move (WS-082, question 3).
+- B15: the version check is answered by WI-123 (2026-11-25): the frame keeps the newest
+  project version, whichever answer arrives last. Still open: the board shows no "paused"
+  banner while the browser retries the stream on its own (`use-project-events.ts`).
+- Answered by WI-123 (2026-11-25): a card refresh already in flight when a drag starts
+  could change the board under the drag (WS-082, question 3). Results that return during a
+  drag or a move are now fetched again once it ends.
 - B16: a local run of `pnpm test` fails when another PostgreSQL holds port 5432: the
   Compose file honours `OPANEL_DB_PORT` but `.env.test` always names 5432. Belongs with the
   `E2E_PORT` follow-up above.
@@ -444,19 +449,9 @@ per-task column cleanup.
 - C01: answered by WI-121 (2026-11-24): a `GET /tasks` cursor whose `created`,
   `updated` or `dueDate` value is no real instant or calendar date is a `400` naming
   `cursor`, not a `500`; the sort keys use the shared rules of WI-051 and WI-114.
-- C02: on reconnect the project frame refreshes the board but not the project
-  (`project-events.tsx`, `onOpen`), so a rename or archive made while the stream was down
-  stays unseen until a reload. Read the project again on reconnect, applied only if its
-  version is newer; one item with B15. To be answered by WI-123.
-- C03: a column read started by one task's refresh replaces the whole column when it
-  returns (`use-board.ts`, `placeTask` and `replaceColumn`), so an older read can undo a
-  newer change to another card in that column. Coalesce column reads and drop a read that a
-  later event or local move has overtaken. Related to the in-flight refresh under a drag
-  above. To be answered by WI-123.
-- C04: the board's loaders append each page (`src/components/board/api.ts`) without
-  removing repeats, so a task moved during the load can appear twice, in two columns.
-  `usePagedList` (WI-080) does not cover them. Keep one card per task id, the newest
-  version. To be answered by WI-123.
+- C02 to C04: answered by WI-123 (2026-11-25). The frame reads the project again on
+  reconnect and keeps its newest version; a column read that a newer change overtook is
+  read again; loads show one card per task.
 - C05: answered by WI-122 (2026-11-25): the three task lists read no description; a
   100-task page of 50 000-character descriptions reads about 80 000 characters instead of
   about 5.1 million (WS-122 "Implementation record").
