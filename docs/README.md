@@ -460,9 +460,10 @@ Optimisations found by the same audit, none urgent:
 - **`mcp/e2e/write-tools.spec.ts` fails now and then** (found in WI-129, 2026-11-25). Once in
   a full run the task history came back as `field_changed`, `created` instead of `created`,
   `field_changed`; alone, 10 of 10 passed. The check orders by `created_at, id`
-  (`mcp/e2e/agent.ts`), and ids are random, so two events with the same `created_at` come
-  back in either order. Needs a work-item: find why the two instants tie, and order by
-  something that cannot.
+  (`mcp/e2e/agent.ts`), and `id` is an increasing identity, so the `field_changed` event was
+  stored with an earlier `created_at` than the `created` one, although the update was sent
+  after the create answered. Both take `now()`, the start of their transaction. Needs a
+  work-item: find how that happens, rather than changing the order of the check.
 
 From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none urgent:
 
