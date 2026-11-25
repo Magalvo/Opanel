@@ -1,6 +1,6 @@
 # WI-126 — The production database image is pinned by digest
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-126)
 - Work-track: none: follow-up B09 (audit of 2026-11-19), confirmed again by the independent
   audit of 2026-11-24 and in the files of `main` (`3c2a01a`)
 - Depends on: none

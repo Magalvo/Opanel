@@ -1,6 +1,7 @@
 # WS-126 — The production database image is pinned by digest
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-25, with the recommended answers to its
+  open questions)
 - Work-item: [WI-126](../work-items/WI-126-pin-postgres-image.md)
 - Canonical docs: [0006](../canonical/0006-operations.md) (packaging, upgrades, backup);
   WS-062 (the image, its Node.js base pinned by digest, question 3), WS-067 (Caddy pinned
