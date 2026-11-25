@@ -191,6 +191,7 @@ operations (doc 0006), are done.
 | [WI-121](work-items/WI-121-task-list-cursor-dates.md)           | Task list cursors refuse impossible dates                         | [WS-121](work-specs/WS-121-task-list-cursor-dates.md)           |
 | [WI-122](work-items/WI-122-task-list-summary-select.md)         | Task lists stop reading descriptions                              | [WS-122](work-specs/WS-122-task-list-summary-select.md)         |
 | [WI-123](work-items/WI-123-live-board-consistency.md)           | The live board keeps the newest state                             | [WS-123](work-specs/WS-123-live-board-consistency.md)           |
+| [WI-124](work-items/WI-124-stream-heartbeat.md)                 | Stream heartbeats keep the queue cap and renew no session         | [WS-124](work-specs/WS-124-stream-heartbeat.md)                 |
 
 ## Follow-ups
 
@@ -379,7 +380,8 @@ chooses. B01 to B05 are WI-079 to WI-083.
 - B06: the event stream's heartbeat check refreshes the session (Better Auth extends a
   session older than `updateAge` on each `getSession`), so an open board tab keeps its
   session from expiring. Pass `disableRefresh` on the heartbeat's check
-  (`src/server/http/event-stream.ts`, `src/server/auth/authenticate.ts`).
+  (`src/server/http/event-stream.ts`, `src/server/auth/authenticate.ts`). To be answered by
+  WI-124.
 - B07: failed bearer-token attempts are not rate limited (the per-token limiter runs after
   authentication), and the example Caddyfile adds no limit, although WS-072 hands
   unauthenticated limiting to the proxy. Add a per-IP limit for failed token
@@ -458,4 +460,4 @@ per-task column cleanup.
 - C06: the event stream's heartbeat writes without the `desiredSize` check events have,
   and `setInterval` starts a new authentication while the last one may still run
   (`src/server/http/event-stream.ts`). Check backpressure in `write` and keep one heartbeat
-  check in flight.
+  check in flight. To be answered by WI-124.
