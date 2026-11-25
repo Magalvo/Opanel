@@ -1,9 +1,11 @@
 import { type SQL, sql } from "drizzle-orm";
+import { z } from "zod";
 
 import { positionBetween } from "@/lib/position";
 import type { AccountKind } from "@/lib/schemas/account-ref";
 import type { Severity } from "@/lib/schemas/bug-reports";
 import type { ColumnCategory } from "@/lib/schemas/columns";
+import { calendarDateSchema } from "@/lib/schemas/dates";
 import type { LabelRef } from "@/lib/schemas/labels";
 import {
   type AllTasksQuery,
@@ -39,6 +41,7 @@ import {
   versionConflict,
 } from "@/server/http/errors";
 import {
+  cursorInstantSchema,
   decodeBacklogCursor,
   decodeBoardCursor,
   decodeTaskListCursor,
@@ -405,20 +408,21 @@ interface SortKey {
   expression: SQL;
   text: SQL;
   cast: SQL;
-  /** What a value read back from a cursor must look like, so a bad one is a `400`. */
-  shape: RegExp;
+  /**
+   * What a value read back from a cursor must be, so a bad one is a `400` before it reaches
+   * the cast (WS-118 deviation 2); dates must be real ones (WS-121).
+   */
+  value: z.ZodType<string>;
   /** The due date's "has none" key keeps tasks with no date last both ways. */
   alwaysAscending?: true;
 }
-
-const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/;
 
 function timestampKey(column: SQL): SortKey {
   return {
     expression: column,
     text: sql`to_char(${column} at time zone 'utc', ${ISO_US})`,
     cast: sql`::timestamptz`,
-    shape: TIMESTAMP,
+    value: cursorInstantSchema,
   };
 }
 
@@ -428,16 +432,21 @@ const SORT_KEYS: Record<TaskSortField, SortKey[]> = {
       expression: sql`p.key collate "C"`,
       text: sql`p.key`,
       cast: sql`::text collate "C"`,
-      shape: /^[A-Z][A-Z0-9]{1,9}$/,
+      value: z.string().regex(/^[A-Z][A-Z0-9]{1,9}$/),
     },
-    { expression: sql`t.number`, text: sql`t.number::text`, cast: sql`::int`, shape: /^\d{1,9}$/ },
+    {
+      expression: sql`t.number`,
+      text: sql`t.number::text`,
+      cast: sql`::int`,
+      value: z.string().regex(/^\d{1,9}$/),
+    },
   ],
   title: [
     {
       expression: sql`lower(t.title) collate "C"`,
       text: sql`lower(t.title)`,
       cast: sql`::text collate "C"`,
-      shape: /^[\s\S]{1,800}$/,
+      value: z.string().regex(/^[\s\S]{1,800}$/),
     },
   ],
   priority: [
@@ -445,7 +454,7 @@ const SORT_KEYS: Record<TaskSortField, SortKey[]> = {
       expression: PRIORITY_RANK,
       text: sql`${PRIORITY_RANK}::text`,
       cast: sql`::int`,
-      shape: /^[0-4]$/,
+      value: z.string().regex(/^[0-4]$/),
     },
   ],
   dueDate: [
@@ -453,14 +462,14 @@ const SORT_KEYS: Record<TaskSortField, SortKey[]> = {
       expression: sql`(t.due_date is null)`,
       text: sql`(t.due_date is null)::text`,
       cast: sql`::boolean`,
-      shape: /^(true|false)$/,
+      value: z.string().regex(/^(true|false)$/),
       alwaysAscending: true,
     },
     {
       expression: sql`coalesce(t.due_date, ${NO_DUE_DATE})`,
       text: sql`to_char(coalesce(t.due_date, ${NO_DUE_DATE}), 'YYYY-MM-DD')`,
       cast: sql`::date`,
-      shape: /^(?!0000)\d{4}-\d{2}-\d{2}$/,
+      value: calendarDateSchema,
     },
   ],
   created: [timestampKey(sql`t.created_at`)],
@@ -527,7 +536,7 @@ export async function listAllTasks(
   let after = sql``;
   if (query.cursor !== undefined) {
     const cursor = decodeTaskListCursor(query.cursor, query.sort, keys.length);
-    if (!keys.every((key, index) => key.shape.test(cursor.values[index] ?? ""))) {
+    if (!keys.every((key, index) => key.value.safeParse(cursor.values[index] ?? "").success)) {
       throw invalidRequest(
         [{ path: "cursor", message: "Invalid cursor." }],
         "The query string is not valid.",
