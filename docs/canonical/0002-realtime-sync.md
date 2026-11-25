@@ -97,7 +97,10 @@ the payload is enough, such as a delete). Keeping payloads thin means:
 - `NOTIFY`'s 8 KB payload limit is never a concern;
 - there is one serialization path for each entity.
 
-The stream sends a heartbeat comment every 25 seconds so proxies keep it open.
+The stream sends a heartbeat comment every 25 seconds so proxies keep it open. Each
+heartbeat first checks the caller's credentials, one check at a time, without extending a
+session: watching a board is not using the app. A heartbeat counts against the 64 KiB a
+reader may leave unread, as events do (WS-124).
 
 ## 4. Consistency rules
 

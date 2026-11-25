@@ -249,6 +249,7 @@ and version = $expected`; no row means `404` if the entity is gone, otherwise th
   on every navigation.
 - An authenticated API route returns the `Set-Cookie` headers that `authenticate` produced
   (it extends a session that is being used), so that using the app keeps the session alive.
+  The event stream's heartbeats check the session without extending it (WS-124).
 
 ## 8. Versioning
 
