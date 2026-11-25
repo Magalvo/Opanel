@@ -1,7 +1,7 @@
 # WS-125 — Failed API token attempts are limited per address
 
-- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to
-  its open questions)
+- Status: Done (approved by the owner on 2026-11-25, with the recommended answers to its
+  open questions; done on 2026-11-25)
 - Work-item: [WI-125](../work-items/WI-125-failed-token-limit.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (agent tokens),
   [0004](../canonical/0004-api-conventions.md) (errors), [0006](../canonical/0006-operations.md)
@@ -182,3 +182,32 @@ openapi:generate`).
 6. **Cookie requests are not covered.** A request with a wrong session cookie also costs a
    session lookup; B07 is about tokens, and sign-in already limits the password path.
    Recorded as a follow-up if the owner wants it.
+
+## Implementation record
+
+- Red (commit `5c7bb4b`): `failed-token-limit.ts` held only the shapes, so the tests failed
+  on behaviour, not on imports: 18 new tests failed (the limiter never refused and had no
+  keys, `failedTokenKey` returned none, `route()` answered `401` for ever, the warning did
+  not name token attempts). Two passed as guards of today's behaviour: no key without a
+  configured header, and no limit without `CLIENT_IP_HEADER`.
+- Green (commit `3ebf214`): `createFailedTokenLimiter` and `failedTokenKey` as in sections
+  2 and 3. `begin` returns an allowed decision with its own `succeeded()`, which gives the
+  unit back only into the window that took it and only once, so a key moved to `overflow`
+  needs no second lookup. `route()` calls a private `authenticateLimited` in place of
+  `authenticate()`; it counts only requests with an `Authorization` header and a key, and
+  keeps the unit only for a `401`. The first-refusal line reads `Failed API token attempts
+from 203.0.113.9 reached the limit; refusing them for 60 s.` (an IPv6 source is its
+  `/64`; `overflow` and `unknown` are quoted). The warning, the `CLIENT_IP_HEADER` comment
+  in `env.ts` and `.env.example` name failed token attempts.
+- Deviation: the test plan's tests 4 to 10 are eight `it` blocks in
+  `route-failed-token.integration.test.ts` (the `/64` case through `route()` is extra).
+  Test 8's "authenticate() called directly" checks that the process's shared limiter does
+  not grow, since the heartbeat path takes no limiter.
+- Docs (commit `e3e5887`): `docs/operations.md` (requirement 1 and the monitoring
+  paragraph), `docs/agents.md` (a bullet under errors rather than a wider `429` row), and
+  canonical doc 0001. The OpenAPI document is unchanged (`pnpm openapi:generate` produced
+  no diff).
+- Gate on the branch: `pnpm check` passed (after `eslint --fix` sorted two import blocks,
+  commit `b30a042`); `pnpm test` 2395/2395; `pnpm test:e2e` 123/123.
+- Follow-up for the index: question 6 (wrong session cookies also cost a lookup each and
+  are not limited), if the owner wants it.

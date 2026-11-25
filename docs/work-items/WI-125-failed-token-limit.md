@@ -1,6 +1,6 @@
 # WI-125 — Failed API token attempts are limited per address
 
-- Status: In progress (approved by the owner on 2026-11-25, with WS-125)
+- Status: Done (approved by the owner on 2026-11-25, with WS-125; done on 2026-11-25)
 - Work-track: none: follow-up B07 (audit of 2026-11-19), confirmed again by the independent
   audit of 2026-11-24 and in the code of `main` (`0243e77`)
 - Depends on: none
@@ -26,28 +26,28 @@ today's behaviour and says so in its start-up warning and in `docs/operations.md
 
 ## Acceptance criteria
 
-- [ ] With `CLIENT_IP_HEADER` set, once one address has failed token authentication the
+- [x] With `CLIENT_IP_HEADER` set, once one address has failed token authentication the
       allowed number of times in a window, every further token request from it in that
       window answers `429 rate_limited` with a `Retry-After` of at most the window's
       remaining seconds, and makes no database query.
-- [ ] The refusal is stable: every request of a flood past the limit gets the same `429`,
+- [x] The refusal is stable: every request of a flood past the limit gets the same `429`,
       and a request after the window has ended is authenticated again.
-- [ ] A client cannot leave its count by changing what it sends: only the last entry of the
+- [x] A client cannot leave its count by changing what it sends: only the last entry of the
       configured header is read (as for sign-in), other forwarding headers are ignored,
       the IPv6 addresses of one `/64` count together, and an IPv4-mapped IPv6 address
       counts as its IPv4 address.
-- [ ] Requests with a valid token never add to the count, and a valid token from another
+- [x] Requests with a valid token never add to the count, and a valid token from another
       address is unaffected while one address is refused.
-- [ ] Every `401` of a token request has the same body, whatever the reason (malformed,
+- [x] Every `401` of a token request has the same body, whatever the reason (malformed,
       unknown, wrong secret, revoked, expired, disabled agent), before and after this
       change; the `429` body is the same as the per-token limit's.
-- [ ] Neither the limiter nor any log line holds any part of the `Authorization` header.
-- [ ] The limiter's memory is bounded: at most a fixed number of addresses are tracked, and
+- [x] Neither the limiter nor any log line holds any part of the `Authorization` header.
+- [x] The limiter's memory is bounded: at most a fixed number of addresses are tracked, and
       ended windows are swept.
-- [ ] Without `CLIENT_IP_HEADER`, token requests behave as today, and the production
+- [x] Without `CLIENT_IP_HEADER`, token requests behave as today, and the production
       start-up warning says that failed token attempts are then not limited per address.
-- [ ] Session (cookie) requests and the event stream's heartbeat checks are not counted.
-- [ ] `docs/operations.md`, `docs/agents.md` and canonical doc 0001 describe the new limit,
+- [x] Session (cookie) requests and the event stream's heartbeat checks are not counted.
+- [x] `docs/operations.md`, `docs/agents.md` and canonical doc 0001 describe the new limit,
       which answers WS-072's question 3 (unauthenticated limiting left to the proxy).
 
 ## Notes
