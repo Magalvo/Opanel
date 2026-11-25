@@ -190,6 +190,7 @@ operations (doc 0006), are done.
 | [WI-120](work-items/WI-120-task-filter-bar.md)                  | The filter bar on the board and the backlog                       | [WS-120](work-specs/WS-120-task-filter-bar.md)                  |
 | [WI-121](work-items/WI-121-task-list-cursor-dates.md)           | Task list cursors refuse impossible dates                         | [WS-121](work-specs/WS-121-task-list-cursor-dates.md)           |
 | [WI-122](work-items/WI-122-task-list-summary-select.md)         | Task lists stop reading descriptions                              | [WS-122](work-specs/WS-122-task-list-summary-select.md)         |
+| [WI-123](work-items/WI-123-live-board-consistency.md)           | The live board keeps the newest state                             | [WS-123](work-specs/WS-123-live-board-consistency.md)           |
 
 ## Follow-ups
 
@@ -446,16 +447,16 @@ per-task column cleanup.
 - C02: on reconnect the project frame refreshes the board but not the project
   (`project-events.tsx`, `onOpen`), so a rename or archive made while the stream was down
   stays unseen until a reload. Read the project again on reconnect, applied only if its
-  version is newer; one item with B15.
+  version is newer; one item with B15. To be answered by WI-123.
 - C03: a column read started by one task's refresh replaces the whole column when it
   returns (`use-board.ts`, `placeTask` and `replaceColumn`), so an older read can undo a
   newer change to another card in that column. Coalesce column reads and drop a read that a
   later event or local move has overtaken. Related to the in-flight refresh under a drag
-  above.
+  above. To be answered by WI-123.
 - C04: the board's loaders append each page (`src/components/board/api.ts`) without
   removing repeats, so a task moved during the load can appear twice, in two columns.
   `usePagedList` (WI-080) does not cover them. Keep one card per task id, the newest
-  version.
+  version. To be answered by WI-123.
 - C05: answered by WI-122 (2026-11-25): the three task lists read no description; a
   100-task page of 50 000-character descriptions reads about 80 000 characters instead of
   about 5.1 million (WS-122 "Implementation record").
