@@ -194,6 +194,7 @@ operations (doc 0006), are done.
 | [WI-124](work-items/WI-124-stream-heartbeat.md)                 | Stream heartbeats keep the queue cap and renew no session         | [WS-124](work-specs/WS-124-stream-heartbeat.md)                 |
 | [WI-125](work-items/WI-125-failed-token-limit.md)               | Failed API token attempts are limited per address                 | [WS-125](work-specs/WS-125-failed-token-limit.md)               |
 | [WI-126](work-items/WI-126-pin-postgres-image.md)               | The production database image is pinned by digest                 | [WS-126](work-specs/WS-126-pin-postgres-image.md)               |
+| [WI-127](work-items/WI-127-node-image-pin.md)                   | The Node.js base image pin is current                             | [WS-127](work-specs/WS-127-node-image-pin.md)                   |
 
 ## Follow-ups
 
@@ -370,7 +371,8 @@ Other follow-ups:
 - **The Node.js base image pin of the `Dockerfile` is stale** (found in WI-126,
   2026-11-25): `node:22-bookworm-slim` resolves to `sha256:be979e55…`, the `Dockerfile`
   pins `sha256:e9f565d3…`, so the weekly `scripts/check-image-pins.ts` of the audit workflow
-  fails until it moves. Move it as `CONTRIBUTING.md` "Image pins" says.
+  fails until it moves. Move it as `CONTRIBUTING.md` "Image pins" says. To be answered by
+  WI-127.
 - Upgrade pnpm from 10 to 12 (`packageManager`, CI).
 - Upgrade Playwright from 1.63.0 to the latest release (see WS-007).
 - Add Firefox and WebKit to the end-to-end tests once there is real UI to protect.
