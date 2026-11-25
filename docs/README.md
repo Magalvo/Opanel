@@ -456,9 +456,9 @@ per-task column cleanup.
   removing repeats, so a task moved during the load can appear twice, in two columns.
   `usePagedList` (WI-080) does not cover them. Keep one card per task id, the newest
   version.
-- C05: the shared task select (`taskSelect` in `tasks.ts`) reads `t.description` for
-  every list, which `toSummary` drops: up to 50 000 characters per task read and
-  discarded. Give lists a summary projection. To be answered by WI-122.
+- C05: answered by WI-122 (2026-11-25): the three task lists read no description; a
+  100-task page of 50 000-character descriptions reads about 80 000 characters instead of
+  about 5.1 million (WS-122 "Implementation record").
 - C06: the event stream's heartbeat writes without the `desiredSize` check events have,
   and `setInterval` starts a new authentication while the last one may still run
   (`src/server/http/event-stream.ts`). Check backpressure in `write` and keep one heartbeat
