@@ -1,6 +1,6 @@
 # WI-122 — Task lists stop reading descriptions
 
-- Status: In progress (approved by the owner on 2026-11-25, with WS-122)
+- Status: Done (approved by the owner on 2026-11-25, with WS-122; done on 2026-11-25)
 - Work-track: none: follow-up C05 of the independent audit of 2026-11-24, confirmed in the
   code of `main`
 - Depends on: none
@@ -16,14 +16,14 @@ about five million characters per page that nobody reads. The answers do not cha
 
 ## Acceptance criteria
 
-- [ ] `listTasks`, `listBacklog` and `listAllTasks` read no task description from the
+- [x] `listTasks`, `listBacklog` and `listAllTasks` read no task description from the
       database, for any filter, sort or cursor.
-- [ ] Reading, creating, updating, moving, deleting and restoring one task still answer its
+- [x] Reading, creating, updating, moving, deleting and restoring one task still answer its
       description, as today.
-- [ ] The answers of the three lists and their OpenAPI schemas are unchanged.
-- [ ] A list row's type has no `description`, so TypeScript refuses a list that tries to
+- [x] The answers of the three lists and their OpenAPI schemas are unchanged.
+- [x] A list row's type has no `description`, so TypeScript refuses a list that tries to
       read it.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 

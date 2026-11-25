@@ -1,6 +1,6 @@
 # WS-122 — Task lists stop reading descriptions
 
-- Status: In progress (approved by the owner on 2026-11-25, as proposed)
+- Status: Done (approved by the owner on 2026-11-25, as proposed; done on 2026-11-25)
 - Work-item: [WI-122](../work-items/WI-122-task-list-summary-select.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (a task and its summary);
   [0004](../canonical/0004-api-conventions.md) section 5 (lists);
@@ -112,8 +112,34 @@ stay as they are, and by the generator's empty diff. Criterion 4 is checked by
 
 ## Deviations from the approved spec
 
-None yet.
+1. **The recording helper is a shared test module**, `src/server/services/recording-db-testing.ts`
+   (like `events-testing.ts`), not a helper in one test file: tests 1 to 3 sit in three
+   files, and a copy in each is what follow-up D10 warns against.
+2. **Delete is checked only as the step before restore** in test 4: `deleteTask` answers
+   nothing (`204`), so it has no description to check.
+3. **Tests 1 to 3 assert that task rows were read, not how many**: a list also reads one
+   row past its page to know whether another follows, which made exact counts brittle.
 
 ## Implementation record
 
-Not started.
+- Red: tests 1 to 3 failed because every task row each list read held `description`;
+  test 4 passed, as a guard that single-task answers keep it (commit `2b54fb0`).
+- Green: `taskSelect` adds `t.description` only when asked; `TASK_SELECT` asks,
+  `SUMMARY_SELECT` and the list across projects do not; list rows are `SummaryRow`, which
+  has no `description`, and `TaskRow` extends it (commit `56d8782`). Import order fixed
+  after lint (commit `11dbc01`). `pnpm openapi:generate` left the document unchanged.
+- Measurement (section 4), 100 tasks with 50 000-character descriptions, the rows a
+  `limit=100` page reads, as JSON characters:
+
+  | List           | Before    | After  |
+  | -------------- | --------- | ------ |
+  | `listTasks`    | 5 081 674 | 79 974 |
+  | `listBacklog`  | 5 077 976 | 76 276 |
+  | `listAllTasks` | 5 135 353 | 83 636 |
+
+  About 98 % less per page. The measurement was a temporary test, not committed.
+
+- Gate: `typecheck`, `lint`, `format:check` pass; `test` 2349 of 2349 (225 files);
+  `test:e2e` 123 of 123.
+- Run on Windows 11 with Node 24.18.0 and pnpm 10.28.0 (corepack), against the Compose
+  PostgreSQL on port 5433.
