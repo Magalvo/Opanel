@@ -188,8 +188,18 @@ export function TaskFilterBar({
     setText(q);
   }
 
+  // What has been asked for already, so a menu opened twice, or a render while an answer is
+  // on its way, asks once.
+  const requested = useRef(new Set<string>());
+
+  function once(what: string): boolean {
+    if (requested.current.has(what)) return false;
+    requested.current.add(what);
+    return true;
+  }
+
   function loadLabels() {
-    if (labels !== null || projectKey === null) return;
+    if (labels !== null || projectKey === null || !once(`labels:${projectKey}`)) return;
     const key = projectKey;
     listLabels(key).then(
       (page) => {
@@ -203,7 +213,7 @@ export function TaskFilterBar({
   }
 
   function loadEpics() {
-    if (epics !== null || projectKey === null) return;
+    if (epics !== null || projectKey === null || !once(`epics:${projectKey}`)) return;
     const key = projectKey;
     listOpenEpics(key).then(
       (list) => {
@@ -214,7 +224,7 @@ export function TaskFilterBar({
   }
 
   function loadTeams() {
-    if (teams !== null) return;
+    if (teams !== null || !once("teams")) return;
     listAllTeams().then(
       (list) => {
         setTeams(list.map((team) => ({ value: team.id, label: team.name })));
@@ -222,6 +232,18 @@ export function TaskFilterBar({
       () => undefined,
     );
   }
+
+  // A link's chips need the names of what it holds: read them without waiting for a menu
+  // (WS-130 deviation 1). A filter that names none reads nothing, as before.
+  const named = (key: FilterKey) => (filter[key] ?? []).some((value) => value !== "none");
+  const needsLabels = named("labelId");
+  const needsEpics = named("epicId");
+  const needsTeams = named("assigneeTeamId");
+  useEffect(() => {
+    if (needsLabels) loadLabels();
+    if (needsEpics) loadEpics();
+    if (needsTeams) loadTeams();
+  });
 
   const names: FilterNames = {
     projects: new Map(

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bugLabel, json, LABELS, opa, page, PROJECT, uiLabel } from "@/components/board/test-data";
-import { installFetch, on } from "@/components/fake-api";
+import { fetchMock, installFetch, on, urlOf } from "@/components/fake-api";
 
 import type { TaskFilter } from "./task-filter";
 
@@ -210,5 +210,30 @@ describe("TaskFilterBar on the list view (WS-130 test 4)", () => {
 
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove Type: Bug" })).toBeVisible();
+  });
+});
+
+describe("TaskFilterBar: names of a link's filters (WS-130 deviation 1)", () => {
+  it("reads the names of the labels, epics and teams a link holds, without opening a menu", async () => {
+    const team = {
+      id: "77777777-7777-4777-8777-777777777777",
+      name: "Frontend",
+      memberCount: 2,
+      createdAt: "2026-11-12T10:00:00.000Z",
+    };
+    on("GET /api/v1/teams?limit=50", page([team]));
+    renderBar({ labelId: [uiLabel.id], assigneeTeamId: [team.id] });
+
+    expect(await screen.findByRole("button", { name: "Remove Label: UI" })).toBeVisible();
+    expect(await screen.findByRole("button", { name: "Remove Team: Frontend" })).toBeVisible();
+  });
+
+  it("reads nothing for a filter that names none", async () => {
+    renderBar({ type: ["bug"], epicId: ["none"], assigneeTeamId: ["none"] });
+
+    await screen.findByRole("button", { name: "Remove Type: Bug" });
+    expect(
+      fetchMock.mock.calls.map(([url]) => urlOf(url)).filter((url) => !url.endsWith("/OPA")),
+    ).toEqual([]);
   });
 });
