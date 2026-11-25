@@ -1,6 +1,6 @@
 # WI-130 — The list view of tasks, with sortable headers
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-25, with WS-130)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item E)
 - Depends on: [WI-118](WI-118-task-list-across-projects.md) (item B, done),
   [WI-120](WI-120-task-filter-bar.md) (item D, done)

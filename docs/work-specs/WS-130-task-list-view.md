@@ -1,6 +1,6 @@
 # WS-130 — The list view of tasks, with sortable headers
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-25, questions 1 to 3 as recommended)
 - Work-item: [WI-130](../work-items/WI-130-task-list-view.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 8 (the list view,
   "the current filter lives in the URL"); [0004](../canonical/0004-api-conventions.md)
