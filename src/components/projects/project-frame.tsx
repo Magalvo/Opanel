@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,8 +49,16 @@ export function ProjectFrame({
   modal?: ReactNode;
 }>) {
   const pathname = usePathname();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setLoadedProject] = useState<Project | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
+
+  /**
+   * Shows a project a page read again, unless the frame holds a newer version of it: answers
+   * may arrive in any order (WS-123 section 2). An equal version applies.
+   */
+  const setProject = useCallback((next: Project) => {
+    setLoadedProject((held) => (held === null || next.version >= held.version ? next : held));
+  }, []);
 
   function failed(failure: unknown) {
     setPhase(failure instanceof ApiFailure && failure.status === 404 ? "missing" : "error");
@@ -61,7 +69,7 @@ export function ProjectFrame({
     getProject(projectKey).then(
       (loaded) => {
         if (cancelled) return;
-        setProject(loaded);
+        setLoadedProject(loaded);
         setPhase("ready");
       },
       (failure: unknown) => {
@@ -76,7 +84,7 @@ export function ProjectFrame({
   function retry() {
     setPhase("loading");
     getProject(projectKey).then((loaded) => {
-      setProject(loaded);
+      setLoadedProject(loaded);
       setPhase("ready");
     }, failed);
   }

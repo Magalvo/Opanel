@@ -62,6 +62,19 @@ export function replaceColumn(
   return next;
 }
 
+/**
+ * One item per task (WS-123 section 5): a task listed twice, because it moved while its
+ * pages were read, keeps its newest version (the later one on a tie), at that one's place.
+ */
+export function uniqueTasks(tasks: readonly TaskSummary[]): TaskSummary[] {
+  const kept = new Map<string, number>();
+  tasks.forEach((task, index) => {
+    const held = kept.get(task.id);
+    if (held === undefined || task.version >= (tasks[held]?.version ?? 0)) kept.set(task.id, index);
+  });
+  return tasks.filter((task, index) => kept.get(task.id) === index);
+}
+
 function byName(a: LabelRef, b: LabelRef): number {
   const left = a.name.toLowerCase();
   const right = b.name.toLowerCase();

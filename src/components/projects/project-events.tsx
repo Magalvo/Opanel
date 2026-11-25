@@ -54,23 +54,36 @@ export function ProjectEventsProvider({
     latest.current = { project, setProject };
   });
 
-  const onEvent = useCallback((event: ProjectEvent) => {
-    if (event.type === "project.changed" && event.version > latest.current.project.version) {
-      getProject(latest.current.project.key).then(
-        (loaded) => {
-          latest.current.setProject(loaded);
-        },
-        () => undefined,
-      );
-    }
-    for (const listener of listeners.current) listener.onEvent?.(event);
+  /** Reads the project again and sets it; the frame keeps whichever version is newest. */
+  const readProject = useCallback(() => {
+    getProject(latest.current.project.key).then(
+      (loaded) => {
+        latest.current.setProject(loaded);
+      },
+      () => undefined,
+    );
   }, []);
 
-  const onOpen = useCallback((first: boolean) => {
-    setOpened(true);
-    if (first) return;
-    for (const listener of listeners.current) listener.onReconnect?.();
-  }, []);
+  const onEvent = useCallback(
+    (event: ProjectEvent) => {
+      if (event.type === "project.changed" && event.version > latest.current.project.version) {
+        readProject();
+      }
+      for (const listener of listeners.current) listener.onEvent?.(event);
+    },
+    [readProject],
+  );
+
+  // A reconnect may have missed a `project.changed` (doc 0002 section 4, WS-123 section 2).
+  const onOpen = useCallback(
+    (first: boolean) => {
+      setOpened(true);
+      if (first) return;
+      readProject();
+      for (const listener of listeners.current) listener.onReconnect?.();
+    },
+    [readProject],
+  );
 
   const { status } = useProjectEvents(project.id, { onEvent, onOpen });
 
