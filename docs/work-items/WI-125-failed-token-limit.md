@@ -1,6 +1,6 @@
 # WI-125 — Failed API token attempts are limited per address
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with WS-125)
 - Work-track: none: follow-up B07 (audit of 2026-11-19), confirmed again by the independent
   audit of 2026-11-24 and in the code of `main` (`0243e77`)
 - Depends on: none

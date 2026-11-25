@@ -1,6 +1,7 @@
 # WS-125 — Failed API token attempts are limited per address
 
-- Status: Proposed
+- Status: In progress (approved by the owner on 2026-11-25, with the recommended answers to
+  its open questions)
 - Work-item: [WI-125](../work-items/WI-125-failed-token-limit.md)
 - Canonical docs: [0001](../canonical/0001-ai-qa-agents-and-triage.md) (agent tokens),
   [0004](../canonical/0004-api-conventions.md) (errors), [0006](../canonical/0006-operations.md)
