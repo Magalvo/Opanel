@@ -10,8 +10,8 @@ import {
   type SessionAuthenticated,
 } from "@/server/auth/authenticate";
 import {
-  type FailedTokenLimiter,
   failedTokenKey,
+  type FailedTokenLimiter,
   getFailedTokenLimiter,
 } from "@/server/auth/failed-token-limit";
 import { assertSameOrigin } from "@/server/auth/origin";
