@@ -343,7 +343,8 @@ Risks:
 - Took in `main` after WI-133 merged (`AGENTS.md` section 8): deleted this item's migration
   and snapshot and generated `0025_task_links_types`; joined the sub-tasks and the
   actor's links in the task answer; kept both items' codes in doc 0004 and
-  `PROBLEM_CODES`; regenerated the OpenAPI document.
+  `PROBLEM_CODES`; regenerated the OpenAPI document. The gate again on the result: all
+  checks pass, no generator diff, Vitest 2614 of 2614 (238 files), `pnpm test:e2e` 135 of 135.
 - Gate on 2026-11-26:
   - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
     leave no diff;
