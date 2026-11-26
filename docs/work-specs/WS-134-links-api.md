@@ -1,6 +1,7 @@
 # WS-134 — Links in the API
 
-- Status: Approved by the owner on 2026-11-26, questions 1 to 9 as recommended
+- Status: Done (approved by the owner on 2026-11-26, questions 1 to 9 as recommended; done
+  on 2026-11-26)
 - Work-item: [WI-134](../work-items/WI-134-links-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 (who may link)
   and 7 (the four link types and their reverse readings);
@@ -339,7 +340,12 @@ Risks:
 - (d7d0fbd) The route and test 15; `pnpm openapi:generate` (test 17, red until then in
   `document.test.ts` and `routes.test.ts`).
 - The canonical updates of section 10 (question 9).
-- GATE_PLACEHOLDER
+- Gate on 2026-11-26:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2592 of 2592 (236 files);
+  - `pnpm test:e2e` 135 of 135, the MCP project included;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
 
 ## Deviations
 
@@ -358,3 +364,11 @@ Risks:
    where the bug section's tests already are, not in a new file.
 5. **Test 15 was written with the route** in one step, so it was not seen failing on its
    own; the contracts it serves had failed `routes.test.ts` (test 17) until then.
+6. **The path task's reach is checked before the other task is looked at** (section 4
+   step 2): a caller outside the path task's project gets `403`, never a `400` about the
+   other task. The WS-073 coverage test lists `addTaskLink` and `removeTaskLink` as
+   project-scoped and `insertLink`, `answerTask` and `matchesTask` as internal.
+7. **Doc 0004 section 4's table of codes gains `link_exists` and `too_many_links`**, which
+   `scripts/api-conventions.test.ts` requires; section 10 did not list it.
+8. **Test 8 has a 30-second timeout**: it creates 100 tasks, which took more than the
+   default 5 seconds under the full suite's load.
