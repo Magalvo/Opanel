@@ -143,6 +143,8 @@ Rules:
   | `409`  | `too_many_labels`            | The project already has 200 labels                              | WS-107    |
   | `409`  | `link_exists`                | The two tasks already have that link                            | WS-134    |
   | `409`  | `too_many_links`             | A task of the link already has 100 links                        | WS-134    |
+  | `409`  | `has_subtasks`               | The task has live sub-tasks, so it cannot be deleted            | WS-133    |
+  | `409`  | `too_many_subtasks`          | The parent already has 100 live sub-tasks                       | WS-133    |
   | `409`  | `agent_disabled`             | The agent is disabled                                           | WS-075    |
   | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process          | WS-047    |
   | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full       | WS-056    |

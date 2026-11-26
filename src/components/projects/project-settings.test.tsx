@@ -60,6 +60,7 @@ const deleted: TaskSummary = {
   assigneeTeam: null,
   assignee: null,
   epic: null,
+  parent: null,
   reporter: { id: "55555555-5555-4555-8555-555555555555", name: "Ada", kind: "human" },
   severity: null,
   fingerprint: null,
@@ -68,6 +69,7 @@ const deleted: TaskSummary = {
   priority: "none",
   dueDate: null,
   labels: [],
+  subtasks: null,
   version: 2,
   createdAt: "2026-11-12T10:00:00.000Z",
   updatedAt: "2026-11-13T10:00:00.000Z",
@@ -404,7 +406,7 @@ describe("ProjectSettings: deleted tasks", () => {
   it("lists deleted tasks with key, title and time, and restores one", async () => {
     on(
       `POST /api/v1/tasks/${deleted.id}/restore`,
-      json({ ...deleted, description: "", links: [], deletedAt: null }),
+      json({ ...deleted, description: "", links: [], subtaskList: [], deletedAt: null }),
     );
     const user = await renderSettings();
     const tasks = section("Deleted tasks");
@@ -424,7 +426,7 @@ describe("ProjectSettings: deleted tasks", () => {
     const later = { ...deleted, columnId: null };
     on(
       `POST /api/v1/tasks/${deleted.id}/restore`,
-      json({ ...later, description: "", links: [], deletedAt: null }),
+      json({ ...later, description: "", links: [], subtaskList: [], deletedAt: null }),
     );
     const user = await renderSettings({ tasks: [later] });
 

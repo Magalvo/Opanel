@@ -332,7 +332,7 @@ Risks:
   green. Two existing tests that named `blocks` as an unknown type, or listed only
   `regression_of`, now follow the four types.
 - (2d1208c) Test 2 ran red on the old checks; the schema changes and the generated
-  `0024_task_links_types` migration made it green.
+  `0024_task_links_types` migration made it green (`0025` after taking in `main`, below).
 - (89d3568) Tests 3 to 12 ran red on the missing service; `src/server/services/task-links.ts`,
   `loadLinks` with the actor's reach, and triage's `insertLink` made them green.
 - (6a64d22) Test 13 ran red on the stored task out of reach, test 14 on the missing
@@ -340,6 +340,10 @@ Risks:
 - (d7d0fbd) The route and test 15; `pnpm openapi:generate` (test 17, red until then in
   `document.test.ts` and `routes.test.ts`).
 - The canonical updates of section 10 (question 9).
+- Took in `main` after WI-133 merged (`AGENTS.md` section 8): deleted this item's migration
+  and snapshot and generated `0025_task_links_types`; joined the sub-tasks and the
+  actor's links in the task answer; kept both items' codes in doc 0004 and
+  `PROBLEM_CODES`; regenerated the OpenAPI document.
 - Gate on 2026-11-26:
   - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
     leave no diff;

@@ -45,6 +45,19 @@ export const teamRefSchema = z
   .strictObject({ id: z.uuid(), name: z.string() })
   .meta({ id: "TeamRef" });
 
+/** A sub-task's parent, as a task shows it (WT-09 decision 4, WS-133). */
+export const taskParentSchema = z
+  .strictObject({ id: z.uuid(), key: z.string(), title: z.string() })
+  .meta({ id: "TaskParent" });
+
+/** How many of a parent's live sub-tasks are done, of how many (WS-133 section 6). */
+export const subtaskProgressSchema = z
+  .strictObject({
+    done: z.int().min(0).meta({ description: "Sub-tasks in a column of the `done` category." }),
+    total: z.int().min(1),
+  })
+  .meta({ id: "SubtaskProgress" });
+
 const taskFields = {
   id: z.uuid(),
   key: z.string().meta({ description: "Never changes and is never reused." }),
@@ -59,6 +72,7 @@ const taskFields = {
   assigneeTeam: teamRefSchema.nullable(),
   assignee: personSchema.nullable(),
   epic: epicRefSchema.nullable(),
+  parent: taskParentSchema.nullable().meta({ description: "Set on sub-tasks only." }),
   reporter: accountRefSchema,
   // The bug fields (WT-06 decision 1, WS-088): only the triage pipeline writes the last three.
   severity: severitySchema.nullable().meta({ description: "Bugs only." }),
@@ -72,6 +86,9 @@ const taskFields = {
   priority: prioritySchema,
   dueDate: calendarDateSchema.nullable().meta({ description: "A calendar date, or `null`." }),
   labels: z.array(labelRefSchema).meta({ description: "The task's labels, by name." }),
+  subtasks: subtaskProgressSchema
+    .nullable()
+    .meta({ description: "`null` for a task with no live sub-tasks." }),
   version: z.int().min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -105,6 +122,10 @@ export type TaskSummary = z.infer<typeof taskSummarySchema>;
 export const taskSchema = z
   .strictObject({
     ...taskFields,
+    subtaskList: z.array(taskSummarySchema).meta({
+      description:
+        "The live sub-tasks, in board order, then the backlog; empty for a task with none.",
+    }),
     description: z.string().meta({ description: "Markdown." }),
     links: z.array(taskLinkSchema).meta({
       description:
@@ -177,6 +198,10 @@ export const taskFilterShape = {
     .meta({ description: "Only tasks reported by people (`human`) or by agents (`agent`)." }),
   labelId: oneOrMany(z.uuid(), "Only tasks with this label of the project."),
   epicId: oneOrMany(noneOrId, "Only tasks of this epic of the project; `none` for no epic."),
+  parentId: oneOrMany(
+    z.union([z.uuid(), taskKeySchema, z.literal("none")]),
+    "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks.",
+  ),
   priority: oneOrMany(prioritySchema, "Only tasks of this priority."),
   severity: oneOrMany(severitySchema, "Only bugs of this severity."),
   dueFrom: calendarDateSchema
@@ -315,7 +340,14 @@ export const createTaskFields = {
     }),
   assigneeTeamId: z.uuid().optional(),
   assigneeAccountId: z.uuid().optional(),
-  epicId: z.uuid().optional().meta({ description: "An epic of the project." }),
+  epicId: z.uuid().optional().meta({
+    description: "An epic of the project. A sub-task's is its parent's: another one is a `400`.",
+  }),
+  parentId: taskRefSchema.optional().meta({
+    description:
+      "Makes the task a sub-task of this task of the project, by id or key; it takes the " +
+      "parent's epic.",
+  }),
   severity: severitySchema.optional().meta({ description: 'Only with `type: "bug"`.' }),
   priority: prioritySchema.optional().meta({ description: "By default `none`." }),
   dueDate: calendarDateSchema.optional().meta({ description: "By default none." }),
@@ -348,7 +380,14 @@ export const updateTaskFields = {
     .uuid()
     .nullable()
     .optional()
-    .meta({ description: "An epic of the project; `null` takes the task out of its epic." }),
+    .meta({
+      description:
+        "An epic of the project; `null` takes the task out of its epic. A sub-task's is its " +
+        "parent's: another one is a `400`.",
+    }),
+  parentId: taskRefSchema.nullable().optional().meta({
+    description: "A task of the project, by id or key, making this a sub-task; `null` detaches it.",
+  }),
   severity: severitySchema.nullable().optional().meta({
     description: "Bugs only; `null` clears it. A task that stops being a bug loses it.",
   }),
@@ -365,6 +404,7 @@ const UPDATABLE = [
   "assigneeTeamId",
   "assigneeAccountId",
   "epicId",
+  "parentId",
   "severity",
   "priority",
   "dueDate",
@@ -487,8 +527,9 @@ export const createTaskContract = {
     404: { description: "There is no such project.", problem: true },
     409: {
       description:
-        "The project is archived (code `project_archived`) or the person is deactivated " +
-        "(code `account_inactive`).",
+        "The project is archived (code `project_archived`), the person is deactivated " +
+        "(code `account_inactive`), or the parent has 100 sub-tasks (code " +
+        "`too_many_subtasks`).",
       problem: true,
     },
     413: PAYLOAD_TOO_LARGE,
@@ -522,7 +563,11 @@ export const updateTaskContract = {
     200: { description: "The task after the change.", schema: taskSchema },
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TASK,
-    409: versionConflictResponse(taskSchema, ["project_archived", "account_inactive"]),
+    409: versionConflictResponse(taskSchema, [
+      "project_archived",
+      "account_inactive",
+      "too_many_subtasks",
+    ]),
     413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },
@@ -565,7 +610,12 @@ export const deleteTaskContract = {
       problem: true,
     },
     404: NO_TASK,
-    409: { description: "The project is archived (code `project_archived`).", problem: true },
+    409: {
+      description:
+        "The project is archived (code `project_archived`), or the task has live sub-tasks " +
+        "(code `has_subtasks`).",
+      problem: true,
+    },
   },
 } satisfies EndpointContract;
 

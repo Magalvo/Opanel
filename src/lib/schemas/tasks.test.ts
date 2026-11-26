@@ -94,6 +94,7 @@ describe("severity and the bug fields (WS-088)", () => {
     assigneeTeam: null,
     assignee: null,
     epic: null,
+    parent: null,
     reporter: { id: UUID, name: "QA Bot", kind: "agent" },
     severity: "high",
     fingerprint: "fp-1",
@@ -102,6 +103,7 @@ describe("severity and the bug fields (WS-088)", () => {
     priority: "none",
     dueDate: null,
     labels: [],
+    subtasks: null,
     links: [
       {
         type: "regression_of",
@@ -114,6 +116,7 @@ describe("severity and the bug fields (WS-088)", () => {
     updatedAt: "2026-11-20T08:30:00.123Z",
     deletedAt: null,
     description: "",
+    subtaskList: [],
   };
 
   it("a task carries severity, fingerprint, occurrences and lastReportedAt", () => {
@@ -126,7 +129,7 @@ describe("severity and the bug fields (WS-088)", () => {
     expect(taskSchema.safeParse({ ...task, occurrences: -1 }).success).toBe(false);
     // Links (WS-090): a type of the catalogue and a direction.
     const [link] = task.links;
-    expect(taskSchema.safeParse({ ...task, links: [] }).success).toBe(true);
+    expect(taskSchema.safeParse({ ...task, links: [], subtaskList: [] }).success).toBe(true);
     expect(taskSchema.safeParse({ ...task, links: [{ ...link, type: "parent_of" }] }).success).toBe(
       false,
     );
@@ -242,6 +245,7 @@ describe("the backlog (WS-101)", () => {
       assigneeTeam: null,
       assignee: null,
       epic: null,
+      parent: null,
       reporter: { id: UUID, name: "Mia", kind: "human" },
       severity: null,
       fingerprint: null,
@@ -250,13 +254,14 @@ describe("the backlog (WS-101)", () => {
       priority: "none",
       dueDate: null,
       labels: [],
+      subtasks: null,
       version: 1,
       createdAt: "2026-11-21T08:00:00.000Z",
       updatedAt: "2026-11-21T08:00:00.000Z",
       deletedAt: null,
     };
     expect(taskSummarySchema.parse(summary)).toEqual(summary);
-    const task = { ...summary, description: "", links: [] };
+    const task = { ...summary, description: "", links: [], subtaskList: [] };
     expect(taskSchema.parse(task)).toEqual(task);
     expect(taskSchema.safeParse({ ...task, columnId: "OPA" }).success).toBe(false);
   });
@@ -293,6 +298,7 @@ describe("priority and due date (WS-102)", () => {
     assigneeTeam: null,
     assignee: null,
     epic: null,
+    parent: null,
     reporter: { id: UUID, name: "Mia", kind: "human" },
     severity: null,
     fingerprint: null,
@@ -301,6 +307,7 @@ describe("priority and due date (WS-102)", () => {
     priority: "high",
     dueDate: "2026-12-01",
     labels: [],
+    subtasks: null,
     version: 1,
     createdAt: "2026-11-21T08:00:00.000Z",
     updatedAt: "2026-11-21T08:00:00.000Z",
@@ -308,7 +315,7 @@ describe("priority and due date (WS-102)", () => {
   };
 
   it("a task and a task summary require priority and dueDate", () => {
-    const task = { ...summary, description: "", links: [] };
+    const task = { ...summary, description: "", links: [], subtaskList: [] };
     expect(taskSummarySchema.parse(summary)).toEqual(summary);
     expect(taskSchema.parse(task)).toEqual(task);
     for (const field of ["priority", "dueDate"]) {
@@ -376,6 +383,7 @@ describe("labels on tasks (WS-107)", () => {
     assigneeTeam: null,
     assignee: null,
     epic: null,
+    parent: null,
     reporter: { id: UUID, name: "Mia", kind: "human" },
     severity: null,
     fingerprint: null,
@@ -384,6 +392,7 @@ describe("labels on tasks (WS-107)", () => {
     priority: "none",
     dueDate: null,
     labels: [{ id: UUID, name: "Bug", colour: "red" }],
+    subtasks: null,
     version: 1,
     createdAt: "2026-11-23T08:00:00.000Z",
     updatedAt: "2026-11-23T08:00:00.000Z",
@@ -392,7 +401,7 @@ describe("labels on tasks (WS-107)", () => {
   const OTHER = "1a9c7d2e-4b63-4e8c-8b62-1d2e3f4a5b6c";
 
   it("a task and a task summary require labels", () => {
-    const task = { ...summary, description: "", links: [] };
+    const task = { ...summary, description: "", links: [], subtaskList: [] };
     expect(taskSummarySchema.parse(summary)).toEqual(summary);
     expect(taskSchema.parse({ ...task, labels: [] }).labels).toEqual([]);
     const { labels: _omitted, ...without } = task;

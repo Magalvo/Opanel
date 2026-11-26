@@ -138,6 +138,27 @@ describe("listActivity (WS-117)", () => {
     });
   });
 
+  it("names a parent by its key, a deleted parent too (WS-133 test 13)", async () => {
+    const { manager, member, task } = await setup();
+    const parent = await createTask(member, "OPA", { title: "Parent" });
+
+    const attached = await updateTask(member, "OPA-1", {
+      parentId: parent.key,
+      version: task.version,
+    });
+    await updateTask(member, "OPA-1", { parentId: null, version: attached.version });
+    await deleteTask(manager, parent.key);
+    const page = await listActivity(member, "OPA-1", { limit: 50 });
+
+    const changes = page.items.filter((item) => item.kind === "event" && item.field === "parentId");
+    expect(
+      changes.map((item) => (item.kind === "event" ? [item.oldValue, item.newValue] : [])),
+    ).toEqual([
+      [null, { id: parent.id, name: parent.key }],
+      [{ id: parent.id, name: parent.key }, null],
+    ]);
+  });
+
   it("reads the backlog, deletion, restore, a repeated report and a deleted label", async () => {
     const { manager, member, columns, task } = await setup();
     const label = await createLabel(member, "OPA", { name: "release", colour: "red" });

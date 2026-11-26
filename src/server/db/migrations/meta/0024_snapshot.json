@@ -1,5 +1,5 @@
 {
-  "id": "7d72405c-52c0-40b3-a39d-bcbdc48d98d9",
+  "id": "903099ea-a07c-4a88-b710-dd27a1f9532b",
   "prevId": "7c3de4de-f729-4c58-8628-414305c0a9ee",
   "version": "7",
   "dialect": "postgresql",
@@ -1944,7 +1944,7 @@
       "checkConstraints": {
         "task_events_type_check": {
           "name": "task_events_type_check",
-          "value": "\"task_events\".\"type\" in ('created', 'field_changed', 'moved', 'deleted', 'restored', 'commented', 'reported_again', 'linked', 'unlinked')"
+          "value": "\"task_events\".\"type\" in ('created', 'field_changed', 'moved', 'deleted', 'restored', 'commented', 'reported_again')"
         }
       },
       "isRLSEnabled": false
@@ -2107,11 +2107,7 @@
       "checkConstraints": {
         "task_links_type_check": {
           "name": "task_links_type_check",
-          "value": "\"task_links\".\"type\" in ('blocks', 'duplicates', 'regression_of', 'relates_to')"
-        },
-        "task_links_relates_to_order_check": {
-          "name": "task_links_relates_to_order_check",
-          "value": "\"task_links\".\"type\" <> 'relates_to' or \"task_links\".\"from_task_id\" < \"task_links\".\"to_task_id\""
+          "value": "\"task_links\".\"type\" in ('regression_of')"
         },
         "task_links_not_self_check": {
           "name": "task_links_not_self_check",
@@ -2189,6 +2185,12 @@
         },
         "epic_id": {
           "name": "epic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_task_id": {
+          "name": "parent_task_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
@@ -2391,6 +2393,22 @@
           "method": "btree",
           "with": {}
         },
+        "tasks_parent_idx": {
+          "name": "tasks_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_task_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"tasks\".\"parent_task_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "tasks_search_idx": {
           "name": "tasks_search_idx",
           "columns": [
@@ -2526,6 +2544,15 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
+        "tasks_parent_task_id_tasks_id_fk": {
+          "name": "tasks_parent_task_id_tasks_id_fk",
+          "tableFrom": "tasks",
+          "tableTo": "tasks",
+          "columnsFrom": ["parent_task_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
         "tasks_reporter_account_id_accounts_id_fk": {
           "name": "tasks_reporter_account_id_accounts_id_fk",
           "tableFrom": "tasks",
@@ -2572,6 +2599,10 @@
         "tasks_priority_check": {
           "name": "tasks_priority_check",
           "value": "\"tasks\".\"priority\" in ('none', 'low', 'medium', 'high', 'urgent')"
+        },
+        "tasks_parent_not_self_check": {
+          "name": "tasks_parent_not_self_check",
+          "value": "\"tasks\".\"parent_task_id\" is null or \"tasks\".\"parent_task_id\" <> \"tasks\".\"id\""
         }
       },
       "isRLSEnabled": false

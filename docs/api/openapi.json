@@ -4947,6 +4947,55 @@
           },
           {
             "in": "query",
+            "name": "parentId",
+            "schema": {
+              "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
             "name": "priority",
             "schema": {
               "description": "Only tasks of this priority. Repeat it for any of several values.",
@@ -5235,7 +5284,7 @@
             }
           },
           "409": {
-            "description": "The project is archived (code `project_archived`) or the person is deactivated (code `account_inactive`).",
+            "description": "The project is archived (code `project_archived`), the person is deactivated (code `account_inactive`), or the parent has 100 sub-tasks (code `too_many_subtasks`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5591,6 +5640,55 @@
               ]
             },
             "description": "Only tasks of this epic of the project; `none` for no epic. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "parentId",
+            "schema": {
+              "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values."
           },
           {
             "in": "query",
@@ -6124,6 +6222,55 @@
           },
           {
             "in": "query",
+            "name": "parentId",
+            "schema": {
+              "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                    },
+                    {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": "none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
             "name": "priority",
             "schema": {
               "description": "Only tasks of this priority. Repeat it for any of several values.",
@@ -6469,7 +6616,7 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or the person to assign is deactivated (code `account_inactive`).",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or the person to assign is deactivated (code `account_inactive`); or code `too_many_subtasks`.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6608,7 +6755,7 @@
             }
           },
           "409": {
-            "description": "The project is archived (code `project_archived`).",
+            "description": "The project is archived (code `project_archived`), or the task has live sub-tasks (code `has_subtasks`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9759,10 +9906,24 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "epicId": {
-            "description": "An epic of the project.",
+            "description": "An epic of the project. A sub-task's is its parent's: another one is a `400`.",
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "parentId": {
+            "description": "Makes the task a sub-task of this task of the project, by id or key; it takes the parent's epic.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+              }
+            ]
           },
           "severity": {
             "description": "Only with `type: \"bug\"`.",
@@ -9836,12 +9997,34 @@
             ]
           },
           "epicId": {
-            "description": "An epic of the project; `null` takes the task out of its epic.",
+            "description": "An epic of the project; `null` takes the task out of its epic. A sub-task's is its parent's: another one is a `400`.",
             "anyOf": [
               {
                 "type": "string",
                 "format": "uuid",
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parentId": {
+            "description": "A task of the project, by id or key, making this a sub-task; `null` detaches it.",
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]{0,8}$"
+                  }
+                ],
+                "description": "The task's id or its key, such as `OPA-12`."
               },
               {
                 "type": "null"
@@ -10332,7 +10515,9 @@
               "label_name_taken",
               "too_many_labels",
               "link_exists",
-              "too_many_links"
+              "too_many_links",
+              "has_subtasks",
+              "too_many_subtasks"
             ],
             "description": "Stable, machine-readable error code. This is what clients branch on."
           },
@@ -11764,6 +11949,17 @@
               }
             ]
           },
+          "parent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskParent"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on sub-tasks only."
+          },
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
@@ -11827,6 +12023,17 @@
             },
             "description": "The task's labels, by name."
           },
+          "subtasks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubtaskProgress"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` for a task with no live sub-tasks."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -11867,6 +12074,7 @@
           "assigneeTeam",
           "assignee",
           "epic",
+          "parent",
           "reporter",
           "severity",
           "fingerprint",
@@ -11875,6 +12083,7 @@
           "priority",
           "dueDate",
           "labels",
+          "subtasks",
           "version",
           "createdAt",
           "updatedAt",
@@ -11918,6 +12127,28 @@
         ],
         "additionalProperties": false
       },
+      "TaskParent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "title"
+        ],
+        "additionalProperties": false
+      },
       "LabelRef": {
         "type": "object",
         "properties": {
@@ -11937,6 +12168,27 @@
           "id",
           "name",
           "colour"
+        ],
+        "additionalProperties": false
+      },
+      "SubtaskProgress": {
+        "type": "object",
+        "properties": {
+          "done": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Sub-tasks in a column of the `done` category."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "done",
+          "total"
         ],
         "additionalProperties": false
       },
@@ -12011,6 +12263,17 @@
               }
             ]
           },
+          "parent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskParent"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on sub-tasks only."
+          },
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
@@ -12074,6 +12337,17 @@
             },
             "description": "The task's labels, by name."
           },
+          "subtasks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubtaskProgress"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` for a task with no live sub-tasks."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -12102,6 +12376,13 @@
             ],
             "description": "Set only on deleted tasks, which only the deleted list shows."
           },
+          "subtaskList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskSummary"
+            },
+            "description": "The live sub-tasks, in board order, then the backlog; empty for a task with none."
+          },
           "description": {
             "type": "string",
             "description": "Markdown."
@@ -12125,6 +12406,7 @@
           "assigneeTeam",
           "assignee",
           "epic",
+          "parent",
           "reporter",
           "severity",
           "fingerprint",
@@ -12133,10 +12415,12 @@
           "priority",
           "dueDate",
           "labels",
+          "subtasks",
           "version",
           "createdAt",
           "updatedAt",
           "deletedAt",
+          "subtaskList",
           "description",
           "links"
         ],
@@ -12285,6 +12569,17 @@
               }
             ]
           },
+          "parent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskParent"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on sub-tasks only."
+          },
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
@@ -12348,6 +12643,17 @@
             },
             "description": "The task's labels, by name."
           },
+          "subtasks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubtaskProgress"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` for a task with no live sub-tasks."
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -12394,6 +12700,7 @@
           "assigneeTeam",
           "assignee",
           "epic",
+          "parent",
           "reporter",
           "severity",
           "fingerprint",
@@ -12402,6 +12709,7 @@
           "priority",
           "dueDate",
           "labels",
+          "subtasks",
           "version",
           "createdAt",
           "updatedAt",

@@ -17,7 +17,7 @@ import { createTask } from "@/server/services/tasks";
 
 import { GET as list, POST as create } from "../../projects/[projectId]/tasks/route";
 import { POST as projectsPost } from "../../projects/route";
-import { GET, PATCH } from "./route";
+import { DELETE, GET, PATCH } from "./route";
 
 function project(projectId: string) {
   return { params: Promise.resolve({ projectId }) };
@@ -239,6 +239,56 @@ describe("task endpoints", () => {
       task("OPA-1"),
     );
     expect(byViewer.status).toBe(403);
+  });
+
+  it("takes parentId, names the field of a refusal, and answers the 409 codes (WS-133 test 14)", async () => {
+    const manager = await cookieFor("manager");
+    await projectsPost(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const cookie = await cookieFor("member");
+    for (const title of ["Parent", "Loose"]) {
+      await create(
+        apiRequest("POST", "/api/v1/projects/OPA/tasks", { cookie, body: { title } }),
+        project("OPA"),
+      );
+    }
+
+    const child = await create(
+      apiRequest("POST", "/api/v1/projects/OPA/tasks", {
+        cookie,
+        body: { title: "Child", parentId: "OPA-1" },
+      }),
+      project("OPA"),
+    );
+    expect(child.status).toBe(201);
+    expect(taskSchema.parse(await child.json()).parent?.key).toBe("OPA-1");
+
+    const refused = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-2", {
+        cookie,
+        body: { parentId: "OPA-3", version: 1 },
+      }),
+      task("OPA-2"),
+    );
+    expect(refused.status).toBe(400);
+    expect(problemSchema.parse(await refused.json()).errors?.map((field) => field.path)).toEqual([
+      "parentId",
+    ]);
+
+    const parent = await GET(apiRequest("GET", "/api/v1/tasks/OPA-1", { cookie }), task("OPA-1"));
+    const answer = taskSchema.parse(await parent.json());
+    expect(answer.subtasks).toEqual({ done: 0, total: 1 });
+    expect(answer.subtaskList.map((item) => item.key)).toEqual(["OPA-3"]);
+    expect(answer.subtaskList[0]?.parent?.key).toBe("OPA-1");
+
+    const blocked = await DELETE(
+      apiRequest("DELETE", "/api/v1/tasks/OPA-1", { cookie: manager }),
+      task("OPA-1"),
+    );
+    expect(blocked.status).toBe(409);
+    expect(problemSchema.parse(await blocked.json()).code).toBe("has_subtasks");
   });
 
   it("lets a Viewer read but not write, and answers 401 without a session", async () => {

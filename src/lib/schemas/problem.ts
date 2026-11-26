@@ -36,6 +36,8 @@ export const PROBLEM_CODES = [
   "too_many_labels",
   "link_exists",
   "too_many_links",
+  "has_subtasks",
+  "too_many_subtasks",
 ] as const;
 
 export const problemCodeSchema = z.enum(PROBLEM_CODES);
