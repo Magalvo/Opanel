@@ -15,9 +15,10 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-08 item G (WI-131), the last: the end-to-end flow, `docs/agents.md` and its doc
-  check, proposals P1 to P3 and the exit check. Items A to F are done (WI-116 to WI-120 and
-  WI-130). WT-07 and WT-11 are done.
+- **Next, an owner decision:** every work-track written so far is done; WT-08 closed on
+  2026-11-26 (WI-116 to WI-120, WI-130 and WI-131). Two candidates: the WT-11 work-item
+  for the five MCP tools waiting under [Follow-ups](#follow-ups), now unblocked, or
+  drafting WT-09 (sub-tasks and task links, doc 0003 section 10).
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -253,7 +254,7 @@ Other follow-ups:
 - **MCP tools for WT-08's search and activity** (WT-08 question 8, approved 2026-11-24):
   `opanel_search_tasks` over `GET /tasks` and `opanel_get_task_activity` over
   `GET /tasks/{taskId}/activity`, in the same WT-11 work-item as the three tools above
-  and below, once WT-08 items B and C are done.
+  and below. WT-08 is done, so they are no longer blocked.
 
 - **Answered by WI-128 (2026-11-25): `planning-flow.spec.ts` failed now and then** (found
   in WI-119). The test clicked "Move to board" before the open backlog showed the change
@@ -290,8 +291,8 @@ Other follow-ups:
 
 - **Grouping the board by epic** (WT-08 question 6, approved 2026-11-24): WT-08 filters
   the board by epic; grouping it into epic swimlanes, with their own drag and drop and
-  keyboard rules, needs its own work-item. Doc 0003 section 4 says so once WT-08 item G
-  applies proposal P3.
+  keyboard rules, needs its own work-item. Doc 0003 section 4 says so since WI-131
+  applied proposal P3.
 
 - **No MCP tool lists a project's epics** (WI-104, WS-104 question 2).
   `opanel_create_task` and `opanel_update_task` take `epicId`, but an assistant sees an
