@@ -15,9 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** drafting WT-09 (sub-tasks and task links, doc 0003 section 10), for the
-  owner to approve. Every work-track written so far is done; WI-132 added the MCP tools for
-  the backlog, labels, epics, search and activity on 2026-11-26.
+- **Next:** WT-09 (sub-tasks and task links, approved on 2026-11-26) items A (sub-tasks in
+  the API) and B (links in the API), in parallel; then C, D and E, and F last. WT-08 and
+  the MCP tools of WI-132 are done.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -289,7 +289,7 @@ Other follow-ups:
 - **Grouping the board by epic** (WT-08 question 6, approved 2026-11-24): WT-08 filters
   the board by epic; grouping it into epic swimlanes, with their own drag and drop and
   keyboard rules, needs its own work-item. Doc 0003 section 4 says so since WI-131
-  applied proposal P3.
+  applied proposal P3. WT-09 leaves grouping by parent out too, for the same reason.
 
 - **Answered by WI-132 (2026-11-26): no MCP tool listed a project's epics** (WI-104,
   WS-104 question 2). `opanel_list_epics` wraps `GET /projects/{projectId}/epics`.
