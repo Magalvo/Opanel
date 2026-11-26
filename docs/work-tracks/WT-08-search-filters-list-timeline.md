@@ -270,8 +270,7 @@ Checked on 2026-11-26 by WI-131, each against the test that proves it.
       column with no name, and a renamed team by its new name".)
 - [x] A Viewer reads everything this track adds and writes nothing new; every new endpoint
       enforces `tasks:read`. (`tasks/route.integration.test.ts`, "answers a Viewer, and
-      refuses a token without tasks:read with 403"; `tasks/[taskId]/activity/
-    route.integration.test.ts`, the Viewer's page and "refuses a token without tasks:read
+      refuses a token without tasks:read with 403"; the activity route's `route.integration.test.ts`, the Viewer's page and "refuses a token without tasks:read
       with 403"; `src/lib/openapi/routes.test.ts`, "access is declared, and route() enforces
       it". The track adds no write.)
 - [x] `docs/agents.md` and its doc check cover the new endpoints and filters; the OpenAPI

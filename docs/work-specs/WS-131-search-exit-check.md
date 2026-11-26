@@ -1,6 +1,7 @@
 # WS-131 — WT-08 end-to-end flow, agents guide and exit check
 
-- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-26, questions 1 to 3 as recommended; done on
+  2026-11-26)
 - Work-item: [WI-131](../work-items/WI-131-search-exit-check.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 5 (P1);
   [0003](../canonical/0003-task-management.md) sections 4 and 8 (P2, P3);
@@ -191,3 +192,40 @@ Risks:
   what it checks (WI-128).
 - **The list across projects shows every project's tasks** in the shared e2e database, so
   step 4 filters by project before it checks exact rows, and checks B's task by its key.
+
+## Implementation record
+
+- Red (17b933d): the four guide tests failed (no "Finding tasks"); the per-filter tests on
+  the backlog and across projects passed at once, as section 1 expected, and each failed
+  with one case's keys made wrong.
+- The flow (12d1697): `tests/e2e/search-flow.spec.ts` passed at once; with step 2's `403`
+  expected as `200` it failed.
+- Green (04a1d08): "Finding tasks" in `docs/agents.md`; P1 in doc 0004 section 5, P2 and
+  P3 in doc 0003 sections 8 and 4, each doc's header naming WT-08.
+- The exit check found three more clauses without a test, each now covered; the behaviour
+  was there, so each passed at once and failed when its expectation was broken (deviation
+  2):
+  - (26b712c) a task is found by the new words of its description;
+  - (26b712c) under every sort, a task left alone is given once while others are written
+    between pages;
+  - (fae9163) a Viewer reads `GET /api/v1/tasks`, and a token without `tasks:read` is a
+    `403` on the list and on the activity.
+- WT-08's exit criteria are ticked with these tests, and its `Status:` line says Done.
+- Gate on 2026-11-26:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2516 of 2516 (233 files);
+  - `pnpm test:e2e` 134 of 134;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The guide's filter test reads the "Filters." bullet and expects every filter but `q`**,
+   which has its own bullet, "Text search"; the test on the endpoints checks `q`. Three new
+   guide tests, not four: test 1 is the existing "has the sections of WS-078, in order",
+   whose list gained "Finding tasks".
+2. **Three more gaps than section 1 found**, all tests only: the description clause of the
+   first criterion, the "missed" clause of the sort criterion for sorts other than
+   `-updated`, and the Viewer and `tasks:read` clauses of the access criterion.
+3. **The sort criterion is ticked with WS-118 question 2's limit**: a task changed between
+   pages may move past the cursor; every task left alone is given once.
