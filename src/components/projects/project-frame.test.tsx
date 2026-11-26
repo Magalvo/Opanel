@@ -76,7 +76,7 @@ describe("ProjectFrame", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Board", "Backlog", "Epics"]);
+    ).toEqual(["Board", "Backlog", "List", "Epics"]);
     expect(within(nav).getByRole("link", { name: "Board" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -117,7 +117,7 @@ describe("ProjectFrame", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Board", "Backlog", "Epics", "Settings"]);
+    ).toEqual(["Board", "Backlog", "List", "Epics", "Settings"]);
     expect(within(nav).getByRole("link", { name: "Epics" })).toHaveAttribute(
       "href",
       "/projects/OPA/epics",
@@ -159,6 +159,21 @@ describe("ProjectFrame", () => {
     expect(backlog).toHaveAttribute("href", "/projects/OPA/backlog");
     expect(backlog).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("links the project's List view after Backlog, never current (WS-130)", async () => {
+    on("GET /api/v1/projects/OPA", () => Response.json(opa));
+    pathname = "/projects/OPA";
+    render(
+      <ProjectFrame projectKey="OPA" canManageProjects={false}>
+        page
+      </ProjectFrame>,
+    );
+
+    const nav = await screen.findByRole("navigation", { name: "Project" });
+    const list = within(nav).getByRole("link", { name: "List" });
+    expect(list).toHaveAttribute("href", "/tasks?projectId=OPA");
+    expect(list).not.toHaveAttribute("aria-current");
   });
 
   it("keeps the tab of the list a task was opened from current (WS-109)", async () => {

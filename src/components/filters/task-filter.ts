@@ -7,11 +7,12 @@ import { TYPE_LABELS } from "@/components/board/task-card";
 import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { formatDueDate } from "@/components/task/due-date";
 import { PRIORITY_LABELS } from "@/components/task/task-meta";
-import type { Priority, TaskType } from "@/lib/schemas/tasks";
-import { taskListQuerySchema } from "@/lib/schemas/tasks";
+import type { Priority, TaskSort, TaskType } from "@/lib/schemas/tasks";
+import { allTasksQuerySchema, taskListQuerySchema, taskSortSchema } from "@/lib/schemas/tasks";
 
 /** Every filter parameter, in the order a link writes them. */
 export const FILTER_KEYS = [
+  "projectId",
   "q",
   "type",
   "category",
@@ -31,14 +32,22 @@ export const FILTER_KEYS = [
 
 export type FilterKey = (typeof FILTER_KEYS)[number];
 
-/** The board takes every filter; the backlog has no column. */
-export const BOARD_KEYS: readonly FilterKey[] = FILTER_KEYS;
-export const BACKLOG_KEYS: readonly FilterKey[] = FILTER_KEYS.filter((key) => key !== "columnId");
+/**
+ * The board takes every filter of one project; the backlog has no column; the list across
+ * projects (WS-130) has projects and no column.
+ */
+export const BOARD_KEYS: readonly FilterKey[] = FILTER_KEYS.filter((key) => key !== "projectId");
+export const BACKLOG_KEYS: readonly FilterKey[] = BOARD_KEYS.filter((key) => key !== "columnId");
+export const LIST_KEYS: readonly FilterKey[] = FILTER_KEYS.filter((key) => key !== "columnId");
 
 /** Raw values by parameter; an absent or empty list is no filter. */
 export type TaskFilter = Partial<Record<FilterKey, readonly string[]>>;
 
-const SHAPE = taskListQuerySchema.shape as unknown as Record<FilterKey, z.ZodType>;
+// Each parameter's own schema: the project lists', and the list across projects' `projectId`.
+const SHAPE = {
+  ...taskListQuerySchema.shape,
+  projectId: allTasksQuerySchema.shape.projectId,
+} as unknown as Record<FilterKey, z.ZodType>;
 
 /**
  * The filter in `params`, one parameter at a time: one the API would refuse is dropped and
@@ -84,6 +93,24 @@ export function filterQuery(filter: TaskFilter): string {
   return query === "" ? "" : `&${query}`;
 }
 
+/** The list's default order (WT-08 decision 4), which a link leaves out. */
+export const DEFAULT_SORT: TaskSort = "-updated";
+
+/** The order in `params`; an absent one, or one the API would refuse, is the default. */
+export function readSort(params: URLSearchParams): { sort: TaskSort; ignored: boolean } {
+  const value = params.get("sort");
+  if (value === null) return { sort: DEFAULT_SORT, ignored: false };
+  const parsed = taskSortSchema.safeParse(value);
+  return parsed.success
+    ? { sort: parsed.data, ignored: false }
+    : { sort: DEFAULT_SORT, ignored: true };
+}
+
+/** The order's query string, without `?`: nothing for the default. */
+export function writeSort(sort: TaskSort): string {
+  return sort === DEFAULT_SORT ? "" : `sort=${sort}`;
+}
+
 export function isEmpty(filter: TaskFilter): boolean {
   return FILTER_KEYS.every((key) => (filter[key] ?? []).length === 0);
 }
@@ -117,6 +144,8 @@ export function withValues(
 
 /** Names for the ids a filter holds, as far as the page knows them. */
 export interface FilterNames {
+  /** A project's key by its id. */
+  projects?: ReadonlyMap<string, string>;
   labels?: ReadonlyMap<string, string>;
   epics?: ReadonlyMap<string, string>;
   teams?: ReadonlyMap<string, string>;
@@ -148,6 +177,8 @@ function named(
 
 function chipLabel(key: FilterKey, value: string, names: FilterNames): string {
   switch (key) {
+    case "projectId":
+      return `Project: ${names.projects?.get(value) ?? value}`;
     case "q":
       return `Search: ${value}`;
     case "type":

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bugLabel, json, LABELS, opa, page, PROJECT, uiLabel } from "@/components/board/test-data";
-import { installFetch, on } from "@/components/fake-api";
+import { fetchMock, installFetch, on, urlOf } from "@/components/fake-api";
 
 import type { TaskFilter } from "./task-filter";
 
@@ -27,9 +27,9 @@ function renderBar(filter: TaskFilter, onChange = vi.fn()) {
       <TaskFilterBar
         filter={filter}
         onChange={onChange}
+        projectKey="OPA"
         people={[ada]}
-        shown={12}
-        total={140}
+        status="12 of 140 tasks match."
         ignored={[]}
       />
     </ProjectFrame>,
@@ -130,9 +130,9 @@ describe("TaskFilterBar: chips and count (WS-120 test 4)", () => {
         <TaskFilterBar
           filter={{}}
           onChange={vi.fn()}
+          projectKey="OPA"
           people={[]}
-          shown={3}
-          total={3}
+          status="3 of 3 tasks match."
           ignored={["priority"]}
         />
       </ProjectFrame>,
@@ -141,5 +141,99 @@ describe("TaskFilterBar: chips and count (WS-120 test 4)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Some filters in this link were not understood and are ignored.",
     );
+  });
+});
+
+describe("TaskFilterBar on the list view (WS-130 test 4)", () => {
+  const projects = [
+    { value: "OPA", label: "Opanel" },
+    { value: "OPS", label: "Operations" },
+  ];
+
+  function renderListBar(filter: TaskFilter, projectKey: string | null, onChange = vi.fn()) {
+    const user = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) });
+    render(
+      <TaskFilterBar
+        filter={filter}
+        onChange={onChange}
+        projectKey={projectKey}
+        projects={projects}
+        people={[]}
+        ignored={[]}
+      />,
+    );
+    return { user, onChange };
+  }
+
+  it("asks for one project before it offers labels or epics, without a project frame", async () => {
+    const { user } = renderListBar({}, null);
+
+    await user.click(screen.getByRole("button", { name: "Label" }));
+    expect(
+      screen.getByRole("menuitem", { name: "Choose one project to filter by label" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    expect(screen.queryByRole("menuitemcheckbox")).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Epic" }));
+    expect(
+      screen.getByRole("menuitem", { name: "Choose one project to filter by epic" }),
+    ).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("offers the chosen project's labels", async () => {
+    const { user, onChange } = renderListBar({ projectId: ["OPA"] }, "OPA");
+
+    await user.click(screen.getByRole("button", { name: "Label" }));
+    await user.click(await screen.findByRole("menuitemcheckbox", { name: "Bug" }));
+
+    expect(onChange).toHaveBeenLastCalledWith({ projectId: ["OPA"], labelId: [bugLabel.id] });
+  });
+
+  it("puts a Project menu first, writing the project's key", async () => {
+    const { user, onChange } = renderListBar({}, null);
+    const bar = screen.getByRole("search", { name: "Filter tasks" });
+
+    expect(within(bar).getAllByRole("button")[0]).toHaveAccessibleName("Project");
+    await user.click(within(bar).getByRole("button", { name: "Project" }));
+    expect(screen.getAllByRole("menuitemcheckbox").map((item) => item.textContent)).toEqual([
+      "Opanel",
+      "Operations",
+    ]);
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Operations" }));
+
+    expect(onChange).toHaveBeenLastCalledWith({ projectId: ["OPS"] });
+  });
+
+  it("shows no status line when none is given", () => {
+    renderListBar({ type: ["bug"] }, null);
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Type: Bug" })).toBeVisible();
+  });
+});
+
+describe("TaskFilterBar: names of a link's filters (WS-130 deviation 1)", () => {
+  it("reads the names of the labels, epics and teams a link holds, without opening a menu", async () => {
+    const team = {
+      id: "77777777-7777-4777-8777-777777777777",
+      name: "Frontend",
+      memberCount: 2,
+      createdAt: "2026-11-12T10:00:00.000Z",
+    };
+    on("GET /api/v1/teams?limit=50", page([team]));
+    renderBar({ labelId: [uiLabel.id], assigneeTeamId: [team.id] });
+
+    expect(await screen.findByRole("button", { name: "Remove Label: UI" })).toBeVisible();
+    expect(await screen.findByRole("button", { name: "Remove Team: Frontend" })).toBeVisible();
+  });
+
+  it("reads nothing for a filter that names none", async () => {
+    renderBar({ type: ["bug"], epicId: ["none"], assigneeTeamId: ["none"] });
+
+    await screen.findByRole("button", { name: "Remove Type: Bug" });
+    expect(
+      fetchMock.mock.calls.map(([url]) => urlOf(url)).filter((url) => !url.endsWith("/OPA")),
+    ).toEqual([]);
   });
 });

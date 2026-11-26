@@ -1,4 +1,4 @@
-import { BotIcon, FolderKanbanIcon, UsersIcon, UsersRoundIcon } from "lucide-react";
+import { BotIcon, FolderKanbanIcon, ListTodoIcon, UsersIcon, UsersRoundIcon } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -39,6 +39,14 @@ export function AppSidebar({
                 <Link href="/projects">
                   <FolderKanbanIcon aria-hidden="true" />
                   Projects
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/tasks">
+                  <ListTodoIcon aria-hidden="true" />
+                  Tasks
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

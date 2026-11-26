@@ -7,10 +7,13 @@ import {
   filterQuery,
   fullIndex,
   isEmpty,
+  LIST_KEYS,
   readFilter,
+  readSort,
   withoutValue,
   withValue,
   writeFilter,
+  writeSort,
 } from "./task-filter";
 
 // The filter in the URL (WS-120 section 2, tests 1 and 2).
@@ -139,5 +142,79 @@ describe("fullIndex (WS-120 section 4)", () => {
     // Moving x into a list where c is shown and a, b are hidden: below c.
     expect(fullIndex(ids("abc"), ids("c"), "x", 1)).toBe(3);
     expect(fullIndex(ids("abc"), ids("c"), "x", 0)).toBe(2);
+  });
+});
+
+// The list view's filter and order in the URL (WS-130 section 2, tests 1 and 2).
+
+const PROJECT_ID = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
+
+describe("readFilter with projects (WS-130 test 1)", () => {
+  it("reads projectId by key and by id, repeated, written first", () => {
+    const { filter, ignored } = readFilter(
+      new URLSearchParams(`type=bug&projectId=OPA&projectId=${PROJECT_ID}`),
+      LIST_KEYS,
+    );
+
+    expect(ignored).toEqual([]);
+    expect(filter).toEqual({ projectId: ["OPA", PROJECT_ID], type: ["bug"] });
+    expect(writeFilter(filter)).toBe(`projectId=OPA&projectId=${PROJECT_ID}&type=bug`);
+  });
+
+  it("ignores a column on the list, and a project on the board and the backlog", () => {
+    expect(readFilter(new URLSearchParams(`columnId=${COLUMN}`), LIST_KEYS).ignored).toEqual([
+      "columnId",
+    ]);
+    expect(readFilter(new URLSearchParams("projectId=OPA"), BOARD_KEYS).ignored).toEqual([
+      "projectId",
+    ]);
+    expect(readFilter(new URLSearchParams("projectId=OPA"), BACKLOG_KEYS).ignored).toEqual([
+      "projectId",
+    ]);
+  });
+
+  it("refuses a project reference the API would refuse", () => {
+    expect(readFilter(new URLSearchParams("projectId=not a key"), LIST_KEYS)).toEqual({
+      filter: {},
+      ignored: ["projectId"],
+    });
+  });
+
+  it("names a project chip by its key", () => {
+    const chips = chipsOf(
+      { projectId: ["OPA", PROJECT_ID, "ZZZ"] },
+      { projects: new Map([[PROJECT_ID, "OPS"]]) },
+    );
+
+    expect(chips.map((chip) => chip.label)).toEqual([
+      "Project: OPA",
+      "Project: OPS",
+      "Project: ZZZ",
+    ]);
+  });
+});
+
+describe("readSort and writeSort (WS-130 test 2)", () => {
+  const SORTS = ["key", "title", "priority", "dueDate", "created", "updated"] as const;
+
+  it("round-trips every sort both ways", () => {
+    for (const field of SORTS) {
+      for (const sort of [field, `-${field}`] as const) {
+        expect(readSort(new URLSearchParams(writeSort(sort)))).toEqual({ sort, ignored: false });
+      }
+    }
+  });
+
+  it("reads no sort as -updated, and leaves -updated out of the link", () => {
+    expect(readSort(new URLSearchParams(""))).toEqual({ sort: "-updated", ignored: false });
+    expect(writeSort("-updated")).toBe("");
+    expect(writeSort("priority")).toBe("sort=priority");
+  });
+
+  it("reads an unreadable sort as -updated and says it was ignored", () => {
+    expect(readSort(new URLSearchParams("sort=status"))).toEqual({
+      sort: "-updated",
+      ignored: true,
+    });
   });
 });

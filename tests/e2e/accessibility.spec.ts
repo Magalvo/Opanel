@@ -191,6 +191,28 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 
+  test(`the list view, filtered and sorted, has no accessibility violations in ${colorScheme} mode (WS-130)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    await page.emulateMedia({ colorScheme });
+
+    for (const path of [
+      `/tasks?projectId=${key}&sort=priority`,
+      `/tasks?projectId=${key}&type=bug`,
+    ]) {
+      await page.goto(path);
+      const bar = page.getByRole("search", { name: "Filter tasks" });
+      await expect(bar.getByRole("button", { name: "Clear filters" })).toBeVisible();
+      await expect(page.getByRole("status", { name: "List status" })).toBeVisible();
+      expect(await violations(page), path).toEqual([]);
+      await bar.getByRole("button", { name: "Project", exact: true }).click();
+      await expect(page.getByRole("menu")).toBeVisible();
+      expect(await violations(page), `${path}, menu open`).toEqual([]);
+      await page.keyboard.press("Escape");
+    }
+  });
+
   test(`the Backlog page and a task over it have no accessibility violations in ${colorScheme} mode (WS-109)`, async ({
     page,
   }) => {

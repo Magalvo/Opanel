@@ -57,7 +57,7 @@ describe("AppShell", () => {
     expect(within(topBar).getByRole("button", { name: "Account menu" })).toHaveTextContent("A");
   });
 
-  it("has a main navigation area whose links, for someone who is not an Admin, are Projects and Teams", () => {
+  it("has a main navigation area whose links, for someone who is not an Admin, are Projects, Tasks and Teams", () => {
     renderShell();
 
     const navigation = screen.getByRole("navigation", { name: "Main" });
@@ -65,7 +65,7 @@ describe("AppShell", () => {
       within(navigation)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Projects", "Teams"]);
+    ).toEqual(["Projects", "Tasks", "Teams"]);
   });
 
   it("shows a Projects link to /projects first, to everyone (WS-036)", () => {
@@ -75,6 +75,17 @@ describe("AppShell", () => {
       const links = within(screen.getByRole("navigation", { name: "Main" })).getAllByRole("link");
       expect(links[0]).toHaveTextContent("Projects");
       expect(links[0]).toHaveAttribute("href", "/projects");
+      unmount();
+    }
+  });
+
+  it("shows a Tasks link to /tasks after Projects, to everyone (WS-130)", () => {
+    for (const canManageAccounts of [false, true]) {
+      const { unmount } = renderShell(canManageAccounts);
+
+      const links = within(screen.getByRole("navigation", { name: "Main" })).getAllByRole("link");
+      expect(links[1]).toHaveTextContent("Tasks");
+      expect(links[1]).toHaveAttribute("href", "/tasks");
       unmount();
     }
   });
@@ -120,7 +131,7 @@ describe("AppShell", () => {
       within(navigation)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Projects", "Teams", "People", "Agents"]);
+    ).toEqual(["Projects", "Tasks", "Teams", "People", "Agents"]);
   });
 
   it("shows no Agents link without agents:manage, even with accounts:manage (WS-077)", () => {
