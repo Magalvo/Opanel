@@ -18,6 +18,16 @@ an index commit when a work-track is approved or done, or when what comes next c
 - **Next:** drafting WT-09 (sub-tasks and task links, doc 0003 section 10), for the
   owner to approve. Every work-track written so far is done; WI-132 added the MCP tools for
   the backlog, labels, epics, search and activity on 2026-11-26.
+- **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
+  B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
+- **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
+  session secret), WI-113 (a reorder within one column reaches an open board live) and
+  WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
+  dragging) is done too.
+- **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
+  are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
+- **Planning gaps awaiting an owner decision** are listed first under
+  [Follow-ups](#follow-ups).
 
 ## Canonical docs (`canonical/`)
 
