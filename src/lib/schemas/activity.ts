@@ -27,6 +27,8 @@ export const ACTIVITY_EVENT_TYPES = [
   "deleted",
   "restored",
   "reported_again",
+  "linked",
+  "unlinked",
 ] as const;
 
 const VALUES_DESCRIPTION =
@@ -34,8 +36,10 @@ const VALUES_DESCRIPTION =
   "`assigneeTeamId` and `epicId` are `NamedRef`s (an epic's name is its title), `labels` " +
   "is a list of `{ id, name }`, and every other field is its value. `moved`: " +
   "`{ column: NamedRef | null }`, `null` for the backlog. `created`: the new task's fields, " +
-  "with `column` as for `moved`. `reported_again`: `{ reportId, occurrences }`. `null` " +
-  "when there is none.";
+  "with `column` as for `moved`. `reported_again`: `{ reportId, occurrences }`. `linked` " +
+  "(in `newValue`) and `unlinked` (in `oldValue`): `{ type, direction, task }`, the link as " +
+  "this task reads it, `task` the other task's `{ id, key }`, or `null` when it is in a " +
+  "project the caller may not reach. `null` when there is none.";
 
 export const activityEventSchema = z
   .strictObject({

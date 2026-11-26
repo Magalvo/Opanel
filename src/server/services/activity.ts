@@ -8,7 +8,12 @@ import type {
   ActivityQuery,
   NamedRef,
 } from "@/lib/schemas/activity";
-import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
+import {
+  type Actor,
+  canAccessProject,
+  requirePermission,
+  requireProjectAccess,
+} from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { notFound } from "@/server/http/errors";
 import { decodeActivityCursor, encodeActivityCursor } from "@/server/http/pagination";
@@ -48,6 +53,8 @@ interface Names {
   teams: Map<string, string>;
   epics: Map<string, string>;
   columns: Map<string, string>;
+  /** Linked tasks in projects the actor cannot reach, answered as `task: null` (WS-134). */
+  hiddenTasks: Set<string>;
 }
 
 const FIELD_KIND: Record<string, "accounts" | "teams" | "epics" | undefined> = {
@@ -66,9 +73,21 @@ function columnIdOf(value: Json): string | null | undefined {
   return typeof id === "string" ? id : null;
 }
 
+function isLinkChange(row: EventRow): boolean {
+  return row.type === "linked" || row.type === "unlinked";
+}
+
+/** The other task's id in a `linked` or `unlinked` value. */
+function linkedTaskIdOf(value: Json): string | undefined {
+  if (!isObject(value) || !isObject(value.task ?? null)) return undefined;
+  const task = value.task as Record<string, Json>;
+  return typeof task.id === "string" ? task.id : undefined;
+}
+
 function idsIn(rows: EventRow[]) {
   const ids = { accounts: new Set<string>(), teams: new Set<string>(), epics: new Set<string>() };
   const columns = new Set<string>();
+  const linkedTasks = new Set<string>();
   for (const row of rows) {
     const kind = row.field === null ? undefined : FIELD_KIND[row.field];
     for (const value of [row.old_value, row.new_value]) {
@@ -79,9 +98,11 @@ function idsIn(rows: EventRow[]) {
         const columnId = columnIdOf(value);
         if (typeof columnId === "string") columns.add(columnId);
       }
+      const linkedId = isLinkChange(row) ? linkedTaskIdOf(value) : undefined;
+      if (linkedId !== undefined) linkedTasks.add(linkedId);
     }
   }
-  return { ...ids, columns };
+  return { ...ids, columns, linkedTasks };
 }
 
 function inList(ids: Set<string>): SQL {
@@ -91,13 +112,14 @@ function inList(ids: Set<string>): SQL {
   );
 }
 
-async function readNames(executor: Executor, rows: EventRow[]): Promise<Names> {
+async function readNames(executor: Executor, actor: Actor, rows: EventRow[]): Promise<Names> {
   const ids = idsIn(rows);
   const names: Names = {
     accounts: new Map(),
     teams: new Map(),
     epics: new Map(),
     columns: new Map(),
+    hiddenTasks: new Set(),
   };
   if (ids.accounts.size > 0) {
     const found = await executor.execute<{ id: string; name: string; kind: AccountKind }>(
@@ -117,6 +139,14 @@ async function readNames(executor: Executor, rows: EventRow[]): Promise<Names> {
     );
     for (const row of found) names[kind].set(row.id, row.name);
   }
+  if (ids.linkedTasks.size > 0 && actor.projectIds !== null) {
+    const found = await executor.execute<{ id: string; project_id: string }>(
+      sql`select id, project_id from tasks where id in (${inList(ids.linkedTasks)})`,
+    );
+    for (const row of found) {
+      if (!canAccessProject(actor, row.project_id)) names.hiddenTasks.add(row.id);
+    }
+  }
   return names;
 }
 
@@ -133,6 +163,10 @@ function named(row: EventRow, value: Json, names: Names): Json {
       return { ...(names.accounts.get(value) ?? { id: value, name: "", kind: "human" }) };
     }
     if (kind !== undefined) return { id: value, name: names[kind].get(value) ?? null };
+  }
+  if (isLinkChange(row) && isObject(value)) {
+    const linkedId = linkedTaskIdOf(value);
+    if (linkedId !== undefined && names.hiddenTasks.has(linkedId)) return { ...value, task: null };
   }
   if ((row.type === "moved" || row.type === "created") && isObject(value)) {
     const columnId = columnIdOf(value);
@@ -223,7 +257,7 @@ export async function listActivity(
     db,
     page.filter((key) => key.kind === "event").map((key) => key.id),
   );
-  const names = await readNames(db, eventRows);
+  const names = await readNames(db, actor, eventRows);
   const events = new Map(eventRows.map((row) => [row.id, toEvent(row, names)]));
 
   const items = page.map((key): ActivityItem => {
