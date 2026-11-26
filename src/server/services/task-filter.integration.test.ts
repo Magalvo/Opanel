@@ -13,7 +13,15 @@ import { listColumns } from "./columns";
 import { createEpic } from "./epics";
 import { createLabel } from "./labels";
 import { createProject } from "./projects";
-import { createTask, deleteTask, listBacklog, listTasks, updateTask } from "./tasks";
+import {
+  createTask,
+  deleteTask,
+  getTask,
+  listBacklog,
+  listTasks,
+  moveTask,
+  updateTask,
+} from "./tasks";
 import { createTeam } from "./teams";
 
 // The filters and the text search of the project lists (WS-116 tests 2 to 9).
@@ -201,6 +209,43 @@ describe("the backlog's filters (WS-116 test 5)", () => {
     ]);
     expect(await backlog(s.mia, { category: "todo" })).toEqual([]);
     expect(await backlog(s.mia, { q: "logout" })).toEqual(["OPA-4"]);
+  });
+});
+
+describe("the backlog's filters, one at a time (WS-131 test 5)", () => {
+  /** The setup with OPA-1, OPA-2 and OPA-5 moved to the backlog, after OPA-4, in that order. */
+  async function backlogSetup(): Promise<Setup> {
+    const s = await setup();
+    for (const key of ["OPA-1", "OPA-2", "OPA-5"]) {
+      const { version } = await getTask(s.manager, key);
+      await moveTask(s.manager, key, { columnId: null, version });
+    }
+    return s;
+  }
+
+  const cases: [string, (s: Setup) => Record<string, string | string[]>, string[]][] = [
+    ["no filter", () => ({}), ["OPA-4", "OPA-1", "OPA-2", "OPA-5"]],
+    ["q", () => ({ q: "login" }), ["OPA-1"]],
+    ["type", () => ({ type: "bug" }), ["OPA-1", "OPA-5"]],
+    ["category: a backlog task has none", () => ({ category: "todo" }), []],
+    ["done=true: a backlog task is never done", () => ({ done: "true" }), []],
+    ["done=false", () => ({ done: "false" }), ["OPA-4", "OPA-1", "OPA-2", "OPA-5"]],
+    ["assigneeTeamId", (s) => ({ assigneeTeamId: s.team.id }), ["OPA-1"]],
+    ["assigneeAccountId", (s) => ({ assigneeAccountId: s.miaAccount.id }), ["OPA-1"]],
+    ["reporterAccountId", (s) => ({ reporterAccountId: s.miaAccount.id }), ["OPA-1"]],
+    ["reporterKind=agent", () => ({ reporterKind: "agent" }), ["OPA-5"]],
+    ["reporterKind=human", () => ({ reporterKind: "human" }), ["OPA-4", "OPA-1", "OPA-2"]],
+    ["labelId", (s) => ({ labelId: s.blue.id }), ["OPA-2"]],
+    ["epicId", (s) => ({ epicId: s.epic.id }), ["OPA-1"]],
+    ["priority", () => ({ priority: "high" }), ["OPA-4"]],
+    ["severity", () => ({ severity: "high" }), ["OPA-1"]],
+    ["dueFrom", () => ({ dueFrom: "2030-01-15" }), ["OPA-2"]],
+    ["dueTo", () => ({ dueTo: "2030-01-10" }), ["OPA-4", "OPA-1"]],
+  ];
+
+  it.each(cases)("%s", async (_name, query, keys) => {
+    const s = await backlogSetup();
+    expect(await backlog(s.mia, query(s))).toEqual(keys);
   });
 });
 

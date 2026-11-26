@@ -15,7 +15,7 @@ import {
 } from "@/lib/schemas/bug-reports";
 import { AGENT_SCOPES } from "@/lib/schemas/permissions";
 import { PROBLEM_CODES } from "@/lib/schemas/problem";
-import { PRIORITIES } from "@/lib/schemas/tasks";
+import { PRIORITIES, TASK_SORTS, taskFilterShape } from "@/lib/schemas/tasks";
 
 import {
   codeSpans,
@@ -37,6 +37,7 @@ const SECTIONS = [
   "Errors and limits",
   "Lists",
   "Tasks and the backlog",
+  "Finding tasks",
   "Live updates",
   "Filing bug reports",
   "Rotating and revoking",
@@ -50,6 +51,21 @@ function section(guide: string, heading: string): string {
   if (start < 0) return "";
   const next = guide.indexOf("\n## ", start + 4);
   return guide.slice(start, next < 0 ? undefined : next);
+}
+
+/** The text of the bullet that starts with `**label**` in `markdown`, up to the next bullet. */
+function bullet(markdown: string, label: string): string {
+  const start = markdown.indexOf(`- **${label}**`);
+  if (start < 0) return "";
+  const next = markdown.indexOf("\n- ", start + 2);
+  const end = markdown.indexOf("\n\n", start);
+  const stops = [next, end].filter((index) => index >= 0);
+  return markdown.slice(start, stops.length === 0 ? undefined : Math.min(...stops));
+}
+
+/** Code spans that look like a parameter or a field name: `projectId`, `dueFrom`, `key`. */
+function names(markdown: string): string[] {
+  return codeSpans(markdown).filter((span) => /^[a-z][A-Za-z]*$/.test(span));
 }
 
 /** `METHOD /api/v1/…` that no contract matches; `{…}` or an example may fill a parameter. */
@@ -168,5 +184,27 @@ describe("docs/agents.md (WS-078)", () => {
   it("is linked from the README and from the OpenAPI document", () => {
     expect(read("README.md")).toContain("](docs/agents.md)");
     expect(buildOpenApiDocument().info.description).toContain("docs/agents.md");
+  });
+
+  it("lists exactly the API's filter parameters in its search section (WS-131)", () => {
+    const filters = bullet(section(guide(), "Finding tasks"), "Filters.");
+    const parameters = names(filters).filter((name) => name !== "none" && name !== "me");
+    expect(new Set(parameters)).toEqual(
+      new Set([...Object.keys(taskFilterShape), "columnId", "projectId"]),
+    );
+    expect(codeSpans(filters)).toEqual(expect.arrayContaining(["none", "me"]));
+  });
+
+  it("lists exactly the sort fields of the list across projects (WS-131)", () => {
+    const order = bullet(section(guide(), "Finding tasks"), "Order.");
+    expect(new Set(names(order).filter((name) => name !== "sort"))).toEqual(new Set(TASK_SORTS));
+    expect(codeSpans(order)).toContain("-updated");
+  });
+
+  it("names the list across projects and a task's activity (WS-131)", () => {
+    const finding = section(guide(), "Finding tasks");
+    expect(finding).toContain("GET /api/v1/tasks?");
+    expect(finding).toContain("GET /api/v1/tasks/{taskId}/activity");
+    expect(codeSpans(finding)).toContain("q");
   });
 });
