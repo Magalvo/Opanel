@@ -15,10 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next, an owner decision:** every work-track written so far is done; WT-08 closed on
-  2026-11-26 (WI-116 to WI-120, WI-130 and WI-131). Two candidates: the WT-11 work-item
-  for the five MCP tools waiting under [Follow-ups](#follow-ups), now unblocked, or
-  drafting WT-09 (sub-tasks and task links, doc 0003 section 10).
+- **Next:** WI-132, the WT-11 work-item for the five MCP tools waiting under
+  [Follow-ups](#follow-ups). Every work-track written so far is done; WT-08 closed on
+  2026-11-26. Drafting WT-09 (sub-tasks and task links) comes after.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -201,6 +200,7 @@ operations (doc 0006), are done.
 | [WI-129](work-items/WI-129-a11y-contrast-focus-motion.md)       | Destructive contrast, settings dialog focus, still skeletons      | [WS-129](work-specs/WS-129-a11y-contrast-focus-motion.md)       |
 | [WI-130](work-items/WI-130-task-list-view.md)                   | The list view of tasks, with sortable headers                     | [WS-130](work-specs/WS-130-task-list-view.md)                   |
 | [WI-131](work-items/WI-131-search-exit-check.md)                | Search and filters end to end, the agents guide, the exit check   | [WS-131](work-specs/WS-131-search-exit-check.md)                |
+| [WI-132](work-items/WI-132-mcp-planning-search-tools.md)        | MCP tools for the backlog, labels, epics, search and activity     | [WS-132](work-specs/WS-132-mcp-planning-search-tools.md)        |
 
 ## Follow-ups
 
