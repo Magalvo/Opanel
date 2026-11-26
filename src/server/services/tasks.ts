@@ -202,7 +202,11 @@ function toTask(row: TaskRow, links: TaskLink[]): Task {
  * The links of a task, both ways, leaving out deleted tasks (WS-090 section 5): the task is a
  * regression of another (`outgoing`), or another is a regression of it (`incoming`).
  */
-async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]> {
+/**
+ * A task's links, read from its side (WS-090, WS-134): both directions, `relates_to`
+ * always `outgoing`, leaving out deleted tasks and tasks in projects the actor cannot reach.
+ */
+async function loadLinks(executor: Executor, actor: Actor, taskId: string): Promise<TaskLink[]> {
   const rows = await executor.execute<{
     type: TaskLink["type"];
     direction: TaskLink["direction"];
@@ -215,11 +219,13 @@ async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]
       select type, 'outgoing' as direction, to_task_id as other
       from task_links where from_task_id = ${taskId}
       union all
-      select type, 'incoming' as direction, from_task_id as other
+      select type, case when type = 'relates_to' then 'outgoing' else 'incoming' end,
+        from_task_id as other
       from task_links where to_task_id = ${taskId}
     ) l
     join tasks t on t.id = l.other and t.deleted_at is null
     join projects p on p.id = t.project_id
+    where true ${reachableBy(actor)}
     order by l.type, l.direction desc, t.number`);
   return rows.map((row) => ({
     type: row.type,
@@ -228,9 +234,16 @@ async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]
   }));
 }
 
-/** A task's full answer: its row and its links. */
-async function withLinks(executor: Executor, row: TaskRow): Promise<Task> {
-  return toTask(row, await loadLinks(executor, row.id));
+/** A task's full answer: its row and the links the actor may see. */
+async function withLinks(executor: Executor, actor: Actor, row: TaskRow): Promise<Task> {
+  return toTask(row, await loadLinks(executor, actor, row.id));
+}
+
+/** A live task's full answer, as `getTask` gives it, for services that change it (WS-134). */
+export async function answerTask(executor: Executor, actor: Actor, id: string): Promise<Task> {
+  const row = await findTask(executor, id);
+  if (!row) throw taskNotFound();
+  return withLinks(executor, actor, row);
 }
 
 function taskNotFound() {
@@ -242,7 +255,7 @@ function fieldError(path: string, message: string) {
 }
 
 /** `t.id = ...` for a UUID; project key and number for a task key such as `OPA-12`. */
-function matchesTask(ref: string): SQL {
+export function matchesTask(ref: string): SQL {
   if (UUID.test(ref)) return sql`t.id = ${ref}::uuid`;
   const dash = ref.lastIndexOf("-");
   return sql`p.key = ${ref.slice(0, dash)} and t.number = ${Number(ref.slice(dash + 1))}`;
@@ -313,7 +326,7 @@ export async function getTask(actor: Actor, ref: string, db: Database = getDb())
   const row = await findTask(db, ref);
   if (!row) throw taskNotFound();
   requireProjectAccess(actor, row.project_id);
-  return withLinks(db, row);
+  return withLinks(db, actor, row);
 }
 
 export async function listTasks(
@@ -784,7 +797,7 @@ export async function updateTask(
     await lockWritableProject(tx, actor, found.project_id);
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
-    if (before.version !== input.version) throw versionConflict(await withLinks(tx, before));
+    if (before.version !== input.version) throw versionConflict(await withLinks(tx, actor, before));
 
     const type = input.type ?? before.type;
     // Only bugs have a severity; a task that stops being a bug loses it (WS-088).
@@ -864,7 +877,7 @@ export async function updateTask(
     const updated = await findTask(tx, before.id);
     if (!updated) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.updated", updated, actor));
-    return withLinks(tx, updated);
+    return withLinks(tx, actor, updated);
   });
 }
 
@@ -899,7 +912,7 @@ export async function moveTask(
 
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
-    if (before.version !== input.version) throw versionConflict(await withLinks(tx, before));
+    if (before.version !== input.version) throw versionConflict(await withLinks(tx, actor, before));
 
     // Neighbours are read over every task of the column, deleted or not (deleted tasks keep
     // their place), leaving the moved task out. Positions compare byte by byte (A2).
@@ -967,7 +980,7 @@ export async function moveTask(
     const moved = await findTask(tx, before.id);
     if (!moved) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.moved", moved, actor));
-    return withLinks(tx, moved);
+    return withLinks(tx, actor, moved);
   });
 }
 
@@ -1012,7 +1025,7 @@ export async function restoreTask(
     await lockWritableProject(tx, actor, found.project_id);
     const task = await findAnyTask(tx, found.id, sql`for update of t`);
     if (!task) throw taskNotFound();
-    if (task.deleted_at === null) return withLinks(tx, task);
+    if (task.deleted_at === null) return withLinks(tx, actor, task);
 
     await tx.execute(sql`
       update tasks set deleted_at = null, deleted_by = null,
@@ -1023,6 +1036,6 @@ export async function restoreTask(
     const restored = await findTask(tx, task.id);
     if (!restored) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.restored", restored, actor));
-    return withLinks(tx, restored);
+    return withLinks(tx, actor, restored);
   });
 }
