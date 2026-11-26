@@ -1,6 +1,7 @@
 # WS-135 — Sub-tasks in the UI
 
-- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-26, questions 1 to 3 as recommended; done on
+  2026-11-26)
 - Work-item: [WI-135](../work-items/WI-135-subtasks-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 7 (sub-tasks);
   [0002](../canonical/0002-realtime-sync.md) section 3 (`task.updated`);
@@ -161,3 +162,41 @@ Risks:
   `listTaskItems` and the filter bar's 300 ms wait, so it adds no new pattern.
 - **Item D (links in the UI)** also changes `task-detail.tsx` and moves the links out of
   `BugSection`: whichever merges second rebases on the first.
+
+## Implementation record
+
+- Red (a1ebec0): 20 tests failed, on the missing marks, sentences, section, "Parent", the
+  equal-version reads and the `has_subtasks` message.
+- Green (4278413): `subtasks-section.tsx` and `parent-field.tsx` in `src/components/task/`;
+  `searchParents` in `task/api.ts`; an optional `parent` on `NewTaskDialog`; the marks in
+  `CardBody` (the backlog's rows reuse it); `withProgress` in `board/live.ts` and the
+  equal-version read in `useBoard` and `useBacklog`; in `TaskDetail`, `refreshSubtasks` for
+  its own equal-version `task.updated` and for any event of a listed sub-task, and the two
+  messages; the epic select locked on a sub-task; the parent's sentences in
+  `activity-text.tsx`.
+- Gate on 2026-11-26:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2637 of 2637 (238 files);
+  - `pnpm test:e2e` 138 of 139: `tests/e2e/search-flow.spec.ts` (WI-131) failed once and
+    passed on two runs alone. It reads the URL's `sort` right after its two "Sort by
+    Priority" clicks, and the rows it waited for were already in that order under the
+    default sort, so the read can come before the second click lands. Recorded as a
+    follow-up, not fixed here (one work-item per branch);
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The page's tests are in `task-detail.test.tsx`**, not in new `subtasks-section` and
+   `parent-field` test files: they need the page's loading, events and messages, which
+   that file's helpers already set up. The card's marks are tested on `CardBody` alone,
+   which the backlog's rows render too.
+2. **An echo now costs one read.** A `task.updated` carrying the version held is read for
+   its progress (section 5), so two existing tests that expected no read on such an echo
+   changed: `use-board.test.tsx` ("the snapshot holds the version" now expects the one read,
+   and the card keeps the snapshot's fields), and `task-detail.test.tsx` ("ignores the echo
+   of a version it holds…" now sends a `task.moved` echo, which is still ignored).
+3. **"Parent" sits above the form, in both modes**, so a Viewer reads it too ("None", or the
+   parent's link).
+4. **The "Add sub-task" dialog keeps its opener in state**, not a ref, for the lint rule on
+   refs read during render.

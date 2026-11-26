@@ -1,6 +1,6 @@
 # WI-135 — Sub-tasks in the UI
 
-- Status: Approved (approved by the owner on 2026-11-26, with WS-135)
+- Status: Done (approved by the owner on 2026-11-26, with WS-135; done on 2026-11-26)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item C)
 - Depends on: [WI-133](WI-133-subtasks-api.md) (item A, done)
 - Work-spec: [WS-135](../work-specs/WS-135-subtasks-ui.md)
@@ -15,27 +15,27 @@ elsewhere without a reload.
 
 ## Acceptance criteria
 
-- [ ] A task's page that is not a sub-task has a "Sub-tasks" section: each live sub-task's
+- [x] A task's page that is not a sub-task has a "Sub-tasks" section: each live sub-task's
       key (a link), title, status (its column, or "Backlog") and assignee, in the API's
       order, and "2 of 5 done". People who edit tasks see "Add sub-task"; the section is
       left out for a Viewer when there are none.
-- [ ] "Add sub-task" opens the create dialog with the parent set, and the new sub-task
+- [x] "Add sub-task" opens the create dialog with the parent set, and the new sub-task
       appears in the list.
-- [ ] The details show "Parent": a link to the parent on a sub-task, with "Remove parent"
+- [x] The details show "Parent": a link to the parent on a sub-task, with "Remove parent"
       for people who edit; on a task without sub-tasks, "Set parent" finds a task of the
       project by key or words. A sub-task's epic is shown as its parent's, not editable.
-- [ ] A board card and a backlog row of a sub-task show its parent's key; a parent's show
+- [x] A board card and a backlog row of a sub-task show its parent's key; a parent's show
       `2/5`, with the accessible name "2 of 5 sub-tasks done".
-- [ ] A parent's card, row and page update their progress when a sub-task changes
+- [x] A parent's card, row and page update their progress when a sub-task changes
       elsewhere (the parent's `task.updated` with an unchanged version), and a parent's page
       updates a sub-task's row when that sub-task changes.
-- [ ] Deleting a task with sub-tasks says to delete or detach them first; the API's
+- [x] Deleting a task with sub-tasks says to delete or detach them first; the API's
       `400`s on `parentId` and `epicId` show beside their field.
-- [ ] The timeline says "made it a sub-task of OPA-1", "removed it from OPA-1" and
+- [x] The timeline says "made it a sub-task of OPA-1", "removed it from OPA-1" and
       "moved it from OPA-1 to OPA-4".
-- [ ] The accessibility checks pass for a parent's page, a sub-task's page and a board
+- [x] The accessibility checks pass for a parent's page, a sub-task's page and a board
       with both, in light and dark mode; every new control is reachable by keyboard.
-- [ ] The full quality gate passes.
+- [x] The full quality gate passes.
 
 ## Notes
 
