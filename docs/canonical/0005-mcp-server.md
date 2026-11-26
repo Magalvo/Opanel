@@ -3,6 +3,8 @@
 - Status: **Approved** (2026-11-16, questions 1 to 4 as proposed)
 - Date: 2026-11-16
 - Supersedes: none
+- Amended by: WI-132 (section 4: the tools for the backlog, labels, epics, search and
+  activity; 2026-11-26)
 - Relates to: [0001](0001-ai-qa-agents-and-triage.md) (agent accounts, tokens, scopes, bug
   reports), [0004](0004-api-conventions.md) (the API it wraps), [0003](0003-task-management.md)
   (what the tools act on)
@@ -64,24 +66,30 @@ already is (doc 0001 section 2). This doc makes no assumption about it.
   rejected or the account is not an agent, and it offers only the tools whose permission
   the account holds. An assistant is never shown a tool that can only fail with `403`.
 
-## 4. Tools (first set)
+## 4. Tools
 
 Named `opanel_<verb>_<thing>`. Each tool's description names its permission. The first
-set follows the scopes of doc 0001 section 3:
+set follows the scopes of doc 0001 section 3; WI-132 added the reads of WT-07 and WT-08
+(the backlog, labels, epics, search and activity):
 
-| Tool                       | API                                                      | Permission                    |
-| -------------------------- | -------------------------------------------------------- | ----------------------------- |
-| `opanel_whoami`            | `GET /me`                                                | authenticated                 |
-| `opanel_list_projects`     | `GET /projects`                                          | `projects:read`               |
-| `opanel_get_board`         | `GET /projects/{id}/columns` and every page of its tasks | `projects:read`, `tasks:read` |
-| `opanel_list_teams`        | `GET /teams`                                             | `projects:read`               |
-| `opanel_find_people`       | `GET /people?q=`                                         | `projects:read`               |
-| `opanel_get_task`          | `GET /tasks/{idOrKey}` and its comments                  | `tasks:read`                  |
-| `opanel_add_comment`       | `POST /tasks/{idOrKey}/comments`                         | `comments:write`              |
-| `opanel_create_task`       | `POST /projects/{id}/tasks`                              | `tasks:write`                 |
-| `opanel_update_task`       | `PATCH /tasks/{idOrKey}` (fields, assignment, epic)      | `tasks:write`                 |
-| `opanel_move_task`         | `POST /tasks/{idOrKey}/move`                             | `tasks:write`                 |
-| `opanel_submit_bug_report` | `POST /projects/{id}/bug-reports` (WT-06)                | `reports:write`               |
+| Tool                       | API                                                       | Permission                    |
+| -------------------------- | --------------------------------------------------------- | ----------------------------- |
+| `opanel_whoami`            | `GET /me`                                                 | authenticated                 |
+| `opanel_list_projects`     | `GET /projects`                                           | `projects:read`               |
+| `opanel_get_board`         | `GET /projects/{id}/columns` and every page of its tasks  | `projects:read`, `tasks:read` |
+| `opanel_get_backlog`       | `GET /projects/{id}/backlog` (one page, with the filters) | `tasks:read`                  |
+| `opanel_list_labels`       | `GET /projects/{id}/labels`                               | `tasks:read`                  |
+| `opanel_list_epics`        | `GET /projects/{id}/epics`                                | `tasks:read`                  |
+| `opanel_list_teams`        | `GET /teams`                                              | `projects:read`               |
+| `opanel_find_people`       | `GET /people?q=`                                          | `projects:read`               |
+| `opanel_search_tasks`      | `GET /tasks` (search, filters, projects, sort)            | `tasks:read`                  |
+| `opanel_get_task`          | `GET /tasks/{idOrKey}` and its comments                   | `tasks:read`                  |
+| `opanel_get_task_activity` | `GET /tasks/{idOrKey}/activity`                           | `tasks:read`                  |
+| `opanel_add_comment`       | `POST /tasks/{idOrKey}/comments`                          | `comments:write`              |
+| `opanel_create_task`       | `POST /projects/{id}/tasks`                               | `tasks:write`                 |
+| `opanel_update_task`       | `PATCH /tasks/{idOrKey}` (fields, assignment, epic)       | `tasks:write`                 |
+| `opanel_move_task`         | `POST /tasks/{idOrKey}/move`                              | `tasks:write`                 |
+| `opanel_submit_bug_report` | `POST /projects/{id}/bug-reports` (WT-06)                 | `reports:write`               |
 
 - **No delete or restore tools**, and nothing for configuration (projects, columns,
   teams, accounts, tokens). Agents cannot hold those permissions anyway (doc 0001), and

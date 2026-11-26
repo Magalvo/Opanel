@@ -36,12 +36,18 @@ import { taskWithCommentsSchema } from "./tools/task";
 
 // The read tools (WS-100 tests 2 to 13), through real MCP calls against a fake fetch.
 
+// The project reads, then teams and people, then the task reads (WS-132 question 1).
 const READ_TOOLS = [
   "opanel_list_projects",
   "opanel_get_board",
+  "opanel_get_backlog",
+  "opanel_list_labels",
+  "opanel_list_epics",
   "opanel_list_teams",
   "opanel_find_people",
+  "opanel_search_tasks",
   "opanel_get_task",
+  "opanel_get_task_activity",
 ];
 
 type Respond = (call: FakeCall, url: URL) => Response;
@@ -90,7 +96,12 @@ describe("the read tools", () => {
     const onlyTasks = await serve(notFound, ["tasks:read"]);
     expect((await onlyTasks.client.listTools()).tools.map((tool) => tool.name)).toEqual([
       "opanel_whoami",
+      "opanel_get_backlog",
+      "opanel_list_labels",
+      "opanel_list_epics",
+      "opanel_search_tasks",
       "opanel_get_task",
+      "opanel_get_task_activity",
     ]);
 
     const onlyProjects = await serve(notFound, ["projects:read"]);

@@ -15,8 +15,8 @@ does beyond them, see its [MCP documentation](https://code.claude.com/docs/en/mc
   makes is in the task's history under the agent's name, with an "Agent" badge.
 - **The tools the agent's permissions allow,** and no others. The list, with each tool's
   permissions, is in [the MCP server's README](../mcp/README.md#tools). A `qa_agent` reads
-  the board, comments and files bugs; a `worker_agent` also creates, updates and moves
-  tasks.
+  the board and the backlog, searches tasks, reads a task's activity, comments and files
+  bugs; a `worker_agent` also creates, updates and moves tasks.
 - **Nothing more.** The MCP server is an API client running beside the assistant. It
   cannot delete anything, change settings or reach a project the agent cannot.
 
