@@ -213,6 +213,34 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 
+  test(`a parent, a sub-task and a board with both have no accessibility violations in ${colorScheme} mode (WS-135)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    const headers = { Origin: E2E_BASE_URL };
+    for (const title of ["A sub-task", "Another sub-task"]) {
+      expect(
+        (
+          await page.request.post(`/api/v1/projects/${key}/tasks`, {
+            headers,
+            data: { title, parentId: `${key}-1` },
+          })
+        ).status(),
+      ).toBe(201);
+    }
+    await page.emulateMedia({ colorScheme });
+
+    for (const [path, loaded] of [
+      [`/projects/${key}/tasks/${key}-1`, "0 of 2 done"],
+      [`/projects/${key}/tasks/${key}-2`, "Remove parent"],
+      [`/projects/${key}`, "A sub-task"],
+    ] as const) {
+      await page.goto(path);
+      await expect(page.getByText(loaded).first()).toBeVisible();
+      expect(await violations(page), path).toEqual([]);
+    }
+  });
+
   test(`the Backlog page and a task over it have no accessibility violations in ${colorScheme} mode (WS-109)`, async ({
     page,
   }) => {

@@ -1729,3 +1729,251 @@ describe("TaskDetail: priority and due date (WS-110)", () => {
     expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ priority: "urgent", version: 4 });
   });
 });
+
+// Sub-tasks on the task page (WS-135 tests 1 to 5, 8 and 9).
+
+describe("TaskDetail: sub-tasks (WS-135)", () => {
+  const parentRef = { id: base.id, key: "OPA-1", title: "Write the board" };
+  const s2 = task(2, doing.id, { title: "Draw the columns", assignee: ada, parent: parentRef });
+  const s3 = task(3, "", { columnId: null, title: "Pick the colours", parent: parentRef });
+  const withSubtasks: Task = {
+    ...base,
+    subtasks: { done: 0, total: 2 },
+    subtaskList: [s2, s3],
+  };
+  const release = {
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+    key: "OPA-9",
+    title: "Release 2.0",
+  };
+  const asSubtask: Task = { ...base, parent: release, epic: { id: launch.id, title: "Launch" } };
+  const SEARCH = "GET /api/v1/tasks?limit=20&sort=-updated&projectId=OPA&parentId=none&q=rel";
+  const releaseItem = {
+    ...task(9, todo.id, { title: "Release 2.0" }),
+    id: release.id,
+    project: { id: opa.id, key: "OPA", name: opa.name },
+    column: { id: todo.id, name: "To do", category: "todo" },
+  };
+
+  function subtasks() {
+    return screen.getByRole("region", { name: "Sub-tasks" });
+  }
+
+  function rowOf(key: string): HTMLElement {
+    const link = within(subtasks()).getByRole("link", { name: key });
+    const row = link.closest("li");
+    if (row === null) throw new Error(`no row for ${key}`);
+    return row;
+  }
+
+  function sendUpdated(entityId: string, version: number) {
+    act(() => {
+      FakeSource.latest().send("task.updated", {
+        id: crypto.randomUUID(),
+        type: "task.updated",
+        projectId: opa.id,
+        entity: "task",
+        entityId,
+        version,
+        actorAccountId: ada.id,
+        at: "2026-11-26T10:00:00.000Z",
+      });
+    });
+  }
+
+  it("lists the sub-tasks with status and assignee, and how many are done (test 1)", async () => {
+    await renderTask({ current: withSubtasks });
+
+    expect(within(subtasks()).getByText("0 of 2 done")).toBeInTheDocument();
+    expect(rowOf("OPA-2")).toHaveTextContent("Draw the columns");
+    expect(rowOf("OPA-2")).toHaveTextContent("In progress");
+    expect(rowOf("OPA-2")).toHaveTextContent("Ada Lovelace");
+    expect(rowOf("OPA-3")).toHaveTextContent("Backlog");
+    expect(within(subtasks()).getByRole("link", { name: "OPA-2" })).toHaveAttribute(
+      "href",
+      "/projects/OPA/tasks/OPA-2",
+    );
+    expect(within(subtasks()).getByRole("button", { name: "Add sub-task" })).toBeEnabled();
+  });
+
+  it("leaves the section out of a sub-task (test 1)", async () => {
+    await renderTask({ current: asSubtask });
+
+    expect(screen.queryByRole("region", { name: "Sub-tasks" })).not.toBeInTheDocument();
+  });
+
+  it("shows a Viewer the sub-tasks without Add sub-task (test 1)", async () => {
+    await renderTask({ current: withSubtasks, canWriteTasks: false });
+
+    expect(within(subtasks()).getByText("0 of 2 done")).toBeInTheDocument();
+    expect(within(subtasks()).queryByRole("button", { name: "Add sub-task" })).toBeNull();
+  });
+
+  it("leaves the section out for a Viewer on a task with none (test 1)", async () => {
+    await renderTask({ canWriteTasks: false });
+
+    expect(screen.queryByRole("region", { name: "Sub-tasks" })).not.toBeInTheDocument();
+  });
+
+  it("adds a sub-task in the first column with the parent set, and lists it (test 2)", async () => {
+    const created = full(task(4, todo.id, { title: "Write the tests", parent: parentRef }));
+    on("POST /api/v1/projects/OPA/tasks", json(created, 201));
+    const user = await renderTask();
+
+    await user.click(within(subtasks()).getByRole("button", { name: "Add sub-task" }));
+    const dialog = screen.getByRole("dialog", { name: "Add a sub-task to OPA-1" });
+    await user.type(within(dialog).getByLabelText("Title"), "Write the tests");
+    on(TASK, json({ ...base, subtasks: { done: 0, total: 1 }, subtaskList: [created] }));
+    await user.click(within(dialog).getByRole("button", { name: "Add task" }));
+
+    await waitFor(() => {
+      expect(within(subtasks()).getByRole("link", { name: "OPA-4" })).toBeInTheDocument();
+    });
+    expect(bodyOf(calls("POST")[0]?.[1])).toEqual({
+      title: "Write the tests",
+      type: "task",
+      columnId: todo.id,
+      parentId: base.id,
+    });
+  });
+
+  it("links a sub-task's parent, and removes it with the version (test 3)", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...asSubtask, parent: null, version: 4 }));
+    const user = await renderTask({ current: asSubtask });
+
+    const parent = within(details()).getByRole("link", { name: /OPA-9/ });
+    expect(parent).toHaveAttribute("href", "/projects/OPA/tasks/OPA-9");
+    await user.click(within(details()).getByRole("button", { name: "Remove parent" }));
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Parent removed.");
+    });
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ parentId: null, version: 3 });
+    expect(within(details()).getByRole("button", { name: "Set parent" })).toBeInTheDocument();
+  });
+
+  it("says a parent cannot be a sub-task (test 3)", async () => {
+    await renderTask({ current: withSubtasks });
+
+    expect(
+      within(details()).getByText("Has sub-tasks; it cannot be a sub-task."),
+    ).toBeInTheDocument();
+    expect(within(details()).queryByRole("button", { name: "Set parent" })).toBeNull();
+  });
+
+  it("finds a parent among the project's tasks that are not sub-tasks, and sets it (test 4)", async () => {
+    on(
+      SEARCH,
+      json({
+        items: [
+          { ...task(1, todo.id), project: releaseItem.project, column: releaseItem.column },
+          releaseItem,
+        ],
+        nextCursor: null,
+      }),
+    );
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, parent: release, version: 4 }));
+    const user = await renderTask();
+
+    await user.click(within(details()).getByRole("button", { name: "Set parent" }));
+    const dialog = screen.getByRole("dialog", { name: "Set a parent for OPA-1" });
+    await user.type(within(dialog).getByLabelText("Find a task"), "rel");
+
+    const choice = await within(dialog).findByRole("button", { name: "OPA-9 Release 2.0" });
+    expect(within(dialog).queryByRole("button", { name: /^OPA-1 / })).toBeNull();
+    await user.click(choice);
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Now a sub-task of OPA-9.");
+    });
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ parentId: release.id, version: 3 });
+  });
+
+  it("shows the API's refusal in the dialog (test 4)", async () => {
+    on(SEARCH, json({ items: [releaseItem], nextCursor: null }));
+    on(
+      "PATCH /api/v1/tasks/OPA-1",
+      problem(400, "invalid_request", [
+        { path: "parentId", message: "A task with sub-tasks cannot become a sub-task." },
+      ]),
+    );
+    const user = await renderTask();
+
+    await user.click(within(details()).getByRole("button", { name: "Set parent" }));
+    const dialog = screen.getByRole("dialog", { name: "Set a parent for OPA-1" });
+    await user.type(within(dialog).getByLabelText("Find a task"), "rel");
+    await user.click(await within(dialog).findByRole("button", { name: "OPA-9 Release 2.0" }));
+
+    expect(
+      await within(dialog).findByText("A task with sub-tasks cannot become a sub-task."),
+    ).toBeVisible();
+  });
+
+  it("shows a sub-task's epic as its parent's, and never sends it (test 5)", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...asSubtask, title: "Renamed", version: 4 }));
+    const user = await renderTask({ current: asSubtask });
+
+    expect(within(details()).getByLabelText("Epic")).toBeDisabled();
+    expect(within(details()).getByText("Follows its parent.")).toBeInTheDocument();
+    const title = within(details()).getByLabelText("Title");
+    await user.clear(title);
+    await user.type(title, "Renamed");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(calls("PATCH")).toHaveLength(1);
+    });
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Renamed", version: 3 });
+  });
+
+  it("takes the sub-tasks from an equal-version event without touching the form (test 8)", async () => {
+    const user = await renderTask({ current: withSubtasks });
+    act(() => {
+      FakeSource.latest().open();
+    });
+    const title = within(details()).getByLabelText("Title");
+    await user.type(title, "!");
+    const doneNow = { ...s2, columnId: done.id, version: 5 };
+    on(
+      TASK,
+      json({ ...withSubtasks, subtasks: { done: 1, total: 2 }, subtaskList: [doneNow, s3] }),
+    );
+
+    sendUpdated(base.id, base.version);
+
+    await waitFor(() => {
+      expect(within(subtasks()).getByText("1 of 2 done")).toBeInTheDocument();
+    });
+    expect(rowOf("OPA-2")).toHaveTextContent("Done");
+    expect(title).toHaveValue("Write the board!");
+  });
+
+  it("reads the task again when one of its sub-tasks changes (test 8)", async () => {
+    await renderTask({ current: withSubtasks });
+    act(() => {
+      FakeSource.latest().open();
+    });
+    on(
+      TASK,
+      json({ ...withSubtasks, subtaskList: [{ ...s2, title: "Draw them all", version: 2 }, s3] }),
+    );
+
+    sendUpdated(s2.id, 2);
+
+    await waitFor(() => {
+      expect(rowOf("OPA-2")).toHaveTextContent("Draw them all");
+    });
+  });
+
+  it("says to delete or detach the sub-tasks first (test 9)", async () => {
+    on("DELETE /api/v1/tasks/OPA-1", problem(409, "has_subtasks"));
+    const user = await renderTask({ current: withSubtasks });
+
+    await user.click(screen.getByRole("button", { name: "Delete task" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+    );
+
+    expect(await screen.findByText("Delete or detach its sub-tasks first.")).toBeInTheDocument();
+  });
+});

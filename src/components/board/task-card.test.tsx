@@ -67,3 +67,33 @@ describe("a card's priority and due date (WS-110)", () => {
     expect(screen.getByText("Due Nov 23, 2026")).toBeInTheDocument();
   });
 });
+
+// A card's sub-task marks (WS-135 test 6). The backlog's rows show the same `CardBody`.
+
+describe("a card's sub-task marks (WS-135)", () => {
+  const parentRef = {
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+    key: "OPA-9",
+    title: "Release 2.0",
+  };
+
+  it("shows a sub-task's parent key, named as its parent", () => {
+    render(<CardBody task={task(1, todo.id, { parent: parentRef })} />);
+
+    const mark = screen.getByText("OPA-9");
+    expect(mark.closest("[aria-label]")).toHaveAttribute("aria-label", "Sub-task of OPA-9");
+  });
+
+  it("shows a parent's progress, named in words", () => {
+    render(<CardBody task={task(9, todo.id, { subtasks: { done: 2, total: 5 } })} />);
+
+    expect(screen.getByLabelText("2 of 5 sub-tasks done")).toHaveTextContent("2/5");
+  });
+
+  it("shows neither mark on a task that is neither", () => {
+    render(<CardBody task={task(1, todo.id)} />);
+
+    expect(screen.queryByLabelText(/sub-tasks done/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Sub-task of/)).not.toBeInTheDocument();
+  });
+});

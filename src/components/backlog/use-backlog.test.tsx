@@ -709,3 +709,18 @@ describe("useBacklog: events during a drag, a move or a load (WS-048, WS-082)", 
     });
   });
 });
+
+describe("useBacklog: a parent's progress (WS-135 test 7)", () => {
+  it("takes a parent's progress from a task.updated with the version it holds", async () => {
+    on(`GET /api/v1/tasks/${t1.id}`, json(full({ ...t1, subtasks: { done: 1, total: 3 } })));
+    const { result } = await renderBacklog();
+
+    send("task.updated", t1.id, t1.version);
+
+    await waitFor(() => {
+      expect(result.current.tasks[0]?.subtasks).toEqual({ done: 1, total: 3 });
+    });
+    expect(keys(result.current.tasks)).toEqual(["OPA-1", "OPA-2", "OPA-3"]);
+    expect(taskGets()).toEqual([`/api/v1/tasks/${t1.id}`]);
+  });
+});

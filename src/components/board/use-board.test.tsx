@@ -1128,3 +1128,36 @@ describe("useBoard: the newest state wins (WS-123)", () => {
     });
   });
 });
+
+describe("useBoard: a parent's progress (WS-135 test 7)", () => {
+  it("takes a parent's progress from a task.updated with the version it holds", async () => {
+    on(`GET /api/v1/tasks/${t1.id}`, json(full({ ...t1, subtasks: { done: 1, total: 2 } })));
+    const { result } = await renderBoard();
+
+    send("task.updated", t1.id, t1.version);
+
+    await waitFor(() => {
+      expect(result.current.board[todo.id]?.[0]?.subtasks).toEqual({ done: 1, total: 2 });
+    });
+    expect(keys(result.current.board, todo.id)).toEqual(["OPA-1", "OPA-2"]);
+    expect(taskGets()).toEqual([`/api/v1/tasks/${t1.id}`]);
+  });
+
+  it("keeps the card when the read finds a newer version, and places that as before", async () => {
+    on(
+      `GET /api/v1/tasks/${t1.id}`,
+      json(full({ ...t1, title: "Renamed", version: 2, subtasks: { done: 0, total: 1 } })),
+    );
+    const { result } = await renderBoard();
+
+    send("task.updated", t1.id, t1.version);
+
+    await waitFor(() => {
+      expect(result.current.board[todo.id]?.[0]).toMatchObject({
+        title: "Renamed",
+        version: 2,
+        subtasks: { done: 0, total: 1 },
+      });
+    });
+  });
+});
