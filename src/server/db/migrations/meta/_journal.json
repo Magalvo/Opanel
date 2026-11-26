@@ -169,6 +169,13 @@
       "when": 1795526176843,
       "tag": "0023_task_updated_index",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795697261457,
+      "tag": "0024_task_parent",
+      "breakpoints": true
     }
   ]
 }

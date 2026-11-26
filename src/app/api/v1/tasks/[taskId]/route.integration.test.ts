@@ -279,8 +279,9 @@ describe("task endpoints", () => {
 
     const parent = await GET(apiRequest("GET", "/api/v1/tasks/OPA-1", { cookie }), task("OPA-1"));
     const answer = taskSchema.parse(await parent.json());
-    expect(answer.subtasks.map((item) => item.key)).toEqual(["OPA-3"]);
-    expect(answer.subtasks[0]?.parent?.key).toBe("OPA-1");
+    expect(answer.subtasks).toEqual({ done: 0, total: 1 });
+    expect(answer.subtaskList.map((item) => item.key)).toEqual(["OPA-3"]);
+    expect(answer.subtaskList[0]?.parent?.key).toBe("OPA-1");
 
     const blocked = await DELETE(
       apiRequest("DELETE", "/api/v1/tasks/OPA-1", { cookie: manager }),

@@ -162,7 +162,7 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN"   "https://opanel.example.co
   match as written, in any language.
 - **Filters.** Each filter is a parameter named after the field: `projectId`, `type`,
   `columnId`, `category`, `done`, `assigneeTeamId`, `assigneeAccountId`,
-  `reporterAccountId`, `reporterKind`, `labelId`, `epicId`, `priority`, `severity`,
+  `reporterAccountId`, `reporterKind`, `labelId`, `epicId`, `parentId`, `priority`, `severity`,
   `dueFrom` and `dueTo`. A repeated parameter means any of its values, and different
   parameters must all hold. `none` matches an empty field and `me` your own account. At
   most 20 values each; an unknown value is a `400` naming the parameter.

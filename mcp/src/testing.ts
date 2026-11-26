@@ -149,6 +149,7 @@ export function taskSummary(
     assigneeTeam: null,
     assignee: null,
     epic: null,
+    parent: null,
     reporter: { id: QA_AGENT.id, name: "QA bot", kind: "agent" as const },
     severity: null,
     fingerprint: null,
@@ -157,6 +158,7 @@ export function taskSummary(
     priority: "none",
     dueDate: null,
     labels: [],
+    subtasks: null,
     version: 1,
     createdAt: AT,
     updatedAt: AT,
@@ -170,6 +172,7 @@ export function task(title = "Login fails") {
     id: TASK_ID,
     description: "Steps to reproduce.",
     links: [],
+    subtaskList: [],
   };
 }
 

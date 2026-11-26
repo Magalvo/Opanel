@@ -261,3 +261,20 @@ export function tooManyLabels(
 ): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "too_many_labels", detail });
 }
+
+/** `409` (WS-133): a parent already has 100 live sub-tasks (WT-09 decision 3). */
+export function tooManySubtasks(
+  detail = "This task already has 100 sub-tasks. Delete or detach one first.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "too_many_subtasks", detail });
+}
+
+/** `409` (WS-133): a task with live sub-tasks cannot be deleted (WT-09 decision 5). */
+export function hasSubtasks(count: number): ApiError {
+  return new ApiError({
+    status: 409,
+    title: "Conflict",
+    code: "has_subtasks",
+    detail: `This task has ${String(count)} sub-task${count === 1 ? "" : "s"}. Delete or detach ${count === 1 ? "it" : "them"} first.`,
+  });
+}

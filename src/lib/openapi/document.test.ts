@@ -492,7 +492,7 @@ describe("buildOpenApiDocument", () => {
       required: expect.arrayContaining(["parent", "subtasks"]) as unknown,
     });
     expect(schemas.Task).toMatchObject({
-      required: expect.arrayContaining(["parent", "subtasks"]) as unknown,
+      required: expect.arrayContaining(["parent", "subtasks", "subtaskList"]) as unknown,
     });
     expect(schemas.CreateTaskRequest).toMatchObject({
       properties: { parentId: expect.anything() as unknown },

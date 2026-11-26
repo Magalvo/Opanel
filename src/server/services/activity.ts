@@ -48,12 +48,15 @@ interface Names {
   teams: Map<string, string>;
   epics: Map<string, string>;
   columns: Map<string, string>;
+  /** A parent named by its key (WS-133 section 8). */
+  tasks: Map<string, string>;
 }
 
-const FIELD_KIND: Record<string, "accounts" | "teams" | "epics" | undefined> = {
+const FIELD_KIND: Record<string, "accounts" | "teams" | "epics" | "tasks" | undefined> = {
   assigneeAccountId: "accounts",
   assigneeTeamId: "teams",
   epicId: "epics",
+  parentId: "tasks",
 };
 
 function isObject(value: Json): value is Record<string, Json> {
@@ -67,7 +70,12 @@ function columnIdOf(value: Json): string | null | undefined {
 }
 
 function idsIn(rows: EventRow[]) {
-  const ids = { accounts: new Set<string>(), teams: new Set<string>(), epics: new Set<string>() };
+  const ids = {
+    accounts: new Set<string>(),
+    teams: new Set<string>(),
+    epics: new Set<string>(),
+    tasks: new Set<string>(),
+  };
   const columns = new Set<string>();
   for (const row of rows) {
     const kind = row.field === null ? undefined : FIELD_KIND[row.field];
@@ -98,6 +106,7 @@ async function readNames(executor: Executor, rows: EventRow[]): Promise<Names> {
     teams: new Map(),
     epics: new Map(),
     columns: new Map(),
+    tasks: new Map(),
   };
   if (ids.accounts.size > 0) {
     const found = await executor.execute<{ id: string; name: string; kind: AccountKind }>(
@@ -109,11 +118,18 @@ async function readNames(executor: Executor, rows: EventRow[]): Promise<Names> {
     ["teams", sql`select id, name from teams`],
     ["epics", sql`select id, title as name from epics`],
     ["columns", sql`select id, name from columns`],
+    // A task keeps its key when deleted, so a deleted parent is still named.
+    [
+      "tasks",
+      sql`select t.id, p.key || '-' || t.number as name from tasks t join projects p on p.id = t.project_id`,
+    ],
   ];
   for (const [kind, select] of named) {
     if (ids[kind].size === 0) continue;
     const found = await executor.execute<{ id: string; name: string }>(
-      sql`${select} where id in (${inList(ids[kind])})`,
+      kind === "tasks"
+        ? sql`${select} where t.id in (${inList(ids[kind])})`
+        : sql`${select} where id in (${inList(ids[kind])})`,
     );
     for (const row of found) names[kind].set(row.id, row.name);
   }

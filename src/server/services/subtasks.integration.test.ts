@@ -133,19 +133,23 @@ describe("refusals (WS-133 test 3)", () => {
     await deleteTask(s.manager, gone.key);
     const plain = await createTask(s.mia, "OPA", { title: "Plain" });
 
-    const cases: [string, Promise<unknown>][] = [
-      ["unknown", createTask(s.mia, "OPA", { title: "X", parentId: "OPA-99" })],
-      ["deleted", createTask(s.mia, "OPA", { title: "X", parentId: gone.key })],
-      ["other project", createTask(s.mia, "OPA", { title: "X", parentId: other.key })],
-      ["a sub-task", createTask(s.mia, "OPA", { title: "X", parentId: child.key })],
-      ["itself", updateTask(s.mia, plain.key, { parentId: plain.id, version: plain.version })],
+    // Each write runs only when its turn comes, so none is refused before it is awaited.
+    const cases: [string, () => Promise<unknown>][] = [
+      ["unknown", () => createTask(s.mia, "OPA", { title: "X", parentId: "OPA-99" })],
+      ["deleted", () => createTask(s.mia, "OPA", { title: "X", parentId: gone.key })],
+      ["other project", () => createTask(s.mia, "OPA", { title: "X", parentId: other.key })],
+      ["a sub-task", () => createTask(s.mia, "OPA", { title: "X", parentId: child.key })],
+      [
+        "itself",
+        () => updateTask(s.mia, plain.key, { parentId: plain.id, version: plain.version }),
+      ],
       [
         "has sub-tasks",
-        updateTask(s.mia, s.parent.key, { parentId: plain.key, version: s.parent.version }),
+        () => updateTask(s.mia, s.parent.key, { parentId: plain.key, version: s.parent.version }),
       ],
     ];
     for (const [name, write] of cases) {
-      const error = await failure(write);
+      const error = await failure(write());
       expect(error.status, name).toBe(400);
       expect(
         error.errors?.map((field) => field.path),
@@ -234,7 +238,9 @@ describe("the epic follows the parent (WS-133 test 5)", () => {
 describe("progress (WS-133 test 6)", () => {
   it("counts live sub-tasks, done only in a done column, never the backlog", async () => {
     const s = await setup();
-    expect((await getTask(s.mia, s.parent.key)).subtasks).toEqual([]);
+    const alone = await getTask(s.mia, s.parent.key);
+    expect(alone.subtasks).toBeNull();
+    expect(alone.subtaskList).toEqual([]);
     const board = await listTasks(s.mia, "OPA", taskListQuerySchema.parse({}));
     expect(board.items.find((task) => task.key === "OPA-1")?.subtasks).toBeNull();
 
@@ -264,7 +270,8 @@ describe("the sub-task list (WS-133 test 7)", () => {
 
     const parent = await getTask(s.mia, s.parent.key);
 
-    expect(parent.subtasks.map((task) => task.title)).toEqual([
+    expect(parent.subtasks).toEqual({ done: 1, total: 5 });
+    expect(parent.subtaskList.map((task) => task.title)).toEqual([
       "In to do",
       "In progress",
       "In done",
@@ -288,7 +295,8 @@ describe("the limit (WS-133 test 8)", () => {
     if (!first) throw new Error("no child");
     await deleteTask(s.manager, first.key);
     expect((await sub(s, "Now it fits")).parent?.id).toBe(s.parent.id);
-  });
+    // A hundred and two task writes, each a transaction of its own.
+  }, 60_000);
 });
 
 describe("deleting a parent (WS-133 test 9)", () => {

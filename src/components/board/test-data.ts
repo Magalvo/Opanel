@@ -50,6 +50,7 @@ export function task(
     assigneeTeam: null,
     assignee: null,
     epic: null,
+    parent: null,
     reporter: { id: "55555555-5555-4555-8555-555555555555", name: "Ada", kind: "human" },
     severity: null,
     fingerprint: null,
@@ -58,6 +59,7 @@ export function task(
     priority: "none",
     dueDate: null,
     labels: [],
+    subtasks: null,
     version: 1,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",
@@ -68,7 +70,7 @@ export function task(
 
 /** The full task the API answers for a summary, with a description. */
 export function full(summary: TaskSummary, extra: Partial<Task> = {}): Task {
-  return { ...summary, description: "", links: [], ...extra };
+  return { ...summary, description: "", links: [], subtaskList: [], ...extra };
 }
 
 export const PROJECT = "GET /api/v1/projects/OPA";
