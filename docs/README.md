@@ -15,19 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WI-132, the WT-11 work-item for the five MCP tools waiting under
-  [Follow-ups](#follow-ups). Every work-track written so far is done; WT-08 closed on
-  2026-11-26. Drafting WT-09 (sub-tasks and task links) comes after.
-- **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
-  B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
-- **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
-  session secret), WI-113 (a reorder within one column reaches an open board live) and
-  WI-114 (epic dates in the year `0000` are a `400`). WI-111 (board moves without
-  dragging) is done too.
-- **Development flow:** WI-103 and WI-097, from the development-flow review of 2026-11-20,
-  are done. The lower findings D08 to D12 are listed under [Follow-ups](#follow-ups).
-- **Planning gaps awaiting an owner decision** are listed first under
-  [Follow-ups](#follow-ups).
+- **Next:** drafting WT-09 (sub-tasks and task links, doc 0003 section 10), for the
+  owner to approve. Every work-track written so far is done; WI-132 added the MCP tools for
+  the backlog, labels, epics, search and activity on 2026-11-26.
 
 ## Canonical docs (`canonical/`)
 
@@ -245,16 +235,13 @@ Other follow-ups:
   under `--sequence.shuffle`, and with the same seed it passed once and failed once. Needs
   a small work-item if it recurs in CI.
 
-- **MCP tools for WT-07's backlog and labels** (WT-07 question 7, approved 2026-11-21): a
-  WT-11 work-item adds `opanel_get_backlog` and `opanel_list_labels`; WT-07 is done, so
-  they are no longer blocked. The existing tools gain priority, due date and the backlog
-  move on their own. WT-08 question 8 (approved 2026-11-24) puts them in one work-item
-  with `opanel_list_epics` below and WT-08's two tools, after WT-08 item B.
+- **Answered by WI-132 (2026-11-26): MCP tools for WT-07's backlog and labels** (WT-07
+  question 7). `opanel_get_backlog` and `opanel_list_labels` read them; the existing tools
+  already took priority, due date and the backlog move.
 
-- **MCP tools for WT-08's search and activity** (WT-08 question 8, approved 2026-11-24):
-  `opanel_search_tasks` over `GET /tasks` and `opanel_get_task_activity` over
-  `GET /tasks/{taskId}/activity`, in the same WT-11 work-item as the three tools above
-  and below. WT-08 is done, so they are no longer blocked.
+- **Answered by WI-132 (2026-11-26): MCP tools for WT-08's search and activity** (WT-08
+  question 8). `opanel_search_tasks` wraps `GET /tasks` and `opanel_get_task_activity`
+  `GET /tasks/{taskId}/activity`.
 
 - **Answered by WI-128 (2026-11-25): `planning-flow.spec.ts` failed now and then** (found
   in WI-119). The test clicked "Move to board" before the open backlog showed the change
@@ -294,11 +281,8 @@ Other follow-ups:
   keyboard rules, needs its own work-item. Doc 0003 section 4 says so since WI-131
   applied proposal P3.
 
-- **No MCP tool lists a project's epics** (WI-104, WS-104 question 2).
-  `opanel_create_task` and `opanel_update_task` take `epicId`, but an assistant sees an
-  epic's id only on a task it has read. Needs a WT-11 work-item: `opanel_list_epics`, a
-  read tool over `GET /projects/{projectId}/epics`, beside `opanel_get_backlog` and
-  `opanel_list_labels` above.
+- **Answered by WI-132 (2026-11-26): no MCP tool listed a project's epics** (WI-104,
+  WS-104 question 2). `opanel_list_epics` wraps `GET /projects/{projectId}/epics`.
 
 - **Agents cannot apply labels in v1** (WT-07 question 5): no agent scope holds
   `labels:write`. If a worker agent needs it, amend doc 0001 section 3 first.
