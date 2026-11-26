@@ -15,9 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-09 (sub-tasks and task links, approved on 2026-11-26) items A (sub-tasks in
-  the API, WI-133) and B (links in the API, WI-134), in parallel; then C, D and E, and F last. WT-08 and
-  the MCP tools of WI-132 are done.
+- **Next:** WT-09 items C (sub-tasks in the UI, WI-135), D (links in the UI) and E (MCP
+  tools for links), which can run in parallel; then F, the exit check. Items A and B are
+  done (WI-133, WI-134). WT-10 (sprints and story points) is not drafted yet.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
