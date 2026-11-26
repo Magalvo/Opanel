@@ -280,9 +280,29 @@ describe("task_links (WS-086 section 7)", () => {
     expect(
       await refusal(
         client()`insert into task_links (from_task_id, to_task_id, type)
-          values (${closed}, ${again}, 'blocks')`,
+          values (${closed}, ${again}, 'parent_of')`,
       ),
     ).toBe("task_links_type_check");
+  });
+
+  it("takes the four types of WT-09, and relates_to only from the lower id (WS-134)", async () => {
+    const [low, high] = [
+      await insertTask(project, column, human),
+      await insertTask(project, column, human),
+    ].sort();
+    for (const type of TASK_LINK_TYPES) {
+      await client()`insert into task_links (from_task_id, to_task_id, type)
+        values (${low ?? ""}, ${high ?? ""}, ${type})`;
+    }
+    await client()`insert into task_links (from_task_id, to_task_id, type)
+      values (${high ?? ""}, ${low ?? ""}, 'blocks')`;
+
+    expect(
+      await refusal(
+        client()`insert into task_links (from_task_id, to_task_id, type)
+          values (${high ?? ""}, ${low ?? ""}, 'relates_to')`,
+      ),
+    ).toBe("task_links_relates_to_order_check");
   });
 });
 
@@ -292,6 +312,15 @@ describe("the task history (WS-086 section 2)", () => {
 
     await client()`insert into task_events (task_id, actor_account_id, type)
       values (${bug}, ${agent}, 'reported_again')`;
+  });
+
+  it("accepts linked and unlinked entries (WS-134)", async () => {
+    const task = await insertTask(project, column, human);
+
+    for (const type of ["linked", "unlinked"]) {
+      await client()`insert into task_events (task_id, actor_account_id, type)
+        values (${task}, ${human}, ${type})`;
+    }
   });
 });
 

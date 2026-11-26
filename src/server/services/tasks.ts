@@ -237,10 +237,10 @@ async function loadSubtasks(executor: Executor, taskId: string): Promise<TaskSum
 }
 
 /**
- * The links of a task, both ways, leaving out deleted tasks (WS-090 section 5): the task is a
- * regression of another (`outgoing`), or another is a regression of it (`incoming`).
+ * A task's links, read from its side (WS-090, WS-134): both directions, `relates_to`
+ * always `outgoing`, leaving out deleted tasks and tasks in projects the actor cannot reach.
  */
-async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]> {
+async function loadLinks(executor: Executor, actor: Actor, taskId: string): Promise<TaskLink[]> {
   const rows = await executor.execute<{
     type: TaskLink["type"];
     direction: TaskLink["direction"];
@@ -253,11 +253,13 @@ async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]
       select type, 'outgoing' as direction, to_task_id as other
       from task_links where from_task_id = ${taskId}
       union all
-      select type, 'incoming' as direction, from_task_id as other
+      select type, case when type = 'relates_to' then 'outgoing' else 'incoming' end,
+        from_task_id as other
       from task_links where to_task_id = ${taskId}
     ) l
     join tasks t on t.id = l.other and t.deleted_at is null
     join projects p on p.id = t.project_id
+    where true ${reachableBy(actor)}
     order by l.type, l.direction desc, t.number`);
   return rows.map((row) => ({
     type: row.type,
@@ -266,9 +268,20 @@ async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]
   }));
 }
 
-/** A task's full answer: its row, its links and its sub-tasks. */
-async function withLinks(executor: Executor, row: TaskRow): Promise<Task> {
-  return toTask(row, await loadLinks(executor, row.id), await loadSubtasks(executor, row.id));
+/** A task's full answer: its row, the links the actor may see, and its sub-tasks. */
+async function withLinks(executor: Executor, actor: Actor, row: TaskRow): Promise<Task> {
+  return toTask(
+    row,
+    await loadLinks(executor, actor, row.id),
+    await loadSubtasks(executor, row.id),
+  );
+}
+
+/** A live task's full answer, as `getTask` gives it, for services that change it (WS-134). */
+export async function answerTask(executor: Executor, actor: Actor, id: string): Promise<Task> {
+  const row = await findTask(executor, id);
+  if (!row) throw taskNotFound();
+  return withLinks(executor, actor, row);
 }
 
 function taskNotFound() {
@@ -280,7 +293,7 @@ function fieldError(path: string, message: string) {
 }
 
 /** `t.id = ...` for a UUID; project key and number for a task key such as `OPA-12`. */
-function matchesTask(ref: string): SQL {
+export function matchesTask(ref: string): SQL {
   if (UUID.test(ref)) return sql`t.id = ${ref}::uuid`;
   const dash = ref.lastIndexOf("-");
   return sql`p.key = ${ref.slice(0, dash)} and t.number = ${Number(ref.slice(dash + 1))}`;
@@ -465,7 +478,7 @@ export async function getTask(actor: Actor, ref: string, db: Database = getDb())
   const row = await findTask(db, ref);
   if (!row) throw taskNotFound();
   requireProjectAccess(actor, row.project_id);
-  return withLinks(db, row);
+  return withLinks(db, actor, row);
 }
 
 export async function listTasks(
@@ -957,7 +970,7 @@ export async function updateTask(
     await lockTasks(tx, [found.id, ...(newParentId === undefined ? [] : [newParentId])]);
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
-    if (before.version !== input.version) throw versionConflict(await withLinks(tx, before));
+    if (before.version !== input.version) throw versionConflict(await withLinks(tx, actor, before));
 
     // The parent after the write: kept, replaced or cleared (WS-133 section 3).
     let parent: TaskRow | undefined;
@@ -1064,7 +1077,7 @@ export async function updateTask(
     if (after.parentId !== before.parent_task_id) {
       await announceParents(tx, actor, [before.parent_task_id, after.parentId]);
     }
-    return withLinks(tx, updated);
+    return withLinks(tx, actor, updated);
   });
 }
 
@@ -1099,7 +1112,7 @@ export async function moveTask(
 
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
-    if (before.version !== input.version) throw versionConflict(await withLinks(tx, before));
+    if (before.version !== input.version) throw versionConflict(await withLinks(tx, actor, before));
 
     // Neighbours are read over every task of the column, deleted or not (deleted tasks keep
     // their place), leaving the moved task out. Positions compare byte by byte (A2).
@@ -1172,7 +1185,7 @@ export async function moveTask(
     if ((before.column_category ?? "backlog") !== (moved.column_category ?? "backlog")) {
       await announceParents(tx, actor, [moved.parent_task_id]);
     }
-    return withLinks(tx, moved);
+    return withLinks(tx, actor, moved);
   });
 }
 
@@ -1221,7 +1234,7 @@ export async function restoreTask(
     await lockWritableProject(tx, actor, found.project_id);
     const task = await findAnyTask(tx, found.id, sql`for update of t`);
     if (!task) throw taskNotFound();
-    if (task.deleted_at === null) return withLinks(tx, task);
+    if (task.deleted_at === null) return withLinks(tx, actor, task);
 
     // A sub-task whose parent is deleted comes back as a normal task (WT-09 decision 5).
     const [parent] =
@@ -1251,6 +1264,6 @@ export async function restoreTask(
     if (!restored) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.restored", restored, actor));
     await announceParents(tx, actor, [restored.parent_task_id]);
-    return withLinks(tx, restored);
+    return withLinks(tx, actor, restored);
   });
 }

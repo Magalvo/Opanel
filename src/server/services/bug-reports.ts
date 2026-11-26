@@ -19,6 +19,7 @@ import { addSystemComment } from "./comments";
 import { publishEvent } from "./events";
 import { claimTaskNumber, findProjectRef, lockWritableProject } from "./projects";
 import { recordTaskEvent } from "./task-events";
+import { insertLink } from "./task-links";
 import { findLiveTask } from "./tasks";
 
 // The bug report endpoint's service: the triage pipeline of canonical doc 0001 section 6
@@ -276,12 +277,6 @@ async function createBug(
       reportId,
     },
   });
-  if (closed) {
-    await tx.execute(sql`
-      insert into task_links (from_task_id, to_task_id, type, created_by)
-      values (${task.id}, ${closed.id}, 'regression_of', ${actor.accountId})`);
-  }
-
   await publishEvent(tx, {
     type: "task.created",
     entity: "task",
@@ -290,6 +285,21 @@ async function createBug(
     version: 1,
     actorAccountId: actor.accountId,
   });
+  if (closed) {
+    // Never refused for the limit (WS-134 section 6): the new bug keeps version 1, and the
+    // closed one gets a new version and its `task.updated`.
+    const closedTask = {
+      id: closed.id,
+      key: `${project.key}-${String(closed.number)}`,
+      projectId: project.id,
+    };
+    await insertLink(
+      tx,
+      actor,
+      { from: { id: task.id, key, projectId: project.id }, to: closedTask, type: "regression_of" },
+      [closedTask],
+    );
+  }
 
   const sentences = [filedSentence(agent, report)];
   sentences.push(

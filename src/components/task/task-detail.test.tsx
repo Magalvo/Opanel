@@ -1245,6 +1245,40 @@ describe("TaskDetail: bugs (WS-091)", () => {
     expect(screen.queryByRole("region", { name: "Links" })).toBeNull();
   });
 
+  it("shows only regression links until every task has a Links section (WS-134 test 16)", async () => {
+    const regression = {
+      type: "regression_of",
+      direction: "outgoing",
+      task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000007", key: "OPA-7", title: "Old login" },
+    } as const;
+    const blocks = {
+      type: "blocks",
+      direction: "outgoing",
+      task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000008", key: "OPA-8", title: "Payments" },
+    } as const;
+    await renderTask({ current: { ...bug, links: [regression, blocks] }, canWriteTasks: false });
+
+    const links = screen.getByRole("region", { name: "Links" });
+    expect(within(links).getByRole("link", { name: "OPA-7 Old login" })).toBeVisible();
+    expect(within(links).queryByRole("link", { name: "OPA-8 Payments" })).toBeNull();
+  });
+
+  it("shows no Links section for an unreported task with only a blocks link (WS-134 test 16)", async () => {
+    await renderTask({
+      current: {
+        ...base,
+        links: [
+          {
+            type: "blocks",
+            direction: "outgoing",
+            task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000008", key: "OPA-8", title: "Payments" },
+          },
+        ],
+      },
+    });
+    expect(screen.queryByRole("region", { name: "Links" })).toBeNull();
+  });
+
   it("lists the reports, newest first, with the agent and every field", async () => {
     on(
       REPORTS,

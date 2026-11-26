@@ -15,6 +15,7 @@ import { createComment } from "./comments";
 import { createEpic } from "./epics";
 import { createLabel, deleteLabel } from "./labels";
 import { createProject } from "./projects";
+import { addTaskLink, removeTaskLink } from "./task-links";
 import { createTask, deleteTask, moveTask, restoreTask, updateTask } from "./tasks";
 import { createTeam, deleteTeam, renameTeam } from "./teams";
 
@@ -323,5 +324,39 @@ describe("listActivity (WS-117)", () => {
     expect(await failure(listActivity(blind, "OPA-1", { limit: 50 }))).toMatchObject({
       status: 403,
     });
+  });
+});
+
+describe("links in the activity (WS-134 test 13)", () => {
+  it("answers linked and unlinked, and hides a task out of a restricted agent's reach", async () => {
+    const { manager, member, project, task } = await setup();
+    await createProject(manager, { key: "API", name: "API" });
+    const other = await createTask(manager, "API", { title: "Orders" });
+    const link = { type: "blocks", direction: "outgoing", taskId: other.key } as const;
+    await addTaskLink(member, task.key, link);
+    await removeTaskLink(member, task.key, link);
+
+    const reading = { type: "blocks", direction: "outgoing", task: { id: other.id, key: "API-1" } };
+    const linked = events(await listActivity(member, task.key, { limit: 50 })).filter(
+      (item) => item.type === "linked" || item.type === "unlinked",
+    );
+    expect(
+      linked.map((item) => [item.type, item.oldValue, item.newValue, item.actor?.name]),
+    ).toEqual([
+      ["linked", null, reading, "Mia"],
+      ["unlinked", reading, null, "Mia"],
+    ]);
+
+    const agent = await createTestAgent({ scopes: ["tasks:read"], projectIds: [project.id] });
+    const restricted = agentActor({
+      accountId: agent.id,
+      role: "qa_agent",
+      scopes: ["tasks:read"],
+      projectIds: [project.id],
+    });
+    const hidden = events(await listActivity(restricted, task.key, { limit: 50 })).filter(
+      (item) => item.type === "linked",
+    );
+    expect(hidden.map((item) => item.newValue)).toEqual([{ ...reading, task: null }]);
   });
 });

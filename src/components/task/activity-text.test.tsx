@@ -176,3 +176,52 @@ describe("relativeTime (WS-119 test 3)", () => {
     expect(time).toHaveTextContent("3 minutes ago");
   });
 });
+
+describe("ActivityLine: links (WS-134 test 14)", () => {
+  const other = { id: "88888888-8888-4888-8888-888888888888", key: "API-3" };
+  const link = (type: string, direction: string, task: unknown = other) => ({
+    type,
+    direction,
+    task,
+  });
+
+  it.each([
+    ["blocks", "outgoing", "blocks"],
+    ["blocks", "incoming", "is blocked by"],
+    ["duplicates", "outgoing", "duplicates"],
+    ["duplicates", "incoming", "is duplicated by"],
+    ["regression_of", "outgoing", "is a regression of"],
+    ["regression_of", "incoming", "has regression"],
+    ["relates_to", "outgoing", "relates to"],
+  ])("%s %s reads “%s”, added and removed", (type, direction, reading) => {
+    expect(sentence({ type: "linked", newValue: link(type, direction) })).toBe(
+      `Ada Lovelace linked this task: ${reading} API-3`,
+    );
+    expect(sentence({ type: "unlinked", oldValue: link(type, direction) })).toBe(
+      `Ada Lovelace removed the link: ${reading} API-3`,
+    );
+  });
+
+  it("links the other task's key", () => {
+    render(
+      <ActivityLine
+        event={event({ type: "linked", newValue: link("blocks", "outgoing") })}
+        now={NOW}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "API-3" })).toHaveAttribute(
+      "href",
+      "/projects/API/tasks/API-3",
+    );
+  });
+
+  it("names a task out of reach, and reads an unknown shape plainly", () => {
+    expect(sentence({ type: "linked", newValue: link("blocks", "outgoing", null) })).toBe(
+      "Ada Lovelace linked this task: blocks a task in another project",
+    );
+    expect(sentence({ type: "unlinked", oldValue: { odd: true } })).toBe(
+      "Ada Lovelace removed a link",
+    );
+    expect(sentence({ type: "linked", newValue: null })).toBe("Ada Lovelace added a link");
+  });
+});

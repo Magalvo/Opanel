@@ -1,14 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import { z } from "zod";
 
 import { AccountName } from "@/components/account-name";
-import { TYPE_LABELS } from "@/components/board/task-card";
+import { taskHref, TYPE_LABELS } from "@/components/board/task-card";
 import { Button } from "@/components/ui/button";
 import { accountRefSchema } from "@/lib/schemas/account-ref";
 import type { ActivityEvent } from "@/lib/schemas/activity";
-import { severitySchema } from "@/lib/schemas/bug-reports";
+import { severitySchema, TASK_LINK_TYPES } from "@/lib/schemas/bug-reports";
 import { prioritySchema, taskTypeSchema } from "@/lib/schemas/tasks";
 
 import { SEVERITY_LABELS } from "./bug-labels";
@@ -23,6 +24,42 @@ const labelsSchema = z.array(z.object({ id: z.string(), name: z.string() }));
 const columnValueSchema = z.object({ column: namedSchema.nullable() });
 const reportedSchema = z.object({ occurrences: z.number() });
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const linkSchema = z.object({
+  type: z.enum(TASK_LINK_TYPES),
+  direction: z.enum(["outgoing", "incoming"]),
+  task: z.object({ id: z.string(), key: z.string() }).nullable(),
+});
+
+/** How a link reads from its task, by direction (doc 0003 section 7). */
+const LINK_READINGS = {
+  blocks: { outgoing: "blocks", incoming: "is blocked by" },
+  duplicates: { outgoing: "duplicates", incoming: "is duplicated by" },
+  regression_of: { outgoing: "is a regression of", incoming: "has regression" },
+  relates_to: { outgoing: "relates to", incoming: "relates to" },
+} as const;
+
+/** "linked this task: blocks API-3", the key a link to the task (WS-134 section 7). */
+function linkChange(value: unknown, added: boolean): ReactNode {
+  const parsed = linkSchema.safeParse(value);
+  if (!parsed.success) return added ? "added a link" : "removed a link";
+  const { type, direction, task } = parsed.data;
+  return (
+    <>
+      {added ? "linked this task: " : "removed the link: "}
+      {LINK_READINGS[type][direction]}{" "}
+      {task === null ? (
+        "a task in another project"
+      ) : (
+        <Link
+          href={taskHref(task.key)}
+          className="font-mono underline-offset-4 hover:underline focus-visible:underline"
+        >
+          {task.key}
+        </Link>
+      )}
+    </>
+  );
+}
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -248,6 +285,10 @@ function what(event: ActivityEvent): ReactNode {
         ? `reported it again (${String(parsed.data.occurrences)} reports in all)`
         : "reported it again";
     }
+    case "linked":
+      return linkChange(event.newValue, true);
+    case "unlinked":
+      return linkChange(event.oldValue, false);
     case "field_changed": {
       const field = event.field ?? "task";
       if (field === "description") {

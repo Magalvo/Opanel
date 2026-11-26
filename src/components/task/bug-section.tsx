@@ -57,15 +57,18 @@ function LinksSection({ links }: Readonly<{ links: readonly TaskLink[] }>) {
 }
 
 /**
- * What a bug adds to the detail (WS-091 section 4): how often it was reported, its links,
- * and the reports behind it. Nothing for a task never reported and without links.
+ * What a bug adds to the detail (WS-091 section 4): how often it was reported, its
+ * regression links, and the reports behind it. Nothing for a task never reported and
+ * without one. Other link types wait for the "Links" section of WT-09 item D (WS-134
+ * section 9), so none reads as a regression.
  */
 export function BugSection({
   task,
   reports,
 }: Readonly<{ task: Task; reports: Page<BugReport> | null }>) {
   const reported = task.occurrences > 0;
-  if (!reported && task.links.length === 0) return null;
+  const regressions = task.links.filter((link) => link.type === "regression_of");
+  if (!reported && regressions.length === 0) return null;
   return (
     <div className="grid min-w-0 gap-5">
       {reported && (
@@ -73,7 +76,7 @@ export function BugSection({
           {reportedText(task.occurrences, task.lastReportedAt)}
         </p>
       )}
-      {task.links.length > 0 && <LinksSection links={task.links} />}
+      {regressions.length > 0 && <LinksSection links={regressions} />}
       {reported && (
         <ReportsSection
           taskKey={task.key}

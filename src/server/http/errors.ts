@@ -262,6 +262,16 @@ export function tooManyLabels(
   return new ApiError({ status: 409, title: "Conflict", code: "too_many_labels", detail });
 }
 
+/** `409` (WS-134): the two tasks already have this link. */
+export function linkExists(detail = "These tasks already have this link."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "link_exists", detail });
+}
+
+/** `409` (WS-134): a task already has its 100 links (WT-09 decision 3). */
+export function tooManyLinks(detail: string): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "too_many_links", detail });
+}
+
 /** `409` (WS-133): a parent already has 100 live sub-tasks (WT-09 decision 3). */
 export function tooManySubtasks(
   detail = "This task already has 100 sub-tasks. Delete or detach one first.",

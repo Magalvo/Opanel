@@ -58,6 +58,7 @@ import {
   updateProjectContract,
 } from "@/lib/schemas/projects";
 import { listBugReportsContract } from "@/lib/schemas/task-bug-reports";
+import { addTaskLinkContract, removeTaskLinkContract } from "@/lib/schemas/task-links";
 import {
   createTaskContract,
   deleteTaskContract,
@@ -134,6 +135,8 @@ export const contracts: readonly EndpointContract[] = [
   moveTaskContract,
   deleteTaskContract,
   restoreTaskContract,
+  addTaskLinkContract,
+  removeTaskLinkContract,
   listEpicsContract,
   createEpicContract,
   getEpicContract,
