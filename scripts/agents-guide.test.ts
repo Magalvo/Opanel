@@ -190,7 +190,12 @@ describe("docs/agents.md (WS-078)", () => {
     const filters = bullet(section(guide(), "Finding tasks"), "Filters.");
     const parameters = names(filters).filter((name) => name !== "none" && name !== "me");
     expect(new Set(parameters)).toEqual(
-      new Set([...Object.keys(taskFilterShape), "columnId", "projectId"]),
+      // `q` has its own bullet, "Text search".
+      new Set([
+        ...Object.keys(taskFilterShape).filter((key) => key !== "q"),
+        "columnId",
+        "projectId",
+      ]),
     );
     expect(codeSpans(filters)).toEqual(expect.arrayContaining(["none", "me"]));
   });

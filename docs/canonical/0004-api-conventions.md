@@ -3,6 +3,8 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Supersedes: none
+- Amended by: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) proposal P1
+  (section 5: the rules of filters; applied 2026-11-26 by WI-131)
 - Relates to: [0001](0001-ai-qa-agents-and-triage.md) (authentication, bug report contract),
   [0002](0002-realtime-sync.md) (events, version conflicts)
 
@@ -187,8 +189,11 @@ GET /api/v1/projects?limit=50&cursor=eyJ...
   with another sort key, is a `400` with the field error `cursor`.
 - Each endpoint has one documented default order. Where sorting is offered it is
   `sort=field` (ascending) or `sort=-field` (descending), limited to documented fields.
-- Filters are plain query parameters named after the field (`assigneeTeamId=...`). The
-  filter set is defined by the work-specs of WT-08.
+- Filters are plain query parameters named after the field (`assigneeTeamId=...`). A
+  repeated parameter means any of its values; different parameters must all hold; `none`
+  matches an empty nullable field and `me` the calling account; ranges are `<field>From`
+  and `<field>To`, inclusive; `q` is text search. The filters themselves live in the
+  contract.
 
 Small, naturally bounded collections that the UI needs whole (the columns of a project)
 may be returned as a full `items` array with `nextCursor: null`; the work-spec says so.

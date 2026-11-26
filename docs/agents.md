@@ -149,6 +149,36 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN" \
   `GET /api/v1/projects/{projectId}/labels` lists the project's. Agents read labels but do
   not apply them: a body with `labelIds` answers `403`.
 
+## Finding tasks
+
+Search and filters are query parameters of the task lists:
+
+```bash
+curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN"   "https://opanel.example.com/api/v1/tasks?q=login%20fails&type=bug&priority=high&priority=urgent"
+```
+
+- **Text search.** `q` finds a task by its key (`OPA-12`, in any case) or by words of its
+  title and description, the last word as a prefix: "log fai" finds "Login fails". Words
+  match as written, in any language.
+- **Filters.** Each filter is a parameter named after the field: `projectId`, `type`,
+  `columnId`, `category`, `done`, `assigneeTeamId`, `assigneeAccountId`,
+  `reporterAccountId`, `reporterKind`, `labelId`, `epicId`, `priority`, `severity`,
+  `dueFrom` and `dueTo`. A repeated parameter means any of its values, and different
+  parameters must all hold. `none` matches an empty field and `me` your own account. At
+  most 20 values each; an unknown value is a `400` naming the parameter.
+- **Where they apply.** `GET /api/v1/projects/{projectId}/tasks` and
+  `GET /api/v1/projects/{projectId}/backlog` take every filter but `projectId`, and the
+  backlog has no column filter. `GET /api/v1/tasks?projectId=OPA` lists the tasks of every
+  project you may read, board and backlog together, or of the projects you name; a
+  project outside your reach is a `403`.
+- **Order.** The list across projects takes `sort`: `key`, `title`, `priority`,
+  `dueDate`, `created` or `updated`, ascending, or with `-` before it, descending. The
+  default is `-updated`, newest first. Tasks with no due date come last either way.
+- **A task's history.** `GET /api/v1/tasks/{taskId}/activity` lists its changes and
+  comments, oldest first, each change naming who made it, person or agent. Ids of
+  accounts, teams, columns and epics come with their names, and a name is `null` when
+  that thing was deleted.
+
 ## Live updates
 
 `GET /api/v1/projects/{projectId}/events` is a Server-Sent Events stream of the project's
