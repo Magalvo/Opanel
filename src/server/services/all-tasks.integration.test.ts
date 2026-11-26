@@ -198,6 +198,19 @@ function compare(sort: string) {
   };
 }
 
+describe("listAllTasks: the parentId filter (WS-133 test 12)", () => {
+  it("keeps a parent's sub-tasks across projects, or the tasks with no parent", async () => {
+    const { mia } = await setup();
+    const child = await listAllTasks(mia, allTasksQuerySchema.parse({ q: "OPA-2" }));
+    const version = child.items[0]?.version ?? 0;
+    await updateTask(mia, "OPA-2", { parentId: "OPA-1", version });
+
+    expect(await keys(mia, { parentId: "OPA-1" })).toEqual(["OPA-2"]);
+    expect(await keys(mia, { parentId: "none" })).toEqual(["OPA-1", "WEB-1"]);
+    expect(await keys(mia, { parentId: "WEB-1" })).toEqual([]);
+  });
+});
+
 describe("listAllTasks: each filter across projects (WS-131 test 6)", () => {
   /**
    * In OPA and in WEB alike: task 1 on the board matches every filter below, task 2 in the
