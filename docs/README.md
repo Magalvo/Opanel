@@ -15,10 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-08 item E, the list view (`/tasks`, "List" in each project, sortable
-  headers; WI-130), then G (the end-to-end flow, the agents guide, proposals P1 to P3 and
-  the exit check). Items A to D and F are done (WI-116 to WI-120). WT-07 and WT-11 are
-  done.
+- **Next:** WT-08 item G, the last: the end-to-end flow, `docs/agents.md` and its doc
+  check, proposals P1 to P3 and the exit check. Items A to F are done (WI-116 to WI-120 and
+  WI-130). WT-07 and WT-11 are done.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
