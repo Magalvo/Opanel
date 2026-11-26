@@ -1,6 +1,7 @@
 # WS-133 — Sub-tasks in the API
 
-- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-26, questions 1 to 3 as recommended; done on
+  2026-11-26)
 - Work-item: [WI-133](../work-items/WI-133-subtasks-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 4 (`Parent`) and
   7 (sub-tasks); [0002](../canonical/0002-realtime-sync.md) section 3 (`task.updated`);
@@ -194,3 +195,36 @@ Risks:
   and the MCP package's). New fields are not breaking for clients (doc 0004 section 8).
 - **A migration beside item B's**: the second to merge regenerates its own, as section 1
   says.
+
+## Implementation record
+
+- Red (d08074d): 21 tests failed, on the missing column (`parent_task_id`), fields
+  (`parent`, `subtasks`), codes and filter.
+- Green (95751c1): migration `0024_task_parent`; `parentId`,
+  `TaskParent`, `SubtaskProgress`, `subtaskList` and the filter in
+  `src/lib/schemas/tasks.ts`; `has_subtasks` and `too_many_subtasks`; in
+  `src/server/services/tasks.ts` the parent rules (`checkedParent`, rows locked in id
+  order), the epic sync, the delete refusal, the restore that detaches, the parent's
+  `task.updated` (`announceParents`); `parentOf` in `task-filter.ts`; parents named by key
+  in `activity.ts`. Fixtures of `TaskSummary` and `Task` gained the new fields, and
+  `docs/agents.md`'s filter list gained `parentId` (its doc check requires every filter).
+- Gate on 2026-11-26:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2563 of 2563 (236 files); `project-events.test.tsx`'s reconnect test failed once
+    in an earlier full run and passed alone and in this run (timing, not this change);
+  - `pnpm test:e2e` 135 of 135;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The list on a full task is `subtaskList`, not `subtasks`** (owner's decision on
+   2026-11-26, during implementation). With `subtasks` the progress on every summary and the
+   list on a full task, a full task stopped being a valid summary, which the web app relies
+   on. `subtasks` is now `{ done, total } | null` on every task, full ones too.
+2. **`docs/agents.md` names `parentId` among the filters now**, not in item F: the doc
+   check of WS-131 requires every filter the API has.
+3. **The two error codes are in doc 0004 section 4's table**, which its test requires;
+   section 10 named only `PROBLEM_CODES`.
+4. **The limit test has a 60-second timeout**: it makes 102 task writes, each its own
+   transaction.
