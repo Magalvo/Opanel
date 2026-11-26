@@ -15,7 +15,7 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-08 item G, the last: the end-to-end flow, `docs/agents.md` and its doc
+- **Next:** WT-08 item G (WI-131), the last: the end-to-end flow, `docs/agents.md` and its doc
   check, proposals P1 to P3 and the exit check. Items A to F are done (WI-116 to WI-120 and
   WI-130). WT-07 and WT-11 are done.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
@@ -199,6 +199,7 @@ operations (doc 0006), are done.
 | [WI-128](work-items/WI-128-live-e2e-readiness.md)               | The live end-to-end tests wait for what they measure              | [WS-128](work-specs/WS-128-live-e2e-readiness.md)               |
 | [WI-129](work-items/WI-129-a11y-contrast-focus-motion.md)       | Destructive contrast, settings dialog focus, still skeletons      | [WS-129](work-specs/WS-129-a11y-contrast-focus-motion.md)       |
 | [WI-130](work-items/WI-130-task-list-view.md)                   | The list view of tasks, with sortable headers                     | [WS-130](work-specs/WS-130-task-list-view.md)                   |
+| [WI-131](work-items/WI-131-search-exit-check.md)                | Search and filters end to end, the agents guide, the exit check   | [WS-131](work-specs/WS-131-search-exit-check.md)                |
 
 ## Follow-ups
 
