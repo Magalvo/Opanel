@@ -4,8 +4,9 @@ import { check, index, pgTable, primaryKey, text, timestamp, uuid } from "drizzl
 import { accounts } from "./accounts";
 import { tasks } from "./tasks";
 
-// Links between tasks (canonical doc 0003 section 7). WT-06 creates the table with the one
-// type the triage pipeline writes, `regression_of` (decision 9); WT-09 adds the others.
+// Links between tasks (canonical doc 0003 section 7). WT-06 created the table with the one
+// type the triage pipeline writes, `regression_of`; WT-09 adds the others (WS-134).
+// `relates_to` reads the same both ways, so it is stored once, from the lower id.
 export const taskLinks = pgTable(
   "task_links",
   {
@@ -21,7 +22,14 @@ export const taskLinks = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.fromTaskId, table.toTaskId, table.type] }),
-    check("task_links_type_check", sql`${table.type} in ('regression_of')`),
+    check(
+      "task_links_type_check",
+      sql`${table.type} in ('blocks', 'duplicates', 'regression_of', 'relates_to')`,
+    ),
+    check(
+      "task_links_relates_to_order_check",
+      sql`${table.type} <> 'relates_to' or ${table.fromTaskId} < ${table.toTaskId}`,
+    ),
     check("task_links_not_self_check", sql`${table.fromTaskId} <> ${table.toTaskId}`),
     index("task_links_to_task_idx").on(table.toTaskId),
   ],
