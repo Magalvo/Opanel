@@ -1,6 +1,7 @@
 # WT-09 — Sub-tasks and task links
 
-- Status: Proposed
+- Status: Approved by the owner on 2026-11-26: decisions 1 to 13, proposals P1 to P3
+  and questions 1 to 9 as recommended.
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 2: the model;
   section 3: "create, edit, move and delete tasks and sub-tasks", "link tasks"; section 4:
   the `Parent` field; section 7: sub-tasks and links; section 8: the filters),
