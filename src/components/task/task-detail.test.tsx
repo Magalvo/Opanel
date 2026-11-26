@@ -883,11 +883,13 @@ describe("TaskDetail: live (WS-049 section 3)", () => {
     expect(bodyOf(calls("PATCH")[1]?.[1])).toMatchObject({ version: 4 });
   });
 
+  // An equal-version task.updated is read for the sub-tasks only (WS-135 test 8), so the
+  // echo here is a move's.
   it("ignores the echo of a version it holds, and events of other tasks", async () => {
     await renderLive();
     const before = reads("/api/v1/tasks/OPA-1");
 
-    send("task.updated", { version: 3 });
+    send("task.moved", { version: 3 });
     send("task.moved", { entityId: task(2, todo.id).id, version: 9 });
 
     expect(reads("/api/v1/tasks/OPA-1")).toBe(before);
@@ -1816,14 +1818,14 @@ describe("TaskDetail: sub-tasks (WS-135)", () => {
   });
 
   it("adds a sub-task in the first column with the parent set, and lists it (test 2)", async () => {
-    const created = full(task(4, todo.id, { title: "Write the tests", parent: parentRef }));
-    on("POST /api/v1/projects/OPA/tasks", json(created, 201));
+    const summary = task(4, todo.id, { title: "Write the tests", parent: parentRef });
+    on("POST /api/v1/projects/OPA/tasks", json(full(summary), 201));
     const user = await renderTask();
 
     await user.click(within(subtasks()).getByRole("button", { name: "Add sub-task" }));
     const dialog = screen.getByRole("dialog", { name: "Add a sub-task to OPA-1" });
     await user.type(within(dialog).getByLabelText("Title"), "Write the tests");
-    on(TASK, json({ ...base, subtasks: { done: 0, total: 1 }, subtaskList: [created] }));
+    on(TASK, json({ ...base, subtasks: { done: 0, total: 1 }, subtaskList: [summary] }));
     await user.click(within(dialog).getByRole("button", { name: "Add task" }));
 
     await waitFor(() => {

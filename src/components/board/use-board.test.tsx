@@ -874,8 +874,10 @@ describe("useBoard: loads around drags and moves (WS-082)", () => {
 });
 
 describe("useBoard: events during a load (WS-082)", () => {
+  // A task.updated with the version held is read once for its progress only (WS-135
+  // section 5): the card keeps every other field of the snapshot.
   it.each([
-    ["holds the version", { ...t1, version: 2 }, []],
+    ["holds the version", { ...t1, version: 2 }, [`/api/v1/tasks/${t1.id}`]],
     ["is older", t1, [`/api/v1/tasks/${t1.id}`]],
   ])(
     "holds an event until the load lands, then applies the version rule: the snapshot %s (test 7)",

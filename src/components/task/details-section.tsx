@@ -34,6 +34,7 @@ import type { TeamSummary } from "@/lib/schemas/teams";
 import { updateTask } from "./api";
 import { SEVERITY_LABELS } from "./bug-labels";
 import { isOverdue } from "./due-date";
+import { ParentField } from "./parent-field";
 import { PersonField, personLabel } from "./person-field";
 import { DueDateText, PRIORITY_LABELS, PriorityIcon } from "./task-meta";
 
@@ -186,6 +187,17 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
       <h3 id={`${id}-heading`} className="sr-only">
         Details
       </h3>
+      <ParentField
+        task={task}
+        projectKey={props.projectKey}
+        editable={editable}
+        busy={props.busy}
+        setBusy={props.setBusy}
+        onSaved={props.onSaved}
+        onConflict={props.onConflict}
+        onFailure={props.onFailure}
+        currentOf={currentOf}
+      />
       {editable ? (
         <DetailsForm {...props} />
       ) : (
@@ -459,6 +471,9 @@ function DetailsForm({
             id={`${id}-epic`}
             value={draft.epicId}
             className={SELECT}
+            // A sub-task's epic is its parent's (WT-09 decision 2, WS-135 section 3).
+            disabled={task.parent !== null}
+            aria-describedby={task.parent !== null ? `${id}-epic-note` : undefined}
             onChange={(event) => {
               set("epicId", event.target.value);
             }}
@@ -473,6 +488,11 @@ function DetailsForm({
               <option value={task.epic.id}>{task.epic.title} (closed)</option>
             )}
           </select>
+          {task.parent !== null && (
+            <p id={`${id}-epic-note`} className="text-xs text-muted-foreground">
+              Follows its parent.
+            </p>
+          )}
         </div>
         <div className="grid min-w-0 gap-1.5">
           <label htmlFor={`${id}-priority`} className="text-sm font-medium">

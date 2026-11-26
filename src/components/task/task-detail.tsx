@@ -45,6 +45,7 @@ import {
 import { BugSection } from "./bug-section";
 import { currentOf, DetailsSection } from "./details-section";
 import { announceTaskChanged, announceTaskDeleted } from "./events";
+import { SubtasksSection } from "./subtasks-section";
 
 export interface TaskDetailProps {
   taskKey: string;
@@ -217,6 +218,14 @@ export function TaskDetail({
         setMessage("This person is deactivated and cannot be assigned.");
         return;
       }
+      if (failure.code === "has_subtasks") {
+        setMessage("Delete or detach its sub-tasks first.");
+        return;
+      }
+      if (failure.code === "too_many_subtasks") {
+        setMessage("That task already has 100 sub-tasks.");
+        return;
+      }
       if (failure.status === 400) {
         setMessage("Some fields need attention.");
         return;
@@ -278,6 +287,31 @@ export function TaskDetail({
     );
   }
 
+  /**
+   * The task's sub-tasks changed: its own `task.updated` with the version held (WS-133
+   * section 7), or an event of one of its sub-tasks. Only `subtasks` and `subtaskList` are
+   * taken, so the form and its unsaved edits are untouched (WS-135 section 5).
+   */
+  function refreshSubtasks() {
+    getTask(taskKey).then(
+      (current) => {
+        setData((held) =>
+          held?.task.id === current.id
+            ? {
+                ...held,
+                task: {
+                  ...held.task,
+                  subtasks: current.subtasks,
+                  subtaskList: current.subtaskList,
+                },
+              }
+            : held,
+        );
+      },
+      () => undefined,
+    );
+  }
+
   /** Reads the task again after an event or a reconnect, and shows what it finds. */
   function refresh() {
     getTask(taskKey).then(
@@ -306,9 +340,25 @@ export function TaskDetail({
     onEvent: (event) => {
       if (data === null) return;
       const own = event.entityId === data.task.id;
+      const ofSubtask =
+        event.type.startsWith("task.") &&
+        data.task.subtaskList.some((subtask) => subtask.id === event.entityId);
+      if (ofSubtask && !deleted) {
+        refreshSubtasks();
+        return;
+      }
       switch (event.type) {
         case "task.updated":
         case "task.moved":
+          if (
+            own &&
+            !deleted &&
+            event.type === "task.updated" &&
+            event.version === live.current.version
+          ) {
+            refreshSubtasks();
+            return;
+          }
           if (!own || deleted || !isNewer(live.current.version, event.version)) return;
           if (live.current.busy) {
             live.current.pending = Math.max(live.current.pending, event.version);
@@ -493,6 +543,20 @@ export function TaskDetail({
         setBusy={setWriting}
         saveVersion={saveVersion}
         onDirtyChange={setDirty}
+      />
+      <SubtasksSection
+        task={task}
+        columns={data.columns}
+        projectKey={project.key}
+        editable={editable}
+        onCreated={() => {
+          setMessage("Sub-task added.");
+          refreshSubtasks();
+        }}
+        onArchived={() => {
+          setMessage("The project is archived.");
+          getProject(project.key).then(setProject, () => undefined);
+        }}
       />
       <BugSection key={task.id} task={task} reports={data.reports} />
       <ActivitySection

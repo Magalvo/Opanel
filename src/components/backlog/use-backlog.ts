@@ -261,6 +261,32 @@ export function useBacklog({
   );
 
   /**
+   * A parent's sub-tasks changed: its `task.updated` carries the version the backlog holds
+   * (WS-133 section 7). Its progress is read and taken into its row (WS-135 section 5).
+   */
+  const refreshProgress = useCallback(
+    async (taskId: string) => {
+      let loaded: TaskSummary;
+      try {
+        const task = await getTask(taskId);
+        if (task.deletedAt !== null) return;
+        loaded = summaryOf(task);
+      } catch {
+        return;
+      }
+      if (!isMounted(mounted)) return;
+      const held = current.current.find((row) => row.id === taskId);
+      if (held === undefined) return;
+      if (held.version === loaded.version) {
+        setTasks(replaceRow(current.current, { ...held, subtasks: loaded.subtasks }));
+      } else if (isNewer(held.version, loaded.version) && loaded.columnId === null) {
+        setTasks(replaceRow(current.current, loaded));
+      }
+    },
+    [setTasks],
+  );
+
+  /**
    * One fetch per task at a time; an event that arrives during it fetches once more after.
    * A failure other than `404` reloads the whole backlog.
    */
@@ -318,11 +344,15 @@ export function useBacklog({
         case "task.created":
         case "task.restored":
         case "task.updated":
-        case "task.moved":
-          if (isNewer(heldVersion(current.current, event.entityId), event.version)) {
+        case "task.moved": {
+          const held = heldVersion(current.current, event.entityId);
+          if (isNewer(held, event.version)) {
             void refreshTask(event.entityId, event.type !== "task.updated");
+          } else if (event.type === "task.updated" && held === event.version) {
+            void refreshProgress(event.entityId);
           }
           return;
+        }
         case "column.changed":
           void refreshColumns();
           return;
@@ -337,7 +367,7 @@ export function useBacklog({
           return;
       }
     },
-    [refreshColumns, refreshLabels, refreshTask, setTasks],
+    [refreshColumns, refreshLabels, refreshProgress, refreshTask, setTasks],
   );
 
   /**
