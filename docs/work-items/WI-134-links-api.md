@@ -1,6 +1,6 @@
 # WI-134 — Links in the API
 
-- Status: Proposed
+- Status: Approved by the owner on 2026-11-26, with WS-134
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item B)
 - Depends on: WT-06 (the `task_links` table, WS-086 and WS-090) and WT-08 (the activity
   endpoint and timeline, WS-117 and WS-119), both done. Runs in parallel with item A

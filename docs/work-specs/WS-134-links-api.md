@@ -1,6 +1,6 @@
 # WS-134 — Links in the API
 
-- Status: Proposed
+- Status: Approved by the owner on 2026-11-26, questions 1 to 9 as recommended
 - Work-item: [WI-134](../work-items/WI-134-links-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 (who may link)
   and 7 (the four link types and their reverse readings);
