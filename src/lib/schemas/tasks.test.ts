@@ -127,7 +127,7 @@ describe("severity and the bug fields (WS-088)", () => {
     // Links (WS-090): a type of the catalogue and a direction.
     const [link] = task.links;
     expect(taskSchema.safeParse({ ...task, links: [] }).success).toBe(true);
-    expect(taskSchema.safeParse({ ...task, links: [{ ...link, type: "blocks" }] }).success).toBe(
+    expect(taskSchema.safeParse({ ...task, links: [{ ...link, type: "parent_of" }] }).success).toBe(
       false,
     );
     expect(taskSchema.safeParse({ ...task, links: [{ ...link, direction: "both" }] }).success).toBe(

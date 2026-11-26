@@ -33,6 +33,7 @@ import {
   updateColumnContract,
 } from "@/lib/schemas/columns";
 import { createCommentContract, listCommentsContract } from "@/lib/schemas/comments";
+import { addTaskLinkContract, removeTaskLinkContract } from "@/lib/schemas/task-links";
 import {
   createEpicContract,
   getEpicContract,
@@ -134,6 +135,8 @@ export const contracts: readonly EndpointContract[] = [
   moveTaskContract,
   deleteTaskContract,
   restoreTaskContract,
+  addTaskLinkContract,
+  removeTaskLinkContract,
   listEpicsContract,
   createEpicContract,
   getEpicContract,

@@ -22,7 +22,7 @@ describe("the vocabularies of bug reports and triage (WS-086)", () => {
     expect(ORIGIN_LAYERS).toEqual(["frontend", "api", "backend", "unknown"]);
     expect(ROUTED_LAYERS).toEqual(["frontend", "api", "backend"]);
     expect(BUG_REPORT_OUTCOMES).toEqual(["created", "deduplicated"]);
-    expect(TASK_LINK_TYPES).toEqual(["regression_of"]);
+    expect(TASK_LINK_TYPES).toEqual(["blocks", "duplicates", "regression_of", "relates_to"]);
     expect(FINGERPRINT_MAX_LENGTH).toBe(128);
   });
 

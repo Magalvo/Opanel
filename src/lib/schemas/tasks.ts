@@ -81,14 +81,15 @@ const taskFields = {
     .meta({ description: "Set only on deleted tasks, which only the deleted list shows." }),
 };
 
-/** A link from or to another task (doc 0003 section 7, WS-090). WT-09 adds types. */
+/** A link from or to another task (doc 0003 section 7, WS-090, WS-134). */
 export const taskLinkSchema = z
   .strictObject({
     type: z.enum(TASK_LINK_TYPES),
     direction: z.enum(["outgoing", "incoming"]).meta({
       description:
-        "`outgoing`: this task is a regression of the other; `incoming`: the other is a " +
-        "regression of this one.",
+        "`outgoing`: this task blocks, duplicates, is a regression of, or relates to the " +
+        "other; `incoming`: it is blocked by, is duplicated by, or has the other as a " +
+        "regression. `relates_to` is always `outgoing` (WS-134).",
     }),
     task: z.strictObject({ id: z.uuid(), key: z.string(), title: z.string() }),
   })
@@ -106,7 +107,9 @@ export const taskSchema = z
     ...taskFields,
     description: z.string().meta({ description: "Markdown." }),
     links: z.array(taskLinkSchema).meta({
-      description: "Links to tasks that are not deleted. Lists of tasks leave them out.",
+      description:
+        "Links to tasks that are not deleted and that the caller may reach (WS-134). Lists " +
+        "of tasks leave them out.",
     }),
   })
   .meta({ id: "Task" });

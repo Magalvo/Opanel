@@ -27,8 +27,8 @@ export type RoutedLayer = z.infer<typeof routedLayerSchema>;
 export const BUG_REPORT_OUTCOMES = ["created", "deduplicated"] as const;
 export type BugReportOutcome = (typeof BUG_REPORT_OUTCOMES)[number];
 
-/** Link types between tasks; WT-09 adds the others of doc 0003 section 7. */
-export const TASK_LINK_TYPES = ["regression_of"] as const;
+/** Link types between tasks (doc 0003 section 7, WT-09 decision 6). */
+export const TASK_LINK_TYPES = ["blocks", "duplicates", "regression_of", "relates_to"] as const;
 export type TaskLinkType = (typeof TASK_LINK_TYPES)[number];
 
 /** The longest fingerprint an agent may send (doc 0001 section 5). */
