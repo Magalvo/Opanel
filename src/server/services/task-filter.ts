@@ -60,6 +60,25 @@ function search(q: string): SQL {
     : sql`t.search @@ (plainto_tsquery('simple', ${rest}) && ${prefix})`;
 }
 
+/**
+ * `parentId` (WS-133 section 9): the sub-tasks of the tasks named by id or key, or the tasks
+ * with no parent for `none`. A task of another project, or none at all, matches nothing.
+ */
+function parentOf(values: readonly string[]): SQL {
+  const parts: SQL[] = [];
+  const ids = values.filter((value) => value !== "none" && !taskKeySchema.safeParse(value).success);
+  const keys = values.filter((value) => taskKeySchema.safeParse(value).success);
+  if (ids.length > 0) parts.push(sql`t.parent_task_id in (${list(ids, sql`::uuid`)})`);
+  for (const key of keys) {
+    const dash = key.lastIndexOf("-");
+    parts.push(sql`t.parent_task_id in (
+      select pt.id from tasks pt join projects pp on pp.id = pt.project_id
+      where pp.key = ${key.slice(0, dash)} and pt.number = ${Number(key.slice(dash + 1))})`);
+  }
+  if (values.includes("none")) parts.push(sql`t.parent_task_id is null`);
+  return sql`(${sql.join(parts, sql` or `)})`;
+}
+
 /** The projects a list covers: some named ones, or every one the actor may read (WS-118). */
 export interface TaskListScope {
   actor: Actor;
@@ -148,6 +167,7 @@ export async function taskFilterWhere(
       where tl.task_id = t.id and tl.label_id in (${list(filter.labelId, sql`::uuid`)}))`);
   }
   if (filter.epicId) conditions.push(anyOf(sql`t.epic_id`, filter.epicId, "none", sql`::uuid`));
+  if (filter.parentId) conditions.push(parentOf(filter.parentId));
   if (filter.priority) conditions.push(anyOf(sql`t.priority`, filter.priority));
   if (filter.severity) conditions.push(anyOf(sql`t.severity`, filter.severity));
   if (filter.dueFrom !== undefined) conditions.push(sql`t.due_date >= ${filter.dueFrom}::date`);

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   check,
   customType,
   date,
@@ -44,6 +45,11 @@ export const tasks = pgTable(
       onDelete: "restrict",
     }),
     epicId: uuid("epic_id").references(() => epics.id, { onDelete: "restrict" }),
+    // A sub-task's parent, one level deep, in the same project (WT-09 decision 1, WS-133).
+    // The service checks the depth and the project; the database refuses a self-parent.
+    parentTaskId: uuid("parent_task_id").references((): AnyPgColumn => tasks.id, {
+      onDelete: "restrict",
+    }),
     // A bug's severity, and what the triage pipeline counts (WT-06 decision 1, WS-086).
     severity: text("severity"),
     fingerprint: text("fingerprint"),
@@ -91,6 +97,13 @@ export const tasks = pgTable(
     index("tasks_assignee_team_idx").on(table.assigneeTeamId),
     index("tasks_assignee_account_idx").on(table.assigneeAccountId),
     index("tasks_epic_idx").on(table.epicId),
+    check(
+      "tasks_parent_not_self_check",
+      sql`${table.parentTaskId} is null or ${table.parentTaskId} <> ${table.id}`,
+    ),
+    index("tasks_parent_idx")
+      .on(table.parentTaskId)
+      .where(sql`${table.parentTaskId} is not null`),
     index("tasks_search_idx").using("gin", table.search),
     index("tasks_due_date_idx").on(table.dueDate),
     index("tasks_reporter_idx").on(table.reporterAccountId),

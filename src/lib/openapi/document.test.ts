@@ -469,6 +469,48 @@ describe("buildOpenApiDocument", () => {
     });
   });
 
+  it("describes sub-tasks: parentId, TaskParent, SubtaskProgress, the codes, the filter (WS-133)", () => {
+    const { schemas } = parsedDocument().components;
+    const json = JSON.stringify(documentAsJson());
+    const { paths } = z
+      .object({
+        paths: z.record(
+          z.string(),
+          z.record(
+            z.string(),
+            z.object({ parameters: z.array(z.object({ name: z.string() })).optional() }),
+          ),
+        ),
+      })
+      .parse(documentAsJson());
+    const filterOf = (path: string) =>
+      (paths[path]?.get?.parameters ?? []).map((parameter) => parameter.name);
+
+    expect(schemas.TaskParent).toMatchObject({ required: ["id", "key", "title"] });
+    expect(schemas.SubtaskProgress).toMatchObject({ required: ["done", "total"] });
+    expect(schemas.TaskSummary).toMatchObject({
+      required: expect.arrayContaining(["parent", "subtasks"]) as unknown,
+    });
+    expect(schemas.Task).toMatchObject({
+      required: expect.arrayContaining(["parent", "subtasks", "subtaskList"]) as unknown,
+    });
+    expect(schemas.CreateTaskRequest).toMatchObject({
+      properties: { parentId: expect.anything() as unknown },
+    });
+    expect(schemas.UpdateTaskRequest).toMatchObject({
+      properties: { parentId: expect.anything() as unknown },
+    });
+    for (const path of [
+      "/api/v1/tasks",
+      "/api/v1/projects/{projectId}/tasks",
+      "/api/v1/projects/{projectId}/backlog",
+    ]) {
+      expect(filterOf(path), path).toContain("parentId");
+    }
+    expect(json).toContain("has_subtasks");
+    expect(json).toContain("too_many_subtasks");
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

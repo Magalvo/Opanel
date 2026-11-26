@@ -249,6 +249,23 @@ describe("the backlog's filters, one at a time (WS-131 test 5)", () => {
   });
 });
 
+describe("the parentId filter on the project lists (WS-133 test 12)", () => {
+  it("keeps a parent's sub-tasks, by key or id, or the tasks with no parent", async () => {
+    const s = await setup();
+    for (const key of ["OPA-2", "OPA-4"]) {
+      const { version } = await getTask(s.mia, key);
+      await updateTask(s.mia, key, { parentId: "OPA-1", version });
+    }
+    const parentId = (await getTask(s.mia, "OPA-1")).id;
+
+    expect(await board(s.mia, { parentId: "OPA-1" })).toEqual(["OPA-2"]);
+    expect(await board(s.mia, { parentId: "none" })).toEqual(["OPA-5", "OPA-1", "OPA-3"]);
+    expect(await backlog(s.mia, { parentId })).toEqual(["OPA-4"]);
+    expect(await backlog(s.mia, { parentId: "none" })).toEqual([]);
+    expect(await board(s.mia, { parentId: "OPA-99" })).toEqual([]);
+  });
+});
+
 describe("ids of another project (WS-116 test 6)", () => {
   it("refuses a column, label or epic of another project with 400 on its field", async () => {
     const s = await setup();

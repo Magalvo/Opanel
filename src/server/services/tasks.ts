@@ -36,8 +36,10 @@ import { taskLabels, tasks } from "@/server/db/schema";
 import {
   accountInactive,
   forbidden,
+  hasSubtasks,
   invalidRequest,
   notFound,
+  tooManySubtasks,
   versionConflict,
 } from "@/server/http/errors";
 import {
@@ -50,13 +52,15 @@ import {
   encodeTaskListCursor,
 } from "@/server/http/pagination";
 
-import { type ProjectEventInput, publishEvent } from "./events";
+import { type ProjectEventInput, publishEvent, publishEvents } from "./events";
 import { isPerson } from "./people";
 import { claimTaskNumber, findProjectRef, lockWritableProject, reachableBy } from "./projects";
 import { recordTaskEvent } from "./task-events";
 import { taskFilterWhere } from "./task-filter";
 
 type Executor = Pick<Database, "execute">;
+/** An executor that can also record history (`recordTaskEvent` inserts). */
+type Writer = Executor & Pick<Database, "insert">;
 
 const ISO_MS = sql`'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
 /** Sorts after every position key (base-62, compared byte by byte): the backlog's place. */
@@ -75,6 +79,8 @@ function taskSelect(extra: SQL = sql``, { description = false } = {}): SQL {
     ${description ? sql`t.description,` : sql``}
     t.column_id, t.assignee_team_id, t.assignee_account_id, t.epic_id,
     e.title as epic_title,
+    t.parent_task_id, pt.number as parent_number, pt.title as parent_title,
+    sc.done as subtasks_done, sc.total as subtasks_total,
     tm.name as team_name,
     a.name as assignee_name, a.disabled_at is null as assignee_active,
     r.id as reporter_id, r.name as reporter_name, r.kind as reporter_kind,
@@ -96,7 +102,14 @@ function taskSelect(extra: SQL = sql``, { description = false } = {}): SQL {
   join accounts r on r.id = t.reporter_account_id
   left join teams tm on tm.id = t.assignee_team_id
   left join accounts a on a.id = t.assignee_account_id
-  left join epics e on e.id = t.epic_id`;
+  left join epics e on e.id = t.epic_id
+  left join tasks pt on pt.id = t.parent_task_id
+  left join lateral (
+    -- A parent's progress (WS-133 section 6), read through tasks_parent_idx.
+    select count(*)::int as total, (count(*) filter (where sc_c.category = 'done'))::int as done
+    from tasks st left join columns sc_c on sc_c.id = st.column_id
+    where st.parent_task_id = t.id and st.deleted_at is null
+  ) sc on true`;
 }
 
 /** One task, with its description. */
@@ -120,6 +133,11 @@ interface SummaryRow extends Record<string, unknown> {
   assignee_account_id: string | null;
   epic_id: string | null;
   epic_title: string | null;
+  parent_task_id: string | null;
+  parent_number: number | null;
+  parent_title: string | null;
+  subtasks_done: number;
+  subtasks_total: number;
   team_name: string | null;
   assignee_name: string | null;
   assignee_active: boolean | null;
@@ -168,6 +186,15 @@ function toSummary(row: SummaryRow): TaskSummary {
             active: row.assignee_active ?? false,
           },
     epic: row.epic_id === null ? null : { id: row.epic_id, title: row.epic_title ?? "" },
+    // A sub-task is in its parent's project, so the parent's key has the same prefix.
+    parent:
+      row.parent_task_id === null
+        ? null
+        : {
+            id: row.parent_task_id,
+            key: `${row.project_key}-${String(row.parent_number)}`,
+            title: row.parent_title ?? "",
+          },
     reporter: { id: row.reporter_id, name: row.reporter_name, kind: row.reporter_kind },
     severity: row.severity,
     fingerprint: row.fingerprint,
@@ -176,6 +203,8 @@ function toSummary(row: SummaryRow): TaskSummary {
     priority: row.priority,
     dueDate: row.due_date,
     labels: row.labels,
+    subtasks:
+      row.subtasks_total === 0 ? null : { done: row.subtasks_done, total: row.subtasks_total },
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -194,8 +223,17 @@ function toListItem(row: SummaryRow): TaskListItem {
   };
 }
 
-function toTask(row: TaskRow, links: TaskLink[]): Task {
-  return { ...toSummary(row), description: row.description, links };
+function toTask(row: TaskRow, links: TaskLink[], subtaskList: TaskSummary[]): Task {
+  return { ...toSummary(row), description: row.description, links, subtaskList };
+}
+
+/** A parent's live sub-tasks: in board order, then the backlog in rank order (WS-133). */
+async function loadSubtasks(executor: Executor, taskId: string): Promise<TaskSummary[]> {
+  const rows = await executor.execute<SummaryRow>(sql`
+    ${SUMMARY_SELECT}
+    where t.parent_task_id = ${taskId} and t.deleted_at is null
+    order by coalesce(c.position, ${BACKLOG_COLUMN_POSITION}) collate "C", t.position, t.id`);
+  return rows.map(toSummary);
 }
 
 /**
@@ -228,9 +266,9 @@ async function loadLinks(executor: Executor, taskId: string): Promise<TaskLink[]
   }));
 }
 
-/** A task's full answer: its row and its links. */
+/** A task's full answer: its row, its links and its sub-tasks. */
 async function withLinks(executor: Executor, row: TaskRow): Promise<Task> {
-  return toTask(row, await loadLinks(executor, row.id));
+  return toTask(row, await loadLinks(executor, row.id), await loadSubtasks(executor, row.id));
 }
 
 function taskNotFound() {
@@ -306,6 +344,120 @@ async function assertAssignablePerson(executor: Executor, accountId: string): Pr
     where a.id = ${accountId} and ${isPerson("a")}`);
   if (!person) throw fieldError("assigneeAccountId", "Not a person who can be assigned.");
   if (!person.active) throw accountInactive();
+}
+
+/** At most this many live sub-tasks per parent (WT-09 decision 3). */
+const MAX_SUBTASKS = 100;
+const SUBTASK_EPIC = "A sub-task's epic is its parent's.";
+
+/** How many live sub-tasks a task has. */
+async function liveSubtasks(executor: Executor, taskId: string): Promise<number> {
+  const [row] = await executor.execute<{ count: number }>(sql`
+    select count(*)::int as count from tasks
+    where parent_task_id = ${taskId} and deleted_at is null`);
+  return row?.count ?? 0;
+}
+
+/** Locks task rows `for update`, in id order, so two writes never wait on each other. */
+async function lockTasks(executor: Executor, ids: readonly string[]): Promise<void> {
+  const unique = [...new Set(ids)].sort();
+  if (unique.length === 0) return;
+  await executor.execute(sql`
+    select id from tasks where id in (${sql.join(
+      unique.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )}) order by id for update`);
+}
+
+/** The id of a live task by id or key, without a lock; for locking rows in order first. */
+async function liveTaskId(executor: Executor, ref: string): Promise<string | undefined> {
+  return (await findTask(executor, ref))?.id;
+}
+
+/**
+ * The parent a write names, checked against WT-09 decision 1 (WS-133 section 3), with its
+ * row locked by the caller. `taskId` is the task that becomes a sub-task, or undefined when
+ * it is being created. Throws `400` on `parentId`, or `409 too_many_subtasks`.
+ */
+async function checkedParent(
+  executor: Executor,
+  ref: string,
+  projectId: string,
+  taskId: string | undefined,
+): Promise<TaskRow> {
+  const parent = await findTask(executor, ref);
+  if (!parent) throw fieldError("parentId", "No live task with this id or key.");
+  if (parent.id === taskId) throw fieldError("parentId", "A task cannot be its own parent.");
+  if (parent.project_id !== projectId) throw fieldError("parentId", "Not a task of this project.");
+  if (parent.parent_task_id !== null) {
+    throw fieldError("parentId", "A sub-task cannot have sub-tasks.");
+  }
+  if (taskId !== undefined && (await liveSubtasks(executor, taskId)) > 0) {
+    throw fieldError("parentId", "A task with sub-tasks cannot become a sub-task.");
+  }
+  if ((await liveSubtasks(executor, parent.id)) >= MAX_SUBTASKS) throw tooManySubtasks();
+  return parent;
+}
+
+/**
+ * Sends `task.updated` for each live parent among `ids` (WS-133 section 7): its sub-tasks
+ * changed, so a board refreshes its progress. The parent's version does not change.
+ */
+async function announceParents(
+  executor: Executor,
+  actor: Actor,
+  ids: readonly (string | null)[],
+): Promise<void> {
+  const unique = [...new Set(ids.filter((id): id is string => id !== null))];
+  if (unique.length === 0) return;
+  const parents = await executor.execute<{ id: string; project_id: string; version: number }>(sql`
+    select id, project_id, version from tasks
+    where deleted_at is null and id in (${sql.join(
+      unique.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )})
+    order by id`);
+  await publishEvents(
+    executor,
+    parents.map((parent) => taskEvent("task.updated", parent, actor)),
+  );
+}
+
+/**
+ * Gives a parent's live sub-tasks its new epic (WT-09 decision 2, WS-133 section 4): each
+ * gets a new version, a history entry by the same actor and its `task.updated`.
+ */
+async function syncSubtaskEpics(
+  executor: Writer,
+  actor: Actor,
+  parentId: string,
+  epicId: string | null,
+): Promise<void> {
+  const changed = await executor.execute<{
+    id: string;
+    project_id: string;
+    version: number;
+    old_epic_id: string | null;
+  }>(sql`
+    update tasks st set epic_id = ${epicId}, version = st.version + 1, updated_at = now()
+    from tasks old
+    where old.id = st.id and st.parent_task_id = ${parentId} and st.deleted_at is null
+      and st.epic_id is distinct from ${epicId}
+    returning st.id, st.project_id, st.version, old.epic_id as old_epic_id`);
+  for (const child of changed) {
+    await recordTaskEvent(executor, {
+      taskId: child.id,
+      actor,
+      type: "field_changed",
+      field: "epicId",
+      oldValue: child.old_epic_id,
+      newValue: epicId,
+    });
+  }
+  await publishEvents(
+    executor,
+    changed.map((child) => taskEvent("task.updated", child, actor)),
+  );
 }
 
 export async function getTask(actor: Actor, ref: string, db: Database = getDb()): Promise<Task> {
@@ -698,7 +850,18 @@ export async function createTask(
     if (input.assigneeAccountId !== undefined) {
       await assertAssignablePerson(tx, input.assigneeAccountId);
     }
-    if (input.epicId !== undefined) await assertEpic(tx, input.epicId, project.id);
+    // A sub-task takes its parent's epic (WS-133 sections 3 and 4).
+    let parent: TaskRow | undefined;
+    if (input.parentId !== undefined) {
+      const parentId = await liveTaskId(tx, input.parentId);
+      if (parentId !== undefined) await lockTasks(tx, [parentId]);
+      parent = await checkedParent(tx, input.parentId, project.id, undefined);
+      if (input.epicId !== undefined && input.epicId !== parent.epic_id) {
+        throw fieldError("epicId", SUBTASK_EPIC);
+      }
+    } else if (input.epicId !== undefined) {
+      await assertEpic(tx, input.epicId, project.id);
+    }
     const labels =
       input.labelIds === undefined
         ? undefined
@@ -722,7 +885,8 @@ export async function createTask(
         position: positionBetween(last?.position ?? null, null),
         assigneeTeamId: input.assigneeTeamId ?? null,
         assigneeAccountId: input.assigneeAccountId ?? null,
-        epicId: input.epicId ?? null,
+        epicId: parent === undefined ? (input.epicId ?? null) : parent.epic_id,
+        parentTaskId: parent?.id ?? null,
         severity: input.severity ?? null,
         priority: input.priority ?? "none",
         dueDate: input.dueDate ?? null,
@@ -746,13 +910,15 @@ export async function createTask(
         ...(input.priority === undefined ? {} : { priority: input.priority }),
         ...(input.dueDate === undefined ? {} : { dueDate: input.dueDate }),
         ...(labels === undefined ? {} : { labels }),
+        ...(parent === undefined ? {} : { parentId: parent.id }),
       },
     });
 
     const created = await findTask(tx, row.id);
     if (!created) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.created", created, actor));
-    return toTask(created, []);
+    await announceParents(tx, actor, [created.parent_task_id]);
+    return toTask(created, [], []);
   });
 }
 
@@ -767,6 +933,7 @@ const EDITABLE = [
   ["assigneeTeamId", "assignee_team_id"],
   ["assigneeAccountId", "assignee_account_id"],
   ["epicId", "epic_id"],
+  ["parentId", "parent_task_id"],
 ] as const;
 
 export async function updateTask(
@@ -782,9 +949,30 @@ export async function updateTask(
     const found = await findTask(tx, ref);
     if (!found) throw taskNotFound();
     await lockWritableProject(tx, actor, found.project_id);
+    // A new parent's row is locked with the task's, in id order (WS-133 section 3).
+    const newParentId =
+      input.parentId === undefined || input.parentId === null
+        ? undefined
+        : await liveTaskId(tx, input.parentId);
+    await lockTasks(tx, [found.id, ...(newParentId === undefined ? [] : [newParentId])]);
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
     if (before.version !== input.version) throw versionConflict(await withLinks(tx, before));
+
+    // The parent after the write: kept, replaced or cleared (WS-133 section 3).
+    let parent: TaskRow | undefined;
+    if (input.parentId === undefined) {
+      parent =
+        before.parent_task_id === null ? undefined : await findTask(tx, before.parent_task_id);
+    } else if (input.parentId !== null) {
+      const sameParent = before.parent_task_id !== null && newParentId === before.parent_task_id;
+      parent = sameParent
+        ? await findTask(tx, before.parent_task_id ?? "")
+        : await checkedParent(tx, input.parentId, before.project_id, before.id);
+    }
+    if (parent !== undefined && input.epicId !== undefined && input.epicId !== parent.epic_id) {
+      throw fieldError("epicId", SUBTASK_EPIC);
+    }
 
     const type = input.type ?? before.type;
     // Only bugs have a severity; a task that stops being a bug loses it (WS-088).
@@ -805,7 +993,13 @@ export async function updateTask(
         input.assigneeAccountId === undefined
           ? before.assignee_account_id
           : input.assigneeAccountId,
-      epicId: input.epicId === undefined ? before.epic_id : input.epicId,
+      epicId:
+        parent !== undefined
+          ? parent.epic_id
+          : input.epicId === undefined
+            ? before.epic_id
+            : input.epicId,
+      parentId: parent?.id ?? null,
     };
     if (after.assigneeTeamId !== null && after.assigneeTeamId !== before.assignee_team_id) {
       await assertTeam(tx, after.assigneeTeamId);
@@ -816,7 +1010,7 @@ export async function updateTask(
     ) {
       await assertAssignablePerson(tx, after.assigneeAccountId);
     }
-    if (after.epicId !== null && after.epicId !== before.epic_id) {
+    if (parent === undefined && after.epicId !== null && after.epicId !== before.epic_id) {
       await assertEpic(tx, after.epicId, before.project_id);
     }
     const labelsBefore = named(before.labels);
@@ -832,7 +1026,7 @@ export async function updateTask(
         title = ${after.title}, description = ${after.description}, type = ${after.type},
         severity = ${after.severity}, priority = ${after.priority}, due_date = ${after.dueDate},
         assignee_team_id = ${after.assigneeTeamId}, assignee_account_id = ${after.assigneeAccountId},
-        epic_id = ${after.epicId},
+        epic_id = ${after.epicId}, parent_task_id = ${after.parentId},
         version = version + 1, updated_at = now()
       where id = ${before.id}`);
 
@@ -861,9 +1055,15 @@ export async function updateTask(
       });
     }
 
+    // A parent's sub-tasks follow its epic (WS-133 section 4).
+    if (after.epicId !== before.epic_id) await syncSubtaskEpics(tx, actor, before.id, after.epicId);
+
     const updated = await findTask(tx, before.id);
     if (!updated) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.updated", updated, actor));
+    if (after.parentId !== before.parent_task_id) {
+      await announceParents(tx, actor, [before.parent_task_id, after.parentId]);
+    }
     return withLinks(tx, updated);
   });
 }
@@ -967,6 +1167,11 @@ export async function moveTask(
     const moved = await findTask(tx, before.id);
     if (!moved) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.moved", moved, actor));
+    // A sub-task that changes category, or goes to or from the backlog, changes its parent's
+    // progress (WS-133 section 7).
+    if ((before.column_category ?? "backlog") !== (moved.column_category ?? "backlog")) {
+      await announceParents(tx, actor, [moved.parent_task_id]);
+    }
     return withLinks(tx, moved);
   });
 }
@@ -986,6 +1191,9 @@ export async function deleteTask(actor: Actor, ref: string, db: Database = getDb
     const task = await findTask(tx, found.id, sql`for update of t`);
     if (!task) throw taskNotFound();
     if (!canDeleteTask(actor, { reporterId: task.reporter_id })) throw forbidden();
+    // A parent goes only once its sub-tasks are deleted or detached (WT-09 decision 5).
+    const subtasks = await liveSubtasks(tx, task.id);
+    if (subtasks > 0) throw hasSubtasks(subtasks);
 
     const [deleted] = await tx.execute<{ version: number }>(sql`
       update tasks set deleted_at = now(), deleted_by = ${actor.accountId},
@@ -995,6 +1203,7 @@ export async function deleteTask(actor: Actor, ref: string, db: Database = getDb
     if (!deleted) throw taskNotFound();
     await recordTaskEvent(tx, { taskId: task.id, actor, type: "deleted" });
     await publishEvent(tx, taskEvent("task.deleted", { ...task, version: deleted.version }, actor));
+    await announceParents(tx, actor, [task.parent_task_id]);
   });
 }
 
@@ -1014,15 +1223,34 @@ export async function restoreTask(
     if (!task) throw taskNotFound();
     if (task.deleted_at === null) return withLinks(tx, task);
 
+    // A sub-task whose parent is deleted comes back as a normal task (WT-09 decision 5).
+    const [parent] =
+      task.parent_task_id === null
+        ? []
+        : await tx.execute<{ deleted: boolean }>(sql`
+            select deleted_at is not null as deleted from tasks where id = ${task.parent_task_id}`);
+    const detach = parent?.deleted === true;
     await tx.execute(sql`
       update tasks set deleted_at = null, deleted_by = null,
+        ${detach ? sql`parent_task_id = null,` : sql``}
         version = version + 1, updated_at = now()
       where id = ${task.id}`);
     await recordTaskEvent(tx, { taskId: task.id, actor, type: "restored" });
+    if (detach) {
+      await recordTaskEvent(tx, {
+        taskId: task.id,
+        actor,
+        type: "field_changed",
+        field: "parentId",
+        oldValue: task.parent_task_id,
+        newValue: null,
+      });
+    }
 
     const restored = await findTask(tx, task.id);
     if (!restored) throw taskNotFound();
     await publishEvent(tx, taskEvent("task.restored", restored, actor));
+    await announceParents(tx, actor, [restored.parent_task_id]);
     return withLinks(tx, restored);
   });
 }
