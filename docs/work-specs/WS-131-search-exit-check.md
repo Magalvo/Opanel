@@ -1,6 +1,6 @@
 # WS-131 — WT-08 end-to-end flow, agents guide and exit check
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
 - Work-item: [WI-131](../work-items/WI-131-search-exit-check.md)
 - Canonical docs: [0004](../canonical/0004-api-conventions.md) section 5 (P1);
   [0003](../canonical/0003-task-management.md) sections 4 and 8 (P2, P3);

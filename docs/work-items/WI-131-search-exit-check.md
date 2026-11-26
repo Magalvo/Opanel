@@ -1,6 +1,6 @@
 # WI-131 — Search and filters end to end, the agents guide, the exit check
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, with WS-131)
 - Work-track: [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) (item G)
 - Depends on: [WI-130](WI-130-task-list-view.md) (item E) and
   [WI-119](WI-119-task-timeline.md) (item F), both done
