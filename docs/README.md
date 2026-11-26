@@ -16,7 +16,7 @@ What a new session needs to start: what comes next, and what waits for the owner
 an index commit when a work-track is approved or done, or when what comes next changes.
 
 - **Next:** WT-09 (sub-tasks and task links, approved on 2026-11-26) items A (sub-tasks in
-  the API) and B (links in the API), in parallel; then C, D and E, and F last. WT-08 and
+  the API, WI-133) and B (links in the API), in parallel; then C, D and E, and F last. WT-08 and
   the MCP tools of WI-132 are done.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
@@ -201,6 +201,7 @@ operations (doc 0006), are done.
 | [WI-130](work-items/WI-130-task-list-view.md)                   | The list view of tasks, with sortable headers                     | [WS-130](work-specs/WS-130-task-list-view.md)                   |
 | [WI-131](work-items/WI-131-search-exit-check.md)                | Search and filters end to end, the agents guide, the exit check   | [WS-131](work-specs/WS-131-search-exit-check.md)                |
 | [WI-132](work-items/WI-132-mcp-planning-search-tools.md)        | MCP tools for the backlog, labels, epics, search and activity     | [WS-132](work-specs/WS-132-mcp-planning-search-tools.md)        |
+| [WI-133](work-items/WI-133-subtasks-api.md)                     | Sub-tasks in the API                                              | [WS-133](work-specs/WS-133-subtasks-api.md)                     |
 
 ## Follow-ups
 
