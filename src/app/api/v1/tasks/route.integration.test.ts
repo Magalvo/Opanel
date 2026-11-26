@@ -108,4 +108,25 @@ describe("GET /api/v1/tasks (WS-118)", () => {
       { path: "cursor", message: "Invalid cursor." },
     ]);
   });
+
+  it("answers a Viewer, and refuses a token without tasks:read with 403 (WS-131)", async () => {
+    await setup();
+    await createTestAccount({ email: "viewer@example.com", role: "viewer" });
+    const viewer = await signInCookie("viewer@example.com");
+    const agent = await createTestAgent({ name: "Projects only", scopes: ["projects:read"] });
+    const { token } = await createTestToken(agent.id);
+
+    const byViewer = await GET(
+      apiRequest("GET", "/api/v1/tasks?sort=key", { cookie: viewer }),
+      undefined,
+    );
+    const byToken = await GET(bearerRequest("/api/v1/tasks", token), undefined);
+
+    expect(byViewer.status).toBe(200);
+    expect(
+      taskListItemPageSchema.parse(await byViewer.json()).items.map((item) => item.key),
+    ).toEqual(["OPA-1", "OPA-2", "WEB-1", "WEB-2"]);
+    expect(byToken.status).toBe(403);
+    expect(problemSchema.parse(await byToken.json()).code).toBe("forbidden");
+  });
 });
