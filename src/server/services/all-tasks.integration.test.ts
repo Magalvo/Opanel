@@ -311,6 +311,46 @@ describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
     expect(all.map((task) => task.id)).toEqual([...all].sort(compare(sort)).map((t) => t.id));
   });
 
+  it.each(sorts)(
+    "sort=%s gives every task left alone once while others are written between pages (WS-131)",
+    async (sort) => {
+      const { mia } = await sortable();
+      const before = (await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "100" })))
+        .items;
+      const first = await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "2" }));
+      if (first.nextCursor === null) throw new Error("one page only");
+
+      // Between the pages: a new task, and a change to one task of the first page.
+      await createTask(mia, "OPA", { title: "Arrived meanwhile", priority: "urgent" });
+      const [changed] = first.items;
+      if (!changed) throw new Error("empty page");
+      await updateTask(mia, changed.key, {
+        title: "Changed meanwhile",
+        priority: "low",
+        version: changed.version,
+      });
+
+      const seen = first.items.map((task) => task.id);
+      let cursor: string | undefined = first.nextCursor;
+      while (cursor !== undefined) {
+        const page = await listAllTasks(
+          mia,
+          allTasksQuerySchema.parse({ sort, limit: "2", cursor }),
+        );
+        seen.push(...page.items.map((task) => task.id));
+        cursor = page.nextCursor ?? undefined;
+      }
+
+      const leftAlone = before.map((task) => task.id).filter((id) => id !== changed.id);
+      for (const id of leftAlone) {
+        expect(
+          seen.filter((seenId) => seenId === id),
+          id,
+        ).toHaveLength(1);
+      }
+    },
+  );
+
   it("does not give a task twice when it is updated between pages of -updated", async () => {
     const { mia } = await sortable();
     const first = await listAllTasks(mia, allTasksQuerySchema.parse({ limit: "2" }));

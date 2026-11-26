@@ -311,6 +311,16 @@ describe("text search (WS-116 tests 7 to 9)", () => {
     expect(await board(s.mia, { q: "archive" })).toEqual([]);
   });
 
+  it("finds a task by the new words of its description as soon as it is edited (WS-131)", async () => {
+    const s = await setup();
+    const { version } = await getTask(s.mia, "OPA-2");
+
+    await updateTask(s.mia, "OPA-2", { description: "Mention the changelog.", version });
+
+    expect(await board(s.mia, { q: "changelog" })).toEqual(["OPA-2"]);
+    expect(await board(s.mia, { q: "dashboard" })).toEqual([]);
+  });
+
   it("finds a task written by SQL alone: the database computes the column", async () => {
     const s = await setup();
     await getDb().execute(sql`
