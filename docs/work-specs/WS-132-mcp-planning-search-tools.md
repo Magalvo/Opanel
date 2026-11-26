@@ -1,6 +1,7 @@
 # WS-132 — MCP tools for the backlog, labels, epics, search and activity
 
-- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-26, questions 1 to 3 as recommended; done on
+  2026-11-26)
 - Work-item: [WI-132](../work-items/WI-132-mcp-planning-search-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) sections 4 (the tools, "new
   tools are added by work-items"), 5 (inputs, outputs, errors) and 6 (data, not
@@ -142,3 +143,34 @@ Risks:
 - **`mcp/e2e/write-tools.spec.ts` fails now and then** (the follow-up found in WI-129).
   The new spec uses its own projects and agent; a flake in the old spec during the gate is
   rerun and recorded, not fixed here.
+
+## Implementation record
+
+- Red (069e161): 27 MCP unit tests failed, every one on the missing tools, the new tool
+  order or `query()` taking arrays.
+- Green (0b13be4): the five tools in `mcp/src/tools/`, registered in the order of section
+  2; `query()` appends each value of an array; the tool tables of `mcp/README.md` and doc
+  0005 section 4, and `docs/mcp.md`.
+- (b09ee36) `mcp/e2e/mcp.spec.ts` lists the tools a `qa_agent` is offered, so it
+  gained the five (deviation 3).
+- Gate on 2026-11-26:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2541 of 2541 (234 files);
+  - `pnpm test:e2e` 135 of 135, the MCP project included;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **`dueInOrder` and `DUE_ORDER` are exported from `src/lib/schemas/tasks.ts`**, not
+   listed under Files, so the search and backlog tools keep the API's due-range rule
+   instead of copying it.
+2. **`query()` also takes a boolean**: the `done` filter parses to one, and `String(false)`
+   is what the API reads.
+3. **Two existing tests changed with the order** (question 1): the offered lists of
+   `mcp/src/read-tools.test.ts` and of `mcp/e2e/mcp.spec.ts`, which section 2's Files
+   named only for the unit tests.
+4. **A column name in the search summary is quoted**, as the board's summary quotes it: a
+   column's name is written by people (doc 0005 section 6).
+5. **The end-to-end test was first run after the tools existed**; it is the same file as
+   written in the Red commit, and it fails before 0b13be4 since the tools are not offered.
