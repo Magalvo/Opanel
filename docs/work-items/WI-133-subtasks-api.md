@@ -1,6 +1,6 @@
 # WI-133 — Sub-tasks in the API
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, with WS-133)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item A)
 - Depends on: none (runs beside item B, links in the API)
 - Work-spec: [WS-133](../work-specs/WS-133-subtasks-api.md)

@@ -1,6 +1,6 @@
 # WS-133 — Sub-tasks in the API
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
 - Work-item: [WI-133](../work-items/WI-133-subtasks-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 4 (`Parent`) and
   7 (sub-tasks); [0002](../canonical/0002-realtime-sync.md) section 3 (`task.updated`);
