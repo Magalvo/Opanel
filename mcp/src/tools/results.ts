@@ -49,11 +49,17 @@ export function count(n: number, one: string, many: string): string {
   return `${String(n)} ${n === 1 ? one : many}`;
 }
 
-/** `?a=1&b=2` from the given fields, in order, leaving out the absent ones; `""` if none. */
-export function query(params: Record<string, string | number | undefined>): string {
+/**
+ * `?a=1&b=2` from the given fields, in order, leaving out the absent ones; `""` if none. Each
+ * value of an array is its own parameter, so a filter of several values repeats (WS-132).
+ */
+export function query(
+  params: Record<string, string | number | boolean | readonly (string | number)[] | undefined>,
+): string {
   const search = new URLSearchParams();
   for (const [name, value] of Object.entries(params)) {
-    if (value !== undefined) search.set(name, String(value));
+    if (value === undefined) continue;
+    for (const each of Array.isArray(value) ? value : [value]) search.append(name, String(each));
   }
   const text = search.toString();
   return text === "" ? "" : `?${text}`;

@@ -4,13 +4,18 @@ import type { Permission } from "@/lib/schemas/permissions";
 
 import type { ApiClient } from "./api";
 import type { Redactor } from "./redact";
+import { getTaskActivity } from "./tools/activity";
+import { getBacklog } from "./tools/backlog";
 import { getBoard } from "./tools/board";
 import { submitBugReport } from "./tools/bug-report";
 import { addComment } from "./tools/comment";
 import { createTask } from "./tools/create-task";
+import { listEpics } from "./tools/epics";
+import { listLabels } from "./tools/labels";
 import { moveTask } from "./tools/move-task";
 import { findPeople } from "./tools/people";
 import { listProjects } from "./tools/projects";
+import { searchTasks } from "./tools/search";
 import { getTask } from "./tools/task";
 import { listTeams } from "./tools/teams";
 import { updateTask } from "./tools/update-task";
@@ -34,11 +39,17 @@ export interface ToolDefinition {
 /** Every tool, in the order they are listed. */
 export const TOOLS: readonly ToolDefinition[] = [
   whoami,
+  // The project reads, then teams and people, then the task reads (WS-132 question 1).
   listProjects,
   getBoard,
+  getBacklog,
+  listLabels,
+  listEpics,
   listTeams,
   findPeople,
+  searchTasks,
   getTask,
+  getTaskActivity,
   // The writes (WS-104).
   addComment,
   createTask,

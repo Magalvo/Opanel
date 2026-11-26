@@ -133,6 +133,7 @@ describe("query (WS-132 test 1)", () => {
       query({ q: "log in", priority: ["high", "urgent"], type: undefined, limit: 5, epicId: [] }),
     ).toBe("?q=log+in&priority=high&priority=urgent&limit=5");
     expect(query({ sort: "-key" })).toBe("?sort=-key");
+    expect(query({ done: false })).toBe("?done=false");
     expect(query({})).toBe("");
   });
 });
@@ -232,7 +233,7 @@ describe("opanel_search_tasks (WS-132 test 4)", () => {
     expect(taskListItemPageSchema.parse(result.structuredContent)).toEqual(body);
     expect(textOf(result).startsWith(NOTICE)).toBe(true);
     expect(summaryOf(result)).toBe(
-      '2 tasks: OPA-1, a bug: "Task OPA" (OPA, In progress); WEB-3, a task: "Task WEB" ' +
+      '2 tasks: OPA-1, a bug: "Task OPA" (OPA, "In progress"); WEB-3, a task: "Task WEB" ' +
         '(WEB, backlog). More: call opanel_search_tasks with cursor "n1".',
     );
   });

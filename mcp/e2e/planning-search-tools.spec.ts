@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-import { scopesOfRole } from "@/lib/schemas/agents";
 import { activityPageSchema } from "@/lib/schemas/activity";
+import { scopesOfRole } from "@/lib/schemas/agents";
 import { epicPageSchema } from "@/lib/schemas/epics";
 import { labelListSchema } from "@/lib/schemas/labels";
 import { taskListItemPageSchema, taskPageSchema } from "@/lib/schemas/tasks";

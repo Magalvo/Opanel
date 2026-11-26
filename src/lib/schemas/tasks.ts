@@ -186,11 +186,15 @@ export const taskFilterShape = {
 
 export type TaskFilter = z.output<z.ZodObject<typeof taskFilterShape>>;
 
-function dueInOrder(query: { dueFrom?: string | undefined; dueTo?: string | undefined }): boolean {
+/** A due range in order: `dueFrom` on or before `dueTo` (WS-116); the MCP tools reuse it. */
+export function dueInOrder(query: {
+  dueFrom?: string | undefined;
+  dueTo?: string | undefined;
+}): boolean {
   return query.dueFrom === undefined || query.dueTo === undefined || query.dueFrom <= query.dueTo;
 }
 
-const DUE_ORDER = { path: ["dueTo"], message: "Not before dueFrom." };
+export const DUE_ORDER = { path: ["dueTo"], message: "Not before dueFrom." };
 
 export const taskListQuerySchema = paginationQuerySchema
   .extend({
