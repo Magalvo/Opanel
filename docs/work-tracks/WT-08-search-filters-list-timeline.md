@@ -1,7 +1,7 @@
 # WT-08 — Search, filters, list view, activity timeline
 
-- Status: Approved by the owner on 2026-11-24: decisions 1 to 13, proposals P1 to P3
-  and questions 1 to 9 as recommended.
+- Status: Done (approved by the owner on 2026-11-24: decisions 1 to 13, proposals P1 to P3
+  and questions 1 to 9 as recommended; done on 2026-11-26 by WI-131)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 4: epics "filtered
   or grouped" on the board; section 8: search and filters; section 9: activity history;
   section 11: no saved filters), [0004](../canonical/0004-api-conventions.md) (section 5:
@@ -232,28 +232,59 @@ beside D.
 
 ## Exit criteria
 
-- [ ] A Member searches by a key, by words of a title and by a word's prefix, and finds the
+Checked on 2026-11-26 by WI-131, each against the test that proves it.
+
+- [x] A Member searches by a key, by words of a title and by a word's prefix, and finds the
       tasks; a task whose title or description changes is found by its new words at once.
-- [ ] Each filter of decision 1, alone and combined, returns exactly the matching tasks on
+      (`task-filter.integration.test.ts`, "text search": "finds a key, words, a prefix and
+      words of the description", "finds a task by its new title as soon as it is renamed",
+      "finds a task by the new words of its description as soon as it is edited";
+      `tests/e2e/search-flow.spec.ts`; `tests/e2e/task-list.spec.ts`.)
+- [x] Each filter of decision 1, alone and combined, returns exactly the matching tasks on
       the board list, the backlog and the list across projects (integration tests, one per
-      filter, and one for any-of and all-of).
-- [ ] An agent restricted to some projects never sees another project's task through the
+      filter, and one for any-of and all-of). (`task-filter.integration.test.ts`, "the board
+      list's filters, one at a time", "the board list's filters together", "the backlog's
+      filters, one at a time" and "the backlog's filters"; `all-tasks.integration.test.ts`,
+      "each filter across projects" and "applies the filters of WS-116 across projects".)
+- [x] An agent restricted to some projects never sees another project's task through the
       list or the activity, and every page of a restricted list is full.
-- [ ] The list across projects sorts by each `sort` field both ways, across pages, with no
+      (`all-tasks.integration.test.ts`, "gives a restricted agent full pages of its projects
+      only" and "answers 404 for an unknown project and 403 for one outside an agent's
+      reach"; `activity.integration.test.ts`, "answers 404 for a deleted or unknown task,
+      and 403 outside the caller's reach"; `tests/e2e/search-flow.spec.ts`.)
+- [x] The list across projects sorts by each `sort` field both ways, across pages, with no
       task repeated or missed while tasks are written meanwhile.
-- [ ] A Member filters the board, shares the URL, and another Member opening it sees the
+      (`all-tasks.integration.test.ts`, "sort=%s gives every task once, in order, over pages
+      of 2", "sort=%s gives every task left alone once while others are written between
+      pages" and "does not give a task twice when it is updated between pages of -updated".
+      A task changed between pages may move past the cursor, as WS-118 question 2 accepted.)
+- [x] A Member filters the board, shares the URL, and another Member opening it sees the
       same filter; on a filtered board, a task changed elsewhere to match appears, and one
-      changed to stop matching leaves, with no reload.
-- [ ] The task page shows changes and comments in order, each with its actor, an agent with
+      changed to stop matching leaves, with no reload. (`tests/e2e/filters.spec.ts`, "a
+      filtered board writes its filter to the URL, and the link shows the same cards" and "a
+      filtered board follows changes made elsewhere, with no reload".)
+- [x] The task page shows changes and comments in order, each with its actor, an agent with
       its badge, and names of deleted columns and teams shown as deleted.
-- [ ] A Viewer reads everything this track adds and writes nothing new; every new endpoint
-      enforces `tasks:read`.
-- [ ] `docs/agents.md` and its doc check cover the new endpoints and filters; the OpenAPI
+      (`tests/e2e/timeline.spec.ts`; `tests/e2e/search-flow.spec.ts`;
+      `activity-text.test.tsx`; `activity.integration.test.ts`, "answers a deleted team and
+      column with no name, and a renamed team by its new name".)
+- [x] A Viewer reads everything this track adds and writes nothing new; every new endpoint
+      enforces `tasks:read`. (`tasks/route.integration.test.ts`, "answers a Viewer, and
+      refuses a token without tasks:read with 403"; the activity route's `route.integration.test.ts`, the Viewer's page and "refuses a token without tasks:read
+      with 403"; `src/lib/openapi/routes.test.ts`, "access is declared, and route() enforces
+      it". The track adds no write.)
+- [x] `docs/agents.md` and its doc check cover the new endpoints and filters; the OpenAPI
       document describes them; docs 0003 and 0004 carry the approved proposals.
-- [ ] Search and the list across projects answer within the limits item A's work-spec
-      sets, measured with 50 000 tasks.
-- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
-      `pnpm openapi:generate` leaving no diff.
+      (`scripts/agents-guide.test.ts`, the three WS-131 tests; `document.test.ts`,
+      "describes a task's activity…" and "describes the list of tasks across projects…";
+      P1 in doc 0004 section 5, P2 and P3 in doc 0003 sections 8 and 4.)
+- [x] Search and the list across projects answer within the limits item A's work-spec
+      sets, measured with 50 000 tasks. (WS-116 and WS-118 "Measurements": search and the
+      default order meet the 100 ms limit; the board order and four sorts that no index
+      serves miss it, which the owner accepted on 2026-11-24, with the follow-up on task
+      lists no index orders.)
+- [x] The full quality gate passes on `main`, with `pnpm db:generate` and
+      `pnpm openapi:generate` leaving no diff. (WS-131 "Implementation record".)
 
 ## Risks and open questions
 

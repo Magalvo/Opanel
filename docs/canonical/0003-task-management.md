@@ -3,7 +3,8 @@
 - Status: **Approved** (2026-11-12)
 - Date: 2026-11-12
 - Amends: [0001](0001-ai-qa-agents-and-triage.md) (human roles, task links, see section 12)
-- Amended by: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) decision 9 (section 7: the `task_links` table and its first type; applied 2026-11-20 by WI-094)
+- Amended by: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) decision 9 (section 7: the `task_links` table and its first type; applied 2026-11-20 by WI-094);
+  [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) proposals P2 and P3 (sections 8 and 4: search, the list view, the epic filter; applied 2026-11-26 by WI-131)
 
 ## 1. Context
 
@@ -101,7 +102,7 @@ sets it. An agent-filed bug arrives with a severity and priority `none`.
 
 **Epics** have a title, description, status (`open` or `closed`), optional start and
 target dates, and show progress as done tasks and done story points over their totals.
-Epics are not cards on the board; the board can be filtered or grouped by epic.
+Epics are not cards on the board; the board can be filtered by epic.
 
 ## 5. Board, columns and backlog
 
@@ -178,6 +179,8 @@ deleted tasks (WS-090).
   (including "filed by an agent"), label, epic, sprint, priority, severity, due date range.
 - Filters apply to the board and to a list view with sortable columns.
 - The current filter lives in the URL, so a filtered view can be shared as a link.
+- Search uses the `simple` configuration, so it treats every language alike; a key finds
+  its task. The list view lists tasks across projects; the sprint filter comes with WT-10.
 
 ## 9. Activity history
 

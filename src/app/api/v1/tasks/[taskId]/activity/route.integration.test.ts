@@ -83,4 +83,15 @@ describe("GET /api/v1/tasks/{taskId}/activity (WS-117)", () => {
     ]);
     expect(anonymous.status).toBe(401);
   });
+
+  it("refuses a token without tasks:read with 403 (WS-131)", async () => {
+    await setup();
+    const agent = await createTestAgent({ name: "Projects only", scopes: ["projects:read"] });
+    const { token } = await createTestToken(agent.id);
+
+    const response = await GET(bearerRequest("/api/v1/tasks/OPA-1/activity", token), task("OPA-1"));
+
+    expect(response.status).toBe(403);
+    expect(problemSchema.parse(await response.json()).code).toBe("forbidden");
+  });
 });

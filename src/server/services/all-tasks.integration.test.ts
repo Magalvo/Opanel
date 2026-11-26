@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
+import { submitBugReportRequestSchema } from "@/lib/schemas/bug-reports";
 import { allTasksQuerySchema, type TaskListItem } from "@/lib/schemas/tasks";
 import { type Actor, agentActor } from "@/server/auth/actor";
 import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
@@ -8,11 +9,14 @@ import { getDb } from "@/server/db/client";
 import { ApiError } from "@/server/http/errors";
 import { decodeTaskListCursor, encodeTaskListCursor } from "@/server/http/pagination";
 
+import { fileBugReport } from "./bug-reports";
 import { listColumns } from "./columns";
+import { createEpic } from "./epics";
 import { createLabel } from "./labels";
 import { archiveProject, createProject } from "./projects";
 import { recordingDb } from "./recording-db-testing";
 import { createTask, deleteTask, listAllTasks, updateTask } from "./tasks";
+import { createTeam } from "./teams";
 
 // The list of tasks across projects (WS-118 tests 2 to 9).
 
@@ -194,6 +198,93 @@ function compare(sort: string) {
   };
 }
 
+describe("listAllTasks: each filter across projects (WS-131 test 6)", () => {
+  /**
+   * In OPA and in WEB alike: task 1 on the board matches every filter below, task 2 in the
+   * backlog matches none of them but `done=false`, `reporterKind=human` and its own due
+   * date. OPA-3 is a bug an agent filed; WEB has no such task.
+   */
+  async function setupEach() {
+    const managerAccount = await createTestAccount({
+      name: "Manager",
+      email: "manager@example.com",
+      role: "manager",
+    });
+    const manager = testActor(managerAccount);
+    const miaAccount = await createTestAccount({
+      name: "Mia",
+      email: "mia@example.com",
+      role: "member",
+    });
+    const mia = testActor(miaAccount);
+    const team = await createTeam(manager, { name: "Frontend" });
+    const labels: string[] = [];
+    const epics: string[] = [];
+    for (const key of ["OPA", "WEB"]) {
+      await createProject(manager, { key, name: key });
+      const label = await createLabel(mia, key, { name: "red", colour: "red" });
+      const epic = await createEpic(manager, key, { title: "Launch" });
+      labels.push(label.id);
+      epics.push(epic.id);
+      await createTask(mia, key, {
+        title: "Login fails on Safari",
+        type: "bug",
+        severity: "high",
+        priority: "urgent",
+        assigneeAccountId: miaAccount.id,
+        assigneeTeamId: team.id,
+        epicId: epic.id,
+        labelIds: [label.id],
+        dueDate: "2030-01-10",
+      });
+      await createTask(manager, key, {
+        title: "Plain notes",
+        type: "story",
+        priority: "low",
+        columnId: null,
+        dueDate: "2030-02-01",
+      });
+    }
+    const scopes = ["projects:read", "tasks:read", "reports:write"] as const;
+    const agent = await createTestAgent({ name: "QA Bot", role: "qa_agent", scopes: [...scopes] });
+    const bot = agentActor({ accountId: agent.id, role: "qa_agent", scopes, projectIds: null });
+    await fileBugReport(
+      bot,
+      "OPA",
+      submitBugReportRequestSchema.parse({ title: "Checkout returns 500", fingerprint: "f-1" }),
+    );
+    return { mia, miaAccount, team, labels, epics };
+  }
+
+  type Each = Awaited<ReturnType<typeof setupEach>>;
+
+  const cases: [string, (s: Each) => Record<string, string | string[]>, string[]][] = [
+    ["no filter", () => ({}), ["OPA-1", "OPA-2", "OPA-3", "WEB-1", "WEB-2"]],
+    ["q", () => ({ q: "login" }), ["OPA-1", "WEB-1"]],
+    ["type", () => ({ type: "bug" }), ["OPA-1", "OPA-3", "WEB-1"]],
+    ["category", () => ({ category: "todo" }), ["OPA-1", "OPA-3", "WEB-1"]],
+    ["done=true", () => ({ done: "true" }), []],
+    ["done=false", () => ({ done: "false" }), ["OPA-1", "OPA-2", "OPA-3", "WEB-1", "WEB-2"]],
+    ["assigneeTeamId", (s) => ({ assigneeTeamId: s.team.id }), ["OPA-1", "WEB-1"]],
+    ["assigneeAccountId", (s) => ({ assigneeAccountId: s.miaAccount.id }), ["OPA-1", "WEB-1"]],
+    ["reporterAccountId", (s) => ({ reporterAccountId: s.miaAccount.id }), ["OPA-1", "WEB-1"]],
+    ["reporterKind=agent", () => ({ reporterKind: "agent" }), ["OPA-3"]],
+    ["reporterKind=human", () => ({ reporterKind: "human" }), ["OPA-1", "OPA-2", "WEB-1", "WEB-2"]],
+    ["labelId, one per project", (s) => ({ labelId: s.labels }), ["OPA-1", "WEB-1"]],
+    ["epicId, one per project", (s) => ({ epicId: s.epics }), ["OPA-1", "WEB-1"]],
+    ["priority", () => ({ priority: "urgent" }), ["OPA-1", "WEB-1"]],
+    ["severity", () => ({ severity: "high" }), ["OPA-1", "WEB-1"]],
+    ["dueFrom", () => ({ dueFrom: "2030-01-15" }), ["OPA-2", "WEB-2"]],
+    ["dueTo", () => ({ dueTo: "2030-01-10" }), ["OPA-1", "WEB-1"]],
+    ["projectId", () => ({ projectId: "WEB" }), ["WEB-1", "WEB-2"]],
+  ];
+
+  it.each(cases)("%s", async (_name, query, expected) => {
+    const s = await setupEach();
+    expect(await keys(s.mia, query(s))).toEqual(expected);
+  });
+});
+
 describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
   const sorts = ["key", "title", "priority", "dueDate", "created", "updated"].flatMap((s) => [
     s,
@@ -219,6 +310,46 @@ describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
     expect(paged.map((task) => task.id)).toEqual(all.map((task) => task.id));
     expect(all.map((task) => task.id)).toEqual([...all].sort(compare(sort)).map((t) => t.id));
   });
+
+  it.each(sorts)(
+    "sort=%s gives every task left alone once while others are written between pages (WS-131)",
+    async (sort) => {
+      const { mia } = await sortable();
+      const before = (await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "100" })))
+        .items;
+      const first = await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "2" }));
+      if (first.nextCursor === null) throw new Error("one page only");
+
+      // Between the pages: a new task, and a change to one task of the first page.
+      await createTask(mia, "OPA", { title: "Arrived meanwhile", priority: "urgent" });
+      const [changed] = first.items;
+      if (!changed) throw new Error("empty page");
+      await updateTask(mia, changed.key, {
+        title: "Changed meanwhile",
+        priority: "low",
+        version: changed.version,
+      });
+
+      const seen = first.items.map((task) => task.id);
+      let cursor: string | undefined = first.nextCursor;
+      while (cursor !== undefined) {
+        const page = await listAllTasks(
+          mia,
+          allTasksQuerySchema.parse({ sort, limit: "2", cursor }),
+        );
+        seen.push(...page.items.map((task) => task.id));
+        cursor = page.nextCursor ?? undefined;
+      }
+
+      const leftAlone = before.map((task) => task.id).filter((id) => id !== changed.id);
+      for (const id of leftAlone) {
+        expect(
+          seen.filter((seenId) => seenId === id),
+          id,
+        ).toHaveLength(1);
+      }
+    },
+  );
 
   it("does not give a task twice when it is updated between pages of -updated", async () => {
     const { mia } = await sortable();
