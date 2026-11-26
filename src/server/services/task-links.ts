@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import type { TaskLinkType } from "@/lib/schemas/bug-reports";
 import { MAX_TASK_LINKS, type TaskLinkRequest } from "@/lib/schemas/task-links";
 import type { Task } from "@/lib/schemas/tasks";
-import { type Actor, requirePermission } from "@/server/auth/actor";
+import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { invalidRequest, linkExists, notFound, tooManyLinks } from "@/server/http/errors";
 
@@ -58,6 +58,8 @@ async function lockPair(
 ): Promise<{ self: LinkedTask; other: LinkedTask }> {
   const self = await findLinkedTask(tx, ref);
   if (!self) throw notFound("There is no such task.");
+  // Out of reach before anything about the other task is said (WT-05 decision 7).
+  requireProjectAccess(actor, self.projectId);
   const other = await findLinkedTask(tx, otherRef);
   if (!other) throw otherTaskError("There is no such task.");
   if (other.id === self.id) throw otherTaskError("A task cannot be linked to itself.");

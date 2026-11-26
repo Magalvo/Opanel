@@ -127,7 +127,7 @@ async function readNames(executor: Executor, actor: Actor, rows: EventRow[]): Pr
     );
     for (const row of found) names.accounts.set(row.id, row);
   }
-  const named: [keyof Omit<Names, "accounts">, SQL][] = [
+  const named: [keyof Omit<Names, "accounts" | "hiddenTasks">, SQL][] = [
     ["teams", sql`select id, name from teams`],
     ["epics", sql`select id, title as name from epics`],
     ["columns", sql`select id, name from columns`],

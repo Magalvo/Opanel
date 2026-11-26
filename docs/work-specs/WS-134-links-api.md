@@ -326,8 +326,35 @@ Risks:
 
 ## Implementation record
 
-_Filled in when the work is done._
+- (0fcf170) Test 1 and the problem-code list ran red on the missing schemas and codes; the
+  request and query schemas, the contracts and `link_exists`/`too_many_links` made them
+  green. Two existing tests that named `blocks` as an unknown type, or listed only
+  `regression_of`, now follow the four types.
+- (2d1208c) Test 2 ran red on the old checks; the schema changes and the generated
+  `0024_task_links_types` migration made it green.
+- (89d3568) Tests 3 to 12 ran red on the missing service; `src/server/services/task-links.ts`,
+  `loadLinks` with the actor's reach, and triage's `insertLink` made them green.
+- (6a64d22) Test 13 ran red on the stored task out of reach, test 14 on the missing
+  sentences, test 16 on the `blocks` link in the bug section; each then passed.
+- (d7d0fbd) The route and test 15; `pnpm openapi:generate` (test 17, red until then in
+  `document.test.ts` and `routes.test.ts`).
+- The canonical updates of section 10 (question 9).
+- GATE_PLACEHOLDER
 
 ## Deviations
 
-_None yet._
+1. **`TASK_LINK_TYPES` and `taskLinkSchema` did not move** to `src/lib/schemas/task-links.ts`
+   (section 3): that file imports `taskRefSchema` and `taskSchema` from `tasks.ts`, so
+   moving them would make an import cycle. They stay in `bug-reports.ts` and `tasks.ts`,
+   widened and described there.
+2. **`loadLinks` stayed in `tasks.ts`** (sections 4 and 5), gaining the actor, for the same
+   reason: `task-links.ts` imports `answerTask` and `matchesTask`, newly exported from
+   `tasks.ts`, and `tasks.ts` imports nothing from it.
+3. **No unique-violation mapping** (section 4 step 6): both task rows are locked
+   `for update` before the existence check, so two identical requests run one after the
+   other and the second sees the row; test 5 covers it.
+4. **Test 10's triage case is in `task-links.integration.test.ts`**, beside WS-090's link
+   tests, not in `triage.integration.test.ts`; **test 16 is in `task-detail.test.tsx`**,
+   where the bug section's tests already are, not in a new file.
+5. **Test 15 was written with the route** in one step, so it was not seen failing on its
+   own; the contracts it serves had failed `routes.test.ts` (test 17) until then.

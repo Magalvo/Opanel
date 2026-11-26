@@ -36,6 +36,7 @@ import {
   unarchiveProject,
   updateProject,
 } from "./projects";
+import { addTaskLink, removeTaskLink } from "./task-links";
 import {
   createTask,
   deleteTask,
@@ -120,6 +121,15 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
       severity: "medium",
     }),
   "bug-reports.listBugReports": (actor, f) => listBugReports(actor, f.task.key, { limit: 10 }),
+  // A link to itself: the reach is checked before the other task (WS-134).
+  "task-links.addTaskLink": (actor, f) =>
+    addTaskLink(actor, f.task.key, { type: "blocks", direction: "outgoing", taskId: f.task.key }),
+  "task-links.removeTaskLink": (actor, f) =>
+    removeTaskLink(actor, f.task.key, {
+      type: "blocks",
+      direction: "outgoing",
+      taskId: f.task.key,
+    }),
   "triage.getTriage": (actor, f) => getTriage(actor, f.project.key),
   "triage.updateTriage": (actor, f) =>
     updateTriage(actor, f.project.id, { triageTeamId: null, version: f.project.version }),
@@ -189,6 +199,9 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "task-filter.taskFilterWhere":
     "internal: called by listTasks and listBacklog, which have checked",
   "tasks.findLiveTask": "internal: returns the task's project, which its callers check",
+  "tasks.answerTask": "internal: called by addTaskLink, which has checked (WS-134)",
+  "tasks.matchesTask": "internal: a SQL condition on a task reference",
+  "task-links.insertLink": "internal: called by addTaskLink and fileBugReport, which have checked",
   "teams.listTeams": "teams are not project-scoped",
   "teams.getTeam": "teams are not project-scoped",
   "teams.createTeam": "teams are not project-scoped",

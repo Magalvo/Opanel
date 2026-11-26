@@ -70,12 +70,12 @@ Events are small and carry identifiers, not full entities:
 }
 ```
 
-Event types in v1 (amended by WT-04 decision 1 and WT-07 decision 12):
+Event types in v1 (amended by WT-04 decision 1, WT-07 decision 12 and WS-134):
 
 | `type`            | `entity`  | `version`                                           | Sent by                                       |
 | ----------------- | --------- | --------------------------------------------------- | --------------------------------------------- |
 | `task.created`    | `task`    | the task's after the write                          | creating a task                               |
-| `task.updated`    | `task`    | the task's after the write                          | editing, assigning, its epic                  |
+| `task.updated`    | `task`    | the task's after the write                          | editing, assigning, its epic, linking (both)  |
 | `task.moved`      | `task`    | the task's after the write                          | moving, also within one column                |
 | `task.deleted`    | `task`    | the task's after the write                          | deleting                                      |
 | `task.restored`   | `task`    | the task's after the write                          | restoring a deleted task                      |

@@ -141,6 +141,8 @@ Rules:
   | `409`  | `too_many_tokens`            | The agent already holds 10 usable tokens                        | WS-075    |
   | `409`  | `label_name_taken`           | Another label of the project has that name, ignoring case       | WS-107    |
   | `409`  | `too_many_labels`            | The project already has 200 labels                              | WS-107    |
+  | `409`  | `link_exists`                | The two tasks already have that link                            | WS-134    |
+  | `409`  | `too_many_links`             | A task of the link already has 100 links                        | WS-134    |
   | `409`  | `agent_disabled`             | The agent is disabled                                           | WS-075    |
   | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process          | WS-047    |
   | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full       | WS-056    |

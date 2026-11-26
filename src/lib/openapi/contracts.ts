@@ -33,7 +33,6 @@ import {
   updateColumnContract,
 } from "@/lib/schemas/columns";
 import { createCommentContract, listCommentsContract } from "@/lib/schemas/comments";
-import { addTaskLinkContract, removeTaskLinkContract } from "@/lib/schemas/task-links";
 import {
   createEpicContract,
   getEpicContract,
@@ -59,6 +58,7 @@ import {
   updateProjectContract,
 } from "@/lib/schemas/projects";
 import { listBugReportsContract } from "@/lib/schemas/task-bug-reports";
+import { addTaskLinkContract, removeTaskLinkContract } from "@/lib/schemas/task-links";
 import {
   createTaskContract,
   deleteTaskContract,

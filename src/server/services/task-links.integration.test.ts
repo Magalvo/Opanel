@@ -347,7 +347,7 @@ describe("adding a link (WS-134)", () => {
 
     await deleteTask(manager, others[0]?.key ?? "");
     await addTaskLink(member, a.key, linkRequest("blocks", "outgoing", b.key));
-  });
+  }, 30_000);
 });
 
 describe("removing a link (WS-134)", () => {

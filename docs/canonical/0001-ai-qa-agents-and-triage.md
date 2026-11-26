@@ -208,7 +208,8 @@ In one database transaction:
    even when deduplicated). The table is append-only for the runtime role.
 6. **Audit**: `bug_report.triaged` with the report, the task, the outcome and the team,
    against the agent's account; the task's history records `created` or
-   `reported_again` with the agent as actor.
+   `reported_again` with the agent as actor and, for a regression, `linked` on the new
+   task and on the closed one, whose version and `task.updated` follow (WS-134).
 
 **Concurrency.** Dedupe is serialised by the advisory lock of step 1, not by a unique
 index: whether a task is open depends on its column's category, which a partial index on
