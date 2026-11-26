@@ -1,6 +1,6 @@
 # WI-135 — Sub-tasks in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, with WS-135)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item C)
 - Depends on: [WI-133](WI-133-subtasks-api.md) (item A, done)
 - Work-spec: [WS-135](../work-specs/WS-135-subtasks-ui.md)

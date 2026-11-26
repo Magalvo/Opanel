@@ -1,6 +1,6 @@
 # WS-135 — Sub-tasks in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
 - Work-item: [WI-135](../work-items/WI-135-subtasks-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 7 (sub-tasks);
   [0002](../canonical/0002-realtime-sync.md) section 3 (`task.updated`);
