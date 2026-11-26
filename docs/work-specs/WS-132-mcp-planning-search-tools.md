@@ -1,6 +1,6 @@
 # WS-132 — MCP tools for the backlog, labels, epics, search and activity
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, questions 1 to 3 as recommended)
 - Work-item: [WI-132](../work-items/WI-132-mcp-planning-search-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) sections 4 (the tools, "new
   tools are added by work-items"), 5 (inputs, outputs, errors) and 6 (data, not

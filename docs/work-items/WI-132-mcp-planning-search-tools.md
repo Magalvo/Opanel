@@ -1,6 +1,6 @@
 # WI-132 — MCP tools for the backlog, labels, epics, search and activity
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-26, with WS-132)
 - Work-track: [WT-11](../work-tracks/WT-11-mcp-server.md) (after item E; the follow-ups of
   WT-07 question 7, WT-08 question 8 and WS-104 question 2)
 - Depends on: WT-07 and WT-08, both done
