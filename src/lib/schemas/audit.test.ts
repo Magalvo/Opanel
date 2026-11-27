@@ -15,7 +15,13 @@ describe("auditActionSchema", () => {
   });
 
   it("includes the actions of WT-02 and of WS-026, WS-028, WS-029, WS-033, WS-075 and WS-087", () => {
-    expect(AUDIT_ACTIONS).toHaveLength(41);
+    expect(AUDIT_ACTIONS).toHaveLength(44);
+    // Sprints (WS-140); item D adds sprint.started and sprint.completed.
+    expect(AUDIT_ACTIONS.filter((action) => action.startsWith("sprint."))).toEqual([
+      "sprint.created",
+      "sprint.updated",
+      "sprint.deleted",
+    ]);
     // Labels (WS-107).
     expect(AUDIT_ACTIONS.filter((action) => action.startsWith("label."))).toEqual([
       "label.created",

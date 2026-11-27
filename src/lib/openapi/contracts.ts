@@ -57,6 +57,13 @@ import {
   unarchiveProjectContract,
   updateProjectContract,
 } from "@/lib/schemas/projects";
+import {
+  createSprintContract,
+  deleteSprintContract,
+  getSprintContract,
+  listSprintsContract,
+  updateSprintContract,
+} from "@/lib/schemas/sprints";
 import { listBugReportsContract } from "@/lib/schemas/task-bug-reports";
 import { addTaskLinkContract, removeTaskLinkContract } from "@/lib/schemas/task-links";
 import {
@@ -141,6 +148,11 @@ export const contracts: readonly EndpointContract[] = [
   createEpicContract,
   getEpicContract,
   updateEpicContract,
+  listSprintsContract,
+  createSprintContract,
+  getSprintContract,
+  updateSprintContract,
+  deleteSprintContract,
   listCommentsContract,
   createCommentContract,
   listActivityContract,

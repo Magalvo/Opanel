@@ -117,6 +117,7 @@ export function project(name = "Opanel", key = "OPA") {
     name,
     description: "",
     archivedAt: null,
+    sprintsEnabled: false,
     version: 1,
     createdAt: AT,
     updatedAt: AT,

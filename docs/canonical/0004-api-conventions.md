@@ -145,6 +145,10 @@ Rules:
   | `409`  | `too_many_links`             | A task of the link already has 100 links                        | WS-134    |
   | `409`  | `has_subtasks`               | The task has live sub-tasks, so it cannot be deleted            | WS-133    |
   | `409`  | `too_many_subtasks`          | The parent already has 100 live sub-tasks                       | WS-133    |
+  | `409`  | `sprints_disabled`           | The project does not use sprints                                | WS-140    |
+  | `409`  | `sprint_active`              | A sprint is active, so sprints cannot be turned off             | WS-140    |
+  | `409`  | `sprint_not_planned`         | Only a planned sprint can be deleted                            | WS-140    |
+  | `409`  | `sprint_completed`           | The sprint is completed, so it cannot change                    | WS-140    |
   | `409`  | `agent_disabled`             | The agent is disabled                                           | WS-075    |
   | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process          | WS-047    |
   | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full       | WS-056    |

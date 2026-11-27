@@ -19,6 +19,8 @@ const TRACK_PREFIXES = [
   "/api/v1/tasks",
   "/api/v1/epics",
   "/api/v1/teams",
+  // WS-140: sprints, and the sprints setting through PATCH /projects/{projectId}.
+  "/api/v1/sprints",
 ];
 
 const ANY_ID = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
@@ -58,6 +60,9 @@ describe("a Viewer and the write endpoints of WT-03", () => {
         "POST /api/v1/tasks/{taskId}/comments",
         "PATCH /api/v1/epics/{epicId}",
         "POST /api/v1/teams",
+        "POST /api/v1/projects/{projectId}/sprints",
+        "PATCH /api/v1/sprints/{sprintId}",
+        "DELETE /api/v1/sprints/{sprintId}",
       ]),
     );
   });

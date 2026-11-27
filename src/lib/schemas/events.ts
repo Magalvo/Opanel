@@ -59,6 +59,13 @@ const epicChanged = z.strictObject({
   version,
 });
 
+const sprintChanged = z.strictObject({
+  ...common,
+  type: z.literal("sprint.changed"),
+  entity: z.literal("sprint"),
+  version: version.nullable().meta({ description: "`null` when the sprint was deleted." }),
+});
+
 const projectChanged = z.strictObject({
   ...common,
   type: z.literal("project.changed"),
@@ -77,6 +84,7 @@ export const projectEventSchema = z
     columnChanged,
     labelChanged,
     epicChanged,
+    sprintChanged,
     projectChanged,
   ])
   .refine((event) => event.type !== "project.changed" || event.entityId === event.projectId, {
@@ -99,6 +107,7 @@ export const PROJECT_EVENT_TYPES: readonly ProjectEventType[] = [
   "column.changed",
   "epic.changed",
   "label.changed",
+  "sprint.changed",
   "project.changed",
 ];
 
@@ -108,7 +117,7 @@ export const projectEventsContract = {
   summary: "Stream a project's events",
   description:
     "Server-Sent Events (WS-047): every change to the project's tasks, comments, columns, " +
-    "epics and the project itself, as it is committed. Each event says what changed, not " +
+    "epics, labels, sprints and the project itself, as it is committed. Each event says what changed, not " +
     "how: read the entity again through its endpoint. Delivery is at most once; after a " +
     "reconnection, reload what you show. At most 10 streams per account and app process.",
   access: { kind: "permission", permission: "tasks:read" },

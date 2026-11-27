@@ -8,10 +8,17 @@ import type {
   ProjectQuery,
   UpdateProjectRequest,
 } from "@/lib/schemas/projects";
-import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
+import { type Actor, can, requirePermission, requireProjectAccess } from "@/server/auth/actor";
 import { type Database, getDb } from "@/server/db/client";
 import { columns, projects } from "@/server/db/schema";
-import { notFound, projectArchived, projectKeyTaken, versionConflict } from "@/server/http/errors";
+import {
+  forbidden,
+  notFound,
+  projectArchived,
+  projectKeyTaken,
+  sprintActive,
+  versionConflict,
+} from "@/server/http/errors";
 import { decodeNameCursor, encodeNameCursor } from "@/server/http/pagination";
 
 import { recordAudit } from "./audit";
@@ -30,7 +37,7 @@ const DEFAULT_COLUMNS = [
 ] as const;
 
 const PROJECT_COLUMNS = sql`
-  p.id, p.key, p.name, p.description, p.version,
+  p.id, p.key, p.name, p.description, p.sprints_enabled, p.version,
   to_char(p.archived_at at time zone 'utc', ${ISO_MS}) as archived_at,
   to_char(p.created_at at time zone 'utc', ${ISO_MS}) as created_at,
   to_char(p.updated_at at time zone 'utc', ${ISO_MS}) as updated_at`;
@@ -40,6 +47,7 @@ interface ProjectRow extends Record<string, unknown> {
   key: string;
   name: string;
   description: string;
+  sprints_enabled: boolean;
   version: number;
   archived_at: string | null;
   created_at: string;
@@ -53,6 +61,7 @@ function toProject(row: ProjectRow): Project {
     name: row.name,
     description: row.description,
     archivedAt: row.archived_at,
+    sprintsEnabled: row.sprints_enabled,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -249,7 +258,16 @@ export async function updateProject(
   input: UpdateProjectRequest,
   db: Database = getDb(),
 ): Promise<Project> {
-  requirePermission(actor, "projects:manage");
+  // Each field needs its own permission (doc 0003 section 3, WS-140 section 4).
+  const needed = [
+    ...(input.name !== undefined || input.description !== undefined
+      ? (["projects:manage"] as const)
+      : []),
+    ...(input.sprintsEnabled === undefined ? [] : (["sprints:manage"] as const)),
+  ];
+  if (needed.length === 0 || !needed.every((permission) => can(actor, permission))) {
+    throw forbidden();
+  }
 
   return db.transaction(async (tx) => {
     const before = await findProject(tx, ref);
@@ -258,9 +276,10 @@ export async function updateProject(
 
     const name = input.name ?? before.name;
     const description = input.description ?? before.description;
+    const sprintsEnabled = input.sprintsEnabled ?? before.sprintsEnabled;
     const [updated] = await tx.execute<ProjectRow>(sql`
       update projects p
-      set name = ${name}, description = ${description},
+      set name = ${name}, description = ${description}, sprints_enabled = ${sprintsEnabled},
           version = p.version + 1, updated_at = now()
       where p.id = ${before.id} and p.version = ${input.version} and p.archived_at is null
       returning ${PROJECT_COLUMNS}`);
@@ -272,9 +291,18 @@ export async function updateProject(
       throw versionConflict(current);
     }
 
+    // The update holds the project's row, so no sprint can start in between (WS-140).
+    if (!sprintsEnabled) {
+      const [active] = await tx.execute(
+        sql`select 1 from sprints where project_id = ${before.id} and state = 'active'`,
+      );
+      if (active) throw sprintActive();
+    }
+
     const changed = [
       ...(name === before.name ? [] : ["name"]),
       ...(description === before.description ? [] : ["description"]),
+      ...(sprintsEnabled === before.sprintsEnabled ? [] : ["sprintsEnabled"]),
     ];
     if (changed.length > 0) {
       await recordAudit(tx, {
