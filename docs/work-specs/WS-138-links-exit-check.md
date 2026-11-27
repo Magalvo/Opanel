@@ -1,6 +1,7 @@
 # WS-138 — WT-09 end-to-end flow, agents guide and exit check
 
-- Status: Done (approved by the owner on 2026-11-27, questions 1 to 4 as recommended; done on 2026-11-27)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 4 as recommended; done on
+  2026-11-27)
 - Work-item: [WI-138](../work-items/WI-138-links-exit-check.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 7 (P1 to P3);
   [WT-09](../work-tracks/WT-09-subtasks-and-links.md) decision 13, proposals P1 to P3, exit
