@@ -1,6 +1,7 @@
 # WS-136 — Links in the UI
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 3 as recommended; done on
+  2026-11-27)
 - Work-item: [WI-136](../work-items/WI-136-links-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) section 7 (links and their
   readings); [0002](../canonical/0002-realtime-sync.md) section 3 (`task.updated`);
@@ -178,3 +179,44 @@ Questions for the owner, each with a recommendation:
 
 Risk: item E (the MCP link tools) touches no file here. Item F's end-to-end flow builds on
 test 8.
+
+## Implementation record
+
+- Red (47bfc79): 17 unit tests failed, all on the missing "Links" section or the old
+  "Regressed by". The e2e tests 8 to 10 and the `bugs.spec.ts` change were written in the
+  same commit.
+- Green (4a02284):
+  - `links-section.tsx` holds the section, the "Add link" dialog and "Remove".
+  - `link-readings.ts` holds the readings, which the timeline now imports.
+  - `task/api.ts` gains `searchTasks`, `addLink` and `removeLink`. `searchParents` and
+    `searchTasks` share `findTasks`, and `PARENT_SEARCH_SIZE` became `TASK_SEARCH_SIZE`.
+  - `TaskDetail` gains `linked()` (sections 3 and 4) and `linkRemoved()` (section 4).
+  - `BugSection` keeps only the reports.
+- Gate on 2026-11-27:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - `pnpm test:e2e` 143 of 143;
+  - Vitest 2651 of 2651 on three full runs. One other full run had one failure, which
+    the summary did not name. Two runs right after it passed. It is not in the files this
+    item touches as far as the passing runs show;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **Three bug-section tests were replaced, not edited.** In `task-detail.test.tsx`,
+   "links to the task it is a regression of…", "shows no Links section without links" and
+   WS-134 test 16's two cases checked the bug section's own links. Section 6 removes that
+   behaviour. WS-136 test 7 now covers what still holds, and tests 1 and 9 cover the rest.
+2. **"Remove" is an icon button.** It shows an ✕ with the tooltip "Remove", and its
+   accessible name is the one section 2 gives ("Remove link: blocks API-3"). A text
+   "Remove" on every row repeated the word down the list.
+3. **The focus moves to "Add link" once the page is no longer busy.** The button is
+   disabled while the removal and the read run, so moving the focus at once did nothing. A
+   ref marks the move, and an effect does it when `busy` clears.
+4. **The search results are at least 32 px tall** (`min-h-8 py-1.5`). Test 10 found that
+   the bare `h-auto` buttons failed axe's `target-size` rule. "Set parent" (WS-135) uses
+   the same buttons, which WS-135's check never opened, so it likely fails the same rule.
+   That is recorded as a follow-up, not fixed here.
+5. **A `404` on removal** reads the task and shows "That link was already removed." The
+   newer task is taken through `changedElsewhere()`, so unsaved edits keep their old
+   version, as for any change made elsewhere.
