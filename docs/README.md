@@ -465,6 +465,12 @@ Optimisations found by the same audit, none urgent:
   stored with an earlier `created_at` than the `created` one, although the update was sent
   after the create answered. Both take `now()`, the start of their transaction. Needs a
   work-item: find how that happens, rather than changing the order of the check.
+- **`tests/e2e/search-flow.spec.ts` can read the sort too early** (found in WI-135,
+  2026-11-26; WS-135 implementation record). It failed once in a full run and passed on two
+  runs alone. It reads the URL's `sort` right after its two "Sort by Priority" clicks, and
+  the rows it waits for were already in that order under the default sort, so the read can
+  come before the second click lands. Needs a small work-item: wait with
+  `expect(page).toHaveURL(/sort=-priority/)` before reading.
 
 From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none urgent:
 
