@@ -1,6 +1,6 @@
 # WI-140 — Sprints in the API
 
-- Status: Approved (approved by the owner on 2026-11-27, with WS-140)
+- Status: Done (approved by the owner on 2026-11-27, with WS-140; done on 2026-11-27)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item B)
 - Depends on: none (runs beside item A, story points)
 - Work-spec: [WS-140](../work-specs/WS-140-sprints-api.md)
@@ -15,26 +15,26 @@ changes (WT-10 decisions 3, 4, 8, 10 to 12).
 
 ## Acceptance criteria
 
-- [ ] Every project answers `sprintsEnabled`, `false` by default; `PATCH /projects/{id}`
+- [x] Every project answers `sprintsEnabled`, `false` by default; `PATCH /projects/{id}`
       with `sprintsEnabled` turns it on and off, needs `sprints:manage`, and writes
       `project.updated` in the audit log.
-- [ ] `POST /projects/{projectId}/sprints` creates a planned sprint with a name, an
+- [x] `POST /projects/{projectId}/sprints` creates a planned sprint with a name, an
       optional goal and both dates; an end date before the start date is a `400` on
       `endDate`; a project without sprints answers `409 sprints_disabled`.
-- [ ] `GET /projects/{projectId}/sprints` pages a project's sprints by start date, then
+- [x] `GET /projects/{projectId}/sprints` pages a project's sprints by start date, then
       creation, with a `state` filter; `GET /sprints/{sprintId}` answers one.
-- [ ] `PATCH /sprints/{sprintId}` edits the name, goal and dates with `version`; a
+- [x] `PATCH /sprints/{sprintId}` edits the name, goal and dates with `version`; a
       completed sprint is `409 sprint_completed`; a stale version is `409 version_conflict`.
-- [ ] `DELETE /sprints/{sprintId}` deletes a planned sprint; any other state is
+- [x] `DELETE /sprints/{sprintId}` deletes a planned sprint; any other state is
       `409 sprint_not_planned`.
-- [ ] Turning sprints off while a sprint is active is `409 sprint_active` (checked against
+- [x] Turning sprints off while a sprint is active is `409 sprint_active` (checked against
       a sprint made active directly in the database, until item D).
-- [ ] Creating, editing and deleting write `sprint.created`, `sprint.updated` and
+- [x] Creating, editing and deleting write `sprint.created`, `sprint.updated` and
       `sprint.deleted` in the audit log and send `sprint.changed` on the project stream
       (`version: null` on delete).
-- [ ] Members, Viewers and agents read sprints and cannot write them (`403`); a restricted
+- [x] Members, Viewers and agents read sprints and cannot write them (`403`); a restricted
       agent reads only its projects' sprints; an archived project's sprints are read-only.
-- [ ] The OpenAPI document describes the endpoints, `Sprint`, the codes and the event;
+- [x] The OpenAPI document describes the endpoints, `Sprint`, the codes and the event;
       doc 0002 carries proposal P3; the full quality gate passes.
 
 ## Notes

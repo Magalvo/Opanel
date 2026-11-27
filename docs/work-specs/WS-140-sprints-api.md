@@ -1,6 +1,7 @@
 # WS-140 — Sprints in the API
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 4 as recommended; done on
+  2026-11-27)
 - Work-item: [WI-140](../work-items/WI-140-sprints-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("create,
   start, complete sprints; enable sprints on a project") and 6 (sprints);
@@ -227,3 +228,56 @@ Risks:
   before item D's "Sprint 1" exists.
 - **A migration beside item A's**: the second to merge regenerates its own, as section 1
   says.
+
+## Implementation record
+
+- Red (a4e4b56): 15 tests failed across the 9 files of the test plan, each on what was missing:
+  the `sprints` table and `projects.sprints_enabled`, the modules
+  `src/lib/schemas/sprints.ts` and `src/server/services/sprints.ts`, `sprintsEnabled`, the
+  `sprint.changed` event, the codes and the sprint operations in the OpenAPI document.
+- Green (79e627e): migration `0026_sprints`; `src/server/db/schema/sprints.ts`;
+  `src/lib/schemas/sprints.ts` (schemas and the five contracts); `sprintsEnabled` on
+  `Project` and `UpdateProjectRequest`; `src/server/services/sprints.ts`; `updateProject`
+  checking permissions by field and refusing `sprint_active`; the two route files; the
+  sprint cursor in `src/server/http/pagination.ts`; the event, the three audit actions, the
+  four codes (with their `409` descriptions in `src/lib/openapi/responses.ts`); the no-op
+  `sprint.changed` case in `use-board.ts` and `use-backlog.ts`; docs 0002 (P3) and 0004
+  (the four codes); `Project` fixtures (UI tests, `mcp/src/testing.ts`) gained
+  `sprintsEnabled`. Then fa42300: the audit and problem code list tests name the new entries.
+- Gate on 2026-11-27:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2731 of 2731 (243 files), alone on the machine; two earlier full runs alongside
+    WI-139's gate had 5-second timeouts in unrelated tests, which passed when rerun;
+  - `pnpm test:e2e` 144 of 145; the one failure, `bugs.spec.ts` "a bug's detail with reports
+    is accessible in dark mode" (the board's first requests hung for 5 seconds after
+    the server started), also failed once when the spec ran alone, then the spec passed
+    6 of 6. It reads no sprint and no project setting;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433; WI-139 ran its own gate in
+    another worktree at the same time.
+
+## Deviations
+
+1. **A restricted agent gets `403`, not `404`, for another project's sprint list** (owner's
+   decision on 2026-11-27, during implementation). Section 6 and test 9 said `404` "as for
+   epics", but `listEpics` answers `403` (`findProjectRef` checks the restriction), and
+   `project-access.integration.test.ts` requires `403` from every project-scoped service.
+   Test 9 checks `403` for both the list and one sprint, and `404` for an unknown sprint.
+2. **The five sprint functions are in `project-access.integration.test.ts`**, whose
+   coverage test requires every exported service function to be classified; its fixture
+   turns sprints on and makes a sprint in each project.
+3. **`PATCH /projects/{projectId}` still names `projects:manage` in its contract**: a
+   contract names one permission, which `route()` checks before the handler. The service
+   checks each field (section 4), so the split takes effect once a role holds one
+   permission without the other; today both are held by the same roles. The operation's
+   description says which field needs which permission.
+4. **`createSprint` also checks the date order itself**, not only the request schema, so a
+   service caller gets the same `400` on `endDate` instead of the table's check failing.
+5. **Test 1's unknown-state row was fixed in the green commit**: it had no start time, so
+   `sprints_started_check` could fail before `sprints_state_check`.
+6. **`src/lib/schemas/events.test.ts` gained the `sprint.changed` examples**, a deleted
+   sprint's `null` version among them; its check that every event type has an example
+   requires one.
+7. **Doc 0002's new row names starting, completing and turning sprints on**, as P3 was
+   approved; those writes come with item D, and in this item only creating, editing and
+   deleting send `sprint.changed`.
