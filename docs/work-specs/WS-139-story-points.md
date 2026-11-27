@@ -1,6 +1,7 @@
 # WS-139 — Story points
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 3 as recommended; done on
+  2026-11-27)
 - Work-item: [WI-139](../work-items/WI-139-story-points.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("set …
   points"), 4 (`Story points`, epic progress) and 9 (history);
@@ -194,3 +195,50 @@ Risks:
   changes (the UI's and the MCP package's). New fields are not breaking for clients.
 - **A migration beside item B's**: the second to merge regenerates its own, as section 1
   says.
+
+## Implementation record
+
+- Red (e680517): every test of the plan failed for the missing piece: the column
+  (`story_points` does not exist), the field (`storyPoints` refused by the strict schemas,
+  `undefined` on answers), the epic fields, the sort value, and the UI (no "Story points"
+  row or input, no card badge, no "Points" column, the timeline's fallback sentence, no
+  points text on epics).
+- Green (953e682): migration `0026_task_story_points` (`numeric(4,1)` and
+  `tasks_story_points_check`), the column read by Drizzle in `mode: "number"`;
+  `storyPointsSchema`, `STORY_POINTS_MAX`, the field on `taskFields`, `createTaskFields`
+  and `updateTaskFields`, `UPDATABLE` and `TASK_SORTS` in `src/lib/schemas/tasks.ts`; the
+  three progress fields in `src/lib/schemas/epics.ts`; in `src/server/services/tasks.ts`
+  the `float8` read, the insert, the update, `EDITABLE` and `SORT_KEYS.storyPoints`; one
+  lateral subquery with `filter` clauses in `EPIC_SELECT`. UI: `formatPoints` and
+  `storyPointsName` in `task-meta.tsx`, the row and number input on the task page, the
+  card badge, the "Points" column, the timeline's words, the epic's points text.
+  `docs/agents.md`, the MCP search and update tool descriptions, and the fixtures of
+  `TaskSummary` and `Epic.progress` gained the new fields.
+- Gate on 2026-11-27:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2717 of 2717 (241 files). An earlier full run under load from another
+    worktree's Vitest had a timeout in `people-page.test.tsx` that passed alone and in this
+    run (timing, not this change);
+  - `pnpm test:e2e` 142 of 146 in the full run, and the other 4 (two accessibility
+    pages, `links-flow`, a `live-board` reorder; elements not shown in time, no axe
+    violation) passed on `--last-failed`. Full runs that overlapped item B's suite or
+    another worktree's Vitest timed out on board and live pages; the same specs pass
+    alone;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **Test 1 checks 1000 as an overflow, not as the check constraint.** `numeric(4,1)` holds
+   at most 999.9, so PostgreSQL refuses 1000 (code `22003`) before the check runs; the test
+   checks the constraint with -0.5, 1.25 (stored as 1.3) and 999.6 instead.
+2. **The timeline reads every points change as "changed the story points from … to …"**,
+   with `none` for no points ("from none to 3", "from 8 to none"), as section 6 gives a
+   value for `null`, rather than the "set" and "cleared" sentences of other fields. Its
+   fallback sentence for an unreadable value now uses the field's words ("the story
+   points", "the due date") instead of the raw field name.
+3. **The epic shows its points text only when at least one task has points**
+   (`unestimated < totalTasks`); "N not estimated" shows beside it. An epic with tasks
+   estimated at 0 points shows "0 / 0 points".
+4. **`opanel_update_task`'s description names story points** among the fields it changes,
+   beside the search tool's sort list that section 8 named.
