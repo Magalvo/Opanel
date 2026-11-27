@@ -131,7 +131,7 @@ test("an agent's reports show on the card and in the detail; a regression links 
   await links.getByRole("link", { name: `${created.taskKey} The login page crashes` }).click();
   await expect(page).toHaveURL(new RegExp(`/tasks/${created.taskKey}$`));
   const back = page.getByRole("region", { name: "Links" });
-  await expect(back.getByText("Regressed by")).toBeVisible();
+  await expect(back.getByText("Has regression")).toBeVisible();
   await expect(
     back.getByRole("link", { name: `${regression.taskKey} The login page crashes` }),
   ).toBeVisible();

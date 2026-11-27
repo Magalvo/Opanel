@@ -45,6 +45,7 @@ import {
 import { BugSection } from "./bug-section";
 import { currentOf, DetailsSection } from "./details-section";
 import { announceTaskChanged, announceTaskDeleted } from "./events";
+import { LinksSection } from "./links-section";
 import { SubtasksSection } from "./subtasks-section";
 
 export interface TaskDetailProps {
@@ -197,6 +198,31 @@ export function TaskDetail({
     setTask(task);
     setMessage(text);
     announceTaskChanged(task);
+  }
+
+  /**
+   * A link this page added or removed (WS-136 sections 3 and 4): shown like a save, but a
+   * version kept for a change elsewhere stays kept, since a link touches no field of the
+   * form, so the next save still shows the other person's version first.
+   */
+  function linked(task: Task, text: string) {
+    setTask(task);
+    setMessage(text);
+    announceTaskChanged(task);
+  }
+
+  /**
+   * The task read after this page removed a link: only that removal when the version is one
+   * higher, a change elsewhere too when it is higher still (WS-136 section 4).
+   */
+  function linkRemoved(current: Task, alreadyRemoved: boolean) {
+    const held = live.current.version;
+    if (alreadyRemoved || current.version !== held + 1) {
+      if (isNewer(held, current.version)) changedElsewhere(current);
+      if (alreadyRemoved) setMessage("That link was already removed.");
+      return;
+    }
+    linked(current, "Link removed.");
   }
 
   function conflict(current: Task) {
@@ -557,6 +583,15 @@ export function TaskDetail({
           setMessage("The project is archived.");
           getProject(project.key).then(setProject, () => undefined);
         }}
+      />
+      <LinksSection
+        task={task}
+        editable={editable}
+        busy={busy}
+        setBusy={setWriting}
+        onLinked={linked}
+        onRemoved={linkRemoved}
+        onFailure={failed}
       />
       <BugSection key={task.id} task={task} reports={data.reports} />
       <ActivitySection

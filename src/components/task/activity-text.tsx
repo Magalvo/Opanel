@@ -14,6 +14,7 @@ import { prioritySchema, taskTypeSchema } from "@/lib/schemas/tasks";
 
 import { SEVERITY_LABELS } from "./bug-labels";
 import { formatDueDate } from "./due-date";
+import { LINK_READINGS } from "./link-readings";
 import { PRIORITY_LABELS } from "./task-meta";
 
 // One line of a task's timeline: an event as a sentence (WS-119 section 3). Values are read
@@ -29,14 +30,6 @@ const linkSchema = z.object({
   direction: z.enum(["outgoing", "incoming"]),
   task: z.object({ id: z.string(), key: z.string() }).nullable(),
 });
-
-/** How a link reads from its task, by direction (doc 0003 section 7). */
-const LINK_READINGS = {
-  blocks: { outgoing: "blocks", incoming: "is blocked by" },
-  duplicates: { outgoing: "duplicates", incoming: "is duplicated by" },
-  regression_of: { outgoing: "is a regression of", incoming: "has regression" },
-  relates_to: { outgoing: "relates to", incoming: "relates to" },
-} as const;
 
 /** "linked this task: blocks API-3", the key a link to the task (WS-134 section 7). */
 function linkChange(value: unknown, added: boolean): ReactNode {

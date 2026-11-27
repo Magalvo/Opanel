@@ -1209,7 +1209,7 @@ describe("TaskDetail: bugs (WS-091)", () => {
     expect(calls("GET").filter(([url]) => url.includes("/bug-reports"))).toEqual([]);
   });
 
-  it("links to the task it is a regression of and the ones that regressed it", async () => {
+  it("lists no links in the bug section; regressions read in Links (WS-136 test 7)", async () => {
     await renderTask({
       current: {
         ...bug,
@@ -1231,7 +1231,8 @@ describe("TaskDetail: bugs (WS-091)", () => {
 
     const links = screen.getByRole("region", { name: "Links" });
     expect(within(links).getByText("Regression of")).toBeVisible();
-    expect(within(links).getByText("Regressed by")).toBeVisible();
+    expect(within(links).getByText("Has regression")).toBeVisible();
+    expect(within(links).queryByText("Regressed by")).toBeNull();
     expect(within(links).getByRole("link", { name: "OPA-7 Old login" })).toHaveAttribute(
       "href",
       "/projects/OPA/tasks/OPA-7",
@@ -1240,45 +1241,8 @@ describe("TaskDetail: bugs (WS-091)", () => {
       "href",
       "/projects/OPA/tasks/OPA-9",
     );
-  });
-
-  it("shows no Links section without links", async () => {
-    await renderTask({ current: bug });
-    expect(screen.queryByRole("region", { name: "Links" })).toBeNull();
-  });
-
-  it("shows only regression links until every task has a Links section (WS-134 test 16)", async () => {
-    const regression = {
-      type: "regression_of",
-      direction: "outgoing",
-      task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000007", key: "OPA-7", title: "Old login" },
-    } as const;
-    const blocks = {
-      type: "blocks",
-      direction: "outgoing",
-      task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000008", key: "OPA-8", title: "Payments" },
-    } as const;
-    await renderTask({ current: { ...bug, links: [regression, blocks] }, canWriteTasks: false });
-
-    const links = screen.getByRole("region", { name: "Links" });
-    expect(within(links).getByRole("link", { name: "OPA-7 Old login" })).toBeVisible();
-    expect(within(links).queryByRole("link", { name: "OPA-8 Payments" })).toBeNull();
-  });
-
-  it("shows no Links section for an unreported task with only a blocks link (WS-134 test 16)", async () => {
-    await renderTask({
-      current: {
-        ...base,
-        links: [
-          {
-            type: "blocks",
-            direction: "outgoing",
-            task: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000008", key: "OPA-8", title: "Payments" },
-          },
-        ],
-      },
-    });
-    expect(screen.queryByRole("region", { name: "Links" })).toBeNull();
+    expect(screen.getAllByRole("region", { name: "Links" })).toHaveLength(1);
+    expect(within(reports()).queryByRole("link", { name: /OPA-7/ })).toBeNull();
   });
 
   it("lists the reports, newest first, with the agent and every field", async () => {
@@ -1977,5 +1941,300 @@ describe("TaskDetail: sub-tasks (WS-135)", () => {
     );
 
     expect(await screen.findByText("Delete or detach its sub-tasks first.")).toBeInTheDocument();
+  });
+});
+
+describe("TaskDetail: links (WS-136)", () => {
+  const LINKS = "POST /api/v1/tasks/OPA-1/links";
+  const SEARCH = "GET /api/v1/tasks?limit=20&sort=-updated&q=log";
+  const api3 = { id: "bbbbbbbb-bbbb-4bbb-8bbb-000000000003", key: "API-3", title: "Log in" };
+  const opa7 = { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000007", key: "OPA-7", title: "Old login" };
+  const opa8 = { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000008", key: "OPA-8", title: "Payments" };
+  const blocksApi3 = { type: "blocks", direction: "outgoing", task: api3 } as const;
+  const UNLINK = `DELETE /api/v1/tasks/OPA-1/links?type=blocks&direction=outgoing&taskId=${api3.id}`;
+  const linked: Task = { ...base, links: [blocksApi3] };
+  const apiProject = {
+    id: "bbbbbbbb-bbbb-4bbb-8bbb-00000000000a",
+    key: "API",
+    name: "Public API",
+  };
+  const api3Item = {
+    ...task(3, todo.id, { title: "Log in" }),
+    id: api3.id,
+    key: "API-3",
+    project: apiProject,
+    column: { id: todo.id, name: "To do", category: "todo" },
+  };
+  const selfItem = {
+    ...task(1, todo.id, { title: "Login board" }),
+    project: { id: opa.id, key: "OPA", name: opa.name },
+    column: { id: todo.id, name: "To do", category: "todo" },
+  };
+
+  function links() {
+    return screen.getByRole("region", { name: "Links" });
+  }
+
+  async function addLink(
+    user: ReturnType<typeof userEvent.setup>,
+    reading: string,
+  ): Promise<HTMLElement> {
+    on(SEARCH, json({ items: [selfItem, api3Item], nextCursor: null }));
+    await user.click(within(links()).getByRole("button", { name: "Add link" }));
+    const dialog = screen.getByRole("dialog", { name: "Link OPA-1 to another task" });
+    await user.selectOptions(within(dialog).getByLabelText("Link type"), reading);
+    await user.type(within(dialog).getByLabelText("Find a task"), "log");
+    const choice = await within(dialog).findByRole("button", { name: "API-3 Log in" });
+    expect(within(dialog).queryByRole("button", { name: /^OPA-1 / })).toBeNull();
+    await user.click(choice);
+    return dialog;
+  }
+
+  function sendUpdated(version: number) {
+    act(() => {
+      FakeSource.latest().send("task.updated", {
+        id: crypto.randomUUID(),
+        type: "task.updated",
+        projectId: opa.id,
+        entity: "task",
+        entityId: base.id,
+        version,
+        actorAccountId: ada.id,
+        at: "2026-11-27T10:00:00.000Z",
+      });
+    });
+  }
+
+  it("groups the links under the seven readings, in order, each a link (test 1)", async () => {
+    const task9 = { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000009", key: "OPA-9", title: "Login" };
+    const task10 = { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000010", key: "OPA-10", title: "Docs" };
+    const task11 = { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000011", key: "OPA-11", title: "Crash" };
+    await renderTask({
+      current: {
+        ...base,
+        links: [
+          { type: "relates_to", direction: "outgoing", task: task10 },
+          { type: "regression_of", direction: "incoming", task: task11 },
+          { type: "duplicates", direction: "incoming", task: task9 },
+          { type: "blocks", direction: "incoming", task: opa8 },
+          blocksApi3,
+          { type: "duplicates", direction: "outgoing", task: opa7 },
+          { type: "regression_of", direction: "outgoing", task: opa7 },
+        ],
+      },
+    });
+
+    const headings = within(links())
+      .getAllByRole("term")
+      .map((term) => term.textContent);
+    expect(headings).toEqual([
+      "Blocks",
+      "Is blocked by",
+      "Duplicates",
+      "Is duplicated by",
+      "Regression of",
+      "Has regression",
+      "Relates to",
+    ]);
+    expect(within(links()).getByRole("link", { name: "API-3 Log in" })).toHaveAttribute(
+      "href",
+      "/projects/API/tasks/API-3",
+    );
+    expect(within(links()).getByRole("button", { name: "Add link" })).toBeEnabled();
+  });
+
+  it("leaves out empty groups (test 1)", async () => {
+    await renderTask({ current: linked });
+    expect(
+      within(links())
+        .getAllByRole("term")
+        .map((term) => term.textContent),
+    ).toEqual(["Blocks"]);
+  });
+
+  it("says there are no links yet to someone who edits (test 1)", async () => {
+    await renderTask();
+    expect(within(links()).getByText("No links yet.")).toBeVisible();
+  });
+
+  it("shows a Viewer the links without Add link or Remove (test 1)", async () => {
+    await renderTask({ current: linked, canWriteTasks: false });
+    expect(within(links()).getByRole("link", { name: "API-3 Log in" })).toBeVisible();
+    expect(within(links()).queryByRole("button")).toBeNull();
+  });
+
+  it("leaves the section out for a Viewer on a task with no links (test 1)", async () => {
+    await renderTask({ canWriteTasks: false });
+    expect(screen.queryByRole("region", { name: "Links" })).toBeNull();
+  });
+
+  it("searches every project, leaves the task out, and adds the chosen reading (test 2)", async () => {
+    on(
+      LINKS,
+      json({
+        ...base,
+        links: [{ type: "blocks", direction: "incoming", task: api3 }],
+        version: 4,
+      }),
+    );
+    const user = await renderTask();
+
+    const dialog = await addLink(user, "Is blocked by");
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Link added.");
+    });
+    expect(bodyOf(calls("POST").find(([url]) => url.endsWith("/links"))?.[1])).toEqual({
+      type: "blocks",
+      direction: "incoming",
+      taskId: api3.id,
+    });
+    expect(dialog).not.toBeInTheDocument();
+    expect(within(links()).getByText("Is blocked by")).toBeVisible();
+    expect(within(links()).getByRole("link", { name: "API-3 Log in" })).toBeVisible();
+  });
+
+  it("sends relates_to as outgoing (test 2)", async () => {
+    on(
+      LINKS,
+      json({
+        ...base,
+        links: [{ type: "relates_to", direction: "outgoing", task: api3 }],
+        version: 4,
+      }),
+    );
+    const user = await renderTask();
+
+    await addLink(user, "Relates to");
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Link added.");
+    });
+    expect(bodyOf(calls("POST").find(([url]) => url.endsWith("/links"))?.[1])).toEqual({
+      type: "relates_to",
+      direction: "outgoing",
+      taskId: api3.id,
+    });
+  });
+
+  it.each([
+    [problem(409, "link_exists"), "That link exists already."],
+    [problem(409, "too_many_links"), "One of the tasks already has 100 links."],
+    [problem(403, "forbidden"), "You cannot link to that task."],
+    [
+      problem(400, "invalid_request", [{ path: "taskId", message: "That task is deleted." }]),
+      "That task is deleted.",
+    ],
+  ])("shows a refusal in the dialog and keeps it open (test 3)", async (answer, text) => {
+    on(LINKS, answer);
+    const user = await renderTask();
+
+    const dialog = await addLink(user, "Blocks");
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(text);
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it("says the project is archived and closes the dialog (test 3)", async () => {
+    on(LINKS, problem(409, "project_archived"));
+    const user = await renderTask();
+
+    const dialog = await addLink(user, "Blocks");
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("The project is archived.");
+    });
+    expect(dialog).not.toBeInTheDocument();
+  });
+
+  it("removes a link, names it, reads the task, and moves the focus to Add link (test 4)", async () => {
+    on(UNLINK, () => new Response(null, { status: 204 }));
+    const user = await renderTask({ current: linked });
+    on(TASK, json({ ...base, links: [], version: 4 }));
+
+    await user.click(within(links()).getByRole("button", { name: "Remove link: blocks API-3" }));
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Link removed.");
+    });
+    expect(calls("DELETE").map(([url]) => url)).toEqual([UNLINK.slice("DELETE ".length)]);
+    expect(within(links()).queryByRole("link", { name: "API-3 Log in" })).toBeNull();
+    expect(within(links()).getByRole("button", { name: "Add link" })).toHaveFocus();
+  });
+
+  it("says someone else changed the task when the read is two versions on (test 5)", async () => {
+    on(UNLINK, () => new Response(null, { status: 204 }));
+    const user = await renderTask({ current: linked });
+    on(TASK, json({ ...base, title: "Renamed elsewhere", links: [], version: 5 }));
+
+    await user.click(within(links()).getByRole("button", { name: "Remove link: blocks API-3" }));
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Someone else changed this task.");
+    });
+    expect(screen.getByRole("heading", { level: 2, name: "Renamed elsewhere" })).toBeVisible();
+  });
+
+  it("says a link was already removed on a 404, and shows the task read (test 5)", async () => {
+    on(UNLINK, problem(404, "not_found"));
+    const user = await renderTask({ current: linked });
+    on(TASK, json({ ...base, links: [], version: 4 }));
+
+    await user.click(within(links()).getByRole("button", { name: "Remove link: blocks API-3" }));
+
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("That link was already removed.");
+    });
+    expect(within(links()).queryByRole("link", { name: "API-3 Log in" })).toBeNull();
+  });
+
+  it("keeps unsaved edits when a link is added, and saves on the new version (test 6)", async () => {
+    on(LINKS, json({ ...base, links: [blocksApi3], version: 4 }));
+    on(
+      "PATCH /api/v1/tasks/OPA-1",
+      json({ ...base, title: "Write the board!", links: [blocksApi3], version: 5 }),
+    );
+    const user = await renderTask();
+    const title = within(details()).getByLabelText("Title");
+    await user.type(title, "!");
+
+    await addLink(user, "Blocks");
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Link added.");
+    });
+    expect(title).toHaveValue("Write the board!");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(calls("PATCH")).toHaveLength(1);
+    });
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Write the board!", version: 4 });
+  });
+
+  it("still saves on the old version after a change elsewhere, when a link is added (test 6)", async () => {
+    const user = await renderTask();
+    act(() => {
+      FakeSource.latest().open();
+    });
+    const title = within(details()).getByLabelText("Title");
+    await user.type(title, "!");
+    on(TASK, json({ ...base, priority: "high", version: 4 }));
+    sendUpdated(4);
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Saving will show their version first.");
+    });
+    on(LINKS, json({ ...base, priority: "high", links: [blocksApi3], version: 5 }));
+    on("PATCH /api/v1/tasks/OPA-1", problem(409, "version_conflict"));
+
+    await addLink(user, "Blocks");
+    await waitFor(() => {
+      expect(status()).toHaveTextContent("Link added.");
+    });
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(calls("PATCH")).toHaveLength(1);
+    });
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Write the board!", version: 3 });
   });
 });
