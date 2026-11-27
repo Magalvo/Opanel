@@ -15,8 +15,9 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-09 item E (MCP tools for links), then F, the exit check. Items A to D are
-  done (WI-133 to WI-136). WT-10 (sprints and story points) is not drafted yet.
+- **Next:** WT-09 item F (the end-to-end flow, the agents guide's section on sub-tasks and
+  links, and the exit check). Items A to E are done (WI-133 to WI-137). WT-10 (sprints and
+  story points) is not drafted yet.
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
