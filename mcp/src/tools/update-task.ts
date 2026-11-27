@@ -37,7 +37,9 @@ export const updateTask: ToolDefinition = {
         description:
           "Changes the fields given, and only those: title, description, type, team, " +
           "assignee, epic, severity (bugs only), priority or due date; null clears a field " +
-          "that may be empty. taskId is the task's id or key, such as OPA-12. version is the " +
+          "that may be empty. parentId sets the parent, and null makes it a normal task again; " +
+          "a sub-task's epic is its parent's, so epicId is refused on one. taskId is the " +
+          "task's id or key, such as OPA-12. version is the " +
           "task's version as last read (opanel_get_task, opanel_get_board): if someone " +
           "changed the task since, nothing is changed and the answer holds the current " +
           `task. ${CHANGES_OPANEL} Needs tasks:write. ` +

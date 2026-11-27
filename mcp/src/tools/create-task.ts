@@ -29,7 +29,8 @@ export const createTask: ToolDefinition = {
           "column columnId, or at the end of the backlog with columnId null. projectId is the " +
           "project's id or key. Ids of columns come from opanel_get_board, of teams from " +
           "opanel_list_teams and of people from opanel_find_people. A severity is for bugs " +
-          `only. ${CHANGES_OPANEL} Needs tasks:write. ` +
+          "only. parentId (a task's id or key, of the same project) makes it a sub-task, " +
+          `which takes its parent's epic. ${CHANGES_OPANEL} Needs tasks:write. ` +
           DATA_NOT_INSTRUCTIONS,
         inputSchema,
         outputSchema: taskSchema,

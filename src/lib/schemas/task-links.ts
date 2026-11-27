@@ -3,12 +3,20 @@ import { z } from "zod";
 import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE } from "@/lib/openapi/responses";
 
-import { TASK_LINK_TYPES } from "./bug-reports";
+import { TASK_LINK_TYPES, type TaskLinkType } from "./bug-reports";
 import { taskParamsSchema, taskRefSchema, taskSchema } from "./tasks";
 
 // Adding and removing links between tasks (doc 0003 section 7, WT-09 decisions 3 and 6 to
 // 8, WS-134). The types and the answer's `TaskLink` stay beside the task and bug-report
 // schemas, which this file imports: moving them here would make an import cycle.
+
+/** How a link reads from its task, by direction (doc 0003 section 7, WS-136, WS-137). */
+export const LINK_READINGS = {
+  blocks: { outgoing: "blocks", incoming: "is blocked by" },
+  duplicates: { outgoing: "duplicates", incoming: "is duplicated by" },
+  regression_of: { outgoing: "is a regression of", incoming: "has regression" },
+  relates_to: { outgoing: "relates to", incoming: "relates to" },
+} as const satisfies Record<TaskLinkType, Record<"outgoing" | "incoming", string>>;
 
 /** At most this many links on one task, to tasks that are not deleted (WT-09 decision 3). */
 export const MAX_TASK_LINKS = 100;

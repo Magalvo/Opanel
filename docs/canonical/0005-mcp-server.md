@@ -4,7 +4,8 @@
 - Date: 2026-11-16
 - Supersedes: none
 - Amended by: WI-132 (section 4: the tools for the backlog, labels, epics, search and
-  activity; 2026-11-26)
+  activity; 2026-11-26); WI-137 (section 4: the link tools, sub-tasks on the task tools;
+  2026-11-27)
 - Relates to: [0001](0001-ai-qa-agents-and-triage.md) (agent accounts, tokens, scopes, bug
   reports), [0004](0004-api-conventions.md) (the API it wraps), [0003](0003-task-management.md)
   (what the tools act on)
@@ -70,7 +71,7 @@ already is (doc 0001 section 2). This doc makes no assumption about it.
 
 Named `opanel_<verb>_<thing>`. Each tool's description names its permission. The first
 set follows the scopes of doc 0001 section 3; WI-132 added the reads of WT-07 and WT-08
-(the backlog, labels, epics, search and activity):
+(the backlog, labels, epics, search and activity), and WI-137 the links of WT-09:
 
 | Tool                       | API                                                       | Permission                    |
 | -------------------------- | --------------------------------------------------------- | ----------------------------- |
@@ -89,11 +90,14 @@ set follows the scopes of doc 0001 section 3; WI-132 added the reads of WT-07 an
 | `opanel_create_task`       | `POST /projects/{id}/tasks`                               | `tasks:write`                 |
 | `opanel_update_task`       | `PATCH /tasks/{idOrKey}` (fields, assignment, epic)       | `tasks:write`                 |
 | `opanel_move_task`         | `POST /tasks/{idOrKey}/move`                              | `tasks:write`                 |
+| `opanel_add_link`          | `POST /tasks/{idOrKey}/links`                             | `tasks:write`, `tasks:read`   |
+| `opanel_remove_link`       | `DELETE /tasks/{idOrKey}/links`, then `GET` the task      | `tasks:write`, `tasks:read`   |
 | `opanel_submit_bug_report` | `POST /projects/{id}/bug-reports` (WT-06)                 | `reports:write`               |
 
-- **No delete or restore tools**, and nothing for configuration (projects, columns,
+- **No tool deletes or restores a task**, and nothing for configuration (projects, columns,
   teams, accounts, tokens). Agents cannot hold those permissions anyway (doc 0001), and
-  destructive actions stay with humans in the web app.
+  destructive actions stay with humans in the web app. Removing a link is a change that
+  both tasks' histories record, undone with `opanel_add_link` (WS-137).
 - Tools accept a task key (`OPA-12`) wherever the API accepts one.
 - **Writes that need `version`** (`update`, `move`) take it as input. A
   `409 version_conflict` is returned as a tool error that includes the current task, so

@@ -12,6 +12,7 @@ import { addComment } from "./tools/comment";
 import { createTask } from "./tools/create-task";
 import { listEpics } from "./tools/epics";
 import { listLabels } from "./tools/labels";
+import { addLink, removeLink } from "./tools/links";
 import { moveTask } from "./tools/move-task";
 import { findPeople } from "./tools/people";
 import { listProjects } from "./tools/projects";
@@ -55,6 +56,8 @@ export const TOOLS: readonly ToolDefinition[] = [
   createTask,
   updateTask,
   moveTask,
+  addLink, // WS-137
+  removeLink,
   submitBugReport, // WS-105
 ];
 
