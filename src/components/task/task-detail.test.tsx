@@ -63,7 +63,7 @@ function epic(id: string, title: string, status: "open" | "closed"): Epic {
     status,
     startDate: null,
     targetDate: null,
-    progress: { doneTasks: 0, totalTasks: 0 },
+    progress: { doneTasks: 0, totalTasks: 0, donePoints: 0, totalPoints: 0, unestimated: 0 },
     version: 1,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",
@@ -1693,6 +1693,90 @@ describe("TaskDetail: priority and due date (WS-110)", () => {
     expect(within(details()).getByLabelText("Priority")).toHaveValue("urgent");
     await user.click(within(details()).getByRole("button", { name: "Save changes" }));
     expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ priority: "urgent", version: 4 });
+  });
+});
+
+describe("TaskDetail: story points (WS-139 test 10)", () => {
+  function value(term: string) {
+    return within(details()).getByText(term).nextElementSibling;
+  }
+
+  it("reads None without points and the number with some, after the due date", async () => {
+    await renderTask({ canWriteTasks: false });
+    expect(value("Story points")).toHaveTextContent("None");
+    const terms = within(details())
+      .getAllByRole("term")
+      .map((term) => term.textContent);
+    expect(terms.indexOf("Story points")).toBe(terms.indexOf("Due date") + 1);
+  });
+
+  it("reads a task's points", async () => {
+    await renderTask({ current: { ...base, storyPoints: 2.5 }, canWriteTasks: false });
+
+    expect(value("Story points")).toHaveTextContent("2.5");
+  });
+
+  it("gives a Viewer no editor", async () => {
+    await renderTask({ current: { ...base, storyPoints: 3 }, canWriteTasks: false });
+
+    expect(within(details()).queryByRole("spinbutton")).not.toBeInTheDocument();
+  });
+
+  it("edits them with a number input of 0 to 999.5 in steps of 0.5, sending a number", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, storyPoints: 5, version: 4 }));
+    const user = await renderTask();
+    const input = within(details()).getByRole("spinbutton", { name: "Story points" });
+    expect(input).toHaveValue(null);
+    expect(input).toHaveAttribute("min", "0");
+    expect(input).toHaveAttribute("max", "999.5");
+    expect(input).toHaveAttribute("step", "0.5");
+
+    await user.type(input, "5");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ storyPoints: 5, version: 3 });
+  });
+
+  it("sends null when emptied, and nothing when only the title changed", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, storyPoints: null, version: 4 }));
+    const user = await renderTask({ current: { ...base, storyPoints: 3 } });
+    const input = within(details()).getByRole("spinbutton", { name: "Story points" });
+    expect(input).toHaveValue(3);
+
+    await user.clear(input);
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ storyPoints: null, version: 3 });
+  });
+
+  it("leaves them out of a save of another field", async () => {
+    on("PATCH /api/v1/tasks/OPA-1", json({ ...base, title: "Renamed", version: 4 }));
+    const user = await renderTask({ current: { ...base, storyPoints: 3 } });
+
+    await user.clear(within(details()).getByLabelText("Title"));
+    await user.type(within(details()).getByLabelText("Title"), "Renamed");
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Renamed", version: 3 });
+  });
+
+  it("shows a story points error from the API at the field", async () => {
+    on(
+      "PATCH /api/v1/tasks/OPA-1",
+      problem(400, "invalid_request", [
+        { path: "storyPoints", message: "Too big: expected number to be <=999.5" },
+      ]),
+    );
+    const user = await renderTask();
+
+    fireEvent.change(within(details()).getByLabelText("Story points"), {
+      target: { value: "1000" },
+    });
+    await user.click(within(details()).getByRole("button", { name: "Save changes" }));
+
+    expect(within(details()).getByLabelText("Story points")).toHaveAccessibleDescription(
+      "Too big: expected number to be <=999.5",
+    );
   });
 });
 

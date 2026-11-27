@@ -38,10 +38,21 @@ export const epicSchema = z
     status: epicStatusSchema,
     startDate: epicDateSchema,
     targetDate: epicDateSchema,
-    progress: z.strictObject({ doneTasks: z.int().min(0), totalTasks: z.int().min(0) }).meta({
-      description:
-        "Tasks of the epic that are not deleted; done ones are in a column of the `done` category.",
-    }),
+    progress: z
+      .strictObject({
+        doneTasks: z.int().min(0),
+        totalTasks: z.int().min(0),
+        donePoints: z.number().min(0).meta({
+          description: "The story points of the done tasks, sub-tasks counted as stored.",
+        }),
+        totalPoints: z.number().min(0).meta({ description: "The story points of every task." }),
+        unestimated: z.int().min(0).meta({ description: "How many of the tasks have no points." }),
+      })
+      .meta({
+        description:
+          "Tasks of the epic that are not deleted; done ones are in a column of the `done` " +
+          "category (WS-139: points too).",
+      }),
     version: z.int().min(1),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),

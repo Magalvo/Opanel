@@ -178,13 +178,82 @@ describe("progress", () => {
     await createTask(member, "OPA", { title: "Not in it" });
     await deleteTask(member, "OPA-3");
 
-    expect((await getEpic(member, epic.id)).progress).toEqual({ doneTasks: 1, totalTasks: 2 });
+    const none = { donePoints: 0, totalPoints: 0, unestimated: 2 };
+    expect((await getEpic(member, epic.id)).progress).toEqual({
+      doneTasks: 1,
+      totalTasks: 2,
+      ...none,
+    });
     await moveTask(member, "OPA-1", { columnId: columns[2] ?? "", version: 1 });
-    expect((await getEpic(member, epic.id)).progress).toEqual({ doneTasks: 2, totalTasks: 2 });
+    expect((await getEpic(member, epic.id)).progress).toEqual({
+      doneTasks: 2,
+      totalTasks: 2,
+      ...none,
+    });
     expect((await listEpics(member, "OPA", { limit: 50 })).items[0]?.progress).toEqual({
       doneTasks: 2,
       totalTasks: 2,
+      ...none,
     });
+  });
+
+  it("sums story points: done only in done columns, sub-tasks counted, deleted left out (WS-139 test 6)", async () => {
+    const { manager, member, columns } = await setup();
+    const done = columns[2] ?? "";
+    const epic = await createEpic(manager, "OPA", { title: "E" });
+    const empty = await createEpic(manager, "OPA", { title: "Empty" });
+    // OPA-1: 5 points, done. OPA-2: 3 points, in progress, with sub-task OPA-3 (2 points,
+    // done) and OPA-4 (none). OPA-5: 8 points, deleted. OPA-6: 0.5 points, in the backlog.
+    // OPA-7: 13 points, outside the epic.
+    await createTask(member, "OPA", {
+      title: "A",
+      epicId: epic.id,
+      columnId: done,
+      storyPoints: 5,
+    });
+    await createTask(member, "OPA", {
+      title: "B",
+      epicId: epic.id,
+      columnId: columns[1] ?? "",
+      storyPoints: 3,
+    });
+    await createTask(member, "OPA", {
+      title: "B1",
+      parentId: "OPA-2",
+      columnId: done,
+      storyPoints: 2,
+    });
+    await createTask(member, "OPA", { title: "B2", parentId: "OPA-2" });
+    await createTask(member, "OPA", { title: "C", epicId: epic.id, storyPoints: 8 });
+    await deleteTask(member, "OPA-5");
+    await createTask(member, "OPA", {
+      title: "D",
+      epicId: epic.id,
+      columnId: null,
+      storyPoints: 0.5,
+    });
+    await createTask(member, "OPA", { title: "Not in it", storyPoints: 13 });
+    await createTask(member, "OPA", { title: "Unestimated", epicId: empty.id });
+
+    expect((await getEpic(member, epic.id)).progress).toEqual({
+      doneTasks: 2,
+      totalTasks: 5,
+      donePoints: 7,
+      totalPoints: 10.5,
+      unestimated: 1,
+    });
+    expect((await getEpic(member, empty.id)).progress).toEqual({
+      doneTasks: 0,
+      totalTasks: 1,
+      donePoints: 0,
+      totalPoints: 0,
+      unestimated: 1,
+    });
+    const listed = (await listEpics(member, "OPA", { limit: 50 })).items;
+    expect(listed.map((each) => [each.title, each.progress.totalPoints])).toEqual([
+      ["E", 10.5],
+      ["Empty", 0],
+    ]);
   });
 });
 

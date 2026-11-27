@@ -24,6 +24,15 @@ export const prioritySchema = z.enum(PRIORITIES).meta({ id: "Priority" });
 
 export type Priority = z.infer<typeof prioritySchema>;
 
+/** A task's story points (WT-10 decision 1 and question 1, WS-139): 0 to 999.5, steps of 0.5. */
+export const STORY_POINTS_MAX = 999.5;
+export const storyPointsSchema = z
+  .number()
+  .min(0)
+  .max(STORY_POINTS_MAX)
+  .multipleOf(0.5)
+  .meta({ description: "Story points: from 0 to 999.5, in steps of 0.5." });
+
 /** Trimmed, 1 to 200 characters. */
 export const taskTitleSchema = z.string().trim().min(1).max(200);
 
@@ -85,6 +94,9 @@ const taskFields = {
   lastReportedAt: z.iso.datetime().nullable().meta({ description: "Read-only." }),
   priority: prioritySchema,
   dueDate: calendarDateSchema.nullable().meta({ description: "A calendar date, or `null`." }),
+  storyPoints: storyPointsSchema
+    .nullable()
+    .meta({ description: "Story points, from 0 to 999.5 in steps of 0.5; `null` when none." }),
   labels: z.array(labelRefSchema).meta({ description: "The task's labels, by name." }),
   subtasks: subtaskProgressSchema
     .nullable()
@@ -253,7 +265,15 @@ export const backlogQuerySchema = paginationQuerySchema
 export type BacklogQuery = z.infer<typeof backlogQuerySchema>;
 
 /** The orders of the list across projects (WT-08 decision 4, WS-118 section 5). */
-export const TASK_SORTS = ["key", "title", "priority", "dueDate", "created", "updated"] as const;
+export const TASK_SORTS = [
+  "key",
+  "title",
+  "priority",
+  "dueDate",
+  "storyPoints",
+  "created",
+  "updated",
+] as const;
 
 export type TaskSortField = (typeof TASK_SORTS)[number];
 
@@ -261,8 +281,8 @@ export const taskSortSchema = z
   .enum([...TASK_SORTS, ...TASK_SORTS.map((field) => `-${field}` as const)])
   .meta({
     description:
-      "A field, ascending, or `-` and a field, descending. Tasks with no due date come last " +
-      "either way.",
+      "A field, ascending, or `-` and a field, descending. Tasks with no due date, or with " +
+      "no story points, come last either way.",
   });
 
 export type TaskSort = z.infer<typeof taskSortSchema>;
@@ -351,6 +371,9 @@ export const createTaskFields = {
   severity: severitySchema.optional().meta({ description: 'Only with `type: "bug"`.' }),
   priority: prioritySchema.optional().meta({ description: "By default `none`." }),
   dueDate: calendarDateSchema.optional().meta({ description: "By default none." }),
+  storyPoints: storyPointsSchema.optional().meta({
+    description: "From 0 to 999.5, in steps of 0.5. By default none.",
+  }),
 };
 
 /** A creation's rule: only a bug has a severity. */
@@ -393,6 +416,9 @@ export const updateTaskFields = {
   }),
   priority: prioritySchema.optional(),
   dueDate: calendarDateSchema.nullable().optional().meta({ description: "`null` clears it." }),
+  storyPoints: storyPointsSchema.nullable().optional().meta({
+    description: "From 0 to 999.5, in steps of 0.5; `null` clears them.",
+  }),
   version: versionSchema,
 };
 
@@ -408,6 +434,7 @@ const UPDATABLE = [
   "severity",
   "priority",
   "dueDate",
+  "storyPoints",
   "labelIds",
 ] as const;
 

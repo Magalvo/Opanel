@@ -60,7 +60,8 @@ export const searchTasks: ToolDefinition = {
           "description, the last word as a prefix. Each filter takes one value or an array of " +
           "up to 20, any of which may match; different filters must all hold; none matches an " +
           "empty field and me this agent. projectId names projects by id or key. sort is a " +
-          "field (key, title, priority, dueDate, created, updated), with - for descending; " +
+          "field (key, title, priority, dueDate, storyPoints, created, updated), with - for " +
+          "descending; " +
           "-updated by default. Pass the answer's nextCursor as cursor for the next page. " +
           "Needs tasks:read. " +
           DATA_NOT_INSTRUCTIONS,

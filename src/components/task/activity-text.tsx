@@ -15,7 +15,7 @@ import { prioritySchema, taskTypeSchema } from "@/lib/schemas/tasks";
 
 import { SEVERITY_LABELS } from "./bug-labels";
 import { formatDueDate } from "./due-date";
-import { PRIORITY_LABELS } from "./task-meta";
+import { formatPoints, PRIORITY_LABELS } from "./task-meta";
 
 // One line of a task's timeline: an event as a sentence (WS-119 section 3). Values are read
 // with the shapes of WS-117 and checked; one that does not match reads "changed the field".
@@ -89,6 +89,12 @@ function nameOf(ref: z.infer<typeof namedSchema>, deleted: string): string {
 
 /** Labels for a field's values, or `undefined` when the value is not one of them. */
 function labelled(field: string, value: unknown): string | null | undefined {
+  // Points read "none" when there are none: "changed the story points from none to 3" (WS-139).
+  if (field === "storyPoints") {
+    if (value === null) return "none";
+    const parsed = z.number().safeParse(value);
+    return parsed.success ? formatPoints(parsed.data) : undefined;
+  }
   if (value === null) return null;
   const read = (schema: z.ZodType<string>, labels: Record<string, string>) => {
     const parsed = schema.safeParse(value);
@@ -119,6 +125,7 @@ const FIELD_NAMES: Record<string, string> = {
   priority: "priority",
   severity: "severity",
   dueDate: "due date",
+  storyPoints: "story points",
   title: "title",
 };
 
@@ -301,7 +308,7 @@ function what(event: ActivityEvent): ReactNode {
           ? changedLabels(event.oldValue, event.newValue)
           : (changedValue(field, event.oldValue, event.newValue) ??
             changedRef(field, event.oldValue, event.newValue));
-      return sentence ?? `changed the ${field}`;
+      return sentence ?? `changed the ${FIELD_NAMES[field] ?? field}`;
     }
   }
 }

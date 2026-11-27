@@ -155,10 +155,14 @@ async function sortable() {
   // Every task, the setup's too, gets an instant from the table, so ties are on purpose.
   const all = await db.execute<{ id: string }>(sql`
     select t.id from tasks t where t.deleted_at is null order by t.created_at, t.id`);
+  // Story points with ties, none for some, by the same turn (WS-139 test 7).
+  const points = [3, null, 0.5, 3, 13] as const;
   for (const [index, row] of all.entries()) {
     const instant = values[index % values.length]?.[2] ?? "2026-01-01T10:00:00.000Z";
+    const storyPoints = points[index % points.length] ?? null;
     await db.execute(
-      sql`update tasks set created_at = ${instant}, updated_at = ${instant} where id = ${row.id}`,
+      sql`update tasks set created_at = ${instant}, updated_at = ${instant},
+          story_points = ${storyPoints} where id = ${row.id}`,
     );
   }
   return { mia, opa, web };
@@ -186,6 +190,12 @@ function compare(sort: string) {
       case "dueDate":
         if ((a.dueDate === null) !== (b.dueDate === null)) return a.dueDate === null ? 1 : -1;
         order = flip(bytes(a.dueDate ?? "", b.dueDate ?? ""));
+        break;
+      case "storyPoints":
+        if ((a.storyPoints === null) !== (b.storyPoints === null)) {
+          return a.storyPoints === null ? 1 : -1;
+        }
+        order = flip((a.storyPoints ?? 0) - (b.storyPoints ?? 0));
         break;
       case "created":
         order = flip(bytes(a.createdAt, b.createdAt));
@@ -299,10 +309,15 @@ describe("listAllTasks: each filter across projects (WS-131 test 6)", () => {
 });
 
 describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
-  const sorts = ["key", "title", "priority", "dueDate", "created", "updated"].flatMap((s) => [
-    s,
-    `-${s}`,
-  ]);
+  const sorts = [
+    "key",
+    "title",
+    "priority",
+    "dueDate",
+    "storyPoints",
+    "created",
+    "updated",
+  ].flatMap((s) => [s, `-${s}`]);
 
   it.each(sorts)("sort=%s gives every task once, in order, over pages of 2", async (sort) => {
     const { mia } = await sortable();
@@ -444,6 +459,45 @@ describe("listAllTasks: sort and pages (WS-118 tests 6 to 9)", () => {
         expect(error.errors, `${sort} ${date}`).toEqual([
           { path: "cursor", message: "Invalid cursor." },
         ]);
+      }
+    }
+  });
+
+  it("puts tasks with no story points last both ways, and pages through them (WS-139 test 7)", async () => {
+    const { mia } = await sortable();
+    for (const sort of ["storyPoints", "-storyPoints"]) {
+      const whole = await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "100" }));
+      const points = whole.items.map((task) => task.storyPoints);
+      expect(points, sort).toEqual(
+        sort === "storyPoints"
+          ? [0.5, 0.5, 3, 3, 3, 13, null, null]
+          : [13, 3, 3, 3, 0.5, 0.5, null, null],
+      );
+      const ids: string[] = [];
+      let cursor: string | undefined;
+      do {
+        const page = await listAllTasks(
+          mia,
+          allTasksQuerySchema.parse({ sort, limit: "1", ...(cursor ? { cursor } : {}) }),
+        );
+        ids.push(...page.items.map((task) => task.id));
+        cursor = page.nextCursor ?? undefined;
+      } while (cursor !== undefined);
+      expect(ids, sort).toEqual(whole.items.map((task) => task.id));
+    }
+  });
+
+  it("refuses a storyPoints cursor whose value is no number of points with 400 (WS-139)", async () => {
+    const { mia } = await sortable();
+    for (const sort of ["storyPoints", "-storyPoints"]) {
+      const page = await listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "1" }));
+      const cursor = decodeTaskListCursor(page.nextCursor ?? "", sort, 2);
+      for (const value of ["-1", "1e3", "abc", "1000", "1.25"]) {
+        const tampered = encodeTaskListCursor({ ...cursor, values: ["false", value] });
+        const error = await failure(
+          listAllTasks(mia, allTasksQuerySchema.parse({ sort, limit: "1", cursor: tampered })),
+        );
+        expect(error.status, `${sort} ${value}`).toBe(400);
       }
     }
   });

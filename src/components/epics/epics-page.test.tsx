@@ -28,7 +28,7 @@ function epic(n: number, title: string, extra: Partial<Epic> = {}): Epic {
     status: "open",
     startDate: null,
     targetDate: null,
-    progress: { doneTasks: 0, totalTasks: 0 },
+    progress: { doneTasks: 0, totalTasks: 0, donePoints: 0, totalPoints: 0, unestimated: 0 },
     version: 1,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",
@@ -40,7 +40,7 @@ const launch = epic(1, "Launch", {
   description: "The **first** release.\n\n<script>window.injected = true</script>",
   startDate: "2026-11-01",
   targetDate: "2026-12-01",
-  progress: { doneTasks: 2, totalTasks: 5 },
+  progress: { doneTasks: 2, totalTasks: 5, donePoints: 0, totalPoints: 0, unestimated: 5 },
   version: 3,
 });
 const polish = epic(2, "Polish");
@@ -467,7 +467,9 @@ describe("EpicsPage: closing and reopening", () => {
   });
 
   it("closes at once when every task is done, and reopens", async () => {
-    const finished = epic(5, "Finished", { progress: { doneTasks: 2, totalTasks: 2 } });
+    const finished = epic(5, "Finished", {
+      progress: { doneTasks: 2, totalTasks: 2, donePoints: 0, totalPoints: 0, unestimated: 2 },
+    });
     on(OPEN, page([finished]));
     on(`PATCH /api/v1/epics/${finished.id}`, json({ ...finished, status: "closed", version: 2 }));
     const user = await renderEpics({ first: "Finished" });
@@ -564,7 +566,16 @@ describe("EpicsPage: live (WS-049 section 4)", () => {
 
   it("updates progress when a task changes", async () => {
     await renderLive();
-    on(OPEN, page([{ ...launch, progress: { doneTasks: 3, totalTasks: 5 } }, polish]));
+    on(
+      OPEN,
+      page([
+        {
+          ...launch,
+          progress: { doneTasks: 3, totalTasks: 5, donePoints: 0, totalPoints: 0, unestimated: 5 },
+        },
+        polish,
+      ]),
+    );
 
     send("task.moved", "task");
 

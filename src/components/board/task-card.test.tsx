@@ -97,3 +97,34 @@ describe("a card's sub-task marks (WS-135)", () => {
     expect(screen.queryByLabelText(/^Sub-task of/)).not.toBeInTheDocument();
   });
 });
+
+// A card's story points (WS-139 test 11).
+
+describe("a card's story points (WS-139)", () => {
+  it("shows the number, named in words, after the due date", () => {
+    render(<CardBody task={task(1, todo.id, { dueDate: "2030-12-01", storyPoints: 3 })} />);
+
+    const badge = screen.getByLabelText("3 story points");
+    expect(badge).toHaveTextContent("3");
+    const due = screen.getByText(/Due Dec 1, 2030/);
+    expect(due.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("says one story point for 1, and the half for 0.5", () => {
+    const { unmount } = render(<CardBody task={task(1, todo.id, { storyPoints: 1 })} />);
+    expect(screen.getByLabelText("1 story point")).toHaveTextContent("1");
+    unmount();
+
+    render(<CardBody task={task(1, todo.id, { storyPoints: 0.5 })} />);
+    expect(screen.getByLabelText("0.5 story points")).toHaveTextContent("0.5");
+  });
+
+  it("shows 0 points, and nothing without points", () => {
+    const { unmount } = render(<CardBody task={task(1, todo.id, { storyPoints: 0 })} />);
+    expect(screen.getByLabelText("0 story points")).toHaveTextContent("0");
+    unmount();
+
+    render(<CardBody task={task(1, todo.id)} />);
+    expect(screen.queryByLabelText(/story point/)).not.toBeInTheDocument();
+  });
+});
