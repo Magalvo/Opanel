@@ -204,6 +204,7 @@ operations (doc 0006), are done.
 | [WI-134](work-items/WI-134-links-api.md)                        | Links in the API                                                  | [WS-134](work-specs/WS-134-links-api.md)                        |
 | [WI-135](work-items/WI-135-subtasks-ui.md)                      | Sub-tasks in the UI                                               | [WS-135](work-specs/WS-135-subtasks-ui.md)                      |
 | [WI-136](work-items/WI-136-links-ui.md)                         | Links in the UI                                                   | [WS-136](work-specs/WS-136-links-ui.md)                         |
+| [WI-137](work-items/WI-137-mcp-link-tools.md)                   | MCP tools for links, sub-tasks on the task tools                  | [WS-137](work-specs/WS-137-mcp-link-tools.md)                   |
 
 ## Follow-ups
 
