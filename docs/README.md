@@ -472,6 +472,11 @@ Optimisations found by the same audit, none urgent:
   the rows it waits for were already in that order under the default sort, so the read can
   come before the second click lands. Needs a small work-item: wait with
   `expect(page).toHaveURL(/sort=-priority/)` before reading.
+- **The "Set parent" dialog's results likely fail axe's `target-size` rule** (found in
+  WI-136, 2026-11-27; WS-136 deviation 4). Its result buttons are `h-auto` with no padding,
+  as the "Add link" dialog's were before WS-136's accessibility check made them `min-h-8
+py-1.5`. WS-135's check never opened that dialog. Needs a small work-item: the same
+  classes in `parent-field.tsx` and an accessibility check with the dialog open.
 
 From the review of the board UI of 2026-11-23 (WI-111, WS-111 section 4), none urgent:
 
