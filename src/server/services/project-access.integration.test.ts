@@ -12,6 +12,7 @@ import type { Epic } from "@/lib/schemas/epics";
 import type { Label } from "@/lib/schemas/labels";
 import { PERMISSIONS } from "@/lib/schemas/permissions";
 import type { Project } from "@/lib/schemas/projects";
+import type { Sprint } from "@/lib/schemas/sprints";
 import type { Task } from "@/lib/schemas/tasks";
 import type { Actor, AgentActor } from "@/server/auth/actor";
 import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
@@ -36,6 +37,7 @@ import {
   unarchiveProject,
   updateProject,
 } from "./projects";
+import { createSprint, deleteSprint, getSprint, listSprints, updateSprint } from "./sprints";
 import { addTaskLink, removeTaskLink } from "./task-links";
 import {
   createTask,
@@ -61,6 +63,7 @@ interface Fixture {
   deletedTask: Task;
   epic: Epic;
   label: Label;
+  sprint: Sprint;
 }
 
 type ScopedCall = (actor: Actor, target: Fixture) => Promise<unknown>;
@@ -110,6 +113,17 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
   "labels.updateLabel": (actor, f) =>
     updateLabel(actor, f.label.id, { name: "Renamed", version: f.label.version }),
   "labels.deleteLabel": (actor, f) => deleteLabel(actor, f.label.id),
+  "sprints.listSprints": (actor, f) => listSprints(actor, f.project.key, { limit: 50 }),
+  "sprints.getSprint": (actor, f) => getSprint(actor, f.sprint.id),
+  "sprints.createSprint": (actor, f) =>
+    createSprint(actor, f.project.key, {
+      name: "New",
+      startDate: "2026-12-01",
+      endDate: "2026-12-14",
+    }),
+  "sprints.updateSprint": (actor, f) =>
+    updateSprint(actor, f.sprint.id, { name: "Renamed", version: f.sprint.version }),
+  "sprints.deleteSprint": (actor, f) => deleteSprint(actor, f.sprint.id),
   "activity.listActivity": (actor, f) => listActivity(actor, f.task.key, { limit: 50 }),
   "comments.listComments": (actor, f) => listComments(actor, f.task.key, { limit: 50 }),
   "comments.createComment": (actor, f) => createComment(actor, f.task.id, { body: "Hello" }),
@@ -251,6 +265,7 @@ async function fingerprint(): Promise<Record<string, string>> {
     "audit_log",
     "labels",
     "task_labels",
+    "sprints",
   ];
   const result: Record<string, string> = {};
   for (const table of tables) {
@@ -264,7 +279,8 @@ async function fingerprint(): Promise<Record<string, string>> {
 }
 
 async function buildFixture(admin: Actor, key: string): Promise<Fixture> {
-  const project = await createProject(admin, { key, name: `Project ${key}` });
+  await createProject(admin, { key, name: `Project ${key}` });
+  const project = await updateProject(admin, key, { sprintsEnabled: true, version: 1 });
   const spare = await createColumn(admin, key, { name: "Spare", category: "todo" });
   const task = await createTask(admin, key, { title: "A task" });
   const deletedTask = await createTask(admin, key, { title: "A deleted task" });
@@ -272,7 +288,12 @@ async function buildFixture(admin: Actor, key: string): Promise<Fixture> {
   const epic = await createEpic(admin, key, { title: "An epic" });
   await createComment(admin, task.id, { body: "A comment" });
   const label = await createLabel(admin, key, { name: "A label", colour: "red" });
-  return { project, spare, task, deletedTask, epic, label };
+  const sprint = await createSprint(admin, key, {
+    name: "A sprint",
+    startDate: "2026-12-01",
+    endDate: "2026-12-14",
+  });
+  return { project, spare, task, deletedTask, epic, label, sprint };
 }
 
 let admin: Actor;
@@ -355,6 +376,7 @@ describe("the order of refusals (WS-073 section 3)", () => {
       () => getTask(restricted, "ZZZ-1"),
       () => updateColumn(restricted, UNKNOWN, { name: "X", version: 1 }),
       () => getEpic(restricted, UNKNOWN),
+      () => getSprint(restricted, UNKNOWN),
       () => listComments(restricted, UNKNOWN, { limit: 50 }),
       () => listActivity(restricted, UNKNOWN, { limit: 50 }),
     ];
