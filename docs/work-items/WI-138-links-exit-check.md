@@ -1,6 +1,6 @@
 # WI-138 — Sub-tasks and links end to end, the agents guide, the exit check
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-138)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item F)
 - Depends on: [WI-135](WI-135-subtasks-ui.md) (item C), [WI-136](WI-136-links-ui.md) (item
   D) and [WI-137](WI-137-mcp-link-tools.md) (item E), all done
