@@ -204,6 +204,7 @@ operations (doc 0006), are done.
 | [WI-133](work-items/WI-133-subtasks-api.md)                     | Sub-tasks in the API                                              | [WS-133](work-specs/WS-133-subtasks-api.md)                     |
 | [WI-134](work-items/WI-134-links-api.md)                        | Links in the API                                                  | [WS-134](work-specs/WS-134-links-api.md)                        |
 | [WI-135](work-items/WI-135-subtasks-ui.md)                      | Sub-tasks in the UI                                               | [WS-135](work-specs/WS-135-subtasks-ui.md)                      |
+| [WI-136](work-items/WI-136-links-ui.md)                         | Links in the UI                                                   | [WS-136](work-specs/WS-136-links-ui.md)                         |
 
 ## Follow-ups
 
