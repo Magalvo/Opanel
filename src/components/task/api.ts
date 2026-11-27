@@ -4,7 +4,7 @@ import { commentSchema } from "@/lib/schemas/comments";
 import { type Epic, epicPageSchema } from "@/lib/schemas/epics";
 import { MAX_PAGE_LIMIT } from "@/lib/schemas/pagination";
 import { bugReportPageSchema } from "@/lib/schemas/task-bug-reports";
-import { taskSchema, type UpdateTaskRequest } from "@/lib/schemas/tasks";
+import { taskListItemPageSchema, taskSchema, type UpdateTaskRequest } from "@/lib/schemas/tasks";
 
 export { listColumns } from "@/components/projects/api";
 export { listAllTeams, searchPeople } from "@/components/teams/api";
@@ -80,4 +80,22 @@ export async function listOpenEpics(projectKey: string): Promise<Epic[]> {
     cursor = page.nextCursor ?? undefined;
   } while (cursor !== undefined);
   return epics;
+}
+
+/** How many tasks "Set parent" offers at a time (WS-135 section 3). */
+export const PARENT_SEARCH_SIZE = 20;
+
+/**
+ * Tasks of the project that may become a parent: not sub-tasks themselves, found by key or
+ * words (WS-135 section 3).
+ */
+export function searchParents(projectKey: string, q: string) {
+  const query = new URLSearchParams({
+    limit: String(PARENT_SEARCH_SIZE),
+    sort: "-updated",
+    projectId: projectKey,
+    parentId: "none",
+    q,
+  });
+  return call(`/api/v1/tasks?${query.toString()}`, {}, taskListItemPageSchema);
 }

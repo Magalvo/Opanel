@@ -5,7 +5,9 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   BookmarkIcon,
   BugIcon,
+  CornerDownRightIcon,
   GripVerticalIcon,
+  ListChecksIcon,
   RepeatIcon,
   SquareCheckIcon,
   UserIcon,
@@ -121,6 +123,27 @@ export function CardBody({
           </span>
         )}
         <DueDateText dueDate={task.dueDate} overdue={isOverdue(task.dueDate, done, today)} />
+        {/* A sub-task's parent and a parent's progress (WS-135 section 4). */}
+        {task.parent !== null && (
+          <span
+            role="img"
+            aria-label={`Sub-task of ${task.parent.key}`}
+            className="inline-flex items-center gap-1 font-mono"
+          >
+            <CornerDownRightIcon aria-hidden="true" className="size-3 shrink-0" />
+            <span aria-hidden="true">{task.parent.key}</span>
+          </span>
+        )}
+        {task.subtasks !== null && (
+          <span
+            role="img"
+            aria-label={`${String(task.subtasks.done)} of ${String(task.subtasks.total)} sub-tasks done`}
+            className="inline-flex items-center gap-1"
+          >
+            <ListChecksIcon aria-hidden="true" className="size-3 shrink-0" />
+            <span aria-hidden="true">{`${String(task.subtasks.done)}/${String(task.subtasks.total)}`}</span>
+          </span>
+        )}
       </span>
       <LabelChips labels={task.labels} />
     </>

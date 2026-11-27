@@ -112,3 +112,22 @@ export function withLabels(board: Board, labels: readonly Label[]): Board {
   }
   return next;
 }
+
+/**
+ * A card with its sub-task progress taken from `task`, when it holds that same version: the
+ * parent's `task.updated` that WS-133 sends when its sub-tasks change keeps its version
+ * (WS-135 section 5). Any other field stays as the card holds it.
+ */
+export function withProgress(board: Board, task: TaskSummary): Board {
+  const place = placeOf(board, task.id);
+  if (place === null) return board;
+  const column = board[place.columnId] ?? [];
+  return {
+    ...board,
+    [place.columnId]: column.map((item) =>
+      item.id === task.id && item.version === task.version
+        ? { ...item, subtasks: task.subtasks }
+        : item,
+    ),
+  };
+}

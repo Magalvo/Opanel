@@ -225,3 +225,24 @@ describe("ActivityLine: links (WS-134 test 14)", () => {
     expect(sentence({ type: "linked", newValue: null })).toBe("Ada Lovelace added a link");
   });
 });
+
+// The sentences of a parent change (WS-135 test 9).
+
+describe("ActivityLine: a parent change (WS-135)", () => {
+  const task = (name: string | null) => ({ id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000009", name });
+
+  it.each([
+    [{ field: "parentId", oldValue: null, newValue: task("OPA-1") }, "made it a sub-task of OPA-1"],
+    [{ field: "parentId", oldValue: task("OPA-1"), newValue: null }, "removed it from OPA-1"],
+    [
+      { field: "parentId", oldValue: task("OPA-1"), newValue: task("OPA-4") },
+      "moved it from OPA-1 to OPA-4",
+    ],
+    [
+      { field: "parentId", oldValue: null, newValue: task(null) },
+      "made it a sub-task of a deleted task",
+    ],
+  ] as const)("%j", (fields, words) => {
+    expect(sentence(fields)).toContain(words);
+  });
+});

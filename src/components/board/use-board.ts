@@ -19,6 +19,7 @@ import {
   replaceColumn,
   replaceInPlace,
   withLabels,
+  withProgress,
 } from "./live";
 import { applyDrop, type Board, groupByColumn, moveRequest, placeOf } from "./moves";
 
@@ -332,6 +333,35 @@ export function useBoard({
   );
 
   /**
+   * A parent's sub-tasks changed: its `task.updated` carries the version the board holds
+   * (WS-133 section 7). Its progress is read and taken; a newer version is placed as any
+   * other change is (WS-135 section 5).
+   */
+  const refreshProgress = useCallback(
+    async (taskId: string) => {
+      let loaded: TaskSummary;
+      try {
+        const task = await getTask(taskId);
+        if (task.deletedAt !== null) return;
+        loaded = summaryOf(task);
+      } catch {
+        return;
+      }
+      if (!isMounted(mounted)) return;
+      if (isHeld()) {
+        staleTasks.current.set(taskId, staleTasks.current.get(taskId) ?? false);
+        return;
+      }
+      if (heldVersion(current.current, taskId) === loaded.version) {
+        setBoard(withProgress(current.current, loaded));
+        return;
+      }
+      await placeTask(loaded);
+    },
+    [isHeld, placeTask, setBoard],
+  );
+
+  /**
    * One fetch per task at a time; an event that arrives during it fetches once more after,
    * reading the column if any of those events may have changed the order (WS-113). A
    * failure other than `404` reloads the whole board.
@@ -379,11 +409,15 @@ export function useBoard({
         case "task.created":
         case "task.restored":
         case "task.updated":
-        case "task.moved":
-          if (isNewer(heldVersion(current.current, event.entityId), event.version)) {
+        case "task.moved": {
+          const held = heldVersion(current.current, event.entityId);
+          if (isNewer(held, event.version)) {
             void refreshTask(event.entityId, event.type !== "task.updated");
+          } else if (event.type === "task.updated" && held === event.version) {
+            void refreshProgress(event.entityId);
           }
           return;
+        }
         case "column.changed":
           void reload();
           return;
@@ -397,7 +431,7 @@ export function useBoard({
           return;
       }
     },
-    [refreshLabels, refreshTask, reload, setBoard],
+    [refreshLabels, refreshProgress, refreshTask, reload, setBoard],
   );
 
   /**

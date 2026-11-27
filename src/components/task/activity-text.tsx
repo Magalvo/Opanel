@@ -184,7 +184,14 @@ function changedRef(field: string, oldValue: unknown, newValue: unknown): ReactN
             noun: "epic",
             deleted: "a deleted epic",
           }
-        : undefined;
+        : field === "parentId"
+          ? {
+              set: "made it a sub-task of",
+              clear: "removed it from",
+              noun: "parent",
+              deleted: "a deleted task",
+            }
+          : undefined;
   if (words === undefined) return undefined;
   const ref = namedSchema.nullable();
   const before = ref.safeParse(oldValue);
@@ -197,7 +204,9 @@ function changedRef(field: string, oldValue: unknown, newValue: unknown): ReactN
     return `${words.clear} ${nameOf(before.data, words.deleted)}`;
   }
   if (before.data === null || after.data === null) return undefined;
-  return `changed the ${words.noun} from ${nameOf(before.data, words.deleted)} to ${nameOf(after.data, words.deleted)}`;
+  // A parent change moves the task between parents (WS-135 section 6).
+  const change = field === "parentId" ? "moved it" : `changed the ${words.noun}`;
+  return `${change} from ${nameOf(before.data, words.deleted)} to ${nameOf(after.data, words.deleted)}`;
 }
 
 function changedLabels(oldValue: unknown, newValue: unknown): ReactNode {

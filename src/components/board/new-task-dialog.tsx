@@ -31,6 +31,7 @@ export function NewTaskDialog({
   onOpenChange,
   onCreated,
   onArchived,
+  parent,
 }: Readonly<{
   projectKey: string;
   /** The column the task goes to the end of; `null` for the end of the backlog. */
@@ -40,6 +41,8 @@ export function NewTaskDialog({
   onOpenChange: (open: boolean) => void;
   onCreated: (task: Task) => void;
   onArchived: () => void;
+  /** The task the new one is a sub-task of (WS-135 section 2). */
+  parent?: { id: string; key: string } | undefined;
 }>) {
   const id = useId();
   const [title, setTitle] = useState("");
@@ -63,6 +66,7 @@ export function NewTaskDialog({
         title: parsed.data,
         type,
         columnId: column === null ? null : column.id,
+        ...(parent === undefined ? {} : { parentId: parent.id }),
       });
       onCreated(task);
       onOpenChange(false);
@@ -96,7 +100,11 @@ export function NewTaskDialog({
       >
         <DialogHeader>
           <DialogTitle>
-            {column === null ? "Add a task to the backlog" : `Add a task to ${column.name}`}
+            {parent !== undefined
+              ? `Add a sub-task to ${parent.key}`
+              : column === null
+                ? "Add a task to the backlog"
+                : `Add a task to ${column.name}`}
           </DialogTitle>
           <DialogDescription>
             {column === null
