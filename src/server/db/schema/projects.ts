@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
 import { teams } from "./teams";
@@ -20,6 +29,8 @@ export const projects = pgTable(
     // Where a bug goes when no rule names a team for its layer (WT-06 decision 2). A team
     // named here cannot be deleted (`team_in_use`).
     triageTeamId: uuid("triage_team_id").references(() => teams.id, { onDelete: "restrict" }),
+    // Whether the project works in sprints (WT-10 decision 4); written with sprints:manage.
+    sprintsEnabled: boolean("sprints_enabled").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

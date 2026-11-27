@@ -9,6 +9,9 @@ const OTHER_CONFLICTS: Partial<Record<ProblemCode, string>> = {
   project_archived: "the project is archived (code `project_archived`)",
   last_done_column: "it would leave the project without a Done column (code `last_done_column`)",
   account_inactive: "the person to assign is deactivated (code `account_inactive`)",
+  sprint_active: "a sprint is active, so sprints cannot be turned off (code `sprint_active`)",
+  sprint_completed: "the sprint is completed (code `sprint_completed`)",
+  sprints_disabled: "the project does not use sprints (code `sprints_disabled`)",
 };
 
 /**

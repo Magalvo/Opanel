@@ -599,6 +599,90 @@ describe("buildOpenApiDocument", () => {
     expect(links.delete.responses).not.toHaveProperty("200");
   });
 
+  it("describes sprints: the five operations, Sprint, sprintsEnabled, the codes, the event (WS-140)", () => {
+    const { schemas } = parsedDocument().components;
+    const json = JSON.stringify(documentAsJson());
+    const operationSchema = z.object({
+      "x-opanel-permission": z.string(),
+      parameters: z.array(z.object({ name: z.string(), in: z.string() })).optional(),
+      responses: z.record(z.string(), z.unknown()),
+    });
+    const { paths } = z
+      .object({
+        paths: z.object({
+          "/api/v1/projects/{projectId}/sprints": z.object({
+            get: operationSchema,
+            post: operationSchema,
+          }),
+          "/api/v1/sprints/{sprintId}": z.object({
+            get: operationSchema,
+            patch: operationSchema,
+            delete: operationSchema,
+          }),
+        }),
+      })
+      .parse(documentAsJson());
+    const list = paths["/api/v1/projects/{projectId}/sprints"];
+    const one = paths["/api/v1/sprints/{sprintId}"];
+
+    expect(list.get["x-opanel-permission"]).toBe("tasks:read");
+    expect(
+      (list.get.parameters ?? [])
+        .filter((parameter) => parameter.in === "query")
+        .map((parameter) => parameter.name)
+        .sort(),
+    ).toEqual(["cursor", "limit", "state"]);
+    expect(list.post["x-opanel-permission"]).toBe("sprints:manage");
+    expect(Object.keys(list.post.responses)).toEqual(
+      expect.arrayContaining(["201", "400", "404", "409"]),
+    );
+    expect(one.get["x-opanel-permission"]).toBe("tasks:read");
+    expect(one.patch["x-opanel-permission"]).toBe("sprints:manage");
+    expect(one.delete["x-opanel-permission"]).toBe("sprints:manage");
+    expect(Object.keys(one.delete.responses)).toEqual(expect.arrayContaining(["204", "409"]));
+    expect(one.delete.responses).not.toHaveProperty("200");
+
+    expect(schemas.SprintState).toMatchObject({
+      type: "string",
+      enum: ["planned", "active", "completed"],
+    });
+    expect(schemas.Sprint).toMatchObject({
+      required: expect.arrayContaining([
+        "id",
+        "projectId",
+        "name",
+        "goal",
+        "startDate",
+        "endDate",
+        "state",
+        "startedAt",
+        "completedAt",
+        "version",
+      ]) as unknown,
+    });
+    expect(schemas.SprintPage).toBeDefined();
+    expect(schemas.CreateSprintRequest).toMatchObject({
+      required: expect.arrayContaining(["name", "startDate", "endDate"]) as unknown,
+    });
+    expect(schemas.UpdateSprintRequest).toMatchObject({ required: ["version"] });
+    expect(schemas.Project).toMatchObject({
+      properties: { sprintsEnabled: { type: "boolean" } },
+      required: expect.arrayContaining(["sprintsEnabled"]) as unknown,
+    });
+    expect(schemas.UpdateProjectRequest).toMatchObject({
+      properties: { sprintsEnabled: { type: "boolean" } },
+    });
+    for (const code of [
+      "sprints_disabled",
+      "sprint_active",
+      "sprint_not_planned",
+      "sprint_completed",
+    ]) {
+      expect(json, code).toContain(code);
+    }
+    expect(json).toContain('"sprint.changed"');
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 
@@ -691,12 +775,18 @@ describe("buildOpenApiDocument", () => {
   });
 
   it.each([
-    ["/api/v1/projects/{projectId}", "patch", "Project", ["project_archived"]],
+    ["/api/v1/projects/{projectId}", "patch", "Project", ["project_archived", "sprint_active"]],
     ["/api/v1/columns/{columnId}", "patch", "Column", ["project_archived", "last_done_column"]],
     ["/api/v1/columns/{columnId}/move", "post", "Column", ["project_archived"]],
     ["/api/v1/tasks/{taskId}", "patch", "Task", ["project_archived", "account_inactive"]],
     ["/api/v1/tasks/{taskId}/move", "post", "Task", ["project_archived"]],
     ["/api/v1/epics/{epicId}", "patch", "Epic", ["project_archived"]],
+    [
+      "/api/v1/sprints/{sprintId}",
+      "patch",
+      "Sprint",
+      ["project_archived", "sprint_completed", "sprints_disabled"],
+    ],
   ])("documents every 409 of %s %s (WS-083)", (path, method, entity, codes) => {
     const conflict = z
       .object({

@@ -18,6 +18,7 @@ function project(key: string, name: string, archived = false): Project {
     name,
     description: "",
     archivedAt: archived ? "2026-11-14T10:00:00.000Z" : null,
+    sprintsEnabled: false,
     version: 1,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",

@@ -1,5 +1,5 @@
 {
-  "id": "8c8c5d20-d594-43ee-9f9e-1203ce40ca21",
+  "id": "4b76a16d-7db3-4d66-a775-79e6f080d224",
   "prevId": "60f871cd-ae85-4bfb-84c0-e88f6bf0c71f",
   "version": "7",
   "dialect": "postgresql",
@@ -1532,6 +1532,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "sprints_enabled": {
+          "name": "sprints_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1822,6 +1829,205 @@
       },
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sprints": {
+      "name": "sprints",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "goal": {
+          "name": "goal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'planned'"
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_points": {
+          "name": "total_points",
+          "type": "numeric(7, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_points": {
+          "name": "completed_points",
+          "type": "numeric(7, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sprints_one_active_idx": {
+          "name": "sprints_one_active_idx",
+          "columns": [
+            {
+              "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"sprints\".\"state\" = 'active'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sprints_project_order_idx": {
+          "name": "sprints_project_order_idx",
+          "columns": [
+            {
+              "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sprints_project_id_projects_id_fk": {
+          "name": "sprints_project_id_projects_id_fk",
+          "tableFrom": "sprints",
+          "tableTo": "projects",
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "sprints_created_by_accounts_id_fk": {
+          "name": "sprints_created_by_accounts_id_fk",
+          "tableFrom": "sprints",
+          "tableTo": "accounts",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "sprints_state_check": {
+          "name": "sprints_state_check",
+          "value": "\"sprints\".\"state\" in ('planned', 'active', 'completed')"
+        },
+        "sprints_dates_ordered": {
+          "name": "sprints_dates_ordered",
+          "value": "\"sprints\".\"end_date\" >= \"sprints\".\"start_date\""
+        },
+        "sprints_version_positive": {
+          "name": "sprints_version_positive",
+          "value": "\"sprints\".\"version\" >= 1"
+        },
+        "sprints_completed_check": {
+          "name": "sprints_completed_check",
+          "value": "case when \"sprints\".\"state\" = 'completed'\n        then \"sprints\".\"completed_at\" is not null and \"sprints\".\"total_points\" is not null and \"sprints\".\"completed_points\" is not null\n        else \"sprints\".\"completed_at\" is null and \"sprints\".\"total_points\" is null and \"sprints\".\"completed_points\" is null end"
+        },
+        "sprints_started_check": {
+          "name": "sprints_started_check",
+          "value": "(\"sprints\".\"started_at\" is null) = (\"sprints\".\"state\" = 'planned')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.task_events": {
@@ -2237,12 +2443,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "story_points": {
-          "name": "story_points",
-          "type": "numeric(4, 1)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "reporter_account_id": {
           "name": "reporter_account_id",
           "type": "uuid",
@@ -2609,10 +2809,6 @@
         "tasks_priority_check": {
           "name": "tasks_priority_check",
           "value": "\"tasks\".\"priority\" in ('none', 'low', 'medium', 'high', 'urgent')"
-        },
-        "tasks_story_points_check": {
-          "name": "tasks_story_points_check",
-          "value": "\"tasks\".\"story_points\" is null or (\"tasks\".\"story_points\" between 0 and 999.5 and \"tasks\".\"story_points\" * 2 = trunc(\"tasks\".\"story_points\" * 2))"
         },
         "tasks_parent_not_self_check": {
           "name": "tasks_parent_not_self_check",

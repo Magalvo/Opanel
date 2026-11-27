@@ -235,3 +235,41 @@ export function decodeTaskListCursor(value: string, sort: string, length: number
   }
   return { sort: result.data.s, values: result.data.v, id: result.data.i };
 }
+
+/**
+ * Where a page of sprints ended (WS-140 question 2): the last sprint's start date, its
+ * creation time with microseconds and its id, the order of the list.
+ */
+export interface SprintCursor {
+  startDate: string;
+  createdAt: string;
+  id: string;
+}
+
+const sprintCursorSchema = z.strictObject({
+  d: z.iso.date().refine((value) => !value.startsWith("0000-")),
+  t: cursorInstantSchema,
+  i: z.uuid(),
+});
+
+export function encodeSprintCursor(cursor: SprintCursor): string {
+  return Buffer.from(
+    JSON.stringify({ d: cursor.startDate, t: cursor.createdAt, i: cursor.id }),
+  ).toString("base64url");
+}
+
+/** Throws `400` naming the field `cursor` if the value is not a sprint cursor of this API. */
+export function decodeSprintCursor(value: string): SprintCursor {
+  const invalid = invalidRequest([{ path: "cursor", message: "Invalid cursor." }]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch {
+    throw invalid;
+  }
+  const result = sprintCursorSchema.safeParse(parsed);
+  if (!result.success) {
+    throw invalid;
+  }
+  return { startDate: result.data.d, createdAt: result.data.t, id: result.data.i };
+}

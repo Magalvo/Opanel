@@ -1,12 +1,15 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
+import type { Permission } from "@/lib/schemas/permissions";
+import type { Actor } from "@/server/auth/actor";
 import { createTestAccount, createTestAgent, failAuditFor, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { auditLog, columns, projects } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
 import { loadAgentActor } from "./agents";
+import { listenForEvents } from "./events-testing";
 import {
   archiveProject,
   createProject,
@@ -171,6 +174,97 @@ describe("updateProject", () => {
     expect((await failure(updateProject(actor, UNKNOWN, { name: "X", version: 1 }))).status).toBe(
       404,
     );
+  });
+});
+
+describe("the sprints setting (WS-140 test 10)", () => {
+  it("is off by default; a Manager turns it on and off, with project.updated and project.changed", async () => {
+    const { account, actor } = await manager();
+    const project = await createProject(actor, { key: "OPA", name: "Opanel" });
+    expect(project.sprintsEnabled).toBe(false);
+    const listener = await listenForEvents();
+    try {
+      const on = await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
+      const off = await updateProject(actor, "OPA", { sprintsEnabled: false, version: 2 });
+      const both = await updateProject(actor, "OPA", {
+        name: "Board",
+        sprintsEnabled: true,
+        version: 3,
+      });
+
+      expect(on).toMatchObject({ sprintsEnabled: true, version: 2 });
+      expect(off).toMatchObject({ sprintsEnabled: false, version: 3 });
+      expect(both).toMatchObject({ name: "Board", sprintsEnabled: true, version: 4 });
+      expect(await getProject(actor, "OPA")).toEqual(both);
+      expect(
+        (await audits())
+          .filter((entry) => entry.action === "project.updated")
+          .map((entry) => [entry.actorAccountId, entry.data]),
+      ).toEqual([
+        [account.id, { changed: ["sprintsEnabled"] }],
+        [account.id, { changed: ["sprintsEnabled"] }],
+        [account.id, { changed: ["name", "sprintsEnabled"] }],
+      ]);
+      await listener.settle();
+      expect(
+        listener
+          .events()
+          .filter((event) => event.type === "project.changed")
+          .map((event) => event.version),
+      ).toEqual([2, 3, 4]);
+    } finally {
+      await listener.close();
+    }
+  });
+
+  it("needs sprints:manage for the setting and projects:manage for the name", async () => {
+    const { actor } = await manager();
+    await createProject(actor, { key: "OPA", name: "Opanel" });
+    const member = testActor(await createTestAccount({ email: "mia@example.com", role: "member" }));
+    const sprintsOnly: Actor = { ...actor, permissions: new Set<Permission>(["sprints:manage"]) };
+    const projectsOnly: Actor = { ...actor, permissions: new Set<Permission>(["projects:manage"]) };
+
+    expect(
+      (await failure(updateProject(member, "OPA", { sprintsEnabled: true, version: 1 }))).status,
+    ).toBe(403);
+    expect(
+      (await failure(updateProject(projectsOnly, "OPA", { sprintsEnabled: true, version: 1 })))
+        .status,
+    ).toBe(403);
+    expect(
+      (
+        await failure(
+          updateProject(sprintsOnly, "OPA", { name: "X", sprintsEnabled: true, version: 1 }),
+        )
+      ).status,
+    ).toBe(403);
+    expect(await getProject(actor, "OPA")).toMatchObject({ sprintsEnabled: false, version: 1 });
+    expect(
+      (await updateProject(sprintsOnly, "OPA", { sprintsEnabled: true, version: 1 }))
+        .sprintsEnabled,
+    ).toBe(true);
+  });
+});
+
+describe("turning sprints off with an active sprint (WS-140 test 11)", () => {
+  it("is 409 sprint_active and writes nothing", async () => {
+    const { actor } = await manager();
+    const project = await createProject(actor, { key: "OPA", name: "Opanel" });
+    await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
+    // Item D starts sprints; until then the state is set in the database.
+    await getDb().execute(sql`
+      insert into sprints (project_id, name, start_date, end_date, state, started_at)
+      values (${project.id}, 'Now', '2026-12-01', '2026-12-14', 'active', now())`);
+    const before = await audits();
+
+    const error = await failure(updateProject(actor, "OPA", { sprintsEnabled: false, version: 2 }));
+
+    expect(error).toMatchObject({ status: 409, code: "sprint_active" });
+    expect(await getProject(actor, "OPA")).toMatchObject({ sprintsEnabled: true, version: 2 });
+    expect(await audits()).toEqual(before);
+    expect(
+      (await updateProject(actor, "OPA", { name: "Renamed", version: 2 })).sprintsEnabled,
+    ).toBe(true);
   });
 });
 

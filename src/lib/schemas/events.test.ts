@@ -31,6 +31,7 @@ const examples = {
   "column.changed": { ...common, type: "column.changed", entity: "column", version: 2 },
   "epic.changed": { ...common, type: "epic.changed", entity: "epic", version: 1 },
   "label.changed": { ...common, type: "label.changed", entity: "label", version: 1 },
+  "sprint.changed": { ...common, type: "sprint.changed", entity: "sprint", version: 1 },
   "project.changed": {
     ...common,
     type: "project.changed",
@@ -51,6 +52,12 @@ describe("projectEventSchema (WS-045)", () => {
 
   it.each(Object.entries(examples))("accepts a valid %s", (_type, event) => {
     expect(projectEventSchema.parse(event)).toEqual(event);
+  });
+
+  it("accepts a deleted sprint, whose version is null (WS-140)", () => {
+    const deleted = { ...examples["sprint.changed"], version: null };
+
+    expect(projectEventSchema.parse(deleted)).toEqual(deleted);
   });
 
   it("accepts a deleted label, whose version is null (WS-107)", () => {

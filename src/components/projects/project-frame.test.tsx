@@ -22,6 +22,7 @@ const opa: Project = {
   name: "Opanel",
   description: "",
   archivedAt: null,
+  sprintsEnabled: false,
   version: 1,
   createdAt: "2026-11-12T10:00:00.000Z",
   updatedAt: "2026-11-12T10:00:00.000Z",
