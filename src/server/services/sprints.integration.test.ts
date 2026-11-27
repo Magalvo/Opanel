@@ -5,12 +5,13 @@ import { describe, expect, it } from "vitest";
 import { agentActor } from "@/server/auth/actor";
 import { createTestAccount, createTestAgent, failAuditFor, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
-import { auditLog } from "@/server/db/schema";
+import { auditLog, taskEvents } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
 import { listenForEvents } from "./events-testing";
 import { archiveProject, createProject, updateProject } from "./projects";
 import { createSprint, deleteSprint, getSprint, listSprints, updateSprint } from "./sprints";
+import { createTask, deleteTask, getTask, listBacklog } from "./tasks";
 
 const UNKNOWN = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
 
@@ -435,5 +436,59 @@ describe("a restricted agent (WS-140 test 9)", () => {
     expect((await failure(listSprints(restricted, "OPA", { limit: 50 }))).status).toBe(403);
     expect((await failure(getSprint(restricted, ours.id))).status).toBe(403);
     expect((await failure(getSprint(restricted, UNKNOWN))).status).toBe(404);
+  });
+});
+
+describe("deleteSprint and its tasks (WS-141 test 18)", () => {
+  it("makes the sprint's tasks unscheduled, keeping their rank, with history and events", async () => {
+    const { manager, managerAccount } = await setup();
+    const sprint = await createSprint(manager, "OPA", { name: "Gone", ...DATES });
+    const a = await createTask(manager, "OPA", { title: "A", sprintId: sprint.id });
+    const b = await createTask(manager, "OPA", { title: "B" });
+    const c = await createTask(manager, "OPA", { title: "C", sprintId: sprint.id });
+    const gone = await createTask(manager, "OPA", { title: "Deleted", sprintId: sprint.id });
+    await deleteTask(manager, gone.key);
+    const listener = await listenForEvents();
+    try {
+      await deleteSprint(manager, sprint.id);
+
+      const page = await listBacklog(manager, "OPA", { limit: 10 });
+      expect(page.items.map((task) => [task.key, task.sprint])).toEqual([
+        [a.key, null],
+        [b.key, null],
+        [c.key, null],
+      ]);
+      const [deleted] = await getDb().execute<{ sprint_id: string | null }>(
+        sql`select sprint_id from tasks where id = ${gone.id}`,
+      );
+      expect(deleted?.sprint_id).toBeNull();
+      for (const task of [a, c]) {
+        const history = await getDb()
+          .select()
+          .from(taskEvents)
+          .where(eq(taskEvents.taskId, task.id))
+          .orderBy(taskEvents.id);
+        expect(history.at(-1)).toMatchObject({
+          type: "field_changed",
+          field: "sprintId",
+          oldValue: sprint.id,
+          newValue: null,
+          actorAccountId: managerAccount.id,
+        });
+      }
+      await listener.settle();
+      expect(
+        listener
+          .events()
+          .filter((event) => event.entity === "task")
+          .map((event) => [event.type, event.entityId, event.version]),
+      ).toEqual([
+        ["task.updated", a.id, 2],
+        ["task.updated", c.id, 2],
+      ]);
+      expect((await getTask(manager, a.key)).version).toBe(2);
+    } finally {
+      await listener.close();
+    }
   });
 });

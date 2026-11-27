@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -12,11 +13,16 @@ import {
   createTestAgent,
   createTestToken,
   signInCookie,
+  testActor,
 } from "@/server/auth/testing";
+import { getDb } from "@/server/db/client";
+import { updateProject } from "@/server/services/projects";
+import { createSprint } from "@/server/services/sprints";
 import { createTask } from "@/server/services/tasks";
 
 import { GET as list, POST as create } from "../../projects/[projectId]/tasks/route";
 import { POST as projectsPost } from "../../projects/route";
+import { POST as move } from "./move/route";
 import { DELETE, GET, PATCH } from "./route";
 
 function project(projectId: string) {
@@ -376,5 +382,106 @@ describe("task endpoints", () => {
 
     expect(await statuses(viewer)).toEqual([403, 403, 200, 200]);
     expect(await statuses()).toEqual([401, 401, 401, 401]);
+  });
+
+  it("takes sprintId on create, edit and move, names it in a 400, and answers the 409 codes (WS-141 test 22)", async () => {
+    const manager = await cookieFor("manager");
+    await projectsPost(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const owner = testActor(
+      await createTestAccount({ email: "owner@example.com", role: "manager" }),
+    );
+    await updateProject(owner, "OPA", { sprintsEnabled: true, version: 1 });
+    const dates = { startDate: "2026-12-01", endDate: "2026-12-14" };
+    const active = await createSprint(owner, "OPA", { name: "Sprint 1", ...dates });
+    const planned = await createSprint(owner, "OPA", { name: "Sprint 2", ...dates });
+    const cookie = await cookieFor("member");
+    const post = (body: unknown) =>
+      create(apiRequest("POST", "/api/v1/projects/OPA/tasks", { cookie, body }), project("OPA"));
+    const patch = (key: string, body: unknown) =>
+      PATCH(apiRequest("PATCH", `/api/v1/tasks/${key}`, { cookie, body }), task(key));
+    const moveTo = (key: string, body: unknown) =>
+      move(apiRequest("POST", `/api/v1/tasks/${key}/move`, { cookie, body }), task(key));
+    const code = async (response: Response) => {
+      const problem = problemSchema.parse(await response.json());
+      return [response.status, problem.code, problem.errors?.map((field) => field.path)];
+    };
+
+    const created = await post({ title: "Planned", sprintId: planned.id });
+    expect(created.status).toBe(201);
+    expect(taskSchema.parse(await created.json()).sprint).toEqual({
+      id: planned.id,
+      name: "Sprint 2",
+      state: "planned",
+    });
+    // No active sprint yet: a column is refused.
+    const firstColumn = (
+      await getDb().execute<{ id: string }>(sql`select id from columns order by position limit 1`)
+    )[0]?.id;
+    expect(await code(await moveTo("OPA-1", { columnId: firstColumn, version: 1 }))).toEqual([
+      409,
+      "no_active_sprint",
+      undefined,
+    ]);
+    expect(
+      await code(await moveTo("OPA-1", { columnId: firstColumn, sprintId: null, version: 1 })),
+    ).toEqual([400, "invalid_request", ["sprintId"]]);
+
+    await getDb().execute(
+      sql`update sprints set state = 'active', started_at = now() where id = ${active.id}`,
+    );
+    const edited = await patch("OPA-1", { sprintId: active.id, version: 1 });
+    expect(edited.status).toBe(200);
+    expect(taskSchema.parse(await edited.json()).columnId).toBe(firstColumn);
+
+    const sub = await post({ title: "Sub", parentId: "OPA-1" });
+    expect(sub.status).toBe(201);
+    expect(await code(await moveTo("OPA-2", { columnId: null, version: 1 }))).toEqual([
+      409,
+      "subtask_follows_parent",
+      undefined,
+    ]);
+    expect(await code(await patch("OPA-2", { sprintId: planned.id, version: 1 }))).toEqual([
+      400,
+      "invalid_request",
+      ["sprintId"],
+    ]);
+
+    const backToBacklog = await moveTo("OPA-1", {
+      columnId: null,
+      sprintId: planned.id,
+      version: 2,
+    });
+    expect(backToBacklog.status).toBe(200);
+    expect(taskSchema.parse(await backToBacklog.json()).sprint?.id).toBe(planned.id);
+    expect(await code(await post({ title: "Bad", sprintId: "not-a-uuid" }))).toEqual([
+      400,
+      "invalid_request",
+      ["sprintId"],
+    ]);
+
+    await getDb().execute(sql`
+      update sprints set state = 'completed', completed_at = now(), total_points = 0,
+        completed_points = 0
+      where id = ${active.id}`);
+    const done = await post({ title: "Done" });
+    expect(done.status).toBe(201);
+    await getDb().execute(
+      sql`update tasks set sprint_id = ${active.id}, column_id = ${firstColumn ?? null} where number = 3`,
+    );
+    expect(await code(await patch("OPA-3", { sprintId: null, version: 1 }))).toEqual([
+      409,
+      "sprint_completed",
+      undefined,
+    ]);
+
+    await updateProject(owner, "OPA", { sprintsEnabled: false, version: 2 });
+    expect(await code(await patch("OPA-3", { sprintId: planned.id, version: 1 }))).toEqual([
+      409,
+      "sprints_disabled",
+      undefined,
+    ]);
   });
 });

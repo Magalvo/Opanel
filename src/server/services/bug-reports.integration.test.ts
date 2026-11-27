@@ -12,8 +12,8 @@ import { ApiError } from "@/server/http/errors";
 import { fileBugReport, listBugReports } from "./bug-reports";
 import { listColumns } from "./columns";
 import { type EventListener, listenForEvents } from "./events-testing";
-import { archiveProject, createProject } from "./projects";
-import { createTask, deleteTask, getTask, moveTask, updateTask } from "./tasks";
+import { archiveProject, createProject, updateProject } from "./projects";
+import { createTask, deleteTask, getTask, listBacklog, moveTask, updateTask } from "./tasks";
 import { createTeam } from "./teams";
 import { updateTriage } from "./triage";
 
@@ -539,5 +539,32 @@ describe("listBugReports (WS-090)", () => {
     expect(seen).toHaveLength(12);
     expect(new Set(seen).size).toBe(12);
     expect(seen).toEqual([...seen].sort().reverse());
+  });
+});
+
+describe("fileBugReport in a project with sprints (WS-141 test 19)", () => {
+  it("puts a new bug at the top of the backlog, unscheduled", async () => {
+    const { managerActor, bot } = await setup();
+    await updateProject(managerActor, "OPA", { sprintsEnabled: true, version: 1 });
+    const first = await createTask(managerActor, "OPA", { title: "Already there" });
+
+    await fileBugReport(bot, "OPA", report());
+
+    const bug = await getTask(managerActor, "OPA-2");
+    expect([bug.columnId, bug.sprint]).toEqual([null, null]);
+    expect((await listBacklog(managerActor, "OPA", { limit: 10 })).items.map((t) => t.key)).toEqual(
+      ["OPA-2", first.key],
+    );
+    const [created] = await historyOf(bug.id);
+    expect(created?.newValue).toMatchObject({ columnId: null });
+  });
+
+  it("still puts it at the top of the first column without sprints", async () => {
+    const { managerActor, columns, bot } = await setup();
+
+    await fileBugReport(bot, "OPA", report());
+
+    const bug = await getTask(managerActor, "OPA-1");
+    expect([bug.columnId, bug.sprint]).toEqual([columns[0]?.id, null]);
   });
 });

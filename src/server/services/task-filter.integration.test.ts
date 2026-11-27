@@ -12,7 +12,8 @@ import { fileBugReport } from "./bug-reports";
 import { listColumns } from "./columns";
 import { createEpic } from "./epics";
 import { createLabel } from "./labels";
-import { createProject } from "./projects";
+import { createProject, updateProject } from "./projects";
+import { createSprint } from "./sprints";
 import {
   createTask,
   deleteTask,
@@ -345,5 +346,44 @@ describe("text search (WS-116 tests 7 to 9)", () => {
       values (${s.project.id}, 99, 'Raw searchable row', null, 'zzz', ${s.miaAccount.id})`);
 
     expect(await backlog(s.mia, { q: "searchable" })).toEqual(["OPA-99"]);
+  });
+});
+
+describe("the sprintId filter on the project lists (WS-141 test 20)", () => {
+  it("keeps a sprint's tasks, unscheduled ones with none, the active sprint's with active", async () => {
+    const manager = testActor(
+      await createTestAccount({ name: "Manager", email: "manager@example.com", role: "manager" }),
+    );
+    await createProject(manager, { key: "OPA", name: "Opanel" });
+    await updateProject(manager, "OPA", { sprintsEnabled: true, version: 1 });
+    const dates = { startDate: "2026-12-01", endDate: "2026-12-14" };
+    const active = await createSprint(manager, "OPA", { name: "Sprint 1", ...dates });
+    const planned = await createSprint(manager, "OPA", { name: "Sprint 2", ...dates });
+    await getDb().execute(
+      sql`update sprints set state = 'active', started_at = now() where id = ${active.id}`,
+    );
+    const [todo] = (await listColumns(manager, "OPA")).items;
+    const board = await createTask(manager, "OPA", { title: "Board", columnId: todo?.id ?? "" });
+    const inPlanned = await createTask(manager, "OPA", { title: "Planned", sprintId: planned.id });
+    const none = await createTask(manager, "OPA", { title: "None" });
+
+    const boardKeys = async (sprintId: string | string[]) =>
+      (await listTasks(manager, "OPA", taskListQuerySchema.parse({ sprintId }))).items.map(
+        (t) => t.key,
+      );
+    const backlogKeys = async (sprintId: string | string[]) =>
+      (await listBacklog(manager, "OPA", backlogQuerySchema.parse({ sprintId }))).items.map(
+        (t) => t.key,
+      );
+
+    expect(await boardKeys("active")).toEqual([board.key]);
+    expect(await boardKeys(active.id)).toEqual([board.key]);
+    expect(await boardKeys("none")).toEqual([]);
+    expect(await backlogKeys(planned.id)).toEqual([inPlanned.key]);
+    expect(await backlogKeys("none")).toEqual([none.key]);
+    expect(await backlogKeys([planned.id, "none"])).toEqual([inPlanned.key, none.key]);
+    // An unknown sprint matches nothing.
+    expect(await backlogKeys("0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f")).toEqual([]);
+    expect(taskListQuerySchema.safeParse({ sprintId: "soon" }).success).toBe(false);
   });
 });
