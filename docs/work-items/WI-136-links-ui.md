@@ -1,6 +1,6 @@
 # WI-136 — Links in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-136)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item D)
 - Depends on: [WI-134](WI-134-links-api.md) (item B, done)
 - Work-spec: [WS-136](../work-specs/WS-136-links-ui.md)
