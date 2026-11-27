@@ -4,6 +4,7 @@ import { commentSchema } from "@/lib/schemas/comments";
 import { type Epic, epicPageSchema } from "@/lib/schemas/epics";
 import { MAX_PAGE_LIMIT } from "@/lib/schemas/pagination";
 import { bugReportPageSchema } from "@/lib/schemas/task-bug-reports";
+import type { TaskLinkRequest } from "@/lib/schemas/task-links";
 import { taskListItemPageSchema, taskSchema, type UpdateTaskRequest } from "@/lib/schemas/tasks";
 
 export { listColumns } from "@/components/projects/api";
@@ -82,20 +83,44 @@ export async function listOpenEpics(projectKey: string): Promise<Epic[]> {
   return epics;
 }
 
-/** How many tasks "Set parent" offers at a time (WS-135 section 3). */
-export const PARENT_SEARCH_SIZE = 20;
+/** How many tasks "Set parent" and "Add link" offer at a time (WS-135, WS-136). */
+export const TASK_SEARCH_SIZE = 20;
+
+/** The most recently updated tasks matching `q`, with the given filters. */
+function findTasks(q: string, filters: Record<string, string>) {
+  const query = new URLSearchParams({
+    limit: String(TASK_SEARCH_SIZE),
+    sort: "-updated",
+    ...filters,
+    q,
+  });
+  return call(`/api/v1/tasks?${query.toString()}`, {}, taskListItemPageSchema);
+}
 
 /**
  * Tasks of the project that may become a parent: not sub-tasks themselves, found by key or
  * words (WS-135 section 3).
  */
 export function searchParents(projectKey: string, q: string) {
+  return findTasks(q, { projectId: projectKey, parentId: "none" });
+}
+
+/** Tasks of every project the caller may reach, found by key or words (WS-136 section 3). */
+export function searchTasks(q: string) {
+  return findTasks(q, {});
+}
+
+/** Links the task to another; answers the task with its new links (WS-136 section 3). */
+export function addLink(key: string, body: TaskLinkRequest) {
+  return call(`/api/v1/tasks/${key}/links`, { method: "POST", ...jsonBody(body) }, taskSchema);
+}
+
+/** Removes the link named as the task reads it (WS-136 section 4). */
+export function removeLink(key: string, link: TaskLinkRequest): Promise<void> {
   const query = new URLSearchParams({
-    limit: String(PARENT_SEARCH_SIZE),
-    sort: "-updated",
-    projectId: projectKey,
-    parentId: "none",
-    q,
+    type: link.type,
+    direction: link.direction,
+    taskId: link.taskId,
   });
-  return call(`/api/v1/tasks?${query.toString()}`, {}, taskListItemPageSchema);
+  return callNoContent(`/api/v1/tasks/${key}/links?${query.toString()}`, { method: "DELETE" });
 }
