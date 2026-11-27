@@ -4625,7 +4625,7 @@
     "/api/v1/projects/{projectId}/tasks": {
       "get": {
         "summary": "List a project's tasks",
-        "description": "Tasks in board order: by column, then by their place in the column, with keyset pagination. Items leave out the description. Tasks in the backlog are not on the board and are listed only with `deleted=true`, after every column's. Filters only leave tasks out: a repeated parameter keeps tasks matching any of its values, and different parameters must all hold. A column, label or epic of another project is a `400`.\n\nRequires the `tasks:read` permission.",
+        "description": "Tasks in board order: by column, then by their place in the column, with keyset pagination. Items leave out the description. Tasks in the backlog are not on the board and are listed only with `deleted=true`, after every column's. In a project with sprints, the board lists the active sprint's tasks only, and nothing when none is active. Filters only leave tasks out: a repeated parameter keeps tasks matching any of its values, and different parameters must all hold. A column, label or epic of another project is a `400`.\n\nRequires the `tasks:read` permission.",
         "x-opanel-permission": "tasks:read",
         "security": [
           {
@@ -4996,6 +4996,53 @@
           },
           {
             "in": "query",
+            "name": "sprintId",
+            "schema": {
+              "description": "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of their project's active sprint. A sprint of another project matches nothing. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "active"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "active"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of their project's active sprint. A sprint of another project matches nothing. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
             "name": "priority",
             "schema": {
               "description": "Only tasks of this priority. Repeat it for any of several values.",
@@ -5284,7 +5331,7 @@
             }
           },
           "409": {
-            "description": "The project is archived (code `project_archived`), the person is deactivated (code `account_inactive`), or the parent has 100 sub-tasks (code `too_many_subtasks`).",
+            "description": "The project is archived (code `project_archived`), the person is deactivated (code `account_inactive`), the parent has 100 sub-tasks (code `too_many_subtasks`), a column is asked with no active sprint (code `no_active_sprint`), the place disagrees with the parent's sprint (code `subtask_follows_parent`), the parent's sprint is completed (code `sprint_completed`), or a sprint is given in a project without sprints (code `sprints_disabled`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5689,6 +5736,53 @@
               ]
             },
             "description": "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
+            "name": "sprintId",
+            "schema": {
+              "description": "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of their project's active sprint. A sprint of another project matches nothing. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "active"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "active"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of their project's active sprint. A sprint of another project matches nothing. Repeat it for any of several values."
           },
           {
             "in": "query",
@@ -6273,6 +6367,53 @@
           },
           {
             "in": "query",
+            "name": "sprintId",
+            "schema": {
+              "description": "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of their project's active sprint. A sprint of another project matches nothing. Repeat it for any of several values.",
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "active"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "active"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "description": "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of their project's active sprint. A sprint of another project matches nothing. Repeat it for any of several values."
+          },
+          {
+            "in": "query",
             "name": "priority",
             "schema": {
               "description": "Only tasks of this priority. Repeat it for any of several values.",
@@ -6618,7 +6759,7 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or the person to assign is deactivated (code `account_inactive`); or code `too_many_subtasks`.",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or the person to assign is deactivated (code `account_inactive`); or code `too_many_subtasks`; or a column is asked while no sprint is active (code `no_active_sprint`); or the place disagrees with the parent's sprint, which a sub-task follows (code `subtask_follows_parent`); or the sprint is completed (code `sprint_completed`); or the project does not use sprints (code `sprints_disabled`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6794,7 +6935,7 @@
     "/api/v1/tasks/{taskId}/move": {
       "post": {
         "summary": "Move a task",
-        "description": "Moves the task to the end of a column of its project, or right after or right before a task of that column; with `columnId: null`, the same within the project's backlog. Send the `version` the move is based on.\n\nRequires the `tasks:write` permission.",
+        "description": "Moves the task to the end of a column of its project, or right after or right before a task of that column; with `columnId: null`, the same within the project's backlog. In a project with sprints, a column move puts the task in the active sprint and a backlog move takes it out, unless `sprintId` names a planned sprint. Send the `version` the move is based on.\n\nRequires the `tasks:write` permission.",
         "x-opanel-permission": "tasks:write",
         "security": [
           {
@@ -6888,7 +7029,7 @@
             }
           },
           "409": {
-            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`).",
+            "description": "The entity was changed since the `version` that was sent (code `version_conflict`). `current` is the entity as it is now. Or the project is archived (code `project_archived`); or a column is asked while no sprint is active (code `no_active_sprint`); or the place disagrees with the parent's sprint, which a sub-task follows (code `subtask_follows_parent`); or the project does not use sprints (code `sprints_disabled`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10538,7 +10679,7 @@
             "$ref": "#/components/schemas/TaskType"
           },
           "columnId": {
-            "description": "A column of the project, or `null` for the end of the backlog. By default the first column.",
+            "description": "A column of the project, or `null` for the end of the backlog. By default the first column; in a project with sprints, the end of the backlog, and a column joins the active sprint (code `no_active_sprint` when there is none).",
             "anyOf": [
               {
                 "type": "string",
@@ -10549,6 +10690,12 @@
                 "type": "null"
               }
             ]
+          },
+          "sprintId": {
+            "description": "A planned or active sprint of the project: the active one puts the task at the bottom of the first column, a planned one at the end of the backlog. A sub-task's is its parent's.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "assigneeTeamId": {
             "type": "string",
@@ -10735,6 +10882,19 @@
               }
             ]
           },
+          "sprintId": {
+            "description": "A planned or active sprint of the project; `null` unschedules the task. The active sprint puts it at the bottom of the first column; a planned one or `null` puts it in the backlog, keeping its rank there. A sub-task's is its parent's.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1,
@@ -10784,6 +10944,19 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "sprintId": {
+            "description": "Only with `columnId: null`: a planned sprint of the project, or `null` to unschedule the task. Without it, a task already in the backlog keeps its sprint.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "version": {
             "type": "integer",
@@ -11270,7 +11443,9 @@
               "sprints_disabled",
               "sprint_active",
               "sprint_not_planned",
-              "sprint_completed"
+              "sprint_completed",
+              "no_active_sprint",
+              "subtask_follows_parent"
             ],
             "description": "Stable, machine-readable error code. This is what clients branch on."
           },
@@ -12718,6 +12893,17 @@
             ],
             "description": "Set on sub-tasks only."
           },
+          "sprint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The task's sprint; `null` when unscheduled. In a project with sprints, a task has a column exactly while its sprint is active or completed."
+          },
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
@@ -12848,6 +13034,7 @@
           "assignee",
           "epic",
           "parent",
+          "sprint",
           "reporter",
           "severity",
           "fingerprint",
@@ -12920,6 +13107,28 @@
           "id",
           "key",
           "title"
+        ],
+        "additionalProperties": false
+      },
+      "SprintRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SprintState"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "state"
         ],
         "additionalProperties": false
       },
@@ -13047,6 +13256,17 @@
               }
             ],
             "description": "Set on sub-tasks only."
+          },
+          "sprint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The task's sprint; `null` when unscheduled. In a project with sprints, a task has a column exactly while its sprint is active or completed."
           },
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
@@ -13196,6 +13416,7 @@
           "assignee",
           "epic",
           "parent",
+          "sprint",
           "reporter",
           "severity",
           "fingerprint",
@@ -13370,6 +13591,17 @@
             ],
             "description": "Set on sub-tasks only."
           },
+          "sprint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The task's sprint; `null` when unscheduled. In a project with sprints, a task has a column exactly while its sprint is active or completed."
+          },
           "reporter": {
             "$ref": "#/components/schemas/AccountRef"
           },
@@ -13506,6 +13738,7 @@
           "assignee",
           "epic",
           "parent",
+          "sprint",
           "reporter",
           "severity",
           "fingerprint",

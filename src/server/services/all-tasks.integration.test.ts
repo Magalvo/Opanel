@@ -13,8 +13,9 @@ import { fileBugReport } from "./bug-reports";
 import { listColumns } from "./columns";
 import { createEpic } from "./epics";
 import { createLabel } from "./labels";
-import { archiveProject, createProject } from "./projects";
+import { archiveProject, createProject, updateProject } from "./projects";
 import { recordingDb } from "./recording-db-testing";
+import { createSprint } from "./sprints";
 import { createTask, deleteTask, listAllTasks, updateTask } from "./tasks";
 import { createTeam } from "./teams";
 
@@ -573,5 +574,31 @@ describe("what listAllTasks takes from the database (WS-122 test 3)", () => {
 
     expect(recording.taskRows()).not.toHaveLength(0);
     for (const row of recording.taskRows()) expect(Object.keys(row)).not.toContain("description");
+  });
+});
+
+describe("the sprintId filter across projects (WS-141 test 20)", () => {
+  it("keeps each project's active sprint with active, and a sprint by its id", async () => {
+    const { manager, mia } = await setup();
+    const dates = { startDate: "2026-12-01", endDate: "2026-12-14" };
+    const sprints = [];
+    for (const key of ["OPA", "WEB"]) {
+      await updateProject(manager, key, { sprintsEnabled: true, version: 1 });
+      const sprint = await createSprint(manager, key, { name: `${key} 1`, ...dates });
+      await getDb().execute(
+        sql`update sprints set state = 'active', started_at = now() where id = ${sprint.id}`,
+      );
+      sprints.push(sprint);
+    }
+    const opa = await createTask(mia, "OPA", { title: "In OPA", sprintId: sprints[0]?.id ?? "" });
+    const web = await createTask(mia, "WEB", { title: "In WEB", sprintId: sprints[1]?.id ?? "" });
+
+    const keys = async (query: Record<string, unknown>) =>
+      (await listAllTasks(mia, allTasksQuerySchema.parse({ sort: "key", ...query }))).items.map(
+        (t) => t.key,
+      );
+    expect(await keys({ sprintId: "active" })).toEqual([opa.key, web.key]);
+    expect(await keys({ sprintId: sprints[1]?.id })).toEqual([web.key]);
+    expect(await keys({ sprintId: "none" })).toEqual(["OPA-1", "OPA-2", "WEB-1"]);
   });
 });

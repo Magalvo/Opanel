@@ -12,6 +12,10 @@ const OTHER_CONFLICTS: Partial<Record<ProblemCode, string>> = {
   sprint_active: "a sprint is active, so sprints cannot be turned off (code `sprint_active`)",
   sprint_completed: "the sprint is completed (code `sprint_completed`)",
   sprints_disabled: "the project does not use sprints (code `sprints_disabled`)",
+  no_active_sprint: "a column is asked while no sprint is active (code `no_active_sprint`)",
+  subtask_follows_parent:
+    "the place disagrees with the parent's sprint, which a sub-task follows (code " +
+    "`subtask_follows_parent`)",
 };
 
 /**

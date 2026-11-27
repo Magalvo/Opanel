@@ -4,9 +4,8 @@ import type { EndpointContract } from "@/lib/openapi/contract";
 import { PAYLOAD_TOO_LARGE, versionConflictResponse } from "@/lib/openapi/responses";
 
 import { calendarDateSchema } from "./dates";
-import { pageSchema, paginationQuerySchema } from "./pagination";
+import { MAX_FILTER_VALUES, pageSchema, paginationQuerySchema } from "./pagination";
 import { projectParamsSchema } from "./projects";
-import { MAX_FILTER_VALUES } from "./tasks";
 import { versionSchema } from "./version";
 
 // Sprints (canonical doc 0003 section 6, WT-10 decisions 3, 4, 8 and 10, WS-140).
@@ -16,6 +15,13 @@ export const sprintStateSchema = z
   .meta({ id: "SprintState" });
 
 export type SprintState = z.infer<typeof sprintStateSchema>;
+
+/** A task's sprint, as a task shows it (WS-141). */
+export const sprintRefSchema = z
+  .strictObject({ id: z.uuid(), name: z.string(), state: sprintStateSchema })
+  .meta({ id: "SprintRef" });
+
+export type SprintRef = z.infer<typeof sprintRefSchema>;
 
 /** Trimmed, 1 to 100 characters. */
 export const sprintNameSchema = z.string().trim().min(1).max(100);

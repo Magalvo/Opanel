@@ -57,14 +57,18 @@ interface Names {
   hiddenTasks: Set<string>;
   /** A parent named by its key (WS-133 section 8). */
   tasks: Map<string, string>;
+  /** A sprint by its name, `null` once deleted (WS-141 section 10). */
+  sprints: Map<string, string>;
 }
 
-const FIELD_KIND: Record<string, "accounts" | "teams" | "epics" | "tasks" | undefined> = {
-  assigneeAccountId: "accounts",
-  assigneeTeamId: "teams",
-  epicId: "epics",
-  parentId: "tasks",
-};
+const FIELD_KIND: Record<string, "accounts" | "teams" | "epics" | "tasks" | "sprints" | undefined> =
+  {
+    assigneeAccountId: "accounts",
+    assigneeTeamId: "teams",
+    epicId: "epics",
+    parentId: "tasks",
+    sprintId: "sprints",
+  };
 
 function isObject(value: Json): value is Record<string, Json> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -93,6 +97,7 @@ function idsIn(rows: EventRow[]) {
     teams: new Set<string>(),
     epics: new Set<string>(),
     tasks: new Set<string>(),
+    sprints: new Set<string>(),
   };
   const columns = new Set<string>();
   const linkedTasks = new Set<string>();
@@ -129,6 +134,7 @@ async function readNames(executor: Executor, actor: Actor, rows: EventRow[]): Pr
     columns: new Map(),
     hiddenTasks: new Set(),
     tasks: new Map(),
+    sprints: new Map(),
   };
   if (ids.accounts.size > 0) {
     const found = await executor.execute<{ id: string; name: string; kind: AccountKind }>(
@@ -140,6 +146,7 @@ async function readNames(executor: Executor, actor: Actor, rows: EventRow[]): Pr
     ["teams", sql`select id, name from teams`],
     ["epics", sql`select id, title as name from epics`],
     ["columns", sql`select id, name from columns`],
+    ["sprints", sql`select id, name from sprints`],
     // A task keeps its key when deleted, so a deleted parent is still named.
     [
       "tasks",

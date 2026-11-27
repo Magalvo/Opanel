@@ -14,7 +14,8 @@ import { createColumn, deleteColumn, listColumns } from "./columns";
 import { createComment } from "./comments";
 import { createEpic } from "./epics";
 import { createLabel, deleteLabel } from "./labels";
-import { createProject } from "./projects";
+import { createProject, updateProject } from "./projects";
+import { createSprint, deleteSprint } from "./sprints";
 import { addTaskLink, removeTaskLink } from "./task-links";
 import { createTask, deleteTask, moveTask, restoreTask, updateTask } from "./tasks";
 import { createTeam, deleteTeam, renameTeam } from "./teams";
@@ -358,5 +359,33 @@ describe("links in the activity (WS-134 test 13)", () => {
       (item) => item.type === "linked",
     );
     expect(hidden.map((item) => item.newValue)).toEqual([{ ...reading, task: null }]);
+  });
+});
+
+describe("sprints in the activity (WS-141 test 21)", () => {
+  it("names a sprintId value by the sprint's name, and null once the sprint is gone", async () => {
+    const { manager, member, task } = await setup();
+    await updateProject(manager, "OPA", { sprintsEnabled: true, version: 1 });
+    const dates = { startDate: "2026-12-01", endDate: "2026-12-14" };
+    const kept = await createSprint(manager, "OPA", { name: "Sprint 1", ...dates });
+    const gone = await createSprint(manager, "OPA", { name: "Sprint 2", ...dates });
+
+    const one = await updateTask(member, "OPA-1", { sprintId: gone.id, version: task.version });
+    await updateTask(member, "OPA-1", { sprintId: kept.id, version: one.version });
+    await deleteSprint(manager, gone.id);
+    const page = await listActivity(member, "OPA-1", { limit: 50 });
+
+    const changes = events(page).filter(
+      (item) => item.type === "field_changed" && item.field === "sprintId",
+    );
+    expect(changes.map((item) => [item.oldValue, item.newValue])).toEqual(
+      expect.arrayContaining([
+        [null, { id: gone.id, name: null }],
+        [
+          { id: gone.id, name: null },
+          { id: kept.id, name: "Sprint 1" },
+        ],
+      ]) as unknown,
+    );
   });
 });

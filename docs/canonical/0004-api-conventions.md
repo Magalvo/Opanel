@@ -149,6 +149,8 @@ Rules:
   | `409`  | `sprint_active`              | A sprint is active, so sprints cannot be turned off             | WS-140    |
   | `409`  | `sprint_not_planned`         | Only a planned sprint can be deleted                            | WS-140    |
   | `409`  | `sprint_completed`           | The sprint is completed, so it cannot change                    | WS-140    |
+  | `409`  | `no_active_sprint`           | A column is asked in a project with sprints, and none is active | WS-141    |
+  | `409`  | `subtask_follows_parent`     | A sub-task's place disagrees with its parent's sprint           | WS-141    |
   | `409`  | `agent_disabled`             | The agent is disabled                                           | WS-075    |
   | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process          | WS-047    |
   | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full       | WS-056    |

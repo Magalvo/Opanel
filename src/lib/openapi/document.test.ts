@@ -683,6 +683,64 @@ describe("buildOpenApiDocument", () => {
     expect(json).toContain('"sprint.changed"');
   });
 
+  it("describes tasks in sprints: sprintId, SprintRef, the move's field, the filter, the codes (WS-141)", () => {
+    const { schemas } = parsedDocument().components;
+    const json = JSON.stringify(documentAsJson());
+
+    expect(schemas.SprintRef).toMatchObject({
+      type: "object",
+      properties: { state: { $ref: "#/components/schemas/SprintState" } },
+      required: ["id", "name", "state"],
+      additionalProperties: false,
+    });
+    for (const name of ["Task", "TaskSummary", "TaskListItem"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: {
+          sprint: { anyOf: [{ $ref: "#/components/schemas/SprintRef" }, { type: "null" }] },
+        },
+        required: expect.arrayContaining(["sprint"]) as unknown,
+      });
+    }
+    expect(schemas.CreateTaskRequest).toMatchObject({
+      properties: { sprintId: { type: "string", format: "uuid" } },
+    });
+    for (const name of ["UpdateTaskRequest", "MoveTaskRequest"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: {
+          sprintId: { anyOf: [{ type: "string", format: "uuid" }, { type: "null" }] },
+        },
+      });
+    }
+
+    const { paths } = z
+      .object({
+        paths: z.record(
+          z.string(),
+          z.record(
+            z.string(),
+            z.object({
+              parameters: z
+                .array(z.object({ name: z.string(), description: z.string().optional() }))
+                .optional(),
+            }),
+          ),
+        ),
+      })
+      .parse(documentAsJson());
+    for (const path of [
+      "/api/v1/projects/{projectId}/tasks",
+      "/api/v1/projects/{projectId}/backlog",
+      "/api/v1/tasks",
+    ]) {
+      const sprintId = paths[path]?.get?.parameters?.find((p) => p.name === "sprintId");
+      expect(sprintId, path).toBeDefined();
+      expect(sprintId?.description, path).toContain("`active`");
+    }
+    for (const code of ["no_active_sprint", "subtask_follows_parent"]) {
+      expect(json, code).toContain(code);
+    }
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 
@@ -778,8 +836,25 @@ describe("buildOpenApiDocument", () => {
     ["/api/v1/projects/{projectId}", "patch", "Project", ["project_archived", "sprint_active"]],
     ["/api/v1/columns/{columnId}", "patch", "Column", ["project_archived", "last_done_column"]],
     ["/api/v1/columns/{columnId}/move", "post", "Column", ["project_archived"]],
-    ["/api/v1/tasks/{taskId}", "patch", "Task", ["project_archived", "account_inactive"]],
-    ["/api/v1/tasks/{taskId}/move", "post", "Task", ["project_archived"]],
+    [
+      "/api/v1/tasks/{taskId}",
+      "patch",
+      "Task",
+      [
+        "project_archived",
+        "account_inactive",
+        "no_active_sprint",
+        "subtask_follows_parent",
+        "sprint_completed",
+        "sprints_disabled",
+      ],
+    ],
+    [
+      "/api/v1/tasks/{taskId}/move",
+      "post",
+      "Task",
+      ["project_archived", "no_active_sprint", "subtask_follows_parent", "sprints_disabled"],
+    ],
     ["/api/v1/epics/{epicId}", "patch", "Epic", ["project_archived"]],
     [
       "/api/v1/sprints/{sprintId}",

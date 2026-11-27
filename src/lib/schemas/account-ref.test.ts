@@ -51,6 +51,7 @@ describe("account references (WS-074)", () => {
       priority: "none",
       dueDate: null,
       storyPoints: null,
+      sprint: null,
       labels: [],
       subtasks: null,
       version: 1,

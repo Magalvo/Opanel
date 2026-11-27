@@ -79,6 +79,22 @@ function parentOf(values: readonly string[]): SQL {
   return sql`(${sql.join(parts, sql` or `)})`;
 }
 
+/**
+ * `sprintId` (WS-141 section 9): a sprint's tasks, unscheduled ones for `none`, and the
+ * tasks of their project's active sprint for `active`. A sprint of another project, or none
+ * at all, matches nothing.
+ */
+function sprintOf(values: readonly string[]): SQL {
+  const parts: SQL[] = [];
+  const ids = values.filter((value) => value !== "none" && value !== "active");
+  if (ids.length > 0) parts.push(sql`t.sprint_id in (${list(ids, sql`::uuid`)})`);
+  if (values.includes("none")) parts.push(sql`t.sprint_id is null`);
+  if (values.includes("active")) {
+    parts.push(sql`t.sprint_id in (select s.id from sprints s where s.state = 'active')`);
+  }
+  return sql`(${sql.join(parts, sql` or `)})`;
+}
+
 /** The projects a list covers: some named ones, or every one the actor may read (WS-118). */
 export interface TaskListScope {
   actor: Actor;
@@ -168,6 +184,7 @@ export async function taskFilterWhere(
   }
   if (filter.epicId) conditions.push(anyOf(sql`t.epic_id`, filter.epicId, "none", sql`::uuid`));
   if (filter.parentId) conditions.push(parentOf(filter.parentId));
+  if (filter.sprintId) conditions.push(sprintOf(filter.sprintId));
   if (filter.priority) conditions.push(anyOf(sql`t.priority`, filter.priority));
   if (filter.severity) conditions.push(anyOf(sql`t.severity`, filter.severity));
   if (filter.dueFrom !== undefined) conditions.push(sql`t.due_date >= ${filter.dueFrom}::date`);

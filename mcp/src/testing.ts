@@ -159,6 +159,7 @@ export function taskSummary(
     priority: "none",
     dueDate: null,
     storyPoints: null,
+    sprint: null,
     labels: [],
     subtasks: null,
     version: 1,

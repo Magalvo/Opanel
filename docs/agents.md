@@ -166,10 +166,11 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN"   "https://opanel.example.co
   match as written, in any language.
 - **Filters.** Each filter is a parameter named after the field: `projectId`, `type`,
   `columnId`, `category`, `done`, `assigneeTeamId`, `assigneeAccountId`,
-  `reporterAccountId`, `reporterKind`, `labelId`, `epicId`, `parentId`, `priority`, `severity`,
-  `dueFrom` and `dueTo`. A repeated parameter means any of its values, and different
-  parameters must all hold. `none` matches an empty field and `me` your own account. At
-  most 20 values each; an unknown value is a `400` naming the parameter.
+  `reporterAccountId`, `reporterKind`, `labelId`, `epicId`, `parentId`, `sprintId`,
+  `priority`, `severity`, `dueFrom` and `dueTo`. A repeated parameter means any of its
+  values, and different parameters must all hold. `none` matches an empty field and `me`
+  your own account; `sprintId` also takes "active", the active sprint of the task's project.
+  At most 20 values each; an unknown value is a `400` naming the parameter.
 - **Where they apply.** `GET /api/v1/projects/{projectId}/tasks` and
   `GET /api/v1/projects/{projectId}/backlog` take every filter but `projectId`, and the
   backlog has no column filter. `GET /api/v1/tasks?projectId=OPA` lists the tasks of every

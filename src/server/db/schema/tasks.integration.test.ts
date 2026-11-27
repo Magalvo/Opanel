@@ -72,3 +72,21 @@ describe("tasks.parent_task_id (WS-133 test 1)", () => {
     expect(row?.parent_task_id).toBe(parent);
   });
 });
+
+describe("tasks.sprint_id (WS-141 test 1)", () => {
+  it("refuses deleting a sprint that a task references", async () => {
+    const { insertTask } = await setup();
+    const task = await insertTask(1);
+    const [project] = await client()<
+      { id: string }[]
+    >`select project_id as id from tasks where id = ${task}`;
+    const sprint = await one(client()<{ id: string }[]>`
+      insert into sprints (project_id, name, start_date, end_date)
+      values (${project?.id ?? ""}, 'Sprint 1', '2026-12-01', '2026-12-14') returning id`);
+    await client()`update tasks set sprint_id = ${sprint} where id = ${task}`;
+
+    expect(await refusal(client()`delete from sprints where id = ${sprint}`)).toBe(
+      "tasks_sprint_id_sprints_id_fk",
+    );
+  });
+});
