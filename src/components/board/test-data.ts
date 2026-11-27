@@ -58,6 +58,7 @@ export function task(
     lastReportedAt: null,
     priority: "none",
     dueDate: null,
+    storyPoints: null,
     labels: [],
     subtasks: null,
     version: 1,

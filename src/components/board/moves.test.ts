@@ -51,6 +51,7 @@ function task(number: number, columnId: string, version = 1): TaskSummary {
     lastReportedAt: null,
     priority: "none",
     dueDate: null,
+    storyPoints: null,
     labels: [],
     subtasks: null,
     version,

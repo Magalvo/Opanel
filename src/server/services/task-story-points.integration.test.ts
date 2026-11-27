@@ -2,6 +2,8 @@
 import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
+import { POST as create } from "@/app/api/v1/projects/[projectId]/tasks/route";
+import { PATCH } from "@/app/api/v1/tasks/[taskId]/route";
 import { problemSchema } from "@/lib/schemas/problem";
 import { taskSchema } from "@/lib/schemas/tasks";
 import { agentActor } from "@/server/auth/actor";
@@ -15,9 +17,6 @@ import {
 import { getDb } from "@/server/db/client";
 import { taskEvents, tasks } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
-
-import { POST as create } from "@/app/api/v1/projects/[projectId]/tasks/route";
-import { PATCH } from "@/app/api/v1/tasks/[taskId]/route";
 
 import { listActivity } from "./activity";
 import { createProject } from "./projects";
@@ -56,7 +55,8 @@ describe("the story_points column (WS-139 test 1)", () => {
     const { actor } = await setup();
     const task = await createTask(actor, "OPA", { title: "T" });
 
-    for (const value of ["-0.5", "1000", "1.25"]) {
+    // 1.25 is stored as 1.3, not a multiple of 0.5; 999.6 is above the top.
+    for (const value of ["-0.5", "1.25", "999.6"]) {
       await expect(
         getDb().execute(
           sql`update tasks set story_points = ${value}::numeric where id = ${task.id}`,
@@ -64,6 +64,10 @@ describe("the story_points column (WS-139 test 1)", () => {
         value,
       ).rejects.toMatchObject({ cause: { constraint_name: "tasks_story_points_check" } });
     }
+    // numeric(4,1) holds at most 999.9: 1000 is refused before the check, as an overflow.
+    await expect(
+      getDb().execute(sql`update tasks set story_points = 1000 where id = ${task.id}`),
+    ).rejects.toMatchObject({ cause: { code: "22003" } });
     for (const value of ["0", "0.5", "999.5"]) {
       await getDb().execute(
         sql`update tasks set story_points = ${value}::numeric where id = ${task.id}`,
@@ -166,7 +170,7 @@ describe("a change to storyPoints in the history (WS-139 test 4)", () => {
     );
     expect(
       answered.map((item) =>
-        item.kind === "event" ? [item.oldValue, item.newValue, item.actor.name] : [],
+        item.kind === "event" ? [item.oldValue, item.newValue, item.actor?.name] : [],
       ),
     ).toEqual([
       [null, 3, "Mia"],

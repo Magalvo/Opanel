@@ -68,6 +68,7 @@ const deleted: TaskSummary = {
   lastReportedAt: null,
   priority: "none",
   dueDate: null,
+  storyPoints: null,
   labels: [],
   subtasks: null,
   version: 2,

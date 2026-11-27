@@ -22,6 +22,7 @@ import {
   PRIORITIES,
   type Priority,
   prioritySchema,
+  STORY_POINTS_MAX,
   type Task,
   taskSchema,
   taskTitleSchema,
@@ -36,7 +37,7 @@ import { SEVERITY_LABELS } from "./bug-labels";
 import { isOverdue } from "./due-date";
 import { ParentField } from "./parent-field";
 import { PersonField, personLabel } from "./person-field";
-import { DueDateText, PRIORITY_LABELS, PriorityIcon } from "./task-meta";
+import { DueDateText, formatPoints, PRIORITY_LABELS, PriorityIcon } from "./task-meta";
 
 const SELECT =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:text-sm dark:bg-input/30";
@@ -66,6 +67,8 @@ interface Draft {
   priority: Priority;
   /** `""` for none, as a date input holds it (WS-110 section 4). */
   dueDate: string;
+  /** `""` for none, as a number input holds it (WS-139 section 6). */
+  storyPoints: string;
   /** The chosen labels, in the order they were chosen (WS-108 section 3). */
   labelIds: string[];
 }
@@ -93,6 +96,7 @@ function draftOf(task: Task): Draft {
     epicId: task.epic?.id ?? "",
     priority: task.priority,
     dueDate: task.dueDate ?? "",
+    storyPoints: task.storyPoints === null ? "" : String(task.storyPoints),
     labelIds: task.labels.map((label) => label.id),
   };
 }
@@ -119,6 +123,9 @@ function changesOf(task: Task, draft: Draft): Omit<UpdateTaskRequest, "version">
   if (draft.dueDate !== (task.dueDate ?? "")) {
     changes.dueDate = draft.dueDate === "" ? null : draft.dueDate;
   }
+  // Emptied points clear them: `null` (WS-139 section 6).
+  const points = draft.storyPoints === "" ? null : Number(draft.storyPoints);
+  if (points !== task.storyPoints) changes.storyPoints = points;
   // Only when the set changed, so a save of other fields needs no labels:write (WS-108).
   if (
     !sameIds(
@@ -231,6 +238,9 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
               ) : (
                 <DueDateText dueDate={task.dueDate} overdue={overdue} />
               )}
+            </Row>
+            <Row term="Story points">
+              {task.storyPoints === null ? "None" : formatPoints(task.storyPoints)}
             </Row>
             <Row term="Labels">
               {task.labels.length === 0 ? "None" : <LabelChips labels={task.labels} />}
@@ -548,6 +558,26 @@ function DetailsForm({
             )}
           </div>
           {errorText("dueDate")}
+        </div>
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor={`${id}-story-points`} className="text-sm font-medium">
+            Story points
+          </label>
+          <Input
+            id={`${id}-story-points`}
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={STORY_POINTS_MAX}
+            step={0.5}
+            value={draft.storyPoints}
+            className="min-w-0"
+            onChange={(event) => {
+              set("storyPoints", event.target.value);
+            }}
+            {...described("storyPoints")}
+          />
+          {errorText("storyPoints")}
         </div>
         <div className="sm:col-span-2">
           <LabelPicker

@@ -336,7 +336,13 @@ describe("epic progress and the backlog", () => {
     await createTask(actor, "OPA", { title: "Board", epicId: epic.id });
     await createTask(actor, "OPA", { title: "Later", columnId: null, epicId: epic.id });
 
-    expect((await getEpic(actor, epic.id)).progress).toEqual({ doneTasks: 1, totalTasks: 3 });
+    expect((await getEpic(actor, epic.id)).progress).toEqual({
+      doneTasks: 1,
+      totalTasks: 3,
+      donePoints: 0,
+      totalPoints: 0,
+      unestimated: 3,
+    });
   });
 });
 

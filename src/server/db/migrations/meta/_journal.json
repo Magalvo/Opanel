@@ -183,6 +183,13 @@
       "when": 1795701215509,
       "tag": "0025_task_links_types",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795791301442,
+      "tag": "0026_task_story_points",
+      "breakpoints": true
     }
   ]
 }

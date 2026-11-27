@@ -6,6 +6,7 @@ import {
   date,
   index,
   integer,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -58,6 +59,8 @@ export const tasks = pgTable(
     // Priority and due date (WT-07 decisions 6 and 7, WS-102).
     priority: text("priority").notNull().default("none"),
     dueDate: date("due_date", { mode: "string" }),
+    // Story points: 0 to 999.5 in steps of 0.5, or none (WT-10 decision 1, WS-139).
+    storyPoints: numeric("story_points", { precision: 4, scale: 1, mode: "number" }),
     reporterAccountId: uuid("reporter_account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
@@ -87,6 +90,10 @@ export const tasks = pgTable(
     check(
       "tasks_priority_check",
       sql`${table.priority} in ('none', 'low', 'medium', 'high', 'urgent')`,
+    ),
+    check(
+      "tasks_story_points_check",
+      sql`${table.storyPoints} is null or (${table.storyPoints} between 0 and 999.5 and ${table.storyPoints} * 2 = trunc(${table.storyPoints} * 2))`,
     ),
     uniqueIndex("tasks_project_number_idx").on(table.projectId, table.number),
     uniqueIndex("tasks_column_position_idx").on(table.columnId, table.position),

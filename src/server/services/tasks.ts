@@ -87,6 +87,8 @@ function taskSelect(extra: SQL = sql``, { description = false } = {}): SQL {
     t.severity, t.fingerprint, t.occurrences,
     to_char(t.last_reported_at at time zone 'utc', ${ISO_MS}) as last_reported_at,
     t.priority, to_char(t.due_date, 'YYYY-MM-DD') as due_date,
+    -- numeric comes back as a string; every value it holds is exact in a float8 (WS-139).
+    t.story_points::float8 as story_points,
     coalesce((
       select json_agg(json_build_object('id', l.id, 'name', l.name, 'colour', l.colour)
                       order by lower(l.name), l.id)
@@ -150,6 +152,7 @@ interface SummaryRow extends Record<string, unknown> {
   last_reported_at: string | null;
   priority: Priority;
   due_date: string | null;
+  story_points: number | null;
   labels: LabelRef[];
   version: number;
   column_position: string | null;
@@ -202,6 +205,7 @@ function toSummary(row: SummaryRow): TaskSummary {
     lastReportedAt: row.last_reported_at,
     priority: row.priority,
     dueDate: row.due_date,
+    storyPoints: row.story_points,
     labels: row.labels,
     subtasks:
       row.subtasks_total === 0 ? null : { done: row.subtasks_done, total: row.subtasks_total },
@@ -647,6 +651,21 @@ const SORT_KEYS: Record<TaskSortField, SortKey[]> = {
       value: calendarDateSchema,
     },
   ],
+  storyPoints: [
+    {
+      expression: sql`(t.story_points is null)`,
+      text: sql`(t.story_points is null)::text`,
+      cast: sql`::boolean`,
+      value: z.string().regex(/^(true|false)$/),
+      alwaysAscending: true,
+    },
+    {
+      expression: sql`coalesce(t.story_points, 0)`,
+      text: sql`coalesce(t.story_points, 0)::text`,
+      cast: sql`::numeric`,
+      value: z.string().regex(/^\d{1,3}(\.\d)?$/),
+    },
+  ],
   created: [timestampKey(sql`t.created_at`)],
   updated: [timestampKey(sql`t.updated_at`)],
 };
@@ -903,6 +922,7 @@ export async function createTask(
         severity: input.severity ?? null,
         priority: input.priority ?? "none",
         dueDate: input.dueDate ?? null,
+        storyPoints: input.storyPoints ?? null,
         reporterAccountId: actor.accountId,
       })
       .returning({ id: tasks.id });
@@ -943,6 +963,7 @@ const EDITABLE = [
   ["severity", "severity"],
   ["priority", "priority"],
   ["dueDate", "due_date"],
+  ["storyPoints", "story_points"],
   ["assigneeTeamId", "assignee_team_id"],
   ["assigneeAccountId", "assignee_account_id"],
   ["epicId", "epic_id"],
@@ -1000,6 +1021,7 @@ export async function updateTask(
         type !== "bug" ? null : input.severity === undefined ? before.severity : input.severity,
       priority: input.priority ?? before.priority,
       dueDate: input.dueDate === undefined ? before.due_date : input.dueDate,
+      storyPoints: input.storyPoints === undefined ? before.story_points : input.storyPoints,
       assigneeTeamId:
         input.assigneeTeamId === undefined ? before.assignee_team_id : input.assigneeTeamId,
       assigneeAccountId:
@@ -1038,6 +1060,7 @@ export async function updateTask(
       update tasks set
         title = ${after.title}, description = ${after.description}, type = ${after.type},
         severity = ${after.severity}, priority = ${after.priority}, due_date = ${after.dueDate},
+        story_points = ${after.storyPoints},
         assignee_team_id = ${after.assigneeTeamId}, assignee_account_id = ${after.assigneeAccountId},
         epic_id = ${after.epicId}, parent_task_id = ${after.parentId},
         version = version + 1, updated_at = now()

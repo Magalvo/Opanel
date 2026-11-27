@@ -6,6 +6,7 @@ import {
   BookmarkIcon,
   BugIcon,
   CornerDownRightIcon,
+  GaugeIcon,
   GripVerticalIcon,
   ListChecksIcon,
   RepeatIcon,
@@ -19,7 +20,12 @@ import type { ReactNode } from "react";
 import { LabelChips } from "@/components/labels/label-chip";
 import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { isOverdue } from "@/components/task/due-date";
-import { DueDateText, PriorityIcon } from "@/components/task/task-meta";
+import {
+  DueDateText,
+  formatPoints,
+  PriorityIcon,
+  storyPointsName,
+} from "@/components/task/task-meta";
 import { Badge } from "@/components/ui/badge";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useToday } from "@/hooks/use-today";
@@ -123,6 +129,17 @@ export function CardBody({
           </span>
         )}
         <DueDateText dueDate={task.dueDate} overdue={isOverdue(task.dueDate, done, today)} />
+        {/* Story points, only when the task has some (WS-139 section 6, question 1). */}
+        {task.storyPoints !== null && (
+          <span
+            role="img"
+            aria-label={storyPointsName(task.storyPoints)}
+            className="inline-flex items-center gap-1 tabular-nums"
+          >
+            <GaugeIcon aria-hidden="true" className="size-3 shrink-0" />
+            <span aria-hidden="true">{formatPoints(task.storyPoints)}</span>
+          </span>
+        )}
         {/* A sub-task's parent and a parent's progress (WS-135 section 4). */}
         {task.parent !== null && (
           <span

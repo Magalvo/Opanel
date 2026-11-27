@@ -30,11 +30,18 @@ const EPIC_SELECT = sql`
     e.version,
     to_char(e.created_at at time zone 'utc', ${ISO_MS}) as created_at,
     to_char(e.updated_at at time zone 'utc', ${ISO_MS}) as updated_at,
-    (select count(*)::int from tasks t
-      where t.epic_id = e.id and t.deleted_at is null) as total_tasks,
-    (select count(*)::int from tasks t join columns c on c.id = t.column_id
-      where t.epic_id = e.id and t.deleted_at is null and c.category = 'done') as done_tasks
-  from epics e`;
+    ep.total_tasks, ep.done_tasks, ep.total_points, ep.done_points, ep.unestimated
+  from epics e
+  -- The epic's live tasks, read once (WS-139 section 4); sub-tasks count as stored.
+  cross join lateral (
+    select count(*)::int as total_tasks,
+      (count(*) filter (where c.category = 'done'))::int as done_tasks,
+      coalesce(sum(t.story_points), 0)::float8 as total_points,
+      coalesce(sum(t.story_points) filter (where c.category = 'done'), 0)::float8 as done_points,
+      (count(*) filter (where t.story_points is null))::int as unestimated
+    from tasks t left join columns c on c.id = t.column_id
+    where t.epic_id = e.id and t.deleted_at is null
+  ) ep`;
 
 interface EpicRow extends Record<string, unknown> {
   id: string;
@@ -49,6 +56,9 @@ interface EpicRow extends Record<string, unknown> {
   updated_at: string;
   total_tasks: number;
   done_tasks: number;
+  total_points: number;
+  done_points: number;
+  unestimated: number;
 }
 
 function toEpic(row: EpicRow): Epic {
@@ -60,7 +70,13 @@ function toEpic(row: EpicRow): Epic {
     status: row.status,
     startDate: row.start_date,
     targetDate: row.target_date,
-    progress: { doneTasks: row.done_tasks, totalTasks: row.total_tasks },
+    progress: {
+      doneTasks: row.done_tasks,
+      totalTasks: row.total_tasks,
+      donePoints: row.done_points,
+      totalPoints: row.total_points,
+      unestimated: row.unestimated,
+    },
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

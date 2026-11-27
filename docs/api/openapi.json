@@ -5808,16 +5808,18 @@
                 "title",
                 "priority",
                 "dueDate",
+                "storyPoints",
                 "created",
                 "updated",
                 "-key",
                 "-title",
                 "-priority",
                 "-dueDate",
+                "-storyPoints",
                 "-created",
                 "-updated"
               ],
-              "description": "A field, ascending, or `-` and a field, descending. Tasks with no due date come last either way."
+              "description": "A field, ascending, or `-` and a field, descending. Tasks with no due date, or with no story points, come last either way."
             }
           }
         ],
@@ -9939,6 +9941,13 @@
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
           },
+          "storyPoints": {
+            "description": "From 0 to 999.5, in steps of 0.5. By default none.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999.5,
+            "multipleOf": 0.5
+          },
           "labelIds": {
             "maxItems": 20,
             "type": "array",
@@ -10052,6 +10061,21 @@
                 "type": "string",
                 "format": "date",
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storyPoints": {
+            "description": "From 0 to 999.5, in steps of 0.5; `null` clears them.",
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 999.5,
+                "multipleOf": 0.5,
+                "description": "Story points: from 0 to 999.5, in steps of 0.5."
               },
               {
                 "type": "null"
@@ -12016,6 +12040,21 @@
             ],
             "description": "A calendar date, or `null`."
           },
+          "storyPoints": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 999.5,
+                "multipleOf": 0.5,
+                "description": "Story points: from 0 to 999.5, in steps of 0.5."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Story points, from 0 to 999.5 in steps of 0.5; `null` when none."
+          },
           "labels": {
             "type": "array",
             "items": {
@@ -12082,6 +12121,7 @@
           "lastReportedAt",
           "priority",
           "dueDate",
+          "storyPoints",
           "labels",
           "subtasks",
           "version",
@@ -12330,6 +12370,21 @@
             ],
             "description": "A calendar date, or `null`."
           },
+          "storyPoints": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 999.5,
+                "multipleOf": 0.5,
+                "description": "Story points: from 0 to 999.5, in steps of 0.5."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Story points, from 0 to 999.5 in steps of 0.5; `null` when none."
+          },
           "labels": {
             "type": "array",
             "items": {
@@ -12414,6 +12469,7 @@
           "lastReportedAt",
           "priority",
           "dueDate",
+          "storyPoints",
           "labels",
           "subtasks",
           "version",
@@ -12636,6 +12692,21 @@
             ],
             "description": "A calendar date, or `null`."
           },
+          "storyPoints": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 999.5,
+                "multipleOf": 0.5,
+                "description": "Story points: from 0 to 999.5, in steps of 0.5."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Story points, from 0 to 999.5 in steps of 0.5; `null` when none."
+          },
           "labels": {
             "type": "array",
             "items": {
@@ -12708,6 +12779,7 @@
           "lastReportedAt",
           "priority",
           "dueDate",
+          "storyPoints",
           "labels",
           "subtasks",
           "version",
@@ -12919,14 +12991,33 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
+              },
+              "donePoints": {
+                "type": "number",
+                "minimum": 0,
+                "description": "The story points of the done tasks, sub-tasks counted as stored."
+              },
+              "totalPoints": {
+                "type": "number",
+                "minimum": 0,
+                "description": "The story points of every task."
+              },
+              "unestimated": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "How many of the tasks have no points."
               }
             },
             "required": [
               "doneTasks",
-              "totalTasks"
+              "totalTasks",
+              "donePoints",
+              "totalPoints",
+              "unestimated"
             ],
             "additionalProperties": false,
-            "description": "Tasks of the epic that are not deleted; done ones are in a column of the `done` category."
+            "description": "Tasks of the epic that are not deleted; done ones are in a column of the `done` category (WS-139: points too)."
           },
           "version": {
             "type": "integer",

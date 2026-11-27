@@ -1,0 +1,2 @@
+ALTER TABLE "tasks" ADD COLUMN "story_points" numeric(4, 1);--> statement-breakpoint
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_story_points_check" CHECK ("tasks"."story_points" is null or ("tasks"."story_points" between 0 and 999.5 and "tasks"."story_points" * 2 = trunc("tasks"."story_points" * 2)));

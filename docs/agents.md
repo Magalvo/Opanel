@@ -143,8 +143,12 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN" \
   sets it.
 - **Due date.** `dueDate` is a calendar date, `YYYY-MM-DD`, or `null`. It has no time
   of day.
-- **Who may set them.** An agent with `tasks:write` may set `priority` and `dueDate`
-  when it creates or edits a task, and the task's history names the agent.
+- **Story points.** `storyPoints` is a number from 0 to 999.5 in steps of 0.5, or `null`
+  for none (the default); `null` on an edit clears them. Any other value is a `400` naming
+  `storyPoints`. A sub-task has points of its own, and an epic's `progress` sums its tasks'
+  points (`donePoints`, `totalPoints`) and counts those with none (`unestimated`).
+- **Who may set them.** An agent with `tasks:write` may set `priority`, `dueDate` and
+  `storyPoints` when it creates or edits a task, and the task's history names the agent.
 - **Labels.** `labels` lists the task's labels as `{ id, name, colour }`, and
   `GET /api/v1/projects/{projectId}/labels` lists the project's. Agents read labels but do
   not apply them: a body with `labelIds` answers `403`.
@@ -172,8 +176,9 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN"   "https://opanel.example.co
   project you may read, board and backlog together, or of the projects you name; a
   project outside your reach is a `403`.
 - **Order.** The list across projects takes `sort`: `key`, `title`, `priority`,
-  `dueDate`, `created` or `updated`, ascending, or with `-` before it, descending. The
-  default is `-updated`, newest first. Tasks with no due date come last either way.
+  `dueDate`, `storyPoints`, `created` or `updated`, ascending, or with `-` before it,
+  descending. The default is `-updated`, newest first. Tasks with no due date, or with no
+  story points, come last either way.
 - **A task's history.** `GET /api/v1/tasks/{taskId}/activity` lists its changes and
   comments, oldest first, each change naming who made it, person or agent. Ids of
   accounts, teams, columns and epics come with their names, and a name is `null` when

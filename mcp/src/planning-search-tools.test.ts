@@ -90,7 +90,7 @@ function epic(title: string, status: "open" | "closed" = "open") {
     status,
     startDate: null,
     targetDate: null,
-    progress: { doneTasks: 1, totalTasks: 3 },
+    progress: { doneTasks: 1, totalTasks: 3, donePoints: 0, totalPoints: 0, unestimated: 3 },
     version: 1,
     createdAt: AT,
     updatedAt: AT,

@@ -59,3 +59,13 @@ export function DueDateText({
     </span>
   );
 }
+
+/** A number of story points as text: "3", "0.5" (WS-139 section 6). */
+export function formatPoints(points: number): string {
+  return String(points);
+}
+
+/** "1 story point", "3 story points": a card's points in words (WS-139 section 6). */
+export function storyPointsName(points: number): string {
+  return `${formatPoints(points)} story point${points === 1 ? "" : "s"}`;
+}

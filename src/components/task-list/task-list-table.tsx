@@ -6,11 +6,11 @@ import Link from "next/link";
 import { taskHref, TYPE_LABELS } from "@/components/board/task-card";
 import { relativeTime } from "@/components/task/activity-text";
 import { isOverdue } from "@/components/task/due-date";
-import { DueDateText, PRIORITY_LABELS } from "@/components/task/task-meta";
+import { DueDateText, formatPoints, PRIORITY_LABELS } from "@/components/task/task-meta";
 import type { TaskListItem, TaskSort, TaskSortField } from "@/lib/schemas/tasks";
 
-// The table of the list view (WS-130 section 4): one row per task, the five sortable
-// headers each a button that sets the order.
+// The table of the list view (WS-130 section 4): one row per task, the sortable headers
+// each a button that sets the order; "Points" since WS-139.
 
 interface ColumnSpec {
   name: string;
@@ -27,6 +27,7 @@ const COLUMNS: readonly ColumnSpec[] = [
   { name: "Priority", sort: "priority" },
   { name: "Assignee" },
   { name: "Due", sort: "dueDate" },
+  { name: "Points", sort: "storyPoints" },
   { name: "Updated", sort: "updated", firstDescending: true },
 ];
 
@@ -127,6 +128,9 @@ export function TaskListTable({
                     dueDate={item.dueDate}
                     overdue={isOverdue(item.dueDate, done, today)}
                   />
+                </td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                  {item.storyPoints === null ? "" : formatPoints(item.storyPoints)}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   <time dateTime={item.updatedAt} title={updated.toLocaleString()}>

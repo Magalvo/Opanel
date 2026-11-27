@@ -63,7 +63,7 @@ function epic(id: string, title: string, status: "open" | "closed"): Epic {
     status,
     startDate: null,
     targetDate: null,
-    progress: { doneTasks: 0, totalTasks: 0 },
+    progress: { doneTasks: 0, totalTasks: 0, donePoints: 0, totalPoints: 0, unestimated: 0 },
     version: 1,
     createdAt: "2026-11-12T10:00:00.000Z",
     updatedAt: "2026-11-12T10:00:00.000Z",
