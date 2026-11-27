@@ -214,7 +214,12 @@ Risks:
   card badge, the "Points" column, the timeline's words, the epic's points text.
   `docs/agents.md`, the MCP search and update tool descriptions, and the fixtures of
   `TaskSummary` and `Epic.progress` gained the new fields.
-- Gate on 2026-11-27:
+- Merge of `main` after item B (#144) (a2cd9f2, snapshot formatted in the next commit): item
+  B's migration took `0026_sprints`, so this item's own migration and snapshot were
+  deleted and `pnpm db:generate` made `0027_task_story_points`, the same SQL with the check
+  constraint as generated; the fixtures of `TaskSummary` merged with item B's `Project`
+  changes without conflict.
+- Gate on 2026-11-27, before the merge:
   - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
     leave no diff;
   - Vitest 2717 of 2717 (241 files). An earlier full run under load from another
@@ -225,6 +230,14 @@ Risks:
     violation) passed on `--last-failed`. Full runs that overlapped item B's suite or
     another worktree's Vitest timed out on board and live pages; the same specs pass
     alone;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+- Gate on 2026-11-27, after the merge of `main` (de3be7c):
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2766 of 2766 (245 files);
+  - `pnpm test:e2e` 146 of 146;
+  - the worktree's test databases, migrated with the earlier `0026_task_story_points`,
+    were dropped first so the harness migrated them afresh;
   - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
 
 ## Deviations
@@ -242,3 +255,6 @@ Risks:
    estimated at 0 points shows "0 / 0 points".
 4. **`opanel_update_task`'s description names story points** among the fields it changes,
    beside the search tool's sort list that section 8 named.
+5. **The migration is `0027_task_story_points`, not `0026_task_story_points`** (sections 2
+   and "Data model changes"): item B merged first with `0026_sprints`, and this item
+   regenerated its own after taking in `main`, as section 1 and `AGENTS.md` section 8 say.
