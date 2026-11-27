@@ -206,6 +206,7 @@ operations (doc 0006), are done.
 | [WI-135](work-items/WI-135-subtasks-ui.md)                      | Sub-tasks in the UI                                               | [WS-135](work-specs/WS-135-subtasks-ui.md)                      |
 | [WI-136](work-items/WI-136-links-ui.md)                         | Links in the UI                                                   | [WS-136](work-specs/WS-136-links-ui.md)                         |
 | [WI-137](work-items/WI-137-mcp-link-tools.md)                   | MCP tools for links, sub-tasks on the task tools                  | [WS-137](work-specs/WS-137-mcp-link-tools.md)                   |
+| [WI-138](work-items/WI-138-links-exit-check.md)                 | Sub-tasks and links end to end, the agents guide, the exit check  | [WS-138](work-specs/WS-138-links-exit-check.md)                 |
 
 ## Follow-ups
 
