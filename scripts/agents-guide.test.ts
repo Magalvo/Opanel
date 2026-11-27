@@ -230,10 +230,13 @@ describe("docs/agents.md (WS-078)", () => {
   });
 
   it("names only real problem codes, and the four of sub-tasks and links (WS-138)", () => {
-    const codes = codeSpans(section(guide(), "Sub-tasks and links")).filter(
-      (span) =>
-        /^[a-z]+(_[a-z]+)+$/.test(span) && !(TASK_LINK_TYPES as readonly string[]).includes(span),
-    );
+    // "`409 link_exists`" is a status and a code in one span.
+    const codes = codeSpans(section(guide(), "Sub-tasks and links"))
+      .flatMap((span) => span.split(" "))
+      .filter(
+        (span) =>
+          /^[a-z]+(_[a-z]+)+$/.test(span) && !(TASK_LINK_TYPES as readonly string[]).includes(span),
+      );
     expect(codes.filter((code) => !(PROBLEM_CODES as readonly string[]).includes(code))).toEqual(
       [],
     );

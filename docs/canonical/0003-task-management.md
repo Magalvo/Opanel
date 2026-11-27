@@ -4,7 +4,8 @@
 - Date: 2026-11-12
 - Amends: [0001](0001-ai-qa-agents-and-triage.md) (human roles, task links, see section 12)
 - Amended by: [WT-06](../work-tracks/WT-06-bug-reports-and-triage.md) decision 9 (section 7: the `task_links` table and its first type; applied 2026-11-20 by WI-094);
-  [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) proposals P2 and P3 (sections 8 and 4: search, the list view, the epic filter; applied 2026-11-26 by WI-131)
+  [WT-08](../work-tracks/WT-08-search-filters-list-timeline.md) proposals P2 and P3 (sections 8 and 4: search, the list view, the epic filter; applied 2026-11-26 by WI-131);
+  [WT-09](../work-tracks/WT-09-subtasks-and-links.md) proposals P1 to P3 (sections 7 and 3: a sub-task's epic and deleting a parent, who links and how links are stored, the link permission; applied 2026-11-27 by WI-138)
 
 ## 1. Context
 
@@ -53,9 +54,9 @@ project. All projects are visible to all signed-in humans.
 | Capability                                                         | Viewer | Member | Manager | Admin |
 | ------------------------------------------------------------------ | :----: | :----: | :-----: | :---: |
 | Read projects, boards, tasks, comments, history                    |   ✓    |   ✓    |    ✓    |   ✓   |
-| Create, edit, move and delete tasks and sub-tasks                  |        |   ✓    |    ✓    |   ✓   |
+| Create, edit, move and delete tasks and sub-tasks; link tasks      |        |   ✓    |    ✓    |   ✓   |
 | Assign tasks to any team or person; set priority, due date, points |        |   ✓    |    ✓    |   ✓   |
-| Comment; link tasks; apply labels; create new labels               |        |   ✓    |    ✓    |   ✓   |
+| Comment; apply labels; create new labels                           |        |   ✓    |    ✓    |   ✓   |
 | Put tasks into, or take them out of, a sprint or the backlog       |        |   ✓    |    ✓    |   ✓   |
 | Create, edit, archive projects; configure columns                  |        |        |    ✓    |   ✓   |
 | Create, edit, close epics                                          |        |        |    ✓    |   ✓   |
@@ -150,7 +151,9 @@ Rules:
 - It belongs to its parent's project and epic, and has its own assignee, status and card
   on the board, marked with its parent's key.
 - The parent shows a progress count. Nothing is automatic: finishing all sub-tasks does
-  not move the parent, and moving the parent does not move them.
+  not move the parent, and moving the parent does not move them. A sub-task's epic is its
+  parent's. A parent with sub-tasks cannot be deleted until they are deleted or detached;
+  a sub-task restored after its parent was deleted becomes a normal task.
 
 **Links**
 
@@ -165,11 +168,11 @@ Links may cross projects. They are informational: a blocked task can still be mo
 `regression of` is the link the triage pipeline creates when a bug reappears after its
 ticket was closed (doc 0001, section 6).
 
-WT-06 created the `task_links` table (`from_task_id`, `to_task_id`, `type`, `created_by`,
-`created_at`) with the one type `regression_of`, written only by the triage pipeline, with
-the agent as `created_by`. WT-09 adds the other types and linking by hand to the same
-table. A task's answer (`links`) lists its links in both directions and leaves out links to
-deleted tasks (WS-090).
+Links are stored in `task_links`. People and agents holding `tasks:write` on both tasks add
+and remove links of every type; the triage pipeline also adds `regression of`. `relates to`
+is stored once. Every link added or removed is in the history of both tasks. A task's
+answer (`links`) lists its links in both directions and leaves out links to deleted tasks
+(WS-090).
 
 ## 8. Search and filters
 
