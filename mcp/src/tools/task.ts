@@ -32,9 +32,21 @@ export const taskWithCommentsSchema = z.strictObject({
 
 export type TaskWithComments = z.infer<typeof taskWithCommentsSchema>;
 
+/** The task's parent, sub-tasks and links, leaving out what does not apply (WS-137). */
+function relations(task: TaskWithComments["task"]): string {
+  const parts = [];
+  if (task.parent !== null) parts.push(`A sub-task of ${task.parent.key}.`);
+  if (task.subtasks !== null) {
+    parts.push(`${String(task.subtasks.done)} of ${String(task.subtasks.total)} sub-tasks done.`);
+  }
+  if (task.links.length > 0) parts.push(`${count(task.links.length, "link", "links")}.`);
+  return parts.map((part) => `${part} `).join("");
+}
+
 function summary({ task, comments }: TaskWithComments): string {
   return (
     `${task.key}, a ${task.type}: ${quote(task.title)}. ` +
+    relations(task) +
     `${count(comments.items.length, "comment", "comments")} shown.` +
     more(NAME, "commentsCursor", comments.nextCursor, "More comments")
   );

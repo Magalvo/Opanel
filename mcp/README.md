@@ -27,18 +27,22 @@ client.
 | `opanel_create_task`       | Creates a task, in a column or the backlog                   | `tasks:write`                 |
 | `opanel_update_task`       | Changes a task's fields, assignment, epic or due date        | `tasks:write`                 |
 | `opanel_move_task`         | Moves a task within the board, or to the backlog             | `tasks:write`                 |
+| `opanel_add_link`          | Links two tasks: blocks, duplicates, regression of, relates  | `tasks:write`, `tasks:read`   |
+| `opanel_remove_link`       | Removes a link between two tasks                             | `tasks:write`, `tasks:read`   |
 | `opanel_submit_bug_report` | Files a bug report: a new bug, or one more occurrence        | `reports:write`               |
 
 The server offers only the tools the agent's permissions allow, read from
 `GET /api/v1/me` at start: a `qa_agent` gets the read tools, `opanel_add_comment` and
-`opanel_submit_bug_report`, and a `worker_agent` the three task writes too. After you
+`opanel_submit_bug_report`, and a `worker_agent` the task writes and the link tools too. After you
 change the agent's scopes, restart the server.
 
 The write tools change Opanel as the agent: every change is in the task's history under
 its account. `opanel_update_task` and `opanel_move_task` take the task's `version` as last
 read; if someone changed the task since, nothing changes and the tool's error holds the
 task as it is now, to look at before trying again. A write is never retried: when Opanel
-does not answer, the error says the change may have been made.
+does not answer, the error says the change may have been made. `parentId` on
+`opanel_create_task` and `opanel_update_task` makes a task a sub-task, and `null` detaches
+it (WS-137).
 
 ## Build and run from a checkout
 

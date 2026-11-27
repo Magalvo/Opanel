@@ -2,14 +2,6 @@ import type { TaskLinkType } from "@/lib/schemas/bug-reports";
 
 type Direction = "outgoing" | "incoming";
 
-/** How a link reads from its task, by direction (doc 0003 section 7). */
-export const LINK_READINGS = {
-  blocks: { outgoing: "blocks", incoming: "is blocked by" },
-  duplicates: { outgoing: "duplicates", incoming: "is duplicated by" },
-  regression_of: { outgoing: "is a regression of", incoming: "has regression" },
-  relates_to: { outgoing: "relates to", incoming: "relates to" },
-} as const satisfies Record<TaskLinkType, Record<Direction, string>>;
-
 /** One way a link reads from a task: a group of the "Links" section, a "Link type" choice. */
 export interface LinkReading {
   type: TaskLinkType;

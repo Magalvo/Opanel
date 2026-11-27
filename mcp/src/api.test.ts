@@ -180,3 +180,38 @@ describe("send", () => {
     );
   });
 });
+
+describe("remove (WS-137 test 7)", () => {
+  it("sends DELETE with the token and no body, and answers null on a 204", async () => {
+    const fake = fakeFetch(() => new Response(null, { status: 204 }));
+
+    const result = await client(fake.fetch).remove("/tasks/OPA-12/links?type=blocks");
+
+    expect(result).toEqual({ ok: true, value: null });
+    const call = fake.calls[0];
+    expect(call?.method).toBe("DELETE");
+    expect(call?.url).toBe(`${URL_BASE}/api/v1/tasks/OPA-12/links?type=blocks`);
+    expect(call?.headers.get("Authorization")).toBe(`Bearer ${TOKEN}`);
+    expect(call?.body).toBeNull();
+  });
+
+  it("turns a problem into a failure, as send does", async () => {
+    const fake = fakeFetch(() => problemResponse(404, "not_found", "There is no such link."));
+
+    const result = await client(fake.fetch).remove("/tasks/OPA-12/links");
+
+    expect(result).toMatchObject({ ok: false, error: { status: 404, code: "not_found" } });
+  });
+
+  it("sends once: a failure says the change may have been made", async () => {
+    const fake = fakeFetch(() => {
+      throw new DOMException("The operation timed out.", "TimeoutError");
+    });
+
+    const result = await client(fake.fetch).remove("/tasks/OPA-12/links");
+
+    expect(fake.calls).toHaveLength(1);
+    const error = result.ok ? null : result.error;
+    expect(error?.kind === "unreachable" ? error.message : "").toMatch(/may have been made/);
+  });
+});

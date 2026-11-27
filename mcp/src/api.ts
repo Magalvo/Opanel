@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 
 import { type FieldError, problemSchema } from "@/lib/schemas/problem";
 
@@ -36,6 +36,11 @@ export interface ApiClient {
     body: unknown,
     schema: z.ZodType<T>,
   ): Promise<ApiResult<T>>;
+  /**
+   * `DELETE /api/v1<path>`, answering `null` on a `204` (WS-137). Sent once, never retried,
+   * as `send` is.
+   */
+  remove(path: string): Promise<ApiResult<null>>;
 }
 
 export interface ApiClientOptions {
@@ -70,7 +75,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   };
 
   async function request(
-    method: "GET" | "POST" | "PATCH",
+    method: "GET" | "POST" | "PATCH" | "DELETE",
     path: string,
     body?: unknown,
   ): Promise<Response | null> {
@@ -81,9 +86,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           Authorization: `Bearer ${options.token}`,
           Accept: "application/json",
           "User-Agent": `opanel-mcp/${options.version}`,
-          ...(method === "GET" ? {} : { "Content-Type": "application/json" }),
+          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
         },
-        ...(method === "GET" ? {} : { body: JSON.stringify(body) }),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
     } catch {
@@ -134,6 +139,12 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     async send(method, path, body, schema) {
       const response = await request(method, path, body);
       return response === null ? { ok: false, error: unanswered } : answer(response, schema);
+    },
+    async remove(path) {
+      const response = await request("DELETE", path);
+      if (response === null) return { ok: false, error: unanswered };
+      if (response.status === 204) return { ok: true, value: null };
+      return answer(response, z.null());
     },
   };
 }

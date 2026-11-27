@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ApiFailure } from "@/lib/api-client";
+import { LINK_READINGS } from "@/lib/schemas/task-links";
 import type { Task, TaskLink, TaskListItem } from "@/lib/schemas/tasks";
 
 import { addLink, getTask, removeLink, searchTasks } from "./api";
-import { LINK_GROUPS, LINK_READINGS, type LinkReading } from "./link-readings";
+import { LINK_GROUPS, type LinkReading } from "./link-readings";
 
 /** How long the search waits after the last key, as the filter bar does (WS-120). */
 const SEARCH_DELAY_MS = 300;

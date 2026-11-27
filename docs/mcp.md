@@ -16,7 +16,8 @@ does beyond them, see its [MCP documentation](https://code.claude.com/docs/en/mc
 - **The tools the agent's permissions allow,** and no others. The list, with each tool's
   permissions, is in [the MCP server's README](../mcp/README.md#tools). A `qa_agent` reads
   the board and the backlog, searches tasks, reads a task's activity, comments and files
-  bugs; a `worker_agent` also creates, updates and moves tasks.
+  bugs; a `worker_agent` also creates, updates and moves tasks, makes sub-tasks, and links
+  tasks.
 - **Nothing more.** The MCP server is an API client running beside the assistant. It
   cannot delete anything, change settings or reach a project the agent cannot.
 
@@ -44,7 +45,7 @@ its scopes and its projects. Choose by what the assistant will do:
 | ---------------------------------------------------- | -------------- | --------------------------------- |
 | Test a product and file the bugs it finds            | `qa_agent`     | none                              |
 | Read boards and answer questions about them          | `qa_agent`     | `reports:write`, `comments:write` |
-| Work tickets: comment, create, update and move tasks | `worker_agent` | `reports:write`, if unused        |
+| Work tickets: comment, create, update, move and link | `worker_agent` | `reports:write`, if unused        |
 
 - **The narrowest fit.** Remove every scope the assistant does not need. A scope can be
   removed, never added beyond the role.

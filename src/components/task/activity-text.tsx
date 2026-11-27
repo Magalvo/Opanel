@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { accountRefSchema } from "@/lib/schemas/account-ref";
 import type { ActivityEvent } from "@/lib/schemas/activity";
 import { severitySchema, TASK_LINK_TYPES } from "@/lib/schemas/bug-reports";
+import { LINK_READINGS } from "@/lib/schemas/task-links";
 import { prioritySchema, taskTypeSchema } from "@/lib/schemas/tasks";
 
 import { SEVERITY_LABELS } from "./bug-labels";
 import { formatDueDate } from "./due-date";
-import { LINK_READINGS } from "./link-readings";
 import { PRIORITY_LABELS } from "./task-meta";
 
 // One line of a task's timeline: an event as a sentence (WS-119 section 3). Values are read
