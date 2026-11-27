@@ -309,7 +309,8 @@ Risks:
    setting directly rather than `placeFor`, since the top of the backlog is a place only a
    new bug takes.
 4. **A sub-task moved to the backlog while its parent's sprint is completed is also
-   `409 subtask_follows_parent`**, not only while it is active: the parent then still has
+   `409 subtask_follows_parent`** (accepted by the owner on 2026-11-27, after the merge),
+   not only while it is active: the parent then still has
    a column (the sprint's record), and a sub-task is off the board exactly when its parent
    is. Section 7 named the active sprint only. Item D's completion moves unfinished parents
    and their sub-tasks together.
