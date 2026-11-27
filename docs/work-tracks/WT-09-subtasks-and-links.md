@@ -1,7 +1,7 @@
 # WT-09 — Sub-tasks and task links
 
-- Status: Approved by the owner on 2026-11-26: decisions 1 to 13, proposals P1 to P3
-  and questions 1 to 9 as recommended.
+- Status: Done (approved by the owner on 2026-11-26: decisions 1 to 13, proposals P1 to P3
+  and questions 1 to 9 as recommended; done on 2026-11-27 by WI-138)
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 2: the model;
   section 3: "create, edit, move and delete tasks and sub-tasks", "link tasks"; section 4:
   the `Parent` field; section 7: sub-tasks and links; section 8: the filters),
@@ -171,25 +171,64 @@ if A merges first; they can run in parallel.
 
 ## Exit criteria
 
-- [ ] A Member makes a task a sub-task, and back, on create and on edit; each refusal of
+- [x] A Member makes a task a sub-task, and back, on create and on edit; each refusal of
       decision 1 is a `400` naming `parentId`; the history names who did it.
-- [ ] A parent's answer, card and page show its sub-tasks and `done/total`, and a page open
-      on the parent follows a sub-task's move with no reload.
-- [ ] Changing a parent's epic changes its sub-tasks' epic; a sub-task's own `epicId` is a
+      (`subtasks.integration.test.ts`, "makes a task a sub-task on create, by key, and
+      answers its parent", "makes a task a sub-task on edit, by id, and a normal task again
+      with null", "refuses each forbidden parent with 400 on parentId, writing nothing" and
+      "records the account that set and cleared a parent, on create and on edit";
+      `tests/e2e/subtasks.spec.ts`, "a Member sets a parent by searching, sees the card's
+      mark, removes it, and reads both in the timeline")
+- [x] A parent's answer, card and page show its sub-tasks and `done/total`, and a page open
+      on the parent follows a sub-task's move with no reload. (`subtasks.integration.test.ts`,
+      "counts live sub-tasks, done only in a done column, never the backlog" and "answers
+      the live sub-tasks in board order, then the backlog"; `task-card.test.tsx`, "shows a
+      parent's progress, named in words"; `tests/e2e/subtasks.spec.ts`, "a Member adds
+      sub-tasks from a page, and a move on the board reaches the open parent page")
+- [x] Changing a parent's epic changes its sub-tasks' epic; a sub-task's own `epicId` is a
       `400`; deleting a parent with live sub-tasks is a `409 has_subtasks`.
-- [ ] A Member and a `worker_agent` each add and remove a link of each type across two
+      (`subtasks.integration.test.ts`, "copies the parent's epic on attach and follows its
+      changes", "refuses an epicId that differs from the parent's, and accepts the same
+      one" and "is 409 has_subtasks while it has live ones, and works once they are gone")
+- [x] A Member and a `worker_agent` each add and remove a link of each type across two
       projects; both tasks' answers, pages and histories show it; `relates_to` reads the
-      same from both.
-- [ ] A `qa_agent` (no `tasks:write`) cannot link; a restricted agent cannot link to, or
+      same from both. (`task-links.integration.test.ts`, "a Member adds %s %s across
+      projects, read from both", "stores relates_to once from the lower id, outgoing on
+      both", "removes it from either task, and answers 404 for no such link" and "writes
+      linked and unlinked on both tasks, as each reads it"; `tests/e2e/links.spec.ts`, "a
+      Member links tasks of two projects, the other page follows, and both timelines read
+      it"; `tests/e2e/links-flow.spec.ts`, the `worker_agent` over HTTP with each type)
+- [x] A `qa_agent` (no `tasks:write`) cannot link; a restricted agent cannot link to, or
       see in `links` or `subtasks`, a task outside its projects.
-- [ ] A Viewer reads everything this track adds and writes nothing; every new endpoint
-      enforces its permission.
-- [ ] `parentId` filters the board list, the backlog and the list across projects.
-- [ ] The 100-item limits of decision 3 answer `409` with their codes.
-- [ ] `docs/agents.md` and its doc check cover sub-tasks and links; the OpenAPI document
-      describes them; doc 0003 carries the approved proposals.
-- [ ] The full quality gate passes on `main`, with `pnpm db:generate` and
-      `pnpm openapi:generate` leaving no diff.
+      (`task-links.integration.test.ts`, "needs tasks:write and both projects in reach" and
+      "leaves out a linked task outside a restricted agent's projects";
+      `subtasks.integration.test.ts`, "reads its project's parent with its sub-tasks, and
+      gets 403 for another project's"; `tests/e2e/links-flow.spec.ts`, steps 6 and 7)
+- [x] A Viewer reads everything this track adds and writes nothing; every new endpoint
+      enforces its permission. (`subtasks.integration.test.ts`, "lets a Viewer read a
+      parent and its sub-tasks, and refuses it setting a parent";
+      `tests/e2e/links.spec.ts`, "a Viewer reads a task's links and cannot change them";
+      `task-detail.test.tsx`, "shows a Viewer the sub-tasks without Add sub-task" and
+      "shows a Viewer the links without Add link or Remove";
+      `viewer-writes.integration.test.ts`, "gets 403 forbidden from every one of them";
+      `routes.test.ts`, "builds every documented handler with route() from the contract of
+      its own method and path")
+- [x] `parentId` filters the board list, the backlog and the list across projects.
+      (`task-filter.integration.test.ts`, "the parentId filter on the project lists";
+      `all-tasks.integration.test.ts`, "listAllTasks: the parentId filter")
+- [x] The 100-item limits of decision 3 answer `409` with their codes.
+      (`subtasks.integration.test.ts`, "refuses a 101st live sub-task with 409
+      too_many_subtasks; a deleted one frees a place"; `task-links.integration.test.ts`,
+      "refuses the 101st link on either task, not counting deleted tasks")
+- [x] `docs/agents.md` and its doc check cover sub-tasks and links; the OpenAPI document
+      describes them; doc 0003 carries the approved proposals. (`agents-guide.test.ts`,
+      "lists exactly the link types, each in a table row", "names both link endpoints" and
+      "names only real problem codes, and the four of sub-tasks and links";
+      `document.test.ts`, "describes sub-tasks: parentId, TaskParent, SubtaskProgress, the
+      codes, the filter" and "describes adding and removing a link, each needing
+      tasks:write"; doc 0003 sections 3 and 7, by WI-138)
+- [x] The full quality gate passes on `main`, with `pnpm db:generate` and
+      `pnpm openapi:generate` leaving no diff. (WS-138's implementation record)
 
 ## Risks and open questions
 
