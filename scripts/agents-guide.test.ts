@@ -12,6 +12,7 @@ import {
   BUG_REPORT_OUTCOMES,
   ORIGIN_LAYERS,
   submitBugReportRequestSchema,
+  TASK_LINK_TYPES,
 } from "@/lib/schemas/bug-reports";
 import { AGENT_SCOPES } from "@/lib/schemas/permissions";
 import { PROBLEM_CODES } from "@/lib/schemas/problem";
@@ -38,6 +39,7 @@ const SECTIONS = [
   "Lists",
   "Tasks and the backlog",
   "Finding tasks",
+  "Sub-tasks and links",
   "Live updates",
   "Filing bug reports",
   "Rotating and revoking",
@@ -211,5 +213,37 @@ describe("docs/agents.md (WS-078)", () => {
     expect(finding).toContain("GET /api/v1/tasks?");
     expect(finding).toContain("GET /api/v1/tasks/{taskId}/activity");
     expect(codeSpans(finding)).toContain("q");
+  });
+
+  it("lists exactly the link types, each in a table row (WS-138)", () => {
+    const rows = [...section(guide(), "Sub-tasks and links").matchAll(/^\| `([a-z_]+)` +\|/gm)].map(
+      (match) => match[1],
+    );
+    expect(rows).toEqual([...TASK_LINK_TYPES]);
+  });
+
+  it("names both link endpoints (WS-138)", () => {
+    const links = section(guide(), "Sub-tasks and links");
+    expect(links).toContain("POST /api/v1/tasks/{taskId}/links");
+    expect(links).toContain("DELETE /api/v1/tasks/{taskId}/links");
+    expect(codeSpans(links)).toEqual(expect.arrayContaining(["parentId", "tasks:write"]));
+  });
+
+  it("names only real problem codes, and the four of sub-tasks and links (WS-138)", () => {
+    const codes = codeSpans(section(guide(), "Sub-tasks and links")).filter(
+      (span) =>
+        /^[a-z]+(_[a-z]+)+$/.test(span) && !(TASK_LINK_TYPES as readonly string[]).includes(span),
+    );
+    expect(codes.filter((code) => !(PROBLEM_CODES as readonly string[]).includes(code))).toEqual(
+      [],
+    );
+    expect(codes).toEqual(
+      expect.arrayContaining([
+        "has_subtasks",
+        "too_many_subtasks",
+        "link_exists",
+        "too_many_links",
+      ]),
+    );
   });
 });

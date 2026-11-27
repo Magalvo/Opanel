@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { ProjectEvent } from "@/lib/schemas/events";
 import { taskListQuerySchema } from "@/lib/schemas/tasks";
-import { createTestAccount, testActor } from "@/server/auth/testing";
+import { agentActor } from "@/server/auth/actor";
+import { createTestAccount, createTestAgent, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 import { taskEvents } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
@@ -278,6 +279,32 @@ describe("the sub-task list (WS-133 test 7)", () => {
       "Backlog one",
       "Backlog two",
     ]);
+  });
+});
+
+describe("a restricted agent's sub-tasks (WS-138 test 6)", () => {
+  it("reads its project's parent with its sub-tasks, and gets 403 for another project's", async () => {
+    const s = await setup();
+    await sub(s, "Card form");
+    const webParent = await createTask(s.mia, "WEB", { title: "Landing page" });
+    await createTask(s.mia, "WEB", { title: "Hero", parentId: webParent.key });
+    const account = await createTestAgent({
+      name: "Restricted",
+      role: "worker_agent",
+      scopes: ["tasks:read", "tasks:write"],
+      projectIds: [s.parent.projectId],
+    });
+    const agent = agentActor({
+      accountId: account.id,
+      role: "worker_agent",
+      scopes: ["tasks:read", "tasks:write"],
+      projectIds: [s.parent.projectId],
+    });
+
+    const parent = await getTask(agent, s.parent.key);
+    expect(parent.subtasks).toEqual({ done: 0, total: 1 });
+    expect(parent.subtaskList.map((task) => task.title)).toEqual(["Card form"]);
+    expect((await failure(getTask(agent, webParent.key))).status).toBe(403);
   });
 });
 
