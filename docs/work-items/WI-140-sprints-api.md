@@ -1,6 +1,6 @@
 # WI-140 — Sprints in the API
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-140)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item B)
 - Depends on: none (runs beside item A, story points)
 - Work-spec: [WS-140](../work-specs/WS-140-sprints-api.md)

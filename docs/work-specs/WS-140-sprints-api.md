@@ -1,6 +1,6 @@
 # WS-140 — Sprints in the API
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
 - Work-item: [WI-140](../work-items/WI-140-sprints-api.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("create,
   start, complete sprints; enable sprints on a project") and 6 (sprints);
