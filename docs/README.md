@@ -16,8 +16,8 @@ What a new session needs to start: what comes next, and what waits for the owner
 an index commit when a work-track is approved or done, or when what comes next changes.
 
 - **Next:** WT-10 (sprints and story points, approved on 2026-11-27) items A (story
-  points, WI-139) and B (sprints in the API), in parallel; then C, D and F, E, and G last. WT-09
-  (sub-tasks and links) is done (WI-133 to WI-138).
+  points, WI-139) and B (sprints in the API, WI-140), in parallel; then C, D and F, E, and
+  G last. WT-09 (sub-tasks and links) is done (WI-133 to WI-138).
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -205,6 +205,7 @@ operations (doc 0006), are done.
 | [WI-137](work-items/WI-137-mcp-link-tools.md)                   | MCP tools for links, sub-tasks on the task tools                  | [WS-137](work-specs/WS-137-mcp-link-tools.md)                   |
 | [WI-138](work-items/WI-138-links-exit-check.md)                 | Sub-tasks and links end to end, the agents guide, the exit check  | [WS-138](work-specs/WS-138-links-exit-check.md)                 |
 | [WI-139](work-items/WI-139-story-points.md)                     | Story points                                                      | [WS-139](work-specs/WS-139-story-points.md)                     |
+| [WI-140](work-items/WI-140-sprints-api.md)                      | Sprints in the API                                                | [WS-140](work-specs/WS-140-sprints-api.md)                      |
 
 ## Follow-ups
 
