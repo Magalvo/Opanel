@@ -1,6 +1,6 @@
 # WS-137 — MCP tools for links, sub-tasks on the task tools
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 3 as recommended)
 - Work-item: [WI-137](../work-items/WI-137-mcp-link-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) sections 4 (the tools; "new
   tools are added by work-items") and 5 (inputs, outputs, errors);

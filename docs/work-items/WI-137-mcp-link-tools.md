@@ -1,6 +1,6 @@
 # WI-137 — MCP tools for links, sub-tasks on the task tools
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-137)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item E)
 - Depends on: [WI-133](WI-133-subtasks-api.md) and [WI-134](WI-134-links-api.md) (items A
   and B, done)
