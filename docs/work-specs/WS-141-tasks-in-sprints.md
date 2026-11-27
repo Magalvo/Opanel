@@ -1,6 +1,7 @@
 # WS-141 — Tasks in sprints
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 4 as recommended; done on
+  2026-11-27)
 - Work-item: [WI-141](../work-items/WI-141-tasks-in-sprints.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("put tasks
   into, or take them out of, a sprint or the backlog"), 4 (`Sprint`), 5 (board and
@@ -257,3 +258,77 @@ Risks:
   not breaking for clients.
 - **Lock order.** Writes take the project (shared), the target column, the active sprint
   (`for share`), then the task; item D must take them in the same order.
+
+## Implementation record
+
+- Red (a61b308): the 23 tests of the plan, in the files the plan names, failed for the
+  missing piece: `tasks.sprint_id` (the database test, and every test that writes it),
+  `sprint` absent from answers, `sprintId` refused by the strict request schemas, no
+  `no_active_sprint` or `subtask_follows_parent`, the board list still answering every
+  task with a column, the sprint lock not taken (test 10's writes finished at once), the
+  filter, the activity's names, `SprintRef` and the codes missing from the OpenAPI
+  document. The checks of unchanged behaviour (test 8's project without sprints, test 19's
+  project without sprints) passed, as they should.
+- Green (b3a2456): migration `0028_task_sprint` (`tasks.sprint_id` `on delete restrict`,
+  `tasks_sprint_idx`); `src/server/services/sprint-placement.ts` with `placeFor`,
+  `sprintsEnabled`, `lockSprintContext`, `lockFirstColumn`, `recordPlaceChange` and
+  `unscheduleSprintTasks`; in `src/server/services/tasks.ts` the `sprints` join and
+  `sprint` answer, `placeFor` in `createTask`, `updateTask`, `moveTask` and `restoreTask`,
+  `syncSubtaskSprints` beside `syncSubtaskEpics`, and the board list's active-sprint
+  condition; `placeNewBug` (top of the backlog with sprints); `deleteSprint` unscheduling
+  its tasks; the `sprintId` filter in `task-filter.ts`; sprint names in `activity.ts`;
+  `SprintRef`, `sprintId` on the three bodies and the filter in the schemas; the two codes
+  (`problem.ts`, `errors.ts`, their `409` descriptions in `responses.ts`); doc 0004's code
+  table and `docs/agents.md`'s filter list; `sprint: null` in the `TaskSummary` fixtures
+  (UI tests, schema tests, `mcp/src/testing.ts`); `MAX_FILTER_VALUES` moved to
+  `src/lib/schemas/pagination.ts` (re-exported from `tasks.ts`), since `sprints.ts`
+  importing it from `tasks.ts` while `tasks.ts` imports `SprintRef` would be a cycle.
+  The same commit aligned three cases of tests 3 and 7 with section 4: `sprintId` on create
+  is a sprint's id, not `null`, so the red tests that sent `null` on create now send a
+  sprint (or nothing).
+- Gate on 2026-11-27:
+  - `pnpm check` (typecheck, lint, Prettier) passes; `pnpm db:generate` ("No schema
+    changes") and `pnpm openapi:generate` leave no diff;
+  - Vitest 2812 of 2812 (247 files);
+  - `pnpm test:e2e` 146 of 146 (5.9 minutes);
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433, no other worktree's gate
+    running.
+
+## Deviations
+
+1. **A backlog move without `sprintId` keeps a planned sprint** (owner's decision A on
+   2026-11-27, during implementation). Section 3's table read "the backlog: no sprint,
+   unless the move names a planned sprint"; as implemented, a task already in the backlog
+   keeps its planned sprint when `sprintId` is left out, a task leaving a column becomes
+   unscheduled, and `sprintId: null` unschedules explicitly. Test 4 covers all three.
+2. **Making a task a sub-task of a parent in a completed sprint is `409 sprint_completed`**
+   (owner's decision B on 2026-11-27), on create and on `PATCH parentId`: copying the
+   parent's sprint would add a task to a completed sprint's record. Test 7 covers both.
+3. **Agent-filed bugs are in this item, not item D** (question 1): WT-10's item table puts
+   decision 14 in item D; `placeNewBug` changed here (test 19). It asks the project's
+   setting directly rather than `placeFor`, since the top of the backlog is a place only a
+   new bug takes.
+4. **A sub-task moved to the backlog while its parent's sprint is completed is also
+   `409 subtask_follows_parent`**, not only while it is active: the parent then still has
+   a column (the sprint's record), and a sub-task is off the board exactly when its parent
+   is. Section 7 named the active sprint only. Item D's completion moves unfinished parents
+   and their sub-tasks together.
+5. **Locks beyond section 3's order, same direction.** `moveTask` in a project with
+   sprints also locks the first column (where sub-tasks joining the active sprint go), its
+   columns in id order; `updateTask` takes the project row exclusively and the first column
+   when `sprintId` or a new parent is sent, since either may move the task to the end of
+   the backlog, whose order the project row guards (WS-101); `restoreTask` takes the
+   project row exclusively for the same reason. The order stays project, columns, active
+   sprint, task.
+6. **`project-access.integration.test.ts` changed in two places**: its coverage test
+   requires the six exported functions of `sprint-placement.ts` to be classified (all
+   internal), and its fixture's projects use sprints (WS-140), so the test of a restricted
+   agent moving a task onto the board first makes the fixture's sprint active, as only
+   item D can start one. No board, backlog, move, restore or triage test of a project
+   without sprints changed.
+7. **Restore also unschedules a backlog task whose sprint is active or completed**,
+   keeping its rank: the other way to break the rule, which no write makes but a restore
+   must not keep.
+8. **A sub-task of a parent with a kept planned sprint, in a project without sprints,
+   gets no sprint when it gets a column**: question 3's rule (a column clears a planned
+   sprint) applies to the copy too.

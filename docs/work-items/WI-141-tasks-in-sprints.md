@@ -1,6 +1,6 @@
 # WI-141 — Tasks in sprints
 
-- Status: Approved (approved by the owner on 2026-11-27, with WS-141)
+- Status: Done (approved by the owner on 2026-11-27, with WS-141; done on 2026-11-27)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item C)
 - Depends on: WI-140 (sprints in the API), done
 - Work-spec: [WS-141](../work-specs/WS-141-tasks-in-sprints.md)
@@ -17,34 +17,34 @@ the history and reaches open pages.
 
 ## Acceptance criteria
 
-- [ ] Every task answer has `sprint: { id, name, state } | null`; `sprintId` on create and
+- [x] Every task answer has `sprint: { id, name, state } | null`; `sprintId` on create and
       `PATCH` sets it, `null` clears it; a sprint of another project, a completed sprint or
       an unknown one is a `400` on `sprintId`.
-- [ ] In a project with sprints, `GET /projects/{projectId}/tasks` lists only the active
+- [x] In a project with sprints, `GET /projects/{projectId}/tasks` lists only the active
       sprint's tasks, and nothing when no sprint is active; the backlog lists every task
       with no column, planned-sprint tasks included.
-- [ ] Moving a task into a column adds it to the active sprint (`409 no_active_sprint`
+- [x] Moving a task into a column adds it to the active sprint (`409 no_active_sprint`
       when there is none); moving it to the backlog takes it out; `sprintId` set to the
       active sprint puts the task at the bottom of the first column, to a planned sprint
       or `null` puts it at the end of the backlog.
-- [ ] Creating a task with a `columnId` in a project with sprints joins the active sprint;
+- [x] Creating a task with a `columnId` in a project with sprints joins the active sprint;
       without one, the task goes to the end of the backlog, unscheduled.
-- [ ] A sub-task's sprint is its parent's: copied when the parent is set, kept in step when
+- [x] A sub-task's sprint is its parent's: copied when the parent is set, kept in step when
       the parent's sprint changes; a differing `sprintId` in a write is a `400`; moving a
       sub-task off the board while its parent is in the active sprint, or onto it while its
       parent is not, is `409 subtask_follows_parent`.
-- [ ] A task of a completed sprint cannot be given another sprint (`409 sprint_completed`);
+- [x] A task of a completed sprint cannot be given another sprint (`409 sprint_completed`);
       moving it takes it out of the record.
-- [ ] Deleting a planned sprint makes its tasks unscheduled, each with a history entry.
-- [ ] In a project without sprints, a non-null `sprintId` is `409 sprints_disabled`, and
+- [x] Deleting a planned sprint makes its tasks unscheduled, each with a history entry.
+- [x] In a project without sprints, a non-null `sprintId` is `409 sprints_disabled`, and
       every existing board and backlog test passes unchanged.
-- [ ] A new agent-filed bug in a project with sprints lands at the top of the backlog,
+- [x] A new agent-filed bug in a project with sprints lands at the top of the backlog,
       unscheduled (if question 1 is answered so).
-- [ ] A sprint change is a `field_changed` entry on `sprintId`, named after who made it,
+- [x] A sprint change is a `field_changed` entry on `sprintId`, named after who made it,
       with the sprint's name in the activity; it sends `task.updated` or `task.moved`.
-- [ ] `sprintId` (a sprint's id, `none` or `active`) filters the board list, the backlog
+- [x] `sprintId` (a sprint's id, `none` or `active`) filters the board list, the backlog
       and the list across projects.
-- [ ] The OpenAPI document describes the field, the filter and the codes; `docs/agents.md`
+- [x] The OpenAPI document describes the field, the filter and the codes; `docs/agents.md`
       names the filter; the full quality gate passes.
 
 ## Notes
