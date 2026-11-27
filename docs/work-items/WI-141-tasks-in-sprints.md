@@ -1,6 +1,6 @@
 # WI-141 — Tasks in sprints
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-141)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item C)
 - Depends on: WI-140 (sprints in the API), done
 - Work-spec: [WS-141](../work-specs/WS-141-tasks-in-sprints.md)

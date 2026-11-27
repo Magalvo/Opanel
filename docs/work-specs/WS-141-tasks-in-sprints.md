@@ -1,6 +1,6 @@
 # WS-141 — Tasks in sprints
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
 - Work-item: [WI-141](../work-items/WI-141-tasks-in-sprints.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("put tasks
   into, or take them out of, a sprint or the backlog"), 4 (`Sprint`), 5 (board and
