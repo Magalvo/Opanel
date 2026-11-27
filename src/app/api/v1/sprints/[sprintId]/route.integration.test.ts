@@ -6,8 +6,8 @@ import { sprintSchema } from "@/lib/schemas/sprints";
 import { apiRequest, createTestAccount, signInCookie } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
 
-import { POST as create } from "../../projects/[projectId]/sprints/route";
 import { PATCH as patchProject } from "../../projects/[projectId]/route";
+import { POST as create } from "../../projects/[projectId]/sprints/route";
 import { POST as createProject } from "../../projects/route";
 import { DELETE, GET, PATCH } from "./route";
 

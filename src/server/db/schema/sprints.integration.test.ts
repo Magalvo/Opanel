@@ -86,7 +86,9 @@ describe("the sprints table (WS-140 test 1)", () => {
     await expect(insertSprint(project.id, { state: "active" })).rejects.toMatchObject({
       cause: { constraint_name: "sprints_started_check" },
     });
-    await expect(insertSprint(project.id, { state: "running" })).rejects.toMatchObject({
+    await expect(
+      insertSprint(project.id, { state: "running", startedAt: true }),
+    ).rejects.toMatchObject({
       cause: { constraint_name: "sprints_state_check" },
     });
   });

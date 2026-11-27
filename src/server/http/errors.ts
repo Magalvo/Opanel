@@ -288,3 +288,27 @@ export function hasSubtasks(count: number): ApiError {
     detail: `This task has ${String(count)} sub-task${count === 1 ? "" : "s"}. Delete or detach ${count === 1 ? "it" : "them"} first.`,
   });
 }
+
+/** `409` (WS-140): the project does not use sprints (WT-10 decision 4). */
+export function sprintsDisabled(
+  detail = "This project does not use sprints. Turn them on first.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "sprints_disabled", detail });
+}
+
+/** `409` (WS-140): sprints cannot be turned off while one is active (doc 0003 section 6). */
+export function sprintActive(
+  detail = "A sprint is active in this project. Complete it first.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "sprint_active", detail });
+}
+
+/** `409` (WS-140): only a planned sprint can be deleted (WT-10 decision 8). */
+export function sprintNotPlanned(detail = "Only a planned sprint can be deleted."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "sprint_not_planned", detail });
+}
+
+/** `409` (WS-140): a completed sprint is a record and cannot change (WT-10 decision 8). */
+export function sprintCompleted(detail = "This sprint is completed and cannot change."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "sprint_completed", detail });
+}

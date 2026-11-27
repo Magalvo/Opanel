@@ -425,6 +425,8 @@ export function useBoard({
         case "project.changed":
         case "comment.created":
         case "epic.changed":
+        // Nothing the board lists depends on sprints until WT-10 items C and E (WS-140).
+        case "sprint.changed":
           return;
         case "label.changed":
           void refreshLabels();

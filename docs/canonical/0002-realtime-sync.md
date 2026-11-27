@@ -70,20 +70,22 @@ Events are small and carry identifiers, not full entities:
 }
 ```
 
-Event types in v1 (amended by WT-04 decision 1, WT-07 decision 12 and WS-134):
+Event types in v1 (amended by WT-04 decision 1, WT-07 decision 12, WS-134 and WT-10 proposal
+P3):
 
-| `type`            | `entity`  | `version`                                           | Sent by                                       |
-| ----------------- | --------- | --------------------------------------------------- | --------------------------------------------- |
-| `task.created`    | `task`    | the task's after the write                          | creating a task                               |
-| `task.updated`    | `task`    | the task's after the write                          | editing, assigning, its epic, linking (both)  |
-| `task.moved`      | `task`    | the task's after the write                          | moving, also within one column                |
-| `task.deleted`    | `task`    | the task's after the write                          | deleting                                      |
-| `task.restored`   | `task`    | the task's after the write                          | restoring a deleted task                      |
-| `comment.created` | `comment` | `null` (comments have none); also carries `taskId`  | commenting                                    |
-| `column.changed`  | `column`  | the column's after the write; `null` when deleted   | creating, editing, moving, deleting a column  |
-| `epic.changed`    | `epic`    | the epic's after the write                          | creating, editing, closing, reopening an epic |
-| `label.changed`   | `label`   | the label's after the write; `null` when deleted    | creating, editing, deleting a label           |
-| `project.changed` | `project` | the project's after the write; `entityId` is itself | renaming, archiving, unarchiving              |
+| `type`            | `entity`  | `version`                                           | Sent by                                                                           |
+| ----------------- | --------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `task.created`    | `task`    | the task's after the write                          | creating a task                                                                   |
+| `task.updated`    | `task`    | the task's after the write                          | editing, assigning, its epic, linking (both)                                      |
+| `task.moved`      | `task`    | the task's after the write                          | moving, also within one column                                                    |
+| `task.deleted`    | `task`    | the task's after the write                          | deleting                                                                          |
+| `task.restored`   | `task`    | the task's after the write                          | restoring a deleted task                                                          |
+| `comment.created` | `comment` | `null` (comments have none); also carries `taskId`  | commenting                                                                        |
+| `column.changed`  | `column`  | the column's after the write; `null` when deleted   | creating, editing, moving, deleting a column                                      |
+| `epic.changed`    | `epic`    | the epic's after the write                          | creating, editing, closing, reopening an epic                                     |
+| `label.changed`   | `label`   | the label's after the write; `null` when deleted    | creating, editing, deleting a label                                               |
+| `sprint.changed`  | `sprint`  | the sprint's after the write; `null` when deleted   | creating, editing, deleting, starting, completing a sprint, or turning sprints on |
+| `project.changed` | `project` | the project's after the write; `entityId` is itself | renaming, archiving, unarchiving                                                  |
 
 Every write that bumps a version, or creates a comment, sends exactly one event, from its
 service, inside its own transaction, on the PostgreSQL channel `opanel_events`. A call

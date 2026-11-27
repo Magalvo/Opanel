@@ -14,6 +14,7 @@ export { projects } from "./projects";
 export { rateLimits } from "./rate-limits";
 export { routingRules } from "./routing-rules";
 export { sessions } from "./sessions";
+export { sprints } from "./sprints";
 export { taskEvents } from "./task-events";
 export { taskLinks } from "./task-links";
 export { tasks } from "./tasks";

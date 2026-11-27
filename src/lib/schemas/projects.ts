@@ -28,6 +28,9 @@ export const projectSchema = z
       .datetime()
       .nullable()
       .meta({ description: "Set while the project is archived and read-only." }),
+    sprintsEnabled: z.boolean().meta({
+      description: "Whether the project works in sprints. Off by default (WT-10 decision 4).",
+    }),
     version: z.int().min(1),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
@@ -63,11 +66,23 @@ export const updateProjectRequestSchema = z
   .strictObject({
     name: projectNameSchema.optional(),
     description: projectDescriptionSchema.optional(),
+    sprintsEnabled: z
+      .boolean()
+      .optional()
+      .meta({
+        description:
+          "Turns sprints on or off; needs `sprints:manage`. Off is refused while a sprint is " +
+          "active (code `sprint_active`).",
+      }),
     version: versionSchema,
   })
-  .refine((body) => body.name !== undefined || body.description !== undefined, {
-    message: "Send name, description or both.",
-  })
+  .refine(
+    (body) =>
+      body.name !== undefined ||
+      body.description !== undefined ||
+      body.sprintsEnabled !== undefined,
+    { message: "Send at least one field to change." },
+  )
   .meta({ id: "UpdateProjectRequest" });
 
 export type UpdateProjectRequest = z.infer<typeof updateProjectRequestSchema>;
@@ -128,17 +143,18 @@ export const getProjectContract = {
 export const updateProjectContract = {
   method: "patch",
   path: "/api/v1/projects/{projectId}",
-  summary: "Change a project's name or description",
+  summary: "Change a project's name, description or sprints setting",
   description:
     "Send the `version` the change is based on. An archived project cannot be changed " +
-    "(code `project_archived`). The key never changes.",
+    "(code `project_archived`). The key never changes. `name` and `description` need " +
+    "`projects:manage`; `sprintsEnabled` needs `sprints:manage` (WT-10 decision 4).",
   access: MANAGE,
   request: { params: projectParamsSchema, body: updateProjectRequestSchema },
   responses: {
     200: { description: "The project after the change.", schema: projectSchema },
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_PROJECT,
-    409: versionConflictResponse(projectSchema, ["project_archived"]),
+    409: versionConflictResponse(projectSchema, ["project_archived", "sprint_active"]),
     413: PAYLOAD_TOO_LARGE,
     415: { description: "The body is not JSON.", problem: true },
   },
