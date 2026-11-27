@@ -9,9 +9,10 @@ import { columnCategorySchema } from "./columns";
 import { calendarDateSchema } from "./dates";
 import { epicRefSchema } from "./epics";
 import { labelRefSchema, MAX_LABELS_PER_TASK } from "./labels";
-import { pageSchema, paginationQuerySchema } from "./pagination";
+import { MAX_FILTER_VALUES, pageSchema, paginationQuerySchema } from "./pagination";
 import { personSchema } from "./people";
 import { projectKeySchema, projectParamsSchema, projectRefSchema } from "./projects";
+import { sprintRefSchema } from "./sprints";
 import { versionSchema } from "./version";
 
 export const taskTypeSchema = z.enum(["task", "bug", "story"]).meta({ id: "TaskType" });
@@ -82,6 +83,11 @@ const taskFields = {
   assignee: personSchema.nullable(),
   epic: epicRefSchema.nullable(),
   parent: taskParentSchema.nullable().meta({ description: "Set on sub-tasks only." }),
+  sprint: sprintRefSchema.nullable().meta({
+    description:
+      "The task's sprint; `null` when unscheduled. In a project with sprints, a task has a " +
+      "column exactly while its sprint is active or completed.",
+  }),
   reporter: accountRefSchema,
   // The bug fields (WT-06 decision 1, WS-088): only the triage pipeline writes the last three.
   severity: severitySchema.nullable().meta({ description: "Bugs only." }),
@@ -153,8 +159,7 @@ export const taskPageSchema = pageSchema(taskSummarySchema).meta({ id: "TaskPage
 
 export type TaskPage = z.infer<typeof taskPageSchema>;
 
-/** At most this many values of one filter (WT-08 decision 1). */
-export const MAX_FILTER_VALUES = 20;
+export { MAX_FILTER_VALUES };
 
 /**
  * A filter given once or repeated (`priority=high&priority=urgent`), read as an array: a
@@ -213,6 +218,11 @@ export const taskFilterShape = {
   parentId: oneOrMany(
     z.union([z.uuid(), taskKeySchema, z.literal("none")]),
     "Only the sub-tasks of this task, by id or key; `none` for tasks that are not sub-tasks.",
+  ),
+  sprintId: oneOrMany(
+    z.union([z.uuid(), z.enum(["none", "active"])]),
+    "Only tasks of this sprint; `none` for unscheduled tasks, `active` for the tasks of " +
+      "their project's active sprint. A sprint of another project matches nothing.",
   ),
   priority: oneOrMany(prioritySchema, "Only tasks of this priority."),
   severity: oneOrMany(severitySchema, "Only bugs of this severity."),
@@ -356,7 +366,17 @@ export const createTaskFields = {
     .meta({
       description:
         "A column of the project, or `null` for the end of the backlog. By default the first " +
-        "column.",
+        "column; in a project with sprints, the end of the backlog, and a column joins the " +
+        "active sprint (code `no_active_sprint` when there is none).",
+    }),
+  sprintId: z
+    .uuid()
+    .optional()
+    .meta({
+      description:
+        "A planned or active sprint of the project: the active one puts the task at the bottom " +
+        "of the first column, a planned one at the end of the backlog. A sub-task's is its " +
+        "parent's.",
     }),
   assigneeTeamId: z.uuid().optional(),
   assigneeAccountId: z.uuid().optional(),
@@ -419,6 +439,16 @@ export const updateTaskFields = {
   storyPoints: storyPointsSchema.nullable().optional().meta({
     description: "From 0 to 999.5, in steps of 0.5; `null` clears them.",
   }),
+  sprintId: z
+    .uuid()
+    .nullable()
+    .optional()
+    .meta({
+      description:
+        "A planned or active sprint of the project; `null` unschedules the task. The active " +
+        "sprint puts it at the bottom of the first column; a planned one or `null` puts it in " +
+        "the backlog, keeping its rank there. A sub-task's is its parent's.",
+    }),
   version: versionSchema,
 };
 
@@ -435,6 +465,7 @@ const UPDATABLE = [
   "priority",
   "dueDate",
   "storyPoints",
+  "sprintId",
   "labelIds",
 ] as const;
 
@@ -464,11 +495,24 @@ export const moveTaskRequestSchema = z
       .uuid()
       .optional()
       .meta({ description: "Or right before this one. Without either, at the end." }),
+    sprintId: z
+      .uuid()
+      .nullable()
+      .optional()
+      .meta({
+        description:
+          "Only with `columnId: null`: a planned sprint of the project, or `null` to unschedule " +
+          "the task. Without it, a task already in the backlog keeps its sprint.",
+      }),
     version: versionSchema,
   })
   .refine((body) => body.afterTaskId === undefined || body.beforeTaskId === undefined, {
     message: "Send afterTaskId or beforeTaskId, not both.",
     path: ["beforeTaskId"],
+  })
+  .refine((body) => body.sprintId === undefined || body.columnId === null, {
+    message: "Send sprintId only with columnId: null.",
+    path: ["sprintId"],
   })
   .meta({ id: "MoveTaskRequest" });
 
@@ -491,7 +535,9 @@ export const listTasksContract = {
   description:
     "Tasks in board order: by column, then by their place in the column, with keyset " +
     "pagination. Items leave out the description. Tasks in the backlog are not on the " +
-    "board and are listed only with `deleted=true`, after every column's. " +
+    "board and are listed only with `deleted=true`, after every column's. In a project with " +
+    "sprints, the board lists the active sprint's tasks only, and nothing when none is " +
+    "active. " +
     FILTERS_DESCRIPTION,
   access: READ,
   request: { params: projectParamsSchema, query: taskListQuerySchema },
@@ -555,8 +601,12 @@ export const createTaskContract = {
     409: {
       description:
         "The project is archived (code `project_archived`), the person is deactivated " +
-        "(code `account_inactive`), or the parent has 100 sub-tasks (code " +
-        "`too_many_subtasks`).",
+        "(code `account_inactive`), the parent has 100 sub-tasks (code " +
+        "`too_many_subtasks`), a column is asked with no active sprint (code " +
+        "`no_active_sprint`), the place disagrees with the parent's sprint (code " +
+        "`subtask_follows_parent`), the parent's sprint is completed (code " +
+        "`sprint_completed`), or a sprint is given in a project without sprints (code " +
+        "`sprints_disabled`).",
       problem: true,
     },
     413: PAYLOAD_TOO_LARGE,
@@ -594,6 +644,10 @@ export const updateTaskContract = {
       "project_archived",
       "account_inactive",
       "too_many_subtasks",
+      "no_active_sprint",
+      "subtask_follows_parent",
+      "sprint_completed",
+      "sprints_disabled",
     ]),
     413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
@@ -607,6 +661,8 @@ export const moveTaskContract = {
   description:
     "Moves the task to the end of a column of its project, or right after or right before a " +
     "task of that column; with `columnId: null`, the same within the project's backlog. " +
+    "In a project with sprints, a column move puts the task in the active sprint and a " +
+    "backlog move takes it out, unless `sprintId` names a planned sprint. " +
     "Send the `version` the move is based on.",
   access: WRITE,
   request: { params: taskParamsSchema, body: moveTaskRequestSchema },
@@ -614,7 +670,12 @@ export const moveTaskContract = {
     200: { description: "The task after the move.", schema: taskSchema },
     400: { description: "The path or the body is not valid.", problem: true },
     404: NO_TASK,
-    409: versionConflictResponse(taskSchema, ["project_archived"]),
+    409: versionConflictResponse(taskSchema, [
+      "project_archived",
+      "no_active_sprint",
+      "subtask_follows_parent",
+      "sprints_disabled",
+    ]),
     413: PAYLOAD_TOO_LARGE,
     415: NOT_JSON,
   },

@@ -8,6 +8,9 @@ export const MAX_PAGE_LIMIT = 100;
  */
 export const MAX_CURSOR_LENGTH = 2048;
 
+/** At most this many values of one filter (WT-08 decision 1). */
+export const MAX_FILTER_VALUES = 20;
+
 /**
  * Query parameters of every list endpoint (canonical doc 0004 section 5). Strict: an
  * unknown parameter is an error. `limit` arrives as text and is coerced.

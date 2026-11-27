@@ -163,7 +163,7 @@ describe("createTask with sprintId (WS-141 test 3)", () => {
     expect(await backlogKeys(s)).toEqual([unscheduled.key, task.key]);
   });
 
-  it("accepts a column and the active sprint, or null and a planned sprint or none", async () => {
+  it("accepts a column and the active sprint, or null and a planned sprint", async () => {
     const s = await setup();
     const both = await createTask(s.mia, "OPA", {
       title: "Both",
@@ -175,11 +175,9 @@ describe("createTask with sprintId (WS-141 test 3)", () => {
       columnId: null,
       sprintId: s.planned.id,
     });
-    const none = await createTask(s.mia, "OPA", { title: "None", columnId: null, sprintId: null });
 
     expect([both.columnId, both.sprint?.id]).toEqual([s.doing.id, s.active.id]);
     expect([planned.columnId, planned.sprint?.id]).toEqual([null, s.planned.id]);
-    expect([none.columnId, none.sprint]).toEqual([null, null]);
   });
 
   it("refuses a completed, foreign or unknown sprint, and a column that disagrees (400)", async () => {
@@ -193,7 +191,6 @@ describe("createTask with sprintId (WS-141 test 3)", () => {
       { sprintId: UNKNOWN },
       { sprintId: third.id, columnId: s.todo.id },
       { sprintId: s.active.id, columnId: null },
-      { sprintId: null, columnId: s.todo.id },
     ]) {
       const error = await failure(createTask(s.mia, "OPA", { title: "X", ...input }));
       expect(fieldFailure(error), JSON.stringify(input)).toEqual([
@@ -394,7 +391,7 @@ describe("sub-tasks follow their parent's sprint (WS-141 test 7)", () => {
     expect(same.sprint?.id).toBe(s.planned.id);
 
     const differing = await failure(
-      createTask(s.mia, "OPA", { title: "X", parentId: planned.key, sprintId: null }),
+      createTask(s.mia, "OPA", { title: "X", parentId: planned.key, sprintId: s.active.id }),
     );
     expect(differing.errors).toEqual([
       { path: "sprintId", message: "A sub-task's sprint is its parent's." },

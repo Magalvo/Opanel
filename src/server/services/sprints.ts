@@ -24,6 +24,7 @@ import { decodeSprintCursor, encodeSprintCursor } from "@/server/http/pagination
 import { recordAudit } from "./audit";
 import { publishEvent } from "./events";
 import { findProjectRef, lockWritableProject } from "./projects";
+import { unscheduleSprintTasks } from "./sprint-placement";
 
 // Sprints in the API (WS-140): planned sprints are created, edited and deleted here; item D
 // starts and completes them.
@@ -291,7 +292,7 @@ export async function updateSprint(
 
 /**
  * Deletes a planned sprint, also while the project does not use sprints (WS-140 question 4).
- * No `version` is asked, as for labels.
+ * No `version` is asked, as for labels. Its tasks become unscheduled first (WS-141).
  */
 export async function deleteSprint(
   actor: Actor,
@@ -304,6 +305,7 @@ export async function deleteSprint(
     const sprint = await lockSprint(tx, actor, sprintId);
     if (sprint.state !== "planned") throw sprintNotPlanned();
 
+    await unscheduleSprintTasks(tx, actor, sprint.project_id, sprintId);
     await tx.execute(sql`delete from sprints where id = ${sprintId}`);
     await recordAudit(tx, {
       actor,

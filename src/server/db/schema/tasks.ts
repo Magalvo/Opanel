@@ -19,6 +19,7 @@ import { byteOrderedText } from "./collated-text";
 import { columns } from "./columns";
 import { epics } from "./epics";
 import { projects } from "./projects";
+import { sprints } from "./sprints";
 import { teams } from "./teams";
 
 /** PostgreSQL's `tsvector`, which Drizzle has no type for; only ever written by the database. */
@@ -61,6 +62,9 @@ export const tasks = pgTable(
     dueDate: date("due_date", { mode: "string" }),
     // Story points: 0 to 999.5 in steps of 0.5, or none (WT-10 decision 1, WS-139).
     storyPoints: numeric("story_points", { precision: 4, scale: 1, mode: "number" }),
+    // The task's sprint, of its project (WT-10 decisions 3 and 5, WS-141); the service checks
+    // the project. `restrict`: deleting a planned sprint first unschedules its tasks.
+    sprintId: uuid("sprint_id").references(() => sprints.id, { onDelete: "restrict" }),
     reporterAccountId: uuid("reporter_account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
@@ -104,6 +108,9 @@ export const tasks = pgTable(
     index("tasks_assignee_team_idx").on(table.assigneeTeamId),
     index("tasks_assignee_account_idx").on(table.assigneeAccountId),
     index("tasks_epic_idx").on(table.epicId),
+    index("tasks_sprint_idx")
+      .on(table.sprintId)
+      .where(sql`${table.sprintId} is not null`),
     check(
       "tasks_parent_not_self_check",
       sql`${table.parentTaskId} is null or ${table.parentTaskId} <> ${table.id}`,

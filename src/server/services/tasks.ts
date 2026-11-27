@@ -7,6 +7,7 @@ import type { Severity } from "@/lib/schemas/bug-reports";
 import type { ColumnCategory } from "@/lib/schemas/columns";
 import { calendarDateSchema } from "@/lib/schemas/dates";
 import type { LabelRef } from "@/lib/schemas/labels";
+import type { SprintState } from "@/lib/schemas/sprints";
 import {
   type AllTasksQuery,
   type BacklogQuery,
@@ -39,6 +40,8 @@ import {
   hasSubtasks,
   invalidRequest,
   notFound,
+  sprintCompleted,
+  sprintsDisabled,
   tooManySubtasks,
   versionConflict,
 } from "@/server/http/errors";
@@ -55,6 +58,17 @@ import {
 import { type ProjectEventInput, publishEvent, publishEvents } from "./events";
 import { isPerson } from "./people";
 import { claimTaskNumber, findProjectRef, lockWritableProject, reachableBy } from "./projects";
+import {
+  lockFirstColumn,
+  lockSprintContext,
+  type PlacedTask,
+  placeFor,
+  type Placement,
+  recordPlaceChange,
+  type SprintContext,
+  sprintsEnabled,
+  type Wanted,
+} from "./sprint-placement";
 import { recordTaskEvent } from "./task-events";
 import { taskFilterWhere } from "./task-filter";
 
@@ -79,6 +93,7 @@ function taskSelect(extra: SQL = sql``, { description = false } = {}): SQL {
     ${description ? sql`t.description,` : sql``}
     t.column_id, t.assignee_team_id, t.assignee_account_id, t.epic_id,
     e.title as epic_title,
+    t.sprint_id, sp.name as sprint_name, sp.state as sprint_state,
     t.parent_task_id, pt.number as parent_number, pt.title as parent_title,
     sc.done as subtasks_done, sc.total as subtasks_total,
     tm.name as team_name,
@@ -105,6 +120,7 @@ function taskSelect(extra: SQL = sql``, { description = false } = {}): SQL {
   left join teams tm on tm.id = t.assignee_team_id
   left join accounts a on a.id = t.assignee_account_id
   left join epics e on e.id = t.epic_id
+  left join sprints sp on sp.id = t.sprint_id
   left join tasks pt on pt.id = t.parent_task_id
   left join lateral (
     -- A parent's progress (WS-133 section 6), read through tasks_parent_idx.
@@ -135,6 +151,9 @@ interface SummaryRow extends Record<string, unknown> {
   assignee_account_id: string | null;
   epic_id: string | null;
   epic_title: string | null;
+  sprint_id: string | null;
+  sprint_name: string | null;
+  sprint_state: SprintState | null;
   parent_task_id: string | null;
   parent_number: number | null;
   parent_title: string | null;
@@ -198,6 +217,10 @@ function toSummary(row: SummaryRow): TaskSummary {
             key: `${row.project_key}-${String(row.parent_number)}`,
             title: row.parent_title ?? "",
           },
+    sprint:
+      row.sprint_id === null
+        ? null
+        : { id: row.sprint_id, name: row.sprint_name ?? "", state: row.sprint_state ?? "planned" },
     reporter: { id: row.reporter_id, name: row.reporter_name, kind: row.reporter_kind },
     severity: row.severity,
     fingerprint: row.fingerprint,
@@ -477,6 +500,73 @@ async function syncSubtaskEpics(
   );
 }
 
+/** A task as `placeFor` sees it, with the parent it has after the write, if any. */
+function placed(row: TaskRow, parent?: TaskRow): PlacedTask {
+  return {
+    sprintId: row.sprint_id,
+    sprintState: row.sprint_state,
+    columnId: row.column_id,
+    position: row.position,
+    parent: parent && { sprintId: parent.sprint_id, sprintState: parent.sprint_state },
+  };
+}
+
+/**
+ * Gives a parent's live sub-tasks its new sprint (WT-10 decision 9, WS-141 section 7), each
+ * placed by the rule: a new version, its history entries and `task.updated`, or
+ * `task.moved` when its column changes.
+ */
+async function syncSubtaskSprints(
+  executor: Writer,
+  actor: Actor,
+  context: SprintContext,
+  parentId: string,
+  sprintId: string | null,
+): Promise<void> {
+  const ids = await executor.execute<{ id: string }>(sql`
+    select id from tasks
+    where parent_task_id = ${parentId} and deleted_at is null
+      and sprint_id is distinct from ${sprintId}`);
+  await lockTasks(
+    executor,
+    ids.map((row) => row.id),
+  );
+  const subtasks = await executor.execute<TaskRow>(sql`
+    ${TASK_SELECT}
+    where t.parent_task_id = ${parentId} and t.deleted_at is null
+      and t.sprint_id is distinct from ${sprintId}
+    order by coalesce(c.position, ${BACKLOG_COLUMN_POSITION}) collate "C", t.position, t.id`);
+  const events: ProjectEventInput[] = [];
+  for (const subtask of subtasks) {
+    const place = await placeFor(executor, context, placed(subtask), {
+      kind: "sprint",
+      sprintId,
+      follow: true,
+    });
+    const [row] = await executor.execute<{ version: number }>(sql`
+      update tasks set sprint_id = ${place.sprintId}, column_id = ${place.columnId},
+        position = ${place.position ?? subtask.position}, version = version + 1, updated_at = now()
+      where id = ${subtask.id}
+      returning version`);
+    await recordPlaceChange(
+      executor,
+      actor,
+      subtask.id,
+      { columnId: subtask.column_id, sprintId: subtask.sprint_id },
+      place,
+      false,
+    );
+    events.push(
+      taskEvent(
+        place.columnId === subtask.column_id ? "task.updated" : "task.moved",
+        { ...subtask, version: row?.version ?? subtask.version },
+        actor,
+      ),
+    );
+  }
+  await publishEvents(executor, events);
+}
+
 export async function getTask(actor: Actor, ref: string, db: Database = getDb()): Promise<Task> {
   requirePermission(actor, "tasks:read");
   const row = await findTask(db, ref);
@@ -510,9 +600,14 @@ export async function listTasks(
           return sql`and (${columnOrder}, t.position, t.id) >
             (${cursor.columnPosition}::text collate "C", ${cursor.position}::text collate "C", ${cursor.id}::uuid)`;
         })();
+  // In a project with sprints, the board is the active sprint (WT-10 decision 5).
+  const board = (await sprintsEnabled(db, project.id))
+    ? sql`and t.sprint_id = (select s.id from sprints s
+          where s.project_id = ${project.id} and s.state = 'active')`
+    : sql``;
   const live = deleted
     ? sql`t.deleted_at is not null`
-    : sql`t.deleted_at is null and t.column_id is not null`;
+    : sql`t.deleted_at is null and t.column_id is not null ${board}`;
 
   const rows = await db.execute<SummaryRow>(sql`
     ${SUMMARY_SELECT}
@@ -849,6 +944,35 @@ function sameLabels(a: readonly NamedLabel[], b: readonly NamedLabel[]): boolean
   return a.length === b.length && b.every((label) => ids.has(label.id));
 }
 
+const SPRINT_AND_COLUMN = "A column goes with the active sprint, the backlog with any other.";
+
+/** What a creation asks of `placeFor` (WS-141 section 4). */
+function createWanted(
+  context: SprintContext,
+  input: CreateTaskRequest,
+  columnId: string | null,
+  parent: TaskRow | undefined,
+): Wanted {
+  if (columnId !== null) {
+    if (
+      context.enabled &&
+      input.sprintId !== undefined &&
+      input.sprintId !== context.activeSprintId
+    ) {
+      throw fieldError("sprintId", SPRINT_AND_COLUMN);
+    }
+    return { kind: "column", columnId };
+  }
+  if (input.sprintId !== undefined) {
+    if (input.columnId === null && input.sprintId === context.activeSprintId) {
+      throw fieldError("sprintId", SPRINT_AND_COLUMN);
+    }
+    return { kind: "sprint", sprintId: input.sprintId };
+  }
+  if (input.columnId === null) return { kind: "backlog" };
+  return { kind: "sprint", sprintId: parent?.sprint_id ?? null, follow: true };
+}
+
 export async function createTask(
   actor: Actor,
   projectRef: string,
@@ -863,10 +987,14 @@ export async function createTask(
     // Locks the project: creations in it run one at a time (WS-030 section 3).
     const project = await claimTaskNumber(tx, actor, projectRef);
 
+    const enabled = await sprintsEnabled(tx, project.id);
+    if (!enabled && typeof input.sprintId === "string") throw sprintsDisabled();
     // Locks the column: creations and moves into it run one at a time (WS-031 section 3).
     // The backlog has no row of its own: the project row, locked above, guards it (WS-101).
+    // In a project with sprints a task goes to the backlog unless a column is given
+    // (WT-10 decision 5), or to the first column with the active sprint.
     let columnId: string | null = null;
-    if (input.columnId !== null) {
+    if (input.columnId !== null && (input.columnId !== undefined || !enabled)) {
       const [column] = await tx.execute<{ id: string }>(
         input.columnId === undefined
           ? sql`select id from columns where project_id = ${project.id}
@@ -876,7 +1004,10 @@ export async function createTask(
       );
       if (!column) throw fieldError("columnId", "Not a column of this project.");
       columnId = column.id;
+    } else if (enabled && (input.sprintId !== undefined || input.parentId !== undefined)) {
+      await lockFirstColumn(tx, project.id);
     }
+    const context = await lockSprintContext(tx, project.id, enabled);
 
     if (input.assigneeTeamId !== undefined) await assertTeam(tx, input.assigneeTeamId);
     if (input.assigneeAccountId !== undefined) {
@@ -891,6 +1022,8 @@ export async function createTask(
       if (input.epicId !== undefined && input.epicId !== parent.epic_id) {
         throw fieldError("epicId", SUBTASK_EPIC);
       }
+      // A completed sprint is a record: no task joins it (WS-141 deviation B).
+      if (parent.sprint_state === "completed") throw sprintCompleted();
     } else if (input.epicId !== undefined) {
       await assertEpic(tx, input.epicId, project.id);
     }
@@ -899,11 +1032,26 @@ export async function createTask(
         ? undefined
         : await projectLabels(tx, project.id, input.labelIds);
 
-    // Deleted tasks keep their place, so they count here too.
-    const [last] = await tx.execute<{ position: string }>(
-      sql`select position from tasks where ${placeOf(project.id, columnId)}
-          order by position desc limit 1`,
+    const place = await placeFor(
+      tx,
+      context,
+      {
+        sprintId: parent?.sprint_id ?? null,
+        sprintState: parent?.sprint_state ?? null,
+        columnId: null,
+        position: null,
+        parent: parent && { sprintId: parent.sprint_id, sprintState: parent.sprint_state },
+      },
+      createWanted(context, input, columnId, parent),
     );
+    // Deleted tasks keep their place, so they count here too.
+    const [last] =
+      place.position === undefined
+        ? await tx.execute<{ position: string }>(
+            sql`select position from tasks where ${placeOf(project.id, place.columnId)}
+                order by position desc limit 1`,
+          )
+        : [];
     const type = input.type ?? "task";
     const [row] = await tx
       .insert(tasks)
@@ -913,8 +1061,9 @@ export async function createTask(
         type,
         title: input.title,
         description: input.description ?? "",
-        columnId,
-        position: positionBetween(last?.position ?? null, null),
+        columnId: place.columnId,
+        sprintId: place.sprintId,
+        position: place.position ?? positionBetween(last?.position ?? null, null),
         assigneeTeamId: input.assigneeTeamId ?? null,
         assigneeAccountId: input.assigneeAccountId ?? null,
         epicId: parent === undefined ? (input.epicId ?? null) : parent.epic_id,
@@ -938,7 +1087,8 @@ export async function createTask(
         key,
         type,
         title: input.title,
-        columnId,
+        columnId: place.columnId,
+        ...(place.sprintId === null ? {} : { sprintId: place.sprintId }),
         ...(input.severity === undefined ? {} : { severity: input.severity }),
         ...(input.priority === undefined ? {} : { priority: input.priority }),
         ...(input.dueDate === undefined ? {} : { dueDate: input.dueDate }),
@@ -968,6 +1118,7 @@ const EDITABLE = [
   ["assigneeAccountId", "assignee_account_id"],
   ["epicId", "epic_id"],
   ["parentId", "parent_task_id"],
+  ["sprintId", "sprint_id"],
 ] as const;
 
 export async function updateTask(
@@ -982,7 +1133,13 @@ export async function updateTask(
   return db.transaction(async (tx) => {
     const found = await findTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, actor, found.project_id);
+    // A sprint or a new parent may move the task to the backlog: its order is the project
+    // row's to guard (WS-101), and the first column's, where the active sprint starts.
+    const mayMove = input.sprintId !== undefined || (input.parentId ?? null) !== null;
+    await lockWritableProject(tx, actor, found.project_id, mayMove ? "exclusive" : "shared");
+    const enabled = await sprintsEnabled(tx, found.project_id);
+    if (enabled && mayMove) await lockFirstColumn(tx, found.project_id);
+    const context = await lockSprintContext(tx, found.project_id, enabled);
     // A new parent's row is locked with the task's, in id order (WS-133 section 3).
     const newParentId =
       input.parentId === undefined || input.parentId === null
@@ -1006,6 +1163,28 @@ export async function updateTask(
     }
     if (parent !== undefined && input.epicId !== undefined && input.epicId !== parent.epic_id) {
       throw fieldError("epicId", SUBTASK_EPIC);
+    }
+    const newParent = parent !== undefined && parent.id !== before.parent_task_id;
+    // A completed sprint is a record: no task joins it (WS-141 deviation B).
+    if (newParent && parent?.sprint_state === "completed") throw sprintCompleted();
+
+    // The sprint asked, or a new parent's (WS-141 sections 6 and 7).
+    let place: Placement = {
+      sprintId: before.sprint_id,
+      columnId: before.column_id,
+      position: before.position,
+    };
+    if (input.sprintId !== undefined) {
+      place = await placeFor(tx, context, placed(before, parent), {
+        kind: "sprint",
+        sprintId: input.sprintId,
+      });
+    } else if (newParent) {
+      place = await placeFor(tx, context, placed(before, parent), {
+        kind: "sprint",
+        sprintId: parent?.sprint_id ?? null,
+        follow: true,
+      });
     }
 
     const type = input.type ?? before.type;
@@ -1035,6 +1214,7 @@ export async function updateTask(
             ? before.epic_id
             : input.epicId,
       parentId: parent?.id ?? null,
+      sprintId: place.sprintId,
     };
     if (after.assigneeTeamId !== null && after.assigneeTeamId !== before.assignee_team_id) {
       await assertTeam(tx, after.assigneeTeamId);
@@ -1063,6 +1243,8 @@ export async function updateTask(
         story_points = ${after.storyPoints},
         assignee_team_id = ${after.assigneeTeamId}, assignee_account_id = ${after.assigneeAccountId},
         epic_id = ${after.epicId}, parent_task_id = ${after.parentId},
+        sprint_id = ${place.sprintId}, column_id = ${place.columnId},
+        position = ${place.position ?? before.position},
         version = version + 1, updated_at = now()
       where id = ${before.id}`);
 
@@ -1091,14 +1273,32 @@ export async function updateTask(
       });
     }
 
-    // A parent's sub-tasks follow its epic (WS-133 section 4).
+    const columnChanged = place.columnId !== before.column_id;
+    await recordPlaceChange(
+      tx,
+      actor,
+      before.id,
+      { columnId: before.column_id, sprintId: before.sprint_id },
+      { columnId: place.columnId, sprintId: before.sprint_id },
+      true,
+    );
+
+    // A parent's sub-tasks follow its epic (WS-133 section 4) and its sprint (WS-141).
     if (after.epicId !== before.epic_id) await syncSubtaskEpics(tx, actor, before.id, after.epicId);
+    if (place.sprintId !== before.sprint_id) {
+      await syncSubtaskSprints(tx, actor, context, before.id, place.sprintId);
+    }
 
     const updated = await findTask(tx, before.id);
     if (!updated) throw taskNotFound();
-    await publishEvent(tx, taskEvent("task.updated", updated, actor));
+    await publishEvent(
+      tx,
+      taskEvent(columnChanged ? "task.moved" : "task.updated", updated, actor),
+    );
     if (after.parentId !== before.parent_task_id) {
       await announceParents(tx, actor, [before.parent_task_id, after.parentId]);
+    } else if (columnChanged) {
+      await announceParents(tx, actor, [after.parentId]);
     }
     return withLinks(tx, actor, updated);
   });
@@ -1125,17 +1325,48 @@ export async function moveTask(
     // column's row guards its own (WS-101 section 2).
     const toBacklog = input.columnId === null;
     await lockWritableProject(tx, actor, found.project_id, toBacklog ? "exclusive" : "shared");
+    const enabled = await sprintsEnabled(tx, found.project_id);
 
-    if (input.columnId !== null) {
-      const [column] = await tx.execute(sql`
-        select id from columns where id = ${input.columnId} and project_id = ${found.project_id}
-        for no key update`);
-      if (!column) throw fieldError("columnId", "Not a column of this project.");
+    // The target column, and in a project with sprints the first one, where sub-tasks
+    // joining the active sprint go: locked in id order.
+    const [first] = enabled
+      ? await tx.execute<{ id: string }>(sql`
+          select id from columns where project_id = ${found.project_id}
+          order by position limit 1`)
+      : [];
+    const columnIds = [
+      ...new Set([
+        ...(input.columnId === null ? [] : [input.columnId]),
+        ...(first ? [first.id] : []),
+      ]),
+    ];
+    if (columnIds.length > 0) {
+      const locked = await tx.execute<{ id: string }>(sql`
+        select id from columns
+        where project_id = ${found.project_id} and id in (${sql.join(
+          columnIds.map((id) => sql`${id}::uuid`),
+          sql`, `,
+        )})
+        order by id for no key update`);
+      if (input.columnId !== null && !locked.some((column) => column.id === input.columnId)) {
+        throw fieldError("columnId", "Not a column of this project.");
+      }
     }
+    const context = await lockSprintContext(tx, found.project_id, enabled);
 
     const before = await findTask(tx, found.id, sql`for update of t`);
     if (!before) throw taskNotFound();
     if (before.version !== input.version) throw versionConflict(await withLinks(tx, actor, before));
+    const parent =
+      before.parent_task_id === null ? undefined : await findTask(tx, before.parent_task_id);
+    const place = await placeFor(
+      tx,
+      context,
+      placed(before, parent),
+      input.columnId === null
+        ? { kind: "backlog", sprintId: input.sprintId }
+        : { kind: "column", columnId: input.columnId },
+    );
 
     // Neighbours are read over every task of the column, deleted or not (deleted tasks keep
     // their place), leaving the moved task out. Positions compare byte by byte (A2).
@@ -1187,17 +1418,19 @@ export async function moveTask(
 
     await tx.execute(sql`
       update tasks set column_id = ${input.columnId}, position = ${position},
-        version = version + 1, updated_at = now()
+        sprint_id = ${place.sprintId}, version = version + 1, updated_at = now()
       where id = ${before.id}`);
 
-    if (!sameColumn) {
-      await recordTaskEvent(tx, {
-        taskId: before.id,
-        actor,
-        type: "moved",
-        oldValue: { columnId: before.column_id },
-        newValue: { columnId: input.columnId },
-      });
+    await recordPlaceChange(
+      tx,
+      actor,
+      before.id,
+      { columnId: before.column_id, sprintId: before.sprint_id },
+      { columnId: input.columnId, sprintId: place.sprintId },
+      true,
+    );
+    if (place.sprintId !== before.sprint_id) {
+      await syncSubtaskSprints(tx, actor, context, before.id, place.sprintId);
     }
 
     const moved = await findTask(tx, before.id);
@@ -1254,7 +1487,13 @@ export async function restoreTask(
   return db.transaction(async (tx) => {
     const found = await findAnyTask(tx, ref);
     if (!found) throw taskNotFound();
-    await lockWritableProject(tx, actor, found.project_id);
+    // A task whose place breaks the sprint rule goes to the end of the backlog (WS-141).
+    await lockWritableProject(tx, actor, found.project_id, "exclusive");
+    const context = await lockSprintContext(
+      tx,
+      found.project_id,
+      await sprintsEnabled(tx, found.project_id),
+    );
     const task = await findAnyTask(tx, found.id, sql`for update of t`);
     if (!task) throw taskNotFound();
     if (task.deleted_at === null) return withLinks(tx, actor, task);
@@ -1266,9 +1505,12 @@ export async function restoreTask(
         : await tx.execute<{ deleted: boolean }>(sql`
             select deleted_at is not null as deleted from tasks where id = ${task.parent_task_id}`);
     const detach = parent?.deleted === true;
+    const place = await placeFor(tx, context, placed(task), { kind: "stay" });
     await tx.execute(sql`
       update tasks set deleted_at = null, deleted_by = null,
         ${detach ? sql`parent_task_id = null,` : sql``}
+        sprint_id = ${place.sprintId}, column_id = ${place.columnId},
+        position = ${place.position ?? task.position},
         version = version + 1, updated_at = now()
       where id = ${task.id}`);
     await recordTaskEvent(tx, { taskId: task.id, actor, type: "restored" });
@@ -1282,6 +1524,14 @@ export async function restoreTask(
         newValue: null,
       });
     }
+    await recordPlaceChange(
+      tx,
+      actor,
+      task.id,
+      { columnId: task.column_id, sprintId: task.sprint_id },
+      place,
+      true,
+    );
 
     const restored = await findTask(tx, task.id);
     if (!restored) throw taskNotFound();

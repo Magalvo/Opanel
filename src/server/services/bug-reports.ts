@@ -18,6 +18,7 @@ import { codeSpan, renderBugDescription } from "./bug-report-description";
 import { addSystemComment } from "./comments";
 import { publishEvent } from "./events";
 import { claimTaskNumber, findProjectRef, lockWritableProject } from "./projects";
+import { sprintsEnabled } from "./sprint-placement";
 import { recordTaskEvent } from "./task-events";
 import { insertLink } from "./task-links";
 import { findLiveTask } from "./tasks";
@@ -55,13 +56,20 @@ export async function routeBugReport(
 }
 
 /**
- * Where a new bug goes (WT-06 decision 7): the top of the project's first column. Locks that
- * column, as `createTask` does. WT-10 changes only this function for sprint projects.
+ * Where a new bug goes (WT-06 decision 7): the top of the project's first column, locking
+ * that column as `createTask` does. In a project with sprints, the top of the backlog,
+ * unscheduled (WT-10 decision 14, WS-141 section 8), which the project's lock guards.
  */
 export async function placeNewBug(
   tx: Executor,
   projectId: string,
-): Promise<{ columnId: string; position: string }> {
+): Promise<{ columnId: string | null; position: string }> {
+  if (await sprintsEnabled(tx, projectId)) {
+    const [top] = await tx.execute<{ position: string }>(sql`
+      select position from tasks where project_id = ${projectId} and column_id is null
+      order by position limit 1`);
+    return { columnId: null, position: positionBetween(null, top?.position ?? null) };
+  }
   const [column] = await tx.execute<{ id: string }>(sql`
     select id from columns where project_id = ${projectId}
     order by position limit 1 for no key update`);

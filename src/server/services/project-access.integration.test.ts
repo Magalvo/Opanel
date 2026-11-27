@@ -210,6 +210,12 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "sign-in.signOut": "sign-in",
   "projects.reachableBy": "internal: the condition the project-filtered lists use",
   "task-events.recordTaskEvent": "internal: called by a service that has checked",
+  "sprint-placement.lockFirstColumn": "internal: called by a task write that has checked",
+  "sprint-placement.lockSprintContext": "internal: called by a task write that has checked",
+  "sprint-placement.placeFor": "internal: called by a task write that has checked (WS-141)",
+  "sprint-placement.recordPlaceChange": "internal: called by a service that has checked",
+  "sprint-placement.sprintsEnabled": "internal: called by a service that has checked",
+  "sprint-placement.unscheduleSprintTasks": "internal: called by deleteSprint, which has checked",
   "task-filter.taskFilterWhere":
     "internal: called by listTasks and listBacklog, which have checked",
   "tasks.findLiveTask": "internal: returns the task's project, which its callers check",
@@ -403,6 +409,10 @@ describe("agents built from their rows (WS-073)", () => {
     const agent = await agentRestrictedTo([a.project.id]);
 
     const created = await createTask(agent, "AAA", { title: "By the agent" });
+    // Project AAA uses sprints: a move onto the board needs an active sprint (WS-141).
+    await getDb().execute(
+      sql`update sprints set state = 'active', started_at = now() where id = ${a.sprint.id}`,
+    );
     await moveTask(agent, created.id, { columnId: a.spare.id, version: created.version });
     await createComment(agent, created.key, { body: "Done" });
     expect((await listProjects(agent, { limit: 50 })).items.map((p) => p.key)).toEqual(["AAA"]);

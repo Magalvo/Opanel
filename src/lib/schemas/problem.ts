@@ -42,6 +42,8 @@ export const PROBLEM_CODES = [
   "sprint_active",
   "sprint_not_planned",
   "sprint_completed",
+  "no_active_sprint",
+  "subtask_follows_parent",
 ] as const;
 
 export const problemCodeSchema = z.enum(PROBLEM_CODES);

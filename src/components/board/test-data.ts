@@ -60,6 +60,7 @@ export function task(
     priority: "none",
     dueDate: null,
     storyPoints: null,
+    sprint: null,
     labels: [],
     subtasks: null,
     version: 1,

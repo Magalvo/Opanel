@@ -308,6 +308,20 @@ export function sprintNotPlanned(detail = "Only a planned sprint can be deleted.
   return new ApiError({ status: 409, title: "Conflict", code: "sprint_not_planned", detail });
 }
 
+/** `409` (WS-141): a column needs an active sprint in a project with sprints (WT-10 decision 5). */
+export function noActiveSprint(
+  detail = "No sprint is active in this project. Start one, or keep the task in the backlog.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "no_active_sprint", detail });
+}
+
+/** `409` (WS-141): a sub-task is on the board exactly when its parent is (WT-10 decision 9). */
+export function subtaskFollowsParent(
+  detail = "A sub-task follows its parent's sprint: move the parent instead.",
+): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "subtask_follows_parent", detail });
+}
+
 /** `409` (WS-140): a completed sprint is a record and cannot change (WT-10 decision 8). */
 export function sprintCompleted(detail = "This sprint is completed and cannot change."): ApiError {
   return new ApiError({ status: 409, title: "Conflict", code: "sprint_completed", detail });
