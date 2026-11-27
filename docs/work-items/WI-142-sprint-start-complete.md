@@ -1,6 +1,6 @@
 # WI-142 — Starting and completing sprints
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-142)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item D)
 - Depends on: WI-139 (story points) and WI-141 (tasks in sprints), both done
 - Work-spec: [WS-142](../work-specs/WS-142-sprint-start-complete.md)

@@ -1,6 +1,6 @@
 # WS-142 — Starting and completing sprints
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
 - Work-item: [WI-142](../work-items/WI-142-sprint-start-complete.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("create, start,
   complete sprints; enable sprints on a project"), 6 (sprints) and 9 (history);
