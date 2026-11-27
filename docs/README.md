@@ -16,9 +16,9 @@ What a new session needs to start: what comes next, and what waits for the owner
 an index commit when a work-track is approved or done, or when what comes next changes.
 
 - **Next:** WT-10 (sprints and story points, approved on 2026-11-27) item D (starting
-  and completing sprints); then F, E, and G last. Items A (story points, WI-139), B
-  (sprints in the API, WI-140) and C (tasks in sprints, WI-141) are done. WT-09 (sub-tasks
-  and links) is done (WI-133 to WI-138).
+  and completing sprints, WI-142); then F, E, and G last. Items A (story points, WI-139),
+  B (sprints in the API, WI-140) and C (tasks in sprints, WI-141) are done. WT-09
+  (sub-tasks and links) is done (WI-133 to WI-138).
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -208,6 +208,7 @@ operations (doc 0006), are done.
 | [WI-139](work-items/WI-139-story-points.md)                     | Story points                                                      | [WS-139](work-specs/WS-139-story-points.md)                     |
 | [WI-140](work-items/WI-140-sprints-api.md)                      | Sprints in the API                                                | [WS-140](work-specs/WS-140-sprints-api.md)                      |
 | [WI-141](work-items/WI-141-tasks-in-sprints.md)                 | Tasks in sprints                                                  | [WS-141](work-specs/WS-141-tasks-in-sprints.md)                 |
+| [WI-142](work-items/WI-142-sprint-start-complete.md)            | Starting and completing sprints                                   | [WS-142](work-specs/WS-142-sprint-start-complete.md)            |
 
 ## Follow-ups
 
