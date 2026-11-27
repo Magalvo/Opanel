@@ -1,6 +1,6 @@
 # WI-139 — Story points
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, with WS-139)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item A)
 - Depends on: none (runs beside item B, sprints in the API)
 - Work-spec: [WS-139](../work-specs/WS-139-story-points.md)

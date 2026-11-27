@@ -1,6 +1,6 @@
 # WS-139 — Story points
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 3 as recommended)
 - Work-item: [WI-139](../work-items/WI-139-story-points.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("set …
   points"), 4 (`Story points`, epic progress) and 9 (history);
