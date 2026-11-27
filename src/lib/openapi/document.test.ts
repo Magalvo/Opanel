@@ -441,6 +441,65 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("describes story points: on tasks, on create and edit, the sort and epic progress (WS-139)", () => {
+    const document = documentAsJson();
+    const { schemas } = parsedDocument().components;
+    const points = { type: "number", minimum: 0, maximum: 999.5, multipleOf: 0.5 };
+    const nullablePoints = { anyOf: [points, { type: "null" }] };
+
+    for (const name of ["Task", "TaskSummary", "TaskListItem"]) {
+      expect(schemas[name], name).toMatchObject({
+        properties: { storyPoints: nullablePoints },
+        required: expect.arrayContaining(["storyPoints"]) as unknown,
+      });
+    }
+    expect(schemas.CreateTaskRequest).toMatchObject({ properties: { storyPoints: points } });
+    expect(schemas.UpdateTaskRequest).toMatchObject({
+      properties: { storyPoints: nullablePoints },
+    });
+    expect(JSON.stringify(schemas.CreateTaskRequest)).toContain("999.5");
+
+    const sort = z
+      .object({
+        paths: z.record(
+          z.string(),
+          z.record(
+            z.string(),
+            z.object({
+              parameters: z
+                .array(z.object({ name: z.string(), schema: z.unknown().optional() }))
+                .optional(),
+            }),
+          ),
+        ),
+      })
+      .parse(document)
+      .paths["/api/v1/tasks"]?.get?.parameters?.find((parameter) => parameter.name === "sort");
+    expect(sort?.schema).toMatchObject({
+      enum: expect.arrayContaining(["storyPoints", "-storyPoints"]) as unknown,
+    });
+
+    expect(JSON.stringify(schemas.Epic)).toContain("donePoints");
+    expect(schemas.Epic).toMatchObject({
+      properties: {
+        progress: {
+          properties: {
+            donePoints: { type: "number" },
+            totalPoints: { type: "number" },
+            unestimated: { type: "integer" },
+          },
+          required: expect.arrayContaining([
+            "doneTasks",
+            "totalTasks",
+            "donePoints",
+            "totalPoints",
+            "unestimated",
+          ]) as unknown,
+        },
+      },
+    });
+  });
+
   it("describes the list of tasks across projects and TaskListItem (WS-118)", () => {
     const { schemas } = parsedDocument().components;
     const { paths } = z

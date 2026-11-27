@@ -241,6 +241,57 @@ describe("task endpoints", () => {
     expect(byViewer.status).toBe(403);
   });
 
+  it("takes storyPoints on create and edit, clears it with null, and names it in a 400 (WS-139 test 8)", async () => {
+    const manager = await cookieFor("manager");
+    await projectsPost(
+      apiRequest("POST", "/api/v1/projects", { cookie: manager, body: { key: "OPA", name: "O" } }),
+      undefined,
+    );
+    const cookie = await cookieFor("member");
+    const created = await create(
+      apiRequest("POST", "/api/v1/projects/OPA/tasks", {
+        cookie,
+        body: { title: "Ship", storyPoints: 2.5 },
+      }),
+      project("OPA"),
+    );
+    expect(created.status).toBe(201);
+    expect(taskSchema.parse(await created.json()).storyPoints).toBe(2.5);
+
+    const edited = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", { cookie, body: { storyPoints: 8, version: 1 } }),
+      task("OPA-1"),
+    );
+    expect(edited.status).toBe(200);
+    expect(taskSchema.parse(await edited.json()).storyPoints).toBe(8);
+
+    const cleared = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie,
+        body: { storyPoints: null, version: 2 },
+      }),
+      task("OPA-1"),
+    );
+    expect(taskSchema.parse(await cleared.json()).storyPoints).toBeNull();
+
+    const listed = await list(apiRequest("GET", "/api/v1/projects/OPA/tasks", { cookie }), {
+      params: Promise.resolve({ projectId: "OPA" }),
+    });
+    expect(taskPageSchema.parse(await listed.json()).items[0]?.storyPoints).toBeNull();
+
+    const refused = await PATCH(
+      apiRequest("PATCH", "/api/v1/tasks/OPA-1", {
+        cookie,
+        body: { storyPoints: 1.25, version: 3 },
+      }),
+      task("OPA-1"),
+    );
+    expect(refused.status).toBe(400);
+    expect(problemSchema.parse(await refused.json()).errors?.map((field) => field.path)).toEqual([
+      "storyPoints",
+    ]);
+  });
+
   it("takes parentId, names the field of a refusal, and answers the 409 codes (WS-133 test 14)", async () => {
     const manager = await cookieFor("manager");
     await projectsPost(

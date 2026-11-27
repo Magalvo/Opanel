@@ -119,11 +119,29 @@ describe("ActivityLine: the sentences (WS-119 test 1)", () => {
       { type: "reported_again", newValue: { reportId: "r", occurrences: 3 } },
       "reported it again (3 reports in all)",
     ],
-    [{ field: "storyPoints", oldValue: 1, newValue: 2 }, "changed the storyPoints"],
+    [{ field: "estimate", oldValue: 1, newValue: 2 }, "changed the estimate"],
     [{ field: "priority", oldValue: 7, newValue: { odd: true } }, "changed the priority"],
   ] as [Partial<ActivityEvent>, string][])("%o reads “%s”", (fields, text) => {
     expect(sentence(fields)).toBe(`Ada Lovelace ${text}`);
   });
+
+  it.each([
+    [{ field: "storyPoints", oldValue: 3, newValue: 5 }, "changed the story points from 3 to 5"],
+    [
+      { field: "storyPoints", oldValue: null, newValue: 0.5 },
+      "changed the story points from none to 0.5",
+    ],
+    [
+      { field: "storyPoints", oldValue: 8, newValue: null },
+      "changed the story points from 8 to none",
+    ],
+    [{ field: "storyPoints", oldValue: "3", newValue: 5 }, "changed the story points"],
+  ] as [Partial<ActivityEvent>, string][])(
+    "story points (WS-139 test 13): %o reads “%s”",
+    (fields, text) => {
+      expect(sentence(fields)).toBe(`Ada Lovelace ${text}`);
+    },
+  );
 
   it("names an agent with its badge, and Opanel when no account acted", () => {
     expect(sentence({ type: "deleted", actor: { ...bot, kind: "agent" } })).toBe(
