@@ -282,6 +282,45 @@ describe("the sub-task list (WS-133 test 7)", () => {
   });
 });
 
+describe("who changed a parent, and a Viewer (WS-138 test 8)", () => {
+  it("records the account that set and cleared a parent, on create and on edit", async () => {
+    const s = await setup();
+    const created = await sub(s, "Card form");
+    const detached = await updateTask(s.manager, created.key, {
+      parentId: null,
+      version: created.version,
+    });
+    await updateTask(s.mia, created.key, { parentId: s.parent.key, version: detached.version });
+
+    const changes = (await historyOf(created.id)).filter((entry) => entry.field === "parentId");
+    expect(changes.map((entry) => [entry.actorAccountId, entry.newValue])).toEqual([
+      [s.manager.accountId, null],
+      [s.mia.accountId, s.parent.id],
+    ]);
+    const creation = (await historyOf(created.id)).find((entry) => entry.type === "created");
+    expect(creation?.actorAccountId).toBe(s.mia.accountId);
+  });
+
+  it("lets a Viewer read a parent and its sub-tasks, and refuses it setting a parent", async () => {
+    const s = await setup();
+    const child = await sub(s, "Card form");
+    const other = await createTask(s.mia, "OPA", { title: "Pay button" });
+    const viewer = testActor(
+      await createTestAccount({ name: "Vera", email: "vera@example.com", role: "viewer" }),
+    );
+
+    expect((await getTask(viewer, child.key)).parent?.key).toBe(s.parent.key);
+    const parent = await getTask(viewer, s.parent.key);
+    expect(parent.subtasks).toEqual({ done: 0, total: 1 });
+    expect(parent.subtaskList.map((task) => task.key)).toEqual([child.key]);
+    const error = await failure(
+      updateTask(viewer, other.key, { parentId: s.parent.key, version: other.version }),
+    );
+    expect(error.status).toBe(403);
+    expect((await getTask(viewer, other.key)).parent).toBeNull();
+  });
+});
+
 describe("a restricted agent's sub-tasks (WS-138 test 6)", () => {
   it("reads its project's parent with its sub-tasks, and gets 403 for another project's", async () => {
     const s = await setup();
