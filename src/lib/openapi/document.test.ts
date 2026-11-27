@@ -511,6 +511,35 @@ describe("buildOpenApiDocument", () => {
     expect(json).toContain("too_many_subtasks");
   });
 
+  it("describes adding and removing a link, each needing tasks:write (WS-138)", () => {
+    const operationSchema = z.object({
+      "x-opanel-permission": z.string(),
+      parameters: z.array(z.object({ name: z.string(), in: z.string() })).optional(),
+      responses: z.record(z.string(), z.unknown()),
+    });
+    const links = z
+      .object({
+        paths: z.object({
+          "/api/v1/tasks/{taskId}/links": z.object({
+            post: operationSchema,
+            delete: operationSchema,
+          }),
+        }),
+      })
+      .parse(documentAsJson()).paths["/api/v1/tasks/{taskId}/links"];
+
+    expect(links.post["x-opanel-permission"]).toBe("tasks:write");
+    expect(Object.keys(links.post.responses)).toEqual(expect.arrayContaining(["200", "409"]));
+    expect(links.delete["x-opanel-permission"]).toBe("tasks:write");
+    expect(
+      (links.delete.parameters ?? [])
+        .filter((parameter) => parameter.in === "query")
+        .map((parameter) => parameter.name),
+    ).toEqual(["type", "direction", "taskId"]);
+    expect(Object.keys(links.delete.responses)).toEqual(expect.arrayContaining(["204", "404"]));
+    expect(links.delete.responses).not.toHaveProperty("200");
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

@@ -56,7 +56,7 @@ A token can do exactly what its agent's scopes allow:
 | `tasks:read`     | Read tasks, epics and comments, and events |
 | `reports:write`  | Submit bug reports                         |
 | `comments:write` | Comment on tasks                           |
-| `tasks:write`    | Create and edit tasks                      |
+| `tasks:write`    | Create, edit and link tasks                |
 
 - **The roles.** `qa_agent` holds the first four; `worker_agent` adds `tasks:write`. An
   Admin may remove scopes from an agent, never add one its role lacks.
@@ -178,6 +178,49 @@ curl -H "Authorization: Bearer $OPANEL_AGENT_TOKEN"   "https://opanel.example.co
   comments, oldest first, each change naming who made it, person or agent. Ids of
   accounts, teams, columns and epics come with their names, and a name is `null` when
   that thing was deleted.
+
+## Sub-tasks and links
+
+A task can be split into sub-tasks and linked to other tasks. A link has one of four
+types, each read one way from each task:
+
+| Type            | From the other task |
+| --------------- | ------------------- |
+| `blocks`        | is blocked by       |
+| `duplicates`    | is duplicated by    |
+| `regression_of` | has regression      |
+| `relates_to`    | relates to          |
+
+To add one:
+
+```bash
+curl -X POST -H "Authorization: Bearer $OPANEL_AGENT_TOKEN" -H "Content-Type: application/json" \
+  -d '{"type": "blocks", "direction": "outgoing", "taskId": "API-3"}' \
+  https://opanel.example.com/api/v1/tasks/OPA-12/links
+```
+
+- **Sub-tasks.** `parentId`, a task's id or key in the same project, makes a task a
+  sub-task when you create or edit it, and `parentId: null` makes it a normal task again.
+  One level only: a sub-task has no sub-tasks. A sub-task's epic is its parent's, so an
+  `epicId` other than the parent's is refused. A refused parent is a `400` naming
+  `parentId`.
+- **Reading them.** `parent` is `{ id, key, title }`, or `null`. `subtasks` is
+  `{ done, total }`, done meaning in a done column, or `null` on a task without
+  sub-tasks. A task's own answer adds `subtaskList`, its sub-tasks in board order, then
+  the backlog. `parentId` is a filter too (see "Finding tasks").
+- **Their limits.** A parent has at most 100 sub-tasks (`too_many_subtasks`). A parent
+  with sub-tasks cannot be deleted (`has_subtasks`); agents do not delete tasks anyway.
+- **Links.** `direction` is how the task in the path reads the link: `outgoing` means it
+  blocks, duplicates, is a regression of or relates to the other task, and `incoming` the
+  reverse. `relates_to` reads the same both ways and is always `outgoing`. Links may cross
+  projects. They are informational: a blocked task can still be moved. A task's `links`
+  lists them, leaving out deleted tasks and tasks you may not read.
+- **Adding and removing.** `POST /api/v1/tasks/{taskId}/links` with
+  `{ type, direction, taskId }` answers the task. `DELETE /api/v1/tasks/{taskId}/links`
+  with the same fields as query parameters answers `204`. Both need `tasks:write` on both
+  tasks, give both tasks a new `version`, and write both histories. A link that exists is
+  a `409 link_exists`, one that does not is a `404`, and a task has at most 100 links
+  (`too_many_links`).
 
 ## Live updates
 
