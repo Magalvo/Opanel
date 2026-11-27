@@ -1,6 +1,6 @@
 # WS-138 — WT-09 end-to-end flow, agents guide and exit check
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 4 as recommended; done on 2026-11-27)
 - Work-item: [WI-138](../work-items/WI-138-links-exit-check.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 and 7 (P1 to P3);
   [WT-09](../work-tracks/WT-09-subtasks-and-links.md) decision 13, proposals P1 to P3, exit
@@ -216,3 +216,46 @@ Risks:
   It waits for what it checks (WI-128).
 - **`search-flow.spec.ts` is flaky** (the follow-up on `main`). If it fails in the gate,
   it is rerun alone and the result recorded, as in WS-135 to WS-137.
+
+## Implementation record
+
+- Red (661d0bf): the three new guide tests and the sections test failed (no "Sub-tasks and
+  links"). The OpenAPI test of the link operations and the restricted agent's sub-tasks
+  test passed at once, as section 1 expected. Each failed with its expectation made wrong:
+  `DELETE` answering `200`, and the other project's parent as `200`.
+- The flow (2c48933): `tests/e2e/links-flow.spec.ts` passed at once. With step 6's `403`
+  expected as `200`, it failed.
+- Green (04e9593): "Sub-tasks and links" in `docs/agents.md`, after "Finding tasks", and
+  the `tasks:write` row reads "Create, edit and link tasks". P1 and P2 are in doc 0003
+  section 7, P3 in section 3, and the header names WT-09.
+- The exit check found two more clauses without a test (8bc3b84), both now covered in
+  `subtasks.integration.test.ts`. The behaviour was there, so each passed at once and
+  failed when its expectation was broken (deviation 3):
+  - the account that sets and clears a parent is in the history;
+  - a Viewer reads a parent and its sub-tasks, and is refused setting a parent.
+- WT-09's exit criteria are ticked with these tests (e739b9b), and its `Status:` line says
+  Done.
+- Gate on 2026-11-27:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2682 of 2682 (239 files);
+  - `pnpm test:e2e` 144 of 145. The one failure was
+    `mcp/e2e/write-tools.spec.ts`, "an agent's assistant creates, updates, moves and
+    comments on a task, as the agent (WS-104)", which this item does not touch. It passed
+    three times of three when rerun alone; its error was not kept, so its cause is unknown
+    (deviation 4);
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The link types are in a table after the section's first sentence**, not in the
+   "Links." bullet. The doc check reads table rows that start a line, as it does for the
+   origin layers; a table inside a bullet is indented.
+2. **The codes test splits each code span on spaces**, since the guide writes a status and
+   its code in one span ("`409 link_exists`"), as its errors section does.
+3. **Two more gaps than section 1 found**, both tests only: the actor clause of the first
+   exit criterion (the e2e test reads the timeline sentence, not its author) and the
+   Viewer clause for sub-tasks through the API.
+4. **One e2e failure outside this item** in the full run, passed alone three times. It may
+   be another flaky test, like `search-flow.spec.ts`; if it fails again, it earns a
+   follow-up.

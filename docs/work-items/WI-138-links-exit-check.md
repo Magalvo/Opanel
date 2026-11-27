@@ -1,6 +1,6 @@
 # WI-138 — Sub-tasks and links end to end, the agents guide, the exit check
 
-- Status: Approved (approved by the owner on 2026-11-27, with WS-138)
+- Status: Done (approved by the owner on 2026-11-27, with WS-138; done on 2026-11-27)
 - Work-track: [WT-09](../work-tracks/WT-09-subtasks-and-links.md) (item F)
 - Depends on: [WI-135](WI-135-subtasks-ui.md) (item C), [WI-136](WI-136-links-ui.md) (item
   D) and [WI-137](WI-137-mcp-link-tools.md) (item E), all done
@@ -17,7 +17,7 @@ criterion is ticked, with a link to the test that covers it.
 
 ## Acceptance criteria
 
-- [ ] An end-to-end test, through the running app:
+- [x] An end-to-end test, through the running app:
   - A Member makes a task a sub-task and adds a link across two projects in the UI.
   - A `worker_agent`, with its token, adds and removes a link of each of the four types
     across the two projects. It reads the sub-task's parent and the parent's
@@ -27,20 +27,20 @@ criterion is ticked, with a link to the test that covers it.
   - A `qa_agent` gets `403` when it links.
   - An agent restricted to one project gets `403` when it links to the other project, and
     does not see that project's task in `links`.
-- [ ] `docs/agents.md` has a section "Sub-tasks and links". It describes `parentId` on
+- [x] `docs/agents.md` has a section "Sub-tasks and links". It describes `parentId` on
       create and edit, one level, the epic that follows the parent, `parent`, `subtasks`
       and `subtaskList`, the link types and directions, and the two link endpoints with
       `tasks:write` on both tasks. It also names the codes `has_subtasks`,
       `too_many_subtasks`, `link_exists` and `too_many_links`.
-- [ ] The doc check fails when that section is missing, when its link types differ from
+- [x] The doc check fails when that section is missing, when its link types differ from
       the API's, when it leaves out the link endpoints, or when it names a code that does
       not exist.
-- [ ] Doc 0003 carries P1 and P2 in section 7 and P3 in section 3, and its header names
+- [x] Doc 0003 carries P1 and P2 in section 7 and P3 in section 3, and its header names
       WT-09.
-- [ ] Every WT-09 exit criterion is ticked, with a link to the test that covers it. A
+- [x] Every WT-09 exit criterion is ticked, with a link to the test that covers it. A
       criterion found without a test gets one. That test first fails when the behaviour is
       missing, or, if the behaviour is already there, when its expectation is made wrong.
-- [ ] The full quality gate passes, and `pnpm db:generate` and `pnpm openapi:generate`
+- [x] The full quality gate passes, and `pnpm db:generate` and `pnpm openapi:generate`
       leave no diff. WT-09's `Status:` line says Done.
 
 ## Notes
