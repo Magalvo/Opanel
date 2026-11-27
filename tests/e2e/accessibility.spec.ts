@@ -241,6 +241,46 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 
+  test(`a page with links of several types and the Add link dialog have no accessibility violations in ${colorScheme} mode (WS-136)`, async ({
+    page,
+  }) => {
+    const key = await projectWithATask(page);
+    const headers = { Origin: E2E_BASE_URL };
+    for (const title of ["A blocker", "A duplicate", "A neighbour"]) {
+      expect(
+        (
+          await page.request.post(`/api/v1/projects/${key}/tasks`, { headers, data: { title } })
+        ).status(),
+      ).toBe(201);
+    }
+    for (const [type, direction, other] of [
+      ["blocks", "incoming", 2],
+      ["duplicates", "outgoing", 3],
+      ["relates_to", "outgoing", 4],
+    ] as const) {
+      expect(
+        (
+          await page.request.post(`/api/v1/tasks/${key}-1/links`, {
+            headers,
+            data: { type, direction, taskId: `${key}-${String(other)}` },
+          })
+        ).status(),
+      ).toBe(200);
+    }
+    await page.emulateMedia({ colorScheme });
+
+    await page.goto(`/projects/${key}/tasks/${key}-1`);
+    const links = page.getByRole("region", { name: "Links" });
+    await expect(links.getByText("Is blocked by")).toBeVisible();
+    expect(await violations(page), "links").toEqual([]);
+
+    await links.getByRole("button", { name: "Add link" }).click();
+    const dialog = page.getByRole("dialog", { name: `Link ${key}-1 to another task` });
+    await dialog.getByLabel("Find a task").fill("neighbour");
+    await expect(dialog.getByRole("button", { name: `${key}-4 A neighbour` })).toBeVisible();
+    expect(await violations(page), "Add link dialog").toEqual([]);
+  });
+
   test(`the Backlog page and a task over it have no accessibility violations in ${colorScheme} mode (WS-109)`, async ({
     page,
   }) => {
