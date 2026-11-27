@@ -1,6 +1,7 @@
 # WT-10 — Sprints and story points
 
-- Status: Proposed
+- Status: Approved by the owner on 2026-11-27: decisions 1 to 16, proposals P1 to P4
+  and questions 1 to 10 as recommended.
 - Canonical docs: [0003](../canonical/0003-task-management.md) (section 3: "put tasks into,
   or take them out of, a sprint or the backlog", "create, start, complete sprints; enable
   sprints on a project", "set … points"; section 4: the `Story points` and `Sprint` fields,
