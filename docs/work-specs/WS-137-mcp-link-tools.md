@@ -1,6 +1,7 @@
 # WS-137 — MCP tools for links, sub-tasks on the task tools
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 3 as recommended; done on
+  2026-11-27)
 - Work-item: [WI-137](../work-items/WI-137-mcp-link-tools.md)
 - Canonical docs: [0005](../canonical/0005-mcp-server.md) sections 4 (the tools; "new
   tools are added by work-items") and 5 (inputs, outputs, errors);
@@ -163,3 +164,40 @@ Questions for the owner, each with a recommendation:
 
 Risk: moving `LINK_READINGS` touches two files of WI-136. Nothing else is in flight on
 them.
+
+## Implementation record
+
+- Red (14c51d8): 24 unit tests failed, on `remove` missing from the API client, the two
+  missing tools, the task tools' descriptions and `opanel_get_task`'s summary. The
+  end-to-end test 10 was written in the same commit.
+- Green (ecbf83d):
+  - `mcp/src/tools/links.ts` holds both tools.
+  - `ApiClient.remove` sends `DELETE` with no body or `Content-Type`, and answers `null` on
+    a `204`.
+  - `LINK_READINGS` moved to `src/lib/schemas/task-links.ts`. The UI's `link-readings.ts`
+    keeps `LINK_GROUPS`.
+  - The task tools' descriptions and `opanel_get_task`'s `relations()` cover section 4.
+  - The docs follow section 5.
+- Gate on 2026-11-27:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2675 of 2675 (239 files);
+  - `pnpm test:e2e` 143 of 144. `tests/e2e/search-flow.spec.ts` (WI-131) failed in its
+    agent test this time. It passed when run again alone, beside `mcp/e2e/link-tools.spec.ts`
+    (test 10), which passed too. It is the follow-up recorded from WI-135, not fixed here;
+  - Windows 11, pnpm 10.28.0, Compose PostgreSQL on port 5433.
+
+## Deviations
+
+1. **The answers start with "Linked:" and "Removed the link:"** rather than "OPA-1 now
+   blocks API-3" and "no longer blocks". The readings are verb phrases ("is blocked by",
+   "is a regression of"), and "now is blocked by" or "no longer is a regression of" read
+   badly. "Linked: OPA-1 is blocked by API-3." reads well for all seven.
+2. **Tests 8 and 9 are in `mcp/src/link-tools.test.ts`**, beside the link tools, not in
+   `write-tools.test.ts` and `read-tools.test.ts`. They use that file's `serve` with a
+   `worker_agent`.
+3. **`docs/agents.md` is unchanged.** None of its sentences became wrong: it describes
+   scopes, and `tasks:write` ("Create and edit tasks") still covers linking until item F
+   writes the guide's section on sub-tasks and links (WT-09 decision 13).
+4. **A failed read after a removal** answers a tool error that starts with "The link was
+   removed, but OPA-12 could not be read after:", followed by the read's own error.
