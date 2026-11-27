@@ -2,6 +2,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import type { Permission } from "@/lib/schemas/permissions";
+import { taskListQuerySchema } from "@/lib/schemas/tasks";
 import type { Actor } from "@/server/auth/actor";
 import { createTestAccount, createTestAgent, failAuditFor, testActor } from "@/server/auth/testing";
 import { getDb } from "@/server/db/client";
@@ -9,6 +10,7 @@ import { auditLog, columns, projects } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 
 import { loadAgentActor } from "./agents";
+import { listColumns } from "./columns";
 import { listenForEvents } from "./events-testing";
 import {
   archiveProject,
@@ -19,6 +21,8 @@ import {
   unarchiveProject,
   updateProject,
 } from "./projects";
+import { listSprints } from "./sprints";
+import { createTask, deleteTask, listTasks } from "./tasks";
 
 const UNKNOWN = "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f";
 
@@ -265,6 +269,137 @@ describe("turning sprints off with an active sprint (WS-140 test 11)", () => {
     expect(
       (await updateProject(actor, "OPA", { name: "Renamed", version: 2 })).sprintsEnabled,
     ).toBe(true);
+  });
+});
+
+async function boardKeys(actor: Actor) {
+  return (await listTasks(actor, "OPA", taskListQuerySchema.parse({ limit: 100 }))).items.map((task) => task.key);
+}
+
+describe("turning sprints on with tasks on the board (WS-142 test 12)", () => {
+  it("creates an active Sprint 1 from today to +14 holding exactly those tasks, with history", async () => {
+    const { account, actor } = await manager();
+    const project = await createProject(actor, { key: "OPA", name: "Opanel" });
+    const [todo, doing] = (await listColumns(actor, "OPA")).items;
+    if (!todo || !doing) throw new Error("no columns");
+    const one = await createTask(actor, "OPA", { title: "One", columnId: todo.id });
+    const two = await createTask(actor, "OPA", { title: "Two", columnId: doing.id });
+    const backlog = await createTask(actor, "OPA", { title: "Backlog" });
+    const gone = await createTask(actor, "OPA", { title: "Gone", columnId: todo.id });
+    await deleteTask(actor, gone.key);
+    const boardBefore = await boardKeys(actor);
+    const [today] = await getDb().execute<{ start: string; end: string }>(sql`
+      select to_char(current_date, 'YYYY-MM-DD') as start,
+        to_char(current_date + 14, 'YYYY-MM-DD') as end`);
+
+    const listener = await listenForEvents();
+    let sprintId: string;
+    try {
+      await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
+      await listener.settle();
+
+      const sprints = (await listSprints(actor, "OPA", { limit: 50 })).items;
+      expect(sprints).toHaveLength(1);
+      const [sprint] = sprints;
+      if (!sprint) throw new Error("no sprint");
+      sprintId = sprint.id;
+      expect(sprint).toMatchObject({
+        name: "Sprint 1",
+        state: "active",
+        startDate: today?.start,
+        endDate: today?.end,
+        progress: { totalTasks: 2, doneTasks: 0 },
+      });
+      expect(sprint.startedAt).not.toBeNull();
+      expect(listener.events().map((e) => [e.type, e.entityId, e.version])).toEqual([
+        ["task.updated", one.id, 2],
+        ["task.updated", two.id, 2],
+        ["sprint.changed", sprint.id, 1],
+        ["project.changed", project.id, 2],
+      ]);
+    } finally {
+      await listener.close();
+    }
+
+    expect(await boardKeys(actor)).toEqual(boardBefore);
+    const placed = await getDb().execute<{ id: string; column_id: string | null; sprint_id: string | null }>(
+      sql`select id, column_id, sprint_id from tasks where project_id = ${project.id} order by number`,
+    );
+    expect(placed.map((row) => [row.id, row.column_id, row.sprint_id])).toEqual([
+      [one.id, todo.id, sprintId],
+      [two.id, doing.id, sprintId],
+      [backlog.id, null, null],
+      [gone.id, todo.id, null],
+    ]);
+    const history = await getDb().execute<{
+      type: string;
+      field: string | null;
+      old_value: unknown;
+      new_value: unknown;
+      actor_account_id: string;
+    }>(sql`
+      select type, field, old_value, new_value, actor_account_id from task_events
+      where task_id = ${one.id} order by id desc limit 1`);
+    expect(history).toEqual([
+      {
+        type: "field_changed",
+        field: "sprintId",
+        old_value: null,
+        new_value: sprintId,
+        actor_account_id: account.id,
+      },
+    ]);
+    const sprintAudits = await getDb()
+      .select({ action: auditLog.action, data: auditLog.data, actor: auditLog.actorAccountId })
+      .from(auditLog)
+      .where(eq(auditLog.entity, "sprint"))
+      .orderBy(asc(auditLog.id));
+    expect(sprintAudits).toEqual([
+      {
+        action: "sprint.created",
+        data: { projectId: project.id, name: "Sprint 1" },
+        actor: account.id,
+      },
+      {
+        action: "sprint.started",
+        data: { projectId: project.id, name: "Sprint 1", tasks: 2 },
+        actor: account.id,
+      },
+    ]);
+  });
+});
+
+describe("turning sprints on with nothing to hold (WS-142 test 13)", () => {
+  it("creates no sprint for an empty board", async () => {
+    const { actor } = await manager();
+    await createProject(actor, { key: "OPA", name: "Opanel" });
+    await createTask(actor, "OPA", { title: "Backlog" });
+
+    await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
+
+    expect((await listSprints(actor, "OPA", { limit: 50 })).items).toEqual([]);
+  });
+
+  it("creates no sprint when the board holds only a completed sprint's record", async () => {
+    const { actor } = await manager();
+    const project = await createProject(actor, { key: "OPA", name: "Opanel" });
+    const [todo] = (await listColumns(actor, "OPA")).items;
+    if (!todo) throw new Error("no columns");
+    const task = await createTask(actor, "OPA", { title: "Record", columnId: todo.id });
+    const [record] = await getDb().execute<{ id: string }>(sql`
+      insert into sprints (project_id, name, start_date, end_date, state, started_at,
+        completed_at, total_points, completed_points, total_tasks, completed_tasks, unestimated)
+      values (${project.id}, 'Old', '2026-11-01', '2026-11-14', 'completed', now(), now(),
+        0, 0, 1, 0, 1)
+      returning id`);
+    await getDb().execute(sql`update tasks set sprint_id = ${record?.id ?? null} where id = ${task.id}`);
+
+    await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
+
+    expect((await listSprints(actor, "OPA", { limit: 50 })).items.map((s) => s.name)).toEqual([
+      "Old",
+    ]);
+    expect(await boardKeys(actor)).toEqual([]);
   });
 });
 
