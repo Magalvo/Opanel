@@ -15,10 +15,10 @@ never edits it. `scripts/docs-index.test.ts` checks it against the docs.
 What a new session needs to start: what comes next, and what waits for the owner. Moved by
 an index commit when a work-track is approved or done, or when what comes next changes.
 
-- **Next:** WT-10 (sprints and story points, approved on 2026-11-27) item F (the task
-  page's sprint, the sprint filter, the MCP tool, WI-143); then E, and G last. Items A to
-  D, the API (WI-139 to WI-142), are done. WT-09 (sub-tasks and links) is done (WI-133 to
-  WI-138).
+- **Next:** WT-10 (sprints and story points, approved on 2026-11-27) item E (sprints in
+  the UI: the setting, the backlog's sections, the board's header, the start and complete
+  dialogs); then G last. Items A to D and F (WI-139 to WI-143) are done. WT-09 (sub-tasks
+  and links) is done (WI-133 to WI-138).
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -306,10 +306,10 @@ Other follow-ups:
 - **Agents cannot apply labels in v1** (WT-07 question 5): no agent scope holds
   `labels:write`. If a worker agent needs it, amend doc 0001 section 3 first.
 
-- **WT-10 places agent-filed bugs at the top of the backlog in sprint projects** (doc 0003
-  section 13, question 1; WT-06 decision 7). Today a new bug goes to the top of the first
-  column. WT-10's work-spec changes `placeNewBug` in `src/server/services/bug-reports.ts`,
-  the one function that decides it, and nothing else in the pipeline (WI-094).
+- **Answered by WI-141 (2026-11-27): agent-filed bugs go to the top of the backlog in
+  sprint projects** (doc 0003 section 13, question 1; WT-06 decision 7). `placeNewBug`
+  answers the top of the backlog, unscheduled, in a project with sprints, and the first
+  column otherwise (WS-141 deviation 3).
 
 - Send one real PostHog error-tracking alert, with a body from `addons/posthog/bodies/`, to
   a local Opanel through a tunnel, and record the answer in WS-093 (the manual check of
