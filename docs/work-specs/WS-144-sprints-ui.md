@@ -1,6 +1,7 @@
 # WS-144 — Sprints in the UI
 
-- Status: Approved (approved by the owner on 2026-11-28, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-28, questions 1 to 4 as recommended; done on
+  2026-11-28)
 - Work-item: [WI-144](../work-items/WI-144-sprints-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 5 and 6;
   [0002](../canonical/0002-realtime-sync.md) sections 3 and 4;
@@ -256,3 +257,75 @@ Risks:
   the whole board when too many events are held (WS-049).
 - **The pages grow.** The new parts are components in `src/components/sprints/`, so
   `backlog.tsx` and `board.tsx` only compose them.
+
+## Implementation record
+
+- Red (8cc8ab9): tests 1 to 15 written first, in `sprints-section.test.tsx`,
+  `src/components/sprints/` (`sections.test.ts`, `dates.test.ts`, `messages.test.ts`,
+  `sprint-backlog.test.tsx`, `sprint-board.test.tsx`) and `tests/e2e/sprints-ui.spec.ts`.
+  50 component tests failed on the missing parts (no sections, header, dialogs or empty
+  state), and the pure and settings test files on their missing modules; the end-to-end
+  flow failed at the missing "Use sprints" switch and the axe checks at the missing
+  sections. The existing backlog and board tests of a project without sprints passed
+  unchanged, as they should (test 3).
+- Green (c9949ce): `src/components/sprints/` holds the new parts: `messages.ts` (the four
+  sentences of WS-143 and the start, completion and sub-task ones), `api.ts`, `dates.ts`,
+  `sections.ts` (grouping, moves, menu, announcements, on the board's `moves.ts` and
+  `collision.ts`), `use-open-sprints.ts`, `sprint-progress.tsx`, `sprint-header.tsx` (the
+  header, its goal and dates, and the board's empty state), `sprint-dialog.tsx`,
+  `start-sprint-dialog.tsx` (start and delete), `complete-sprint-dialog.tsx`,
+  `row-menu.tsx`, `completed-sprints.tsx` and `sprint-backlog.tsx`;
+  `src/components/projects/sprints-section.tsx`. `backlog.tsx`, `board.tsx` and
+  `project-settings.tsx` compose them; `use-backlog.ts` gains `place` (one optimistic move
+  with its request), `backlog-row.tsx` an `action` in place of "Move to board", both hooks
+  and `task-detail.tsx` the shared sentences, and the three pages `canManageSprints`.
+- Gate on 2026-11-28:
+  - `pnpm check` (typecheck, lint, Prettier) passes; `pnpm openapi:generate` leaves no
+    diff (no contract changed);
+  - Vitest 2974 of 2974 (257 files);
+  - `pnpm test:e2e` 150 of 150 (5.6 minutes), the new spec's axe checks in light and dark
+    mode included. An earlier full run, before WS-143's end-to-end test was adjusted
+    (deviation 6), failed only that test;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18.7 on port 5433, no other
+    worktree's gate running.
+
+## Deviations
+
+1. **The board's card menu is unchanged** (owner's decision A on 2026-11-28, during
+   implementation). Section 7's bullet renaming the card menu's "Move to backlog" to "Move
+   out of the sprint" falls away: the card menu has no such item (WS-111 question 3), and
+   none is added. A task leaves the sprint from its page, or at the sprint's completion.
+2. **A new sprint starts on the later of the day after the latest sprint ends and today**
+   (section 6 said "the day after the latest sprint's end (or today)"), so a project whose
+   sprints all ended long ago does not get a sprint dated in the past.
+3. **The completion's sentence counts from the board the dialog showed**: "N done, M moved"
+   are the dialog's own family counts, and the kept sub-tasks come from the answer's
+   `unfinishedSubtasksKept`, as section 8 asks. The answer's frozen `doneTasks` also counts
+   a done sub-task that left with its unfinished parent, so it would say a task was both
+   done and moved.
+4. **More files than the table lists**, all in `src/components/sprints/`: the pure
+   `sections.ts` and `dates.ts`, the hook `use-open-sprints.ts`, `row-menu.tsx`,
+   `completed-sprints.tsx`, `sprint-backlog.tsx` (the sections, which `backlog.tsx`
+   composes) and the tests' `test-data.ts`. The delete dialog shares
+   `start-sprint-dialog.tsx`, and the board's empty state `sprint-header.tsx`.
+5. **Two existing tests of a project with sprints now answer its sprints** (red commit):
+   the backlog's "Sprint filter" test and the board's "no Sprint filter" test, which render
+   a project with sprints and so now read its open sprints. No test of a project without
+   sprints changed.
+6. **Four test changes in the green commit.** The three page tests
+   (`backlog/page`, `settings/page` and the board's `layout` integration tests) pin each
+   page's props, so they now expect `canManageSprints` (true for a Manager and an Admin);
+   they belonged in the red commit. WS-143's end-to-end test reads the backlog of a
+   project with sprints: its task in Sprint 5 is now in the "Sprint 5" section, and its
+   "Sprint" filter button is named exactly, as "Completed sprints" also contains the word.
+   Test 5's keyboard part moved from `sections.test.ts` to `sections-keyboard.test.tsx`,
+   unchanged: `@dnd-kit` reads the droppables' nodes, the `.ts` unit project runs in Node,
+   and `DOM_TEST_FILES` is pinned by `scripts/vitest-config.test.ts`. Test 2's list of section names filtered them with a
+   case-sensitive pattern that dropped "Completed sprints"; it is case-insensitive now.
+7. **The board also reads itself again when sprints are turned on or off**, which changes
+   what it lists, besides on a start or completion (section 9).
+8. **Choices section 6 left open**: the active sprint is edited from "Edit" in its summary
+   in the backlog; start and delete refusals are said in the backlog's status line; the
+   start's link to the board reads "Go to the board", as the summary already has "Open the
+   board". A planned section's header counts the sprint's tasks and points whatever the
+   filter; the backlog's section counts the rows shown, as before.
