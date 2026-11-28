@@ -16,8 +16,8 @@ What a new session needs to start: what comes next, and what waits for the owner
 an index commit when a work-track is approved or done, or when what comes next changes.
 
 - **Next:** WT-10 (sprints and story points, approved on 2026-11-27) item F (the task
-  page's sprint, the sprint filter, the MCP tool); then E, and G last. Items A to D, the
-  API (WI-139 to WI-142), are done. WT-09 (sub-tasks and links) is done (WI-133 to
+  page's sprint, the sprint filter, the MCP tool, WI-143); then E, and G last. Items A to
+  D, the API (WI-139 to WI-142), are done. WT-09 (sub-tasks and links) is done (WI-133 to
   WI-138).
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
@@ -209,6 +209,7 @@ operations (doc 0006), are done.
 | [WI-140](work-items/WI-140-sprints-api.md)                      | Sprints in the API                                                | [WS-140](work-specs/WS-140-sprints-api.md)                      |
 | [WI-141](work-items/WI-141-tasks-in-sprints.md)                 | Tasks in sprints                                                  | [WS-141](work-specs/WS-141-tasks-in-sprints.md)                 |
 | [WI-142](work-items/WI-142-sprint-start-complete.md)            | Starting and completing sprints                                   | [WS-142](work-specs/WS-142-sprint-start-complete.md)            |
+| [WI-143](work-items/WI-143-sprint-fields-filter-mcp.md)         | The task's sprint in the UI, the sprint filter, the MCP tool      | [WS-143](work-specs/WS-143-sprint-fields-filter-mcp.md)         |
 
 ## Follow-ups
 
