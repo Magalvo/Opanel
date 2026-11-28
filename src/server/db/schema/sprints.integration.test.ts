@@ -30,7 +30,11 @@ function insertSprint(
 ) {
   const state = values.state ?? "planned";
   const frozen = new Set<Frozen>(
-    values.frozen === true ? FROZEN : values.frozen === undefined || values.frozen === false ? [] : values.frozen,
+    values.frozen === true
+      ? FROZEN
+      : values.frozen === undefined || values.frozen === false
+        ? []
+        : values.frozen,
   );
   const value = (column: Frozen, given: number) => (frozen.has(column) ? sql`${given}` : sql`null`);
   return getDb().execute(sql`

@@ -464,7 +464,7 @@ describe("task endpoints", () => {
 
     await getDb().execute(sql`
       update sprints set state = 'completed', completed_at = now(), total_points = 0,
-        completed_points = 0
+        completed_points = 0, total_tasks = 0, completed_tasks = 0, unestimated = 0
       where id = ${active.id}`);
     const done = await post({ title: "Done" });
     expect(done.status).toBe(201);

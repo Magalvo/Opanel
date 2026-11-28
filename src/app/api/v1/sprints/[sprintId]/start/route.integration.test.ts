@@ -77,7 +77,9 @@ describe("POST /api/v1/sprints/{sprintId}/start", () => {
       status: 409,
       code: "sprints_disabled",
     });
-    await getDb().execute(sql`update projects set sprints_enabled = true where id = ${s.project.id}`);
+    await getDb().execute(
+      sql`update projects set sprints_enabled = true where id = ${s.project.id}`,
+    );
 
     const stale = await start(s.cookie, s.one.id, { version: 4 });
     expect(stale.status).toBe(409);

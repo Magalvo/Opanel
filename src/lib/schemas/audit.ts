@@ -42,6 +42,8 @@ export const AUDIT_ACTIONS = [
   "sprint.created",
   "sprint.updated",
   "sprint.deleted",
+  "sprint.started",
+  "sprint.completed",
   "agent.created",
   "agent.updated",
   "agent.disabled",

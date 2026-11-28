@@ -58,10 +58,12 @@ import {
   updateProjectContract,
 } from "@/lib/schemas/projects";
 import {
+  completeSprintContract,
   createSprintContract,
   deleteSprintContract,
   getSprintContract,
   listSprintsContract,
+  startSprintContract,
   updateSprintContract,
 } from "@/lib/schemas/sprints";
 import { listBugReportsContract } from "@/lib/schemas/task-bug-reports";
@@ -153,6 +155,8 @@ export const contracts: readonly EndpointContract[] = [
   getSprintContract,
   updateSprintContract,
   deleteSprintContract,
+  startSprintContract,
+  completeSprintContract,
   listCommentsContract,
   createCommentContract,
   listActivityContract,

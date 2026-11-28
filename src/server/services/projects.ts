@@ -23,6 +23,7 @@ import { decodeNameCursor, encodeNameCursor } from "@/server/http/pagination";
 
 import { recordAudit } from "./audit";
 import { publishEvent } from "./events";
+import { startFirstSprint } from "./sprint-placement";
 
 type Executor = Pick<Database, "execute">;
 
@@ -297,6 +298,9 @@ export async function updateProject(
         sql`select 1 from sprints where project_id = ${before.id} and state = 'active'`,
       );
       if (active) throw sprintActive();
+    } else if (!before.sprintsEnabled) {
+      // Tasks on the board become "Sprint 1", so nothing disappears (WS-142 section 6).
+      await startFirstSprint(tx, actor, before.id);
     }
 
     const changed = [

@@ -80,9 +80,9 @@ describe("POST /api/v1/sprints/{sprintId}/complete", () => {
     expect(
       (await complete(s.cookie, s.one.id, { moveUnfinishedTo: null, version: 2, x: 1 })).status,
     ).toBe(400);
-    expect(
-      (await complete(s.cookie, UNKNOWN, { moveUnfinishedTo: null, version: 1 })).status,
-    ).toBe(404);
+    expect((await complete(s.cookie, UNKNOWN, { moveUnfinishedTo: null, version: 1 })).status).toBe(
+      404,
+    );
   });
 
   it("answers each code", async () => {

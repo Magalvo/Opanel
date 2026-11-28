@@ -56,7 +56,8 @@ async function makeActive(sprintId: string): Promise<void> {
 async function makeCompleted(sprintId: string): Promise<void> {
   await getDb().execute(sql`
     update sprints set state = 'completed', started_at = now(), completed_at = now(),
-      total_points = 0, completed_points = 0
+      total_points = 0, completed_points = 0, total_tasks = 0, completed_tasks = 0,
+      unestimated = 0
     where id = ${sprintId}`);
 }
 
@@ -93,6 +94,7 @@ describe("createSprint (WS-140 test 2)", () => {
         state: "planned",
         startedAt: null,
         completedAt: null,
+        progress: { doneTasks: 0, totalTasks: 0, donePoints: 0, totalPoints: 0, unestimated: 0 },
         version: 1,
         createdAt: expect.any(String) as unknown,
         updatedAt: expect.any(String) as unknown,

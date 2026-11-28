@@ -11,6 +11,8 @@ const OTHER_CONFLICTS: Partial<Record<ProblemCode, string>> = {
   account_inactive: "the person to assign is deactivated (code `account_inactive`)",
   sprint_active: "a sprint is active, so sprints cannot be turned off (code `sprint_active`)",
   sprint_completed: "the sprint is completed (code `sprint_completed`)",
+  sprint_not_planned: "the sprint is not planned (code `sprint_not_planned`)",
+  sprint_not_active: "the sprint is not active (code `sprint_not_active`)",
   sprints_disabled: "the project does not use sprints (code `sprints_disabled`)",
   no_active_sprint: "a column is asked while no sprint is active (code `no_active_sprint`)",
   subtask_follows_parent:

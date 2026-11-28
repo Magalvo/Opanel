@@ -112,7 +112,8 @@ describe("GET, PATCH and DELETE /api/v1/sprints/{sprintId}", () => {
     const active = await newSprint("Now");
     await getDb().execute(sql`
       update sprints set state = 'completed', started_at = now(), completed_at = now(),
-        total_points = 0, completed_points = 0
+        total_points = 0, completed_points = 0, total_tasks = 0, completed_tasks = 0,
+        unestimated = 0
       where id = ${completed.id}`);
     await getDb().execute(
       sql`update sprints set state = 'active', started_at = now() where id = ${active.id}`,

@@ -29,30 +29,65 @@ export const sprintNameSchema = z.string().trim().min(1).max(100);
 /** Markdown, up to 2 000 characters, kept as written. */
 export const sprintGoalSchema = z.string().max(2_000);
 
-export const sprintSchema = z
+/** A sprint's tasks and points (WS-142 section 3), the shape of an epic's progress. */
+export const sprintProgressSchema = z
   .strictObject({
-    id: z.uuid(),
-    projectId: z.uuid(),
-    name: z.string(),
-    goal: z.string().meta({ description: "Markdown." }),
-    startDate: z.iso.date(),
-    endDate: z.iso.date(),
-    state: sprintStateSchema,
-    startedAt: z.iso
-      .datetime()
-      .nullable()
-      .meta({ description: "When the sprint was started; `null` while planned." }),
-    completedAt: z.iso
-      .datetime()
-      .nullable()
-      .meta({ description: "When the sprint was completed; `null` until then." }),
-    version: z.int().min(1),
-    createdAt: z.iso.datetime(),
-    updatedAt: z.iso.datetime(),
+    doneTasks: z.int().min(0),
+    totalTasks: z.int().min(0),
+    donePoints: z.number().min(0).meta({
+      description: "The story points of the done tasks, sub-tasks counted as stored.",
+    }),
+    totalPoints: z.number().min(0).meta({ description: "The story points of every task." }),
+    unestimated: z.int().min(0).meta({ description: "How many of the tasks have no points." }),
   })
-  .meta({ id: "Sprint" });
+  .meta({
+    id: "SprintProgress",
+    description:
+      "The sprint's tasks that are not deleted, sub-tasks included; done ones are in a column " +
+      "of the `done` category. Computed live for a planned or active sprint; frozen when the " +
+      "sprint completes, whatever happens to its tasks afterwards.",
+  });
+
+export type SprintProgress = z.infer<typeof sprintProgressSchema>;
+
+const sprintFields = {
+  id: z.uuid(),
+  projectId: z.uuid(),
+  name: z.string(),
+  goal: z.string().meta({ description: "Markdown." }),
+  startDate: z.iso.date(),
+  endDate: z.iso.date(),
+  state: sprintStateSchema,
+  startedAt: z.iso
+    .datetime()
+    .nullable()
+    .meta({ description: "When the sprint was started; `null` while planned." }),
+  completedAt: z.iso
+    .datetime()
+    .nullable()
+    .meta({ description: "When the sprint was completed; `null` until then." }),
+  progress: sprintProgressSchema,
+  version: z.int().min(1),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+};
+
+export const sprintSchema = z.strictObject(sprintFields).meta({ id: "Sprint" });
 
 export type Sprint = z.infer<typeof sprintSchema>;
+
+/** The answer of a completion: the sprint, and the unfinished sub-tasks its record kept. */
+export const completedSprintSchema = z
+  .strictObject({
+    ...sprintFields,
+    unfinishedSubtasksKept: z.int().min(0).meta({
+      description:
+        "How many unfinished sub-tasks stayed in the sprint's record with their done parent.",
+    }),
+  })
+  .meta({ id: "CompletedSprint" });
+
+export type CompletedSprint = z.infer<typeof completedSprintSchema>;
 
 export const sprintPageSchema = pageSchema(sprintSchema).meta({ id: "SprintPage" });
 
@@ -107,6 +142,28 @@ export const updateSprintRequestSchema = z
   .meta({ id: "UpdateSprintRequest" });
 
 export type UpdateSprintRequest = z.infer<typeof updateSprintRequestSchema>;
+
+export const startSprintRequestSchema = z
+  .strictObject({ version: versionSchema })
+  .meta({ id: "StartSprintRequest" });
+
+export type StartSprintRequest = z.infer<typeof startSprintRequestSchema>;
+
+export const completeSprintRequestSchema = z
+  .strictObject({
+    moveUnfinishedTo: z
+      .uuid()
+      .nullable()
+      .meta({
+        description:
+          "A planned sprint of the project for the unfinished work, or `null` to unschedule it. " +
+          "Either way it goes to the top of the backlog, in board order.",
+      }),
+    version: versionSchema,
+  })
+  .meta({ id: "CompleteSprintRequest" });
+
+export type CompleteSprintRequest = z.infer<typeof completeSprintRequestSchema>;
 
 export const sprintParamsSchema = z.strictObject({ sprintId: z.uuid() });
 
@@ -206,5 +263,59 @@ export const deleteSprintContract = {
         "archived (code `project_archived`).",
       problem: true,
     },
+  },
+} satisfies EndpointContract;
+
+export const startSprintContract = {
+  method: "post",
+  path: "/api/v1/sprints/{sprintId}/start",
+  summary: "Start a planned sprint",
+  description:
+    "The sprint becomes active and its tasks go to the bottom of the first column, in their " +
+    "backlog order. Send the `version` it is based on. One sprint is active at a time.",
+  access: MANAGE,
+  request: { params: sprintParamsSchema, body: startSprintRequestSchema },
+  responses: {
+    200: { description: "The sprint, active.", schema: sprintSchema },
+    400: { description: "The path or the body is not valid.", problem: true },
+    404: NO_SPRINT,
+    409: versionConflictResponse(sprintSchema, [
+      "project_archived",
+      "sprints_disabled",
+      "sprint_not_planned",
+      "sprint_active",
+    ]),
+    413: PAYLOAD_TOO_LARGE,
+    415: NOT_JSON,
+  },
+} satisfies EndpointContract;
+
+export const completeSprintContract = {
+  method: "post",
+  path: "/api/v1/sprints/{sprintId}/complete",
+  summary: "Complete the active sprint",
+  description:
+    "Freezes the sprint's progress. Done work stays in its column as the sprint's record: a " +
+    "task with no parent in the sprint, with its sub-tasks, is done when that task is in a " +
+    "`done` column. The rest leaves the board for `moveUnfinishedTo` (a planned sprint) or " +
+    "unscheduled, at the top of the backlog in board order. Send the `version` it is based on.",
+  access: MANAGE,
+  request: { params: sprintParamsSchema, body: completeSprintRequestSchema },
+  responses: {
+    200: { description: "The sprint, completed.", schema: completedSprintSchema },
+    400: {
+      description:
+        "The path or the body is not valid, or `moveUnfinishedTo` is not a planned sprint of " +
+        "the project.",
+      problem: true,
+    },
+    404: NO_SPRINT,
+    409: versionConflictResponse(sprintSchema, [
+      "project_archived",
+      "sprints_disabled",
+      "sprint_not_active",
+    ]),
+    413: PAYLOAD_TOO_LARGE,
+    415: NOT_JSON,
   },
 } satisfies EndpointContract;

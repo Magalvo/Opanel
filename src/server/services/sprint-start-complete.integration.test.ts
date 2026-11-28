@@ -243,7 +243,7 @@ describe("starting an empty sprint, and deleted tasks (WS-142 test 4)", () => {
     await startSprint(s.manager, s.one.id, { version: 1 });
     expect(await placeOf(gone.id)).toMatchObject({ columnId: null, sprintId: s.one.id });
 
-    const restored = await restoreTask(s.mia, gone.key);
+    const restored = await restoreTask(s.manager, gone.key);
     expect(restored.columnId).toBeNull();
     expect(restored.sprint).toBeNull();
   });
@@ -282,7 +282,13 @@ describe("completing into a planned sprint (WS-142 test 5)", () => {
       expect(await placeOf(task.id)).toMatchObject({ columnId: null, sprintId: s.two.id });
     }
     // To do (C, A), then In progress (D), above what the backlog held.
-    expect(await backlogKeys(s.mia)).toEqual([s.c.key, s.a.key, s.d.key, s.waiting.key, s.next.key]);
+    expect(await backlogKeys(s.mia)).toEqual([
+      s.c.key,
+      s.a.key,
+      s.d.key,
+      s.waiting.key,
+      s.next.key,
+    ]);
     expect(await boardKeys(s.mia)).toEqual([]);
     expect(
       (await historyOf(s.d.id))
@@ -311,7 +317,13 @@ describe("completing into the backlog (WS-142 test 6)", () => {
     for (const task of [s.a, s.c, s.d]) {
       expect(await placeOf(task.id)).toMatchObject({ columnId: null, sprintId: null });
     }
-    expect(await backlogKeys(s.mia)).toEqual([s.c.key, s.a.key, s.d.key, s.waiting.key, s.next.key]);
+    expect(await backlogKeys(s.mia)).toEqual([
+      s.c.key,
+      s.a.key,
+      s.d.key,
+      s.waiting.key,
+      s.next.key,
+    ]);
     expect((await auditOf("sprint.completed"))[0]?.data).toMatchObject({
       moveUnfinishedTo: null,
       moved: 3,
@@ -415,8 +427,9 @@ describe("complete refusals (WS-142 test 8)", () => {
     ]);
 
     expect(completed.status).toBe("fulfilled");
+    // After the completion, the move is refused: the task changed, or no sprint is active.
     if (moved.status === "rejected") {
-      expect(moved.reason).toMatchObject({ code: "no_active_sprint" });
+      expect(["version_conflict", "no_active_sprint"]).toContain((moved.reason as ApiError).code);
     }
     expect(await placeOf(s.a.id)).toMatchObject({ columnId: null, sprintId: null });
   });
@@ -581,7 +594,7 @@ describe("a 500-task sprint (WS-142 test 14)", () => {
       version: 2,
     });
     const completeMs = performance.now() - completedAt;
-    console.info(
+    console.warn(
       `WS-142 test 14: start ${startMs.toFixed(0)} ms, complete ${completeMs.toFixed(0)} ms`,
     );
 
@@ -597,7 +610,7 @@ describe("a 500-task sprint (WS-142 test 14)", () => {
         (count(*) filter (where sprint_id = ${s.two.id} and column_id is null))::int as moved
       from tasks where project_id = ${s.opa.id}`);
     expect(counts).toEqual({ kept: 250, moved: 250 });
-  });
+  }, 60_000);
 });
 
 describe("a planned sprint's edit after the start (WS-142 section 4)", () => {

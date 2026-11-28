@@ -273,7 +273,9 @@ describe("turning sprints off with an active sprint (WS-140 test 11)", () => {
 });
 
 async function boardKeys(actor: Actor) {
-  return (await listTasks(actor, "OPA", taskListQuerySchema.parse({ limit: 100 }))).items.map((task) => task.key);
+  return (await listTasks(actor, "OPA", taskListQuerySchema.parse({ limit: 100 }))).items.map(
+    (task) => task.key,
+  );
 }
 
 describe("turning sprints on with tasks on the board (WS-142 test 12)", () => {
@@ -284,7 +286,7 @@ describe("turning sprints on with tasks on the board (WS-142 test 12)", () => {
     if (!todo || !doing) throw new Error("no columns");
     const one = await createTask(actor, "OPA", { title: "One", columnId: todo.id });
     const two = await createTask(actor, "OPA", { title: "Two", columnId: doing.id });
-    const backlog = await createTask(actor, "OPA", { title: "Backlog" });
+    const backlog = await createTask(actor, "OPA", { title: "Backlog", columnId: null });
     const gone = await createTask(actor, "OPA", { title: "Gone", columnId: todo.id });
     await deleteTask(actor, gone.key);
     const boardBefore = await boardKeys(actor);
@@ -322,7 +324,11 @@ describe("turning sprints on with tasks on the board (WS-142 test 12)", () => {
     }
 
     expect(await boardKeys(actor)).toEqual(boardBefore);
-    const placed = await getDb().execute<{ id: string; column_id: string | null; sprint_id: string | null }>(
+    const placed = await getDb().execute<{
+      id: string;
+      column_id: string | null;
+      sprint_id: string | null;
+    }>(
       sql`select id, column_id, sprint_id from tasks where project_id = ${project.id} order by number`,
     );
     expect(placed.map((row) => [row.id, row.column_id, row.sprint_id])).toEqual([
@@ -373,7 +379,7 @@ describe("turning sprints on with nothing to hold (WS-142 test 13)", () => {
   it("creates no sprint for an empty board", async () => {
     const { actor } = await manager();
     await createProject(actor, { key: "OPA", name: "Opanel" });
-    await createTask(actor, "OPA", { title: "Backlog" });
+    await createTask(actor, "OPA", { title: "Backlog", columnId: null });
 
     await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
 
@@ -392,7 +398,9 @@ describe("turning sprints on with nothing to hold (WS-142 test 13)", () => {
       values (${project.id}, 'Old', '2026-11-01', '2026-11-14', 'completed', now(), now(),
         0, 0, 1, 0, 1)
       returning id`);
-    await getDb().execute(sql`update tasks set sprint_id = ${record?.id ?? null} where id = ${task.id}`);
+    await getDb().execute(
+      sql`update tasks set sprint_id = ${record?.id ?? null} where id = ${task.id}`,
+    );
 
     await updateProject(actor, "OPA", { sprintsEnabled: true, version: 1 });
 
