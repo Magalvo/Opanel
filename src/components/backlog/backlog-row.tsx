@@ -36,18 +36,21 @@ export function StaticBacklogRow({ task }: Readonly<{ task: TaskSummary }>) {
 /**
  * A row that can be dragged (WS-109 section 3): with the pointer or by touch from anywhere
  * on it, and by keyboard from its handle. "Move to board" sends it to the end of the first
- * column (section 4).
+ * column (section 4); in a project with sprints, `action` takes its place (WS-144 section 5).
  */
 export function SortableBacklogRow({
   task,
   disabled,
   sending,
   onMoveToBoard,
+  action,
 }: Readonly<{
   task: TaskSummary;
   disabled: boolean;
   sending: boolean;
-  onMoveToBoard: () => void;
+  onMoveToBoard?: () => void;
+  /** The row's own control in place of "Move to board": the sections' "Move to" menu. */
+  action?: ReactNode;
 }>) {
   const {
     attributes,
@@ -84,19 +87,21 @@ export function SortableBacklogRow({
         className={cn(ROW, "cursor-grab touch-manipulation", isDragging && "opacity-50")}
       >
         <Content task={task} handle={handle} />
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          data-move-id={task.id}
-          disabled={disabled || sending}
-          onClick={onMoveToBoard}
-        >
-          <ArrowRightIcon aria-hidden="true" />
-          {/* The visible text starts the name, then the task (WCAG 2.5.3). */}
-          {"Move to board "}
-          <span className="sr-only">{task.key}</span>
-        </Button>
+        {action ?? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            data-move-id={task.id}
+            disabled={disabled || sending}
+            onClick={onMoveToBoard}
+          >
+            <ArrowRightIcon aria-hidden="true" />
+            {/* The visible text starts the name, then the task (WCAG 2.5.3). */}
+            {"Move to board "}
+            <span className="sr-only">{task.key}</span>
+          </Button>
+        )}
       </div>
     </li>
   );

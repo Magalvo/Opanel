@@ -126,8 +126,8 @@ describe("Backlog with sprints: the sections (WS-144 section 4, test 2)", () => 
 
     const names = screen
       .getAllByRole("region")
-      .map((item) => item.getAttribute("aria-label") ?? item.querySelector("h2")?.textContent)
-      .filter((name) => name !== null && /Sprint|Backlog/.test(name));
+      .map((item) => item.getAttribute("aria-label") ?? item.querySelector("h2")?.textContent ?? "")
+      .filter((name) => /sprint|backlog/i.test(name));
     expect(names).toEqual([
       "Active sprint: Sprint 4",
       "Sprint 5",

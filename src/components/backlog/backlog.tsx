@@ -33,6 +33,8 @@ import { useUrlTaskFilter } from "@/components/filters/use-url-task-filter";
 import { getProject } from "@/components/projects/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
+import { SprintBacklog } from "@/components/sprints/sprint-backlog";
+import { useOpenSprints } from "@/components/sprints/use-open-sprints";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { TaskSummary } from "@/lib/schemas/tasks";
@@ -56,15 +58,20 @@ function count(tasks: number): string {
 /**
  * A project's backlog (WS-109): the tasks that are not on the board, in the team's order.
  * People who may change tasks, on a project that is not archived, reorder them by pointer,
- * touch and keyboard, add tasks to the end, and move a task to the board.
+ * touch and keyboard, add tasks to the end, and move a task to the board. In a project with
+ * sprints the same tasks are shown in sections, one per sprint (WS-144).
  */
-export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
+export function Backlog({
+  canWriteTasks,
+  canManageSprints = false,
+}: Readonly<{ canWriteTasks: boolean; canManageSprints?: boolean }>) {
   const dndId = useId();
   const headingId = useId();
   const { project, setProject } = useProject();
   const projectKey = project.key;
   const archived = project.archivedAt !== null;
   const writable = canWriteTasks && !archived;
+  const sprintsOn = project.sprintsEnabled;
 
   const [message, setMessage] = useState("");
   // The "Add task" dialog is open, with the button that gets the focus back.
@@ -75,6 +82,7 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
     getProject(projectKey).then(setProject, () => undefined);
   }, [projectKey, setProject]);
 
+  const backlog = useBacklog({ projectKey, announce: setMessage, onArchived: refreshProject });
   const {
     phase,
     tasks: allTasks,
@@ -86,7 +94,13 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
     drop,
     moveToBoard,
     hold,
-  } = useBacklog({ projectKey, announce: setMessage, onArchived: refreshProject });
+  } = backlog;
+  // A start or a completion changes which tasks are in the backlog (WS-144 section 9).
+  const sprints = useOpenSprints({
+    projectKey,
+    enabled: sprintsOn,
+    onActiveChanged: () => void reload(),
+  });
 
   // The filter (WS-120): the backlog shows the tasks the filtered list returns, in its order.
   const { filter, ignored, setFilter } = useUrlTaskFilter(BACKLOG_KEYS);
@@ -327,7 +341,22 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
         </div>
       )}
 
-      {phase === "ready" && (
+      {phase === "ready" && sprintsOn && (
+        <SprintBacklog
+          projectKey={projectKey}
+          backlog={backlog}
+          tasks={tasks}
+          filtered={filtered}
+          writable={writable}
+          manageable={canManageSprints && !archived}
+          sprints={sprints}
+          announce={setMessage}
+          addButton={addButton}
+          onAdd={setAdding}
+        />
+      )}
+
+      {phase === "ready" && !sprintsOn && (
         <section
           aria-labelledby={headingId}
           className="grid w-full max-w-3xl gap-2 rounded-xl bg-muted/50 p-2"

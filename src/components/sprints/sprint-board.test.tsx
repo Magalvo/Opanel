@@ -84,6 +84,7 @@ async function renderBoard({
       <Board canWriteTasks={canWriteTasks} canManageSprints={canManageSprints} />
     </ProjectFrame>,
   );
+  await screen.findByRole("status", { name: "Board messages" });
   return user;
 }
 

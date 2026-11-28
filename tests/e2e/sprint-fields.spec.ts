@@ -117,14 +117,16 @@ test("a Member moves a task into the active sprint from its page, reads it in th
   await expect(timeline.getByText(/changed the sprint from Sprint 4 to Sprint 5/)).toBeVisible();
 
   await page.goto(`/projects/${key}/backlog`);
-  const backlog = page.getByRole("region", { name: "Backlog" });
+  // The backlog of a project with sprints has a section per sprint (WS-144).
+  const backlog = page.getByRole("region", { name: "Backlog", exact: true });
+  const sprint5 = page.getByRole("region", { name: "Sprint 5", exact: true });
   await expect(backlog.getByText("Another task")).toBeVisible();
-  await page.getByRole("button", { name: "Sprint" }).click();
+  await page.getByRole("button", { name: "Sprint", exact: true }).click();
   await page.getByRole("menuitemcheckbox", { name: "Sprint 5 (planned)" }).click();
   await page.keyboard.press("Escape");
 
   await expect(page).toHaveURL(/sprintId=/);
   await expect(backlog.getByText("Another task")).toBeHidden();
-  await expect(backlog.getByText("Plan the release")).toBeVisible();
+  await expect(sprint5.getByText("Plan the release")).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove Sprint: Sprint 5" })).toBeVisible();
 });

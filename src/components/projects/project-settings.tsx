@@ -7,16 +7,18 @@ import { DeletedTasksSection } from "./deleted-tasks-section";
 import { DetailsSection } from "./details-section";
 import { LabelsSection } from "./labels-section";
 import { useProject } from "./project-frame";
+import { SprintsSection } from "./sprints-section";
 import { TriageSection } from "./triage-section";
 
 /**
- * A project's settings (WS-036): details, columns, labels (WS-108), triage (WS-092) and
- * deleted tasks, for managers.
+ * A project's settings (WS-036): details, columns, sprints (WS-144), labels (WS-108), triage
+ * (WS-092) and deleted tasks, for managers.
  */
 export function ProjectSettings({
   canRestoreTasks,
   canManageTriage,
-}: Readonly<{ canRestoreTasks: boolean; canManageTriage: boolean }>) {
+  canManageSprints = false,
+}: Readonly<{ canRestoreTasks: boolean; canManageTriage: boolean; canManageSprints?: boolean }>) {
   const { project } = useProject();
   const [message, setMessage] = useState("");
   const archived = project.archivedAt !== null;
@@ -29,6 +31,7 @@ export function ProjectSettings({
       {archived && <p className="text-sm">This project is archived, so it is read-only.</p>}
       <DetailsSection announce={setMessage} />
       <ColumnsSection announce={setMessage} readOnly={archived} />
+      <SprintsSection announce={setMessage} readOnly={archived || !canManageSprints} />
       <LabelsSection announce={setMessage} readOnly={archived} />
       <TriageSection announce={setMessage} readOnly={archived || !canManageTriage} />
       {canRestoreTasks && <DeletedTasksSection announce={setMessage} readOnly={archived} />}
