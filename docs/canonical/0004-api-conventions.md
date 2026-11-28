@@ -123,37 +123,38 @@ Rules:
   `current`). Codes are never renamed or reused. The specific codes so far (a test keeps
   this table and the base one equal to `PROBLEM_CODES`, WS-083):
 
-  | Status | `code`                       | Meaning                                                         | Work-spec |
-  | ------ | ---------------------------- | --------------------------------------------------------------- | --------- |
-  | `403`  | `invalid_setup_token`        | The first-run setup's token is missing or wrong                 | WS-050    |
-  | `403`  | `setup_token_not_configured` | A production server has no setup token configured               | WS-055    |
-  | `404`  | `invalid_link`               | A one-time link that cannot be used                             | WS-019    |
-  | `409`  | `last_admin`                 | The change would leave no active Admin                          | WS-018    |
-  | `409`  | `team_name_taken`            | Another team has that name                                      | WS-026    |
-  | `409`  | `account_inactive`           | The person to assign or add is deactivated                      | WS-026    |
-  | `409`  | `version_conflict`           | The entity changed since the `version` sent; `current` holds it | WS-027    |
-  | `409`  | `project_key_taken`          | Another project has that key                                    | WS-028    |
-  | `409`  | `project_archived`           | The project is archived, so read-only                           | WS-028    |
-  | `409`  | `last_done_column`           | The change would leave the project without a Done column        | WS-029    |
-  | `409`  | `team_in_use`                | A task is assigned to the team                                  | WS-030    |
-  | `409`  | `column_not_empty`           | The column still holds tasks                                    | WS-030    |
-  | `409`  | `agent_name_taken`           | Another agent has that name                                     | WS-075    |
-  | `409`  | `too_many_tokens`            | The agent already holds 10 usable tokens                        | WS-075    |
-  | `409`  | `label_name_taken`           | Another label of the project has that name, ignoring case       | WS-107    |
-  | `409`  | `too_many_labels`            | The project already has 200 labels                              | WS-107    |
-  | `409`  | `link_exists`                | The two tasks already have that link                            | WS-134    |
-  | `409`  | `too_many_links`             | A task of the link already has 100 links                        | WS-134    |
-  | `409`  | `has_subtasks`               | The task has live sub-tasks, so it cannot be deleted            | WS-133    |
-  | `409`  | `too_many_subtasks`          | The parent already has 100 live sub-tasks                       | WS-133    |
-  | `409`  | `sprints_disabled`           | The project does not use sprints                                | WS-140    |
-  | `409`  | `sprint_active`              | A sprint is active, so sprints cannot be turned off             | WS-140    |
-  | `409`  | `sprint_not_planned`         | Only a planned sprint can be deleted                            | WS-140    |
-  | `409`  | `sprint_completed`           | The sprint is completed, so it cannot change                    | WS-140    |
-  | `409`  | `no_active_sprint`           | A column is asked in a project with sprints, and none is active | WS-141    |
-  | `409`  | `subtask_follows_parent`     | A sub-task's place disagrees with its parent's sprint           | WS-141    |
-  | `409`  | `agent_disabled`             | The agent is disabled                                           | WS-075    |
-  | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process          | WS-047    |
-  | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full       | WS-056    |
+  | Status | `code`                       | Meaning                                                             | Work-spec      |
+  | ------ | ---------------------------- | ------------------------------------------------------------------- | -------------- |
+  | `403`  | `invalid_setup_token`        | The first-run setup's token is missing or wrong                     | WS-050         |
+  | `403`  | `setup_token_not_configured` | A production server has no setup token configured                   | WS-055         |
+  | `404`  | `invalid_link`               | A one-time link that cannot be used                                 | WS-019         |
+  | `409`  | `last_admin`                 | The change would leave no active Admin                              | WS-018         |
+  | `409`  | `team_name_taken`            | Another team has that name                                          | WS-026         |
+  | `409`  | `account_inactive`           | The person to assign or add is deactivated                          | WS-026         |
+  | `409`  | `version_conflict`           | The entity changed since the `version` sent; `current` holds it     | WS-027         |
+  | `409`  | `project_key_taken`          | Another project has that key                                        | WS-028         |
+  | `409`  | `project_archived`           | The project is archived, so read-only                               | WS-028         |
+  | `409`  | `last_done_column`           | The change would leave the project without a Done column            | WS-029         |
+  | `409`  | `team_in_use`                | A task is assigned to the team                                      | WS-030         |
+  | `409`  | `column_not_empty`           | The column still holds tasks                                        | WS-030         |
+  | `409`  | `agent_name_taken`           | Another agent has that name                                         | WS-075         |
+  | `409`  | `too_many_tokens`            | The agent already holds 10 usable tokens                            | WS-075         |
+  | `409`  | `label_name_taken`           | Another label of the project has that name, ignoring case           | WS-107         |
+  | `409`  | `too_many_labels`            | The project already has 200 labels                                  | WS-107         |
+  | `409`  | `link_exists`                | The two tasks already have that link                                | WS-134         |
+  | `409`  | `too_many_links`             | A task of the link already has 100 links                            | WS-134         |
+  | `409`  | `has_subtasks`               | The task has live sub-tasks, so it cannot be deleted                | WS-133         |
+  | `409`  | `too_many_subtasks`          | The parent already has 100 live sub-tasks                           | WS-133         |
+  | `409`  | `sprints_disabled`           | The project does not use sprints                                    | WS-140         |
+  | `409`  | `sprint_active`              | A sprint is active: sprints cannot be turned off, nor another start | WS-140, WS-142 |
+  | `409`  | `sprint_not_planned`         | Only a planned sprint can be deleted or started                     | WS-140, WS-142 |
+  | `409`  | `sprint_completed`           | The sprint is completed, so it cannot change                        | WS-140         |
+  | `409`  | `sprint_not_active`          | Only the active sprint can be completed                             | WS-142         |
+  | `409`  | `no_active_sprint`           | A column is asked in a project with sprints, and none is active     | WS-141         |
+  | `409`  | `subtask_follows_parent`     | A sub-task's place disagrees with its parent's sprint               | WS-141         |
+  | `409`  | `agent_disabled`             | The agent is disabled                                               | WS-075         |
+  | `429`  | `too_many_streams`           | The account holds 10 event streams on this app process              | WS-047         |
+  | `429`  | `server_busy`                | A password hash is needed while the hashing queue is full           | WS-056         |
 
 - Every `429` carries `Retry-After`, in whole seconds. Every operation an API token may call
   documents the token's `429 rate_limited`, and a versioned write documents each other

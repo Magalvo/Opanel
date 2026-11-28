@@ -17,7 +17,7 @@ import { projects } from "./projects";
 
 // Sprints of a project (canonical doc 0003 section 6, WT-10 decision 3, WS-140). One active
 // sprint per project at most, enforced by the partial unique index so it holds under
-// concurrency. The start, completion and frozen-point columns are written by item D only.
+// concurrency. The start, completion and frozen-progress columns are written by item D (WS-142).
 export const sprints = pgTable(
   "sprints",
   {
@@ -34,6 +34,10 @@ export const sprints = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     totalPoints: numeric("total_points", { precision: 7, scale: 1 }),
     completedPoints: numeric("completed_points", { precision: 7, scale: 1 }),
+    // The rest of the progress frozen at completion (WS-142 section 2).
+    totalTasks: integer("total_tasks"),
+    completedTasks: integer("completed_tasks"),
+    unestimated: integer("unestimated"),
     version: integer("version").notNull().default(1),
     createdBy: uuid("created_by").references(() => accounts.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -43,12 +47,14 @@ export const sprints = pgTable(
     check("sprints_state_check", sql`${table.state} in ('planned', 'active', 'completed')`),
     check("sprints_dates_ordered", sql`${table.endDate} >= ${table.startDate}`),
     check("sprints_version_positive", sql`${table.version} >= 1`),
-    // The record of a completed sprint, and only of one (WT-10 decision 7).
+    // The record of a completed sprint, and only of one (WT-10 decision 7, WS-142 section 2).
     check(
       "sprints_completed_check",
       sql`case when ${table.state} = 'completed'
         then ${table.completedAt} is not null and ${table.totalPoints} is not null and ${table.completedPoints} is not null
-        else ${table.completedAt} is null and ${table.totalPoints} is null and ${table.completedPoints} is null end`,
+          and ${table.totalTasks} is not null and ${table.completedTasks} is not null and ${table.unestimated} is not null
+        else ${table.completedAt} is null and ${table.totalPoints} is null and ${table.completedPoints} is null
+          and ${table.totalTasks} is null and ${table.completedTasks} is null and ${table.unestimated} is null end`,
     ),
     check(
       "sprints_started_check",

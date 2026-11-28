@@ -37,7 +37,15 @@ import {
   unarchiveProject,
   updateProject,
 } from "./projects";
-import { createSprint, deleteSprint, getSprint, listSprints, updateSprint } from "./sprints";
+import {
+  completeSprint,
+  createSprint,
+  deleteSprint,
+  getSprint,
+  listSprints,
+  startSprint,
+  updateSprint,
+} from "./sprints";
 import { addTaskLink, removeTaskLink } from "./task-links";
 import {
   createTask,
@@ -124,6 +132,10 @@ const PROJECT_SCOPED: Record<string, ScopedCall> = {
   "sprints.updateSprint": (actor, f) =>
     updateSprint(actor, f.sprint.id, { name: "Renamed", version: f.sprint.version }),
   "sprints.deleteSprint": (actor, f) => deleteSprint(actor, f.sprint.id),
+  "sprints.startSprint": (actor, f) =>
+    startSprint(actor, f.sprint.id, { version: f.sprint.version }),
+  "sprints.completeSprint": (actor, f) =>
+    completeSprint(actor, f.sprint.id, { moveUnfinishedTo: null, version: f.sprint.version }),
   "activity.listActivity": (actor, f) => listActivity(actor, f.task.key, { limit: 50 }),
   "comments.listComments": (actor, f) => listComments(actor, f.task.key, { limit: 50 }),
   "comments.createComment": (actor, f) => createComment(actor, f.task.id, { body: "Hello" }),
@@ -216,6 +228,12 @@ const NOT_PROJECT_SCOPED: Record<string, string> = {
   "sprint-placement.recordPlaceChange": "internal: called by a service that has checked",
   "sprint-placement.sprintsEnabled": "internal: called by a service that has checked",
   "sprint-placement.unscheduleSprintTasks": "internal: called by deleteSprint, which has checked",
+  "sprint-placement.placeStartedSprintTasks":
+    "internal: called by startSprint, which has checked (WS-142)",
+  "sprint-placement.placeCompletedSprintTasks":
+    "internal: called by completeSprint, which has checked (WS-142)",
+  "sprint-placement.startFirstSprint":
+    "internal: called by updateProject, which has checked (WS-142)",
   "task-filter.taskFilterWhere":
     "internal: called by listTasks and listBacklog, which have checked",
   "tasks.findLiveTask": "internal: returns the task's project, which its callers check",

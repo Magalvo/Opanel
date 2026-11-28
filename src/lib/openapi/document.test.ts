@@ -741,6 +741,62 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("describes starting and completing sprints: both operations, SprintProgress, CompletedSprint, the code (WS-142)", () => {
+    const { schemas } = parsedDocument().components;
+    const json = JSON.stringify(documentAsJson());
+    const operationSchema = z.object({
+      "x-opanel-permission": z.string(),
+      requestBody: z.unknown(),
+      responses: z.record(z.string(), z.unknown()),
+    });
+    const { paths } = z
+      .object({
+        paths: z.object({
+          "/api/v1/sprints/{sprintId}/start": z.object({ post: operationSchema }),
+          "/api/v1/sprints/{sprintId}/complete": z.object({ post: operationSchema }),
+        }),
+      })
+      .parse(documentAsJson());
+    const start = paths["/api/v1/sprints/{sprintId}/start"].post;
+    const complete = paths["/api/v1/sprints/{sprintId}/complete"].post;
+
+    expect(start["x-opanel-permission"]).toBe("sprints:manage");
+    expect(complete["x-opanel-permission"]).toBe("sprints:manage");
+    expect(Object.keys(start.responses)).toEqual(
+      expect.arrayContaining(["200", "400", "403", "404", "409"]),
+    );
+    expect(Object.keys(complete.responses)).toEqual(
+      expect.arrayContaining(["200", "400", "403", "404", "409"]),
+    );
+    expect(JSON.stringify(complete.responses["200"])).toContain(
+      '"#/components/schemas/CompletedSprint"',
+    );
+    expect(schemas.StartSprintRequest).toMatchObject({ required: ["version"] });
+    expect(schemas.CompleteSprintRequest).toMatchObject({
+      properties: {
+        moveUnfinishedTo: { anyOf: [{ type: "string", format: "uuid" }, { type: "null" }] },
+      },
+      required: expect.arrayContaining(["moveUnfinishedTo", "version"]) as unknown,
+    });
+    expect(schemas.SprintProgress).toMatchObject({
+      required: expect.arrayContaining([
+        "doneTasks",
+        "totalTasks",
+        "donePoints",
+        "totalPoints",
+        "unestimated",
+      ]) as unknown,
+    });
+    expect(schemas.Sprint).toMatchObject({
+      properties: { progress: { $ref: "#/components/schemas/SprintProgress" } },
+      required: expect.arrayContaining(["progress"]) as unknown,
+    });
+    expect(schemas.CompletedSprint).toMatchObject({
+      required: expect.arrayContaining(["progress", "unfinishedSubtasksKept"]) as unknown,
+    });
+    expect(json).toContain("sprint_not_active");
+  });
+
   it("names the reporter and the comment author as AccountRef, with its kind (WS-074)", () => {
     const { schemas } = parsedDocument().components;
 

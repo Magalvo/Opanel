@@ -42,6 +42,7 @@ export const PROBLEM_CODES = [
   "sprint_active",
   "sprint_not_planned",
   "sprint_completed",
+  "sprint_not_active",
   "no_active_sprint",
   "subtask_follows_parent",
 ] as const;

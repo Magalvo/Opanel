@@ -1,11 +1,14 @@
 import { sql } from "drizzle-orm";
 
 import type {
+  CompletedSprint,
+  CompleteSprintRequest,
   CreateSprintRequest,
   Sprint,
   SprintPage,
   SprintQuery,
   SprintState,
+  StartSprintRequest,
   UpdateSprintRequest,
 } from "@/lib/schemas/sprints";
 import { type Actor, requirePermission, requireProjectAccess } from "@/server/auth/actor";
@@ -14,7 +17,9 @@ import { sprints } from "@/server/db/schema";
 import {
   invalidRequest,
   notFound,
+  sprintActive,
   sprintCompleted,
+  sprintNotActive,
   sprintNotPlanned,
   sprintsDisabled,
   versionConflict,
@@ -24,14 +29,32 @@ import { decodeSprintCursor, encodeSprintCursor } from "@/server/http/pagination
 import { recordAudit } from "./audit";
 import { publishEvent } from "./events";
 import { findProjectRef, lockWritableProject } from "./projects";
-import { unscheduleSprintTasks } from "./sprint-placement";
+import {
+  lockFirstColumn,
+  placeCompletedSprintTasks,
+  placeStartedSprintTasks,
+  unscheduleSprintTasks,
+} from "./sprint-placement";
 
 // Sprints in the API (WS-140): planned sprints are created, edited and deleted here; item D
-// starts and completes them.
+// starts and completes them (WS-142).
 
 type Executor = Pick<Database, "execute">;
 
 const ISO_MS = sql`'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'`;
+
+/**
+ * A sprint's live tasks and points, sub-tasks included, done meaning in a `done` column
+ * (WT-10 decision 2), summed as an epic's (WS-139). Refers to the sprint as `s`.
+ */
+const LIVE_PROGRESS = sql`
+  select count(*)::int as total_tasks,
+    (count(*) filter (where c.category = 'done'))::int as done_tasks,
+    coalesce(sum(t.story_points), 0)::float8 as total_points,
+    coalesce(sum(t.story_points) filter (where c.category = 'done'), 0)::float8 as done_points,
+    (count(*) filter (where t.story_points is null))::int as unestimated
+  from tasks t left join columns c on c.id = t.column_id
+  where t.sprint_id = s.id and t.deleted_at is null`;
 
 /** Every column of a sprint's API shape, and its creation time with microseconds (cursor). */
 const SPRINT_SELECT = sql`
@@ -42,8 +65,17 @@ const SPRINT_SELECT = sql`
     to_char(s.completed_at at time zone 'utc', ${ISO_MS}) as completed_at,
     to_char(s.created_at at time zone 'utc', ${ISO_MS}) as created_at,
     to_char(s.updated_at at time zone 'utc', ${ISO_MS}) as updated_at,
-    to_char(s.created_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as created_at_us
-  from sprints s`;
+    to_char(s.created_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as created_at_us,
+    -- Progress (WS-142 section 3): frozen once completed, else over the live tasks.
+    case when s.state = 'completed' then s.total_tasks else sp.total_tasks end as total_tasks,
+    case when s.state = 'completed' then s.completed_tasks else sp.done_tasks end as done_tasks,
+    case when s.state = 'completed' then s.total_points::float8 else sp.total_points end
+      as total_points,
+    case when s.state = 'completed' then s.completed_points::float8 else sp.done_points end
+      as done_points,
+    case when s.state = 'completed' then s.unestimated else sp.unestimated end as unestimated
+  from sprints s
+  cross join lateral (${LIVE_PROGRESS} and s.state <> 'completed') sp`;
 
 interface SprintRow extends Record<string, unknown> {
   id: string;
@@ -59,6 +91,11 @@ interface SprintRow extends Record<string, unknown> {
   created_at: string;
   updated_at: string;
   created_at_us: string;
+  total_tasks: number;
+  done_tasks: number;
+  total_points: number;
+  done_points: number;
+  unestimated: number;
 }
 
 function toSprint(row: SprintRow): Sprint {
@@ -72,6 +109,13 @@ function toSprint(row: SprintRow): Sprint {
     state: row.state,
     startedAt: row.started_at,
     completedAt: row.completed_at,
+    progress: {
+      doneTasks: row.done_tasks,
+      totalTasks: row.total_tasks,
+      donePoints: row.done_points,
+      totalPoints: row.total_points,
+      unestimated: row.unestimated,
+    },
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -179,15 +223,35 @@ async function requireSprintsEnabled(executor: Executor, projectId: string): Pro
 
 /**
  * For a write to one sprint: resolves its project and locks it as `lockWritableProject`
- * does (`404`, `403`, `409 project_archived`), then locks the sprint's row.
+ * does (`404`, `403`, `409 project_archived`), then locks the sprint's row. Starting and
+ * completing (WS-142) take the project exclusively, as tasks leave or join the backlog;
+ * starting locks the first column, and completing the target sprint, in id order with it.
  */
-async function lockSprint(executor: Executor, actor: Actor, sprintId: string): Promise<SprintRow> {
+async function lockSprint(
+  executor: Executor,
+  actor: Actor,
+  sprintId: string,
+  options: { exclusive?: boolean; firstColumn?: boolean; also?: string | null } = {},
+): Promise<SprintRow> {
   const [owner] = await executor.execute<{ project_id: string }>(
     sql`select project_id from sprints where id = ${sprintId}`,
   );
   if (!owner) throw sprintNotFound();
-  await lockWritableProject(executor, actor, owner.project_id);
-  await executor.execute(sql`select 1 from sprints where id = ${sprintId} for update`);
+  await lockWritableProject(
+    executor,
+    actor,
+    owner.project_id,
+    options.exclusive === true ? "exclusive" : "shared",
+  );
+  if (options.firstColumn === true) await lockFirstColumn(executor, owner.project_id);
+  const ids = [sprintId, ...(options.also ? [options.also] : [])];
+  await executor.execute(sql`
+    select 1 from sprints
+    where project_id = ${owner.project_id} and id in (${sql.join(
+      ids.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )})
+    order by id for update`);
   const sprint = await findSprint(executor, sprintId);
   if (!sprint) throw sprintNotFound();
   return sprint;
@@ -315,5 +379,114 @@ export async function deleteSprint(
       data: { projectId: sprint.project_id, name: sprint.name },
     });
     await publishSprintChanged(tx, actor, sprint, null);
+  });
+}
+
+/**
+ * Starts a planned sprint (WS-142 section 4): it becomes active and its live tasks go to the
+ * bottom of the first column, in backlog order. One sprint is active at a time. Its dates do
+ * not change.
+ */
+export async function startSprint(
+  actor: Actor,
+  sprintId: string,
+  input: StartSprintRequest,
+  db: Database = getDb(),
+): Promise<Sprint> {
+  requirePermission(actor, "sprints:manage");
+
+  return db.transaction(async (tx) => {
+    const before = await lockSprint(tx, actor, sprintId, { exclusive: true, firstColumn: true });
+    await requireSprintsEnabled(tx, before.project_id);
+    if (before.state !== "planned") {
+      throw sprintNotPlanned("Only a planned sprint can be started.");
+    }
+    const [active] = await tx.execute(sql`
+      select 1 from sprints where project_id = ${before.project_id} and state = 'active'`);
+    if (active) throw sprintActive("Another sprint is active in this project. Complete it first.");
+    if (before.version !== input.version) throw versionConflict(toSprint(before));
+
+    await tx.execute(sql`
+      update sprints set state = 'active', started_at = now(), version = version + 1,
+        updated_at = now()
+      where id = ${sprintId}`);
+    const tasks = await placeStartedSprintTasks(tx, actor, before.project_id, sprintId);
+    await recordAudit(tx, {
+      actor,
+      action: "sprint.started",
+      entity: "sprint",
+      entityId: sprintId,
+      data: { projectId: before.project_id, name: before.name, tasks },
+    });
+
+    const started = await findSprint(tx, sprintId);
+    if (!started) throw sprintNotFound();
+    await publishSprintChanged(tx, actor, started, started.version);
+    return toSprint(started);
+  });
+}
+
+function badTarget() {
+  return invalidRequest(
+    [{ path: "moveUnfinishedTo", message: "Not a planned sprint of this project." }],
+    "The request body is not valid.",
+  );
+}
+
+/**
+ * Completes the active sprint (WS-142 section 5): its progress is frozen, done families stay
+ * as its record and the others go to `moveUnfinishedTo` (a planned sprint) or unscheduled, at
+ * the top of the backlog. Answers the sprint and the unfinished sub-tasks its record kept.
+ */
+export async function completeSprint(
+  actor: Actor,
+  sprintId: string,
+  input: CompleteSprintRequest,
+  db: Database = getDb(),
+): Promise<CompletedSprint> {
+  requirePermission(actor, "sprints:manage");
+  const target = input.moveUnfinishedTo;
+
+  return db.transaction(async (tx) => {
+    const before = await lockSprint(tx, actor, sprintId, { exclusive: true, also: target });
+    await requireSprintsEnabled(tx, before.project_id);
+    if (before.state !== "active") throw sprintNotActive();
+    if (target !== null) {
+      const [planned] = await tx.execute<{ state: SprintState }>(sql`
+        select state from sprints where id = ${target} and project_id = ${before.project_id}`);
+      if (planned?.state !== "planned") throw badTarget();
+    }
+    if (before.version !== input.version) throw versionConflict(toSprint(before));
+
+    // Frozen before anything moves (WS-142 section 3).
+    await tx.execute(sql`
+      update sprints set state = 'completed', completed_at = now(),
+        version = version + 1, updated_at = now(),
+        total_tasks = ${before.total_tasks}, completed_tasks = ${before.done_tasks},
+        total_points = ${before.total_points}, completed_points = ${before.done_points},
+        unestimated = ${before.unestimated}
+      where id = ${sprintId}`);
+    const placed = await placeCompletedSprintTasks(tx, actor, before.project_id, sprintId, target);
+    await recordAudit(tx, {
+      actor,
+      action: "sprint.completed",
+      entity: "sprint",
+      entityId: sprintId,
+      data: {
+        projectId: before.project_id,
+        name: before.name,
+        moveUnfinishedTo: target,
+        moved: placed.moved,
+      },
+    });
+
+    const completed = await findSprint(tx, sprintId);
+    if (!completed) throw sprintNotFound();
+    await publishSprintChanged(tx, actor, completed, completed.version);
+    if (target !== null) {
+      const next = await findSprint(tx, target);
+      if (next) await publishSprintChanged(tx, actor, next, next.version);
+    }
+    return { ...toSprint(completed), unfinishedSubtasksKept: placed.unfinishedSubtasksKept };
   });
 }

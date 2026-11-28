@@ -1,5 +1,5 @@
 // The sprints table's own rules (WS-140 test 1): one active sprint per project, ordered
-// dates, frozen points exactly when completed, a start time exactly when not planned.
+// dates, frozen progress exactly when completed (WS-142 test 1), a start time exactly when not planned.
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
@@ -24,19 +24,39 @@ function insertSprint(
     endDate?: string;
     startedAt?: boolean;
     completedAt?: boolean;
-    points?: boolean;
+    /** The frozen values set (WS-142 section 2); `true` sets all five. */
+    frozen?: boolean | readonly Frozen[];
   } = {},
 ) {
   const state = values.state ?? "planned";
+  const frozen = new Set<Frozen>(
+    values.frozen === true
+      ? FROZEN
+      : values.frozen === undefined || values.frozen === false
+        ? []
+        : values.frozen,
+  );
+  const value = (column: Frozen, given: number) => (frozen.has(column) ? sql`${given}` : sql`null`);
   return getDb().execute(sql`
     insert into sprints (project_id, name, start_date, end_date, state, started_at,
-      completed_at, total_points, completed_points)
+      completed_at, total_points, completed_points, total_tasks, completed_tasks, unestimated)
     values (${projectId}, 'Sprint', ${values.startDate ?? "2026-12-01"},
       ${values.endDate ?? "2026-12-14"}, ${state},
       ${values.startedAt ? sql`now()` : sql`null`},
       ${values.completedAt ? sql`now()` : sql`null`},
-      ${values.points ? sql`10` : sql`null`}, ${values.points ? sql`4.5` : sql`null`})`);
+      ${value("total_points", 10)}, ${value("completed_points", 4.5)},
+      ${value("total_tasks", 6)}, ${value("completed_tasks", 3)}, ${value("unestimated", 1)})`);
 }
+
+const FROZEN = [
+  "total_points",
+  "completed_points",
+  "total_tasks",
+  "completed_tasks",
+  "unestimated",
+] as const;
+
+type Frozen = (typeof FROZEN)[number];
 
 describe("the sprints table (WS-140 test 1)", () => {
   it("refuses a second active sprint in a project, not in another one", async () => {
@@ -66,15 +86,38 @@ describe("the sprints table (WS-140 test 1)", () => {
     await expect(
       insertSprint(project.id, { state: "completed", startedAt: true, completedAt: true }),
     ).rejects.toMatchObject({ cause: { constraint_name: "sprints_completed_check" } });
-    await expect(insertSprint(project.id, { points: true })).rejects.toMatchObject({
+    await expect(insertSprint(project.id, { frozen: true })).rejects.toMatchObject({
       cause: { constraint_name: "sprints_completed_check" },
     });
     await insertSprint(project.id, {
       state: "completed",
       startedAt: true,
       completedAt: true,
-      points: true,
+      frozen: true,
     });
+  });
+
+  it("refuses a completed sprint missing any of the five frozen values, and any on an active one (WS-142 test 1)", async () => {
+    const { project } = await setup();
+
+    for (const missing of FROZEN) {
+      await expect(
+        insertSprint(project.id, {
+          state: "completed",
+          startedAt: true,
+          completedAt: true,
+          frozen: FROZEN.filter((column) => column !== missing),
+        }),
+        missing,
+      ).rejects.toMatchObject({ cause: { constraint_name: "sprints_completed_check" } });
+    }
+    for (const column of FROZEN) {
+      await expect(
+        insertSprint(project.id, { state: "active", startedAt: true, frozen: [column] }),
+        column,
+      ).rejects.toMatchObject({ cause: { constraint_name: "sprints_completed_check" } });
+    }
+    await insertSprint(project.id, { state: "active", startedAt: true });
   });
 
   it("refuses a start time on a planned sprint and none on an active one, and an unknown state", async () => {

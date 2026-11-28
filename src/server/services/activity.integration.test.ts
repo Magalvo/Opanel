@@ -365,12 +365,14 @@ describe("links in the activity (WS-134 test 13)", () => {
 describe("sprints in the activity (WS-141 test 21)", () => {
   it("names a sprintId value by the sprint's name, and null once the sprint is gone", async () => {
     const { manager, member, task } = await setup();
+    // In the backlog first, so turning sprints on makes no "Sprint 1" (WS-142).
+    const waiting = await moveTask(member, "OPA-1", { columnId: null, version: task.version });
     await updateProject(manager, "OPA", { sprintsEnabled: true, version: 1 });
     const dates = { startDate: "2026-12-01", endDate: "2026-12-14" };
     const kept = await createSprint(manager, "OPA", { name: "Sprint 1", ...dates });
     const gone = await createSprint(manager, "OPA", { name: "Sprint 2", ...dates });
 
-    const one = await updateTask(member, "OPA-1", { sprintId: gone.id, version: task.version });
+    const one = await updateTask(member, "OPA-1", { sprintId: gone.id, version: waiting.version });
     await updateTask(member, "OPA-1", { sprintId: kept.id, version: one.version });
     await deleteSprint(manager, gone.id);
     const page = await listActivity(member, "OPA-1", { limit: 50 });

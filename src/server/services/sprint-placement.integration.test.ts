@@ -33,7 +33,10 @@ async function setState(sprintId: string, state: "planned" | "active" | "complet
       started_at = ${state === "planned" ? null : sql`now()`},
       completed_at = ${state === "completed" ? sql`now()` : null},
       total_points = ${state === "completed" ? 0 : null},
-      completed_points = ${state === "completed" ? 0 : null}
+      completed_points = ${state === "completed" ? 0 : null},
+      total_tasks = ${state === "completed" ? 0 : null},
+      completed_tasks = ${state === "completed" ? 0 : null},
+      unestimated = ${state === "completed" ? 0 : null}
     where id = ${sprintId}`);
 }
 

@@ -55,6 +55,7 @@ describe("problemSchema", () => {
       "setup_token_not_configured",
       "sprint_active",
       "sprint_completed",
+      "sprint_not_active",
       "sprint_not_planned",
       "sprints_disabled",
       "subtask_follows_parent",

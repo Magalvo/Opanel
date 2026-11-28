@@ -308,6 +308,11 @@ export function sprintNotPlanned(detail = "Only a planned sprint can be deleted.
   return new ApiError({ status: 409, title: "Conflict", code: "sprint_not_planned", detail });
 }
 
+/** `409` (WS-142): only the active sprint can be completed (WT-10 decision 7). */
+export function sprintNotActive(detail = "Only the active sprint can be completed."): ApiError {
+  return new ApiError({ status: 409, title: "Conflict", code: "sprint_not_active", detail });
+}
+
 /** `409` (WS-141): a column needs an active sprint in a project with sprints (WT-10 decision 5). */
 export function noActiveSprint(
   detail = "No sprint is active in this project. Start one, or keep the task in the backlog.",
