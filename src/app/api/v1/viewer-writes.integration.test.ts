@@ -63,6 +63,8 @@ describe("a Viewer and the write endpoints of WT-03", () => {
         "POST /api/v1/projects/{projectId}/sprints",
         "PATCH /api/v1/sprints/{sprintId}",
         "DELETE /api/v1/sprints/{sprintId}",
+        "POST /api/v1/sprints/{sprintId}/start",
+        "POST /api/v1/sprints/{sprintId}/complete",
       ]),
     );
   });
