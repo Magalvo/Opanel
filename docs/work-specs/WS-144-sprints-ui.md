@@ -1,6 +1,6 @@
 # WS-144 — Sprints in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-28, questions 1 to 4 as recommended)
 - Work-item: [WI-144](../work-items/WI-144-sprints-ui.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 5 and 6;
   [0002](../canonical/0002-realtime-sync.md) sections 3 and 4;

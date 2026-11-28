@@ -1,6 +1,6 @@
 # WI-144 — Sprints in the UI
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-28, with WS-144)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item E)
 - Depends on: WI-142 (starting and completing) and WI-143 (the sprint field and filter),
   both done
