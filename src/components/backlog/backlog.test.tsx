@@ -337,6 +337,8 @@ describe("Backlog: filtered (WS-120 test 7)", () => {
 
 describe("Backlog: the Sprint filter (WS-143 test 7)", () => {
   it("offers it in a project with sprints", async () => {
+    // The backlog of a project with sprints reads its sprints for its sections (WS-144).
+    on("GET /api/v1/projects/OPA/sprints?limit=100&state=active&state=planned", page([]));
     await renderBacklog({ project: { ...opa, sprintsEnabled: true } });
 
     const bar = await screen.findByRole("search", { name: "Filter tasks" });

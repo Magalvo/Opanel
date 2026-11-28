@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bodyOf, calls, hold, installFetch, on, problem } from "@/components/fake-api";
+import { sprint } from "@/components/sprints/test-data";
 import { FakeSource } from "@/hooks/fake-event-source";
 import type { Project } from "@/lib/schemas/projects";
 
@@ -654,6 +655,11 @@ describe("Board: filtered (WS-120 test 6)", () => {
 
 describe("Board: no Sprint filter (WS-143 test 7, question 1)", () => {
   it("leaves the menu out, even in a project with sprints", async () => {
+    // The board of a project with sprints shows its columns while a sprint is active (WS-144).
+    on(
+      "GET /api/v1/projects/OPA/sprints?limit=100&state=active&state=planned",
+      page([sprint(4, "active", "2026-12-01", "2026-12-14")]),
+    );
     await renderBoard({ project: { ...opa, sprintsEnabled: true } });
 
     const bar = await screen.findByRole("search", { name: "Filter tasks" });
