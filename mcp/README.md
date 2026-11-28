@@ -18,6 +18,7 @@ client.
 | `opanel_get_backlog`       | A page of a project's backlog, in rank order, with filters   | `tasks:read`                  |
 | `opanel_list_labels`       | Every label of a project                                     | `tasks:read`                  |
 | `opanel_list_epics`        | A page of a project's epics, open, closed or all             | `tasks:read`                  |
+| `opanel_list_sprints`      | A page of a project's sprints, by state, with their points   | `tasks:read`                  |
 | `opanel_list_teams`        | A page of teams                                              | `projects:read`               |
 | `opanel_find_people`       | A page of people, by the start of their name                 | `projects:read`               |
 | `opanel_search_tasks`      | A page of tasks across projects: words or key, filters, sort | `tasks:read`                  |
