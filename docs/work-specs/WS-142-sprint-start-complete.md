@@ -1,6 +1,7 @@
 # WS-142 — Starting and completing sprints
 
-- Status: Approved (approved by the owner on 2026-11-27, questions 1 to 4 as recommended)
+- Status: Done (approved by the owner on 2026-11-27, questions 1 to 4 as recommended; done on
+  2026-11-28)
 - Work-item: [WI-142](../work-items/WI-142-sprint-start-complete.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3 ("create, start,
   complete sprints; enable sprints on a project"), 6 (sprints) and 9 (history);
@@ -220,3 +221,59 @@ Risks:
 - **"Sprint 1" changes `PATCH /projects/{id}`'s side effects** for a project turned on with
   tasks on its board; `project.updated`'s audit entry and the sprint's own entries record
   both.
+
+## Implementation record
+
+- Red (a261021, 86f494b): tests 1 to 16 written first; 27 tests and 2 route files failed, on
+  the missing columns (`total_tasks`), functions (`startSprint`, `completeSprint`), routes,
+  `progress` and the OpenAPI document.
+- Green (a6f0d80): migration `0029_sprint_frozen_progress` (it drops and creates again
+  `sprints_completed_check`); `SprintProgress`, `CompletedSprint`, `StartSprintRequest`,
+  `CompleteSprintRequest` and both contracts in `src/lib/schemas/sprints.ts`;
+  `sprint_not_active`, `sprint.started` and `sprint.completed`; `progress` on every sprint
+  (live, or frozen once completed) and `startSprint` and `completeSprint` in
+  `src/server/services/sprints.ts`; `placeStartedSprintTasks`, `placeCompletedSprintTasks`
+  and `startFirstSprint` in `src/server/services/sprint-placement.ts`, called from
+  `updateProject` when sprints are turned on; the two routes; doc 0004's table.
+- Test 14 (500 tasks, half done, completed into a planned sprint), three runs: start 213 to
+  231 ms, complete 174 to 180 ms, well under the 2 seconds of section 8. A first version that
+  wrote each task with its own statements took 8.3 s and 4.4 s; the writes are now one
+  statement each for the places, the history and the events (deviation 1).
+- Gate on 2026-11-28:
+  - typecheck, lint and Prettier pass; `pnpm db:generate` and `pnpm openapi:generate`
+    leave no diff;
+  - Vitest 2847 of 2847 (250 files);
+  - `pnpm test:e2e` 146 of 146;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18.7 on port 5433.
+
+## Deviations
+
+1. **The rule is asked once per kind of place, and the writes are batched.** Section 4 put
+   each started task through `placeFor`'s active-sprint branch; it now places the first one
+   (the bottom of the first column) and the others follow it in backlog order with
+   `positionsBetween`. Completion asks `placeFor` once for a head and once for a sub-task
+   following it, as every leaving family goes to the same place. The places, the history
+   entries and the events of all tasks are then written in one statement each
+   (`writePlaces`, `recordPlaceChanges`; `recordPlaceChange` now calls the latter), which
+   took test 14 from 8.3 s and 4.4 s to about 0.2 s each.
+2. **`placeFor` no longer keeps a task of an active sprint that has no column** when the
+   write names its own sprint: it joins the board as a task joining the active sprint
+   would. Only a just-started sprint's tasks are in that place; before, the short cut
+   "same sprint, keep the place" answered it.
+3. **Two WS-141 tests changed with "Sprint 1"**: `all-tasks.integration.test.ts` (test 20)
+   turned sprints on with tasks on the board and then made another sprint active; it now
+   uses each project's "Sprint 1", and its `sprintId` expectations follow. The activity test
+   (WS-141 test 21) moves its task to the backlog first, so no "Sprint 1" is made. The
+   fixtures that set a sprint completed in the database set the three new frozen values,
+   `sprints.integration.test.ts` expects `progress`, and the access test of WS-073 lists the
+   two services and classifies the three new helpers as internal.
+4. **Doc 0004's rows for `sprint_active` and `sprint_not_planned` also name starting**, as
+   both codes now answer it.
+5. **Deleted tasks of a leaving family keep their version**: section 5 gives them no entries
+   or events; they only lose the column and take the target sprint, with a place at the top
+   of the backlog when they had a column.
+6. **The target sprint's `sprint.changed` carries its version unchanged**: its row is not
+   written, only its tasks change (as `announceParents` does for a parent).
+7. **Test 14 inserts its 500 tasks in SQL and has a 60-second timeout**, so only start and
+   completion are timed. The new check of migration 0029 refuses a completed sprint without
+   the three new values; no sprint could be completed before this item outside tests.
