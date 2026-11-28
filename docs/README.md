@@ -17,8 +17,8 @@ an index commit when a work-track is approved or done, or when what comes next c
 
 - **Next:** WT-10 (sprints and story points, approved on 2026-11-27) item E (sprints in
   the UI: the setting, the backlog's sections, the board's header, the start and complete
-  dialogs); then G last. Items A to D and F (WI-139 to WI-143) are done. WT-09 (sub-tasks
-  and links) is done (WI-133 to WI-138).
+  dialogs, WI-144); then G last. Items A to D and F (WI-139 to WI-143) are done. WT-09
+  (sub-tasks and links) is done (WI-133 to WI-138).
 - **Done, from the independent audit of 2026-11-24:** C01 to C06 and the still-present
   B06, B07 and B09 (WI-121 to WI-127). Board scaling is left to its follow-ups below.
 - **Done, from the project audit of 2026-11-23:** WI-112 (production refuses the example
@@ -210,6 +210,7 @@ operations (doc 0006), are done.
 | [WI-141](work-items/WI-141-tasks-in-sprints.md)                 | Tasks in sprints                                                  | [WS-141](work-specs/WS-141-tasks-in-sprints.md)                 |
 | [WI-142](work-items/WI-142-sprint-start-complete.md)            | Starting and completing sprints                                   | [WS-142](work-specs/WS-142-sprint-start-complete.md)            |
 | [WI-143](work-items/WI-143-sprint-fields-filter-mcp.md)         | The task's sprint in the UI, the sprint filter, the MCP tool      | [WS-143](work-specs/WS-143-sprint-fields-filter-mcp.md)         |
+| [WI-144](work-items/WI-144-sprints-ui.md)                       | Sprints in the UI                                                 | [WS-144](work-specs/WS-144-sprints-ui.md)                       |
 
 ## Follow-ups
 
