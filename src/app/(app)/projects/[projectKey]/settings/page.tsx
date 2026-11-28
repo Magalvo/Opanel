@@ -20,6 +20,7 @@ export default async function SettingsRoute() {
     <ProjectSettings
       canRestoreTasks={can(actor, "tasks:delete_any")}
       canManageTriage={can(actor, "teams:manage")}
+      canManageSprints={can(actor, "sprints:manage")}
     />
   );
 }

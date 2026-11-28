@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { listLabels } from "@/components/labels/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
+import { sprintRuleSentence } from "@/components/sprints/messages";
 import { getTask } from "@/components/task/api";
 import { onTaskEvents } from "@/components/task/events";
 import { ApiFailure } from "@/lib/api-client";
@@ -47,6 +48,9 @@ function summaryOf(task: Task): TaskSummary {
 }
 
 function moveFailure(failure: unknown, key: string): string {
+  // A refusal of the sprint rules reads as on the task page (WS-144 section 9).
+  const rule = sprintRuleSentence(failure);
+  if (rule !== null) return rule;
   const code = failure instanceof ApiFailure ? failure.code : null;
   if (code === "version_conflict") return `Someone else changed ${key}. The board was refreshed.`;
   if (code === "project_archived") return "The project is archived.";
@@ -425,7 +429,8 @@ export function useBoard({
         case "project.changed":
         case "comment.created":
         case "epic.changed":
-        // Nothing the board lists depends on sprints until WT-10 items C and E (WS-140).
+        // The board reads its sprint again, and itself after a start or a completion
+        // (WS-144 section 9), in `useOpenSprints`.
         case "sprint.changed":
           return;
         case "label.changed":

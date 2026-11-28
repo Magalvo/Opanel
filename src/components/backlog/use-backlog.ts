@@ -6,12 +6,13 @@ import { listColumns, moveTask } from "@/components/board/api";
 import { isNewer, withLabels } from "@/components/board/live";
 import { listLabels } from "@/components/labels/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
+import { sprintRuleSentence } from "@/components/sprints/messages";
 import { getTask } from "@/components/task/api";
 import { onTaskEvents } from "@/components/task/events";
 import { ApiFailure } from "@/lib/api-client";
 import type { Column } from "@/lib/schemas/columns";
 import type { ProjectEvent } from "@/lib/schemas/events";
-import type { Task, TaskSummary } from "@/lib/schemas/tasks";
+import type { MoveTaskRequest, Task, TaskSummary } from "@/lib/schemas/tasks";
 
 import { listAllBacklog } from "./api";
 import { backlogMoveRequest, reorder } from "./moves";
@@ -61,6 +62,9 @@ function replaceRow(tasks: Rows, task: TaskSummary): Rows {
 }
 
 function moveFailure(failure: unknown, key: string): string {
+  // A refusal of the sprint rules reads as on the task page (WS-144 section 9).
+  const rule = sprintRuleSentence(failure);
+  if (rule !== null) return rule;
   const code = failure instanceof ApiFailure ? failure.code : null;
   if (code === "version_conflict") {
     return `Someone else changed ${key}. The backlog was refreshed.`;
@@ -364,7 +368,8 @@ export function useBacklog({
         case "project.changed":
         case "comment.created":
         case "epic.changed":
-        // Nothing the backlog lists depends on sprints until WT-10 items C and E (WS-140).
+        // The sections read the sprints again, and the backlog after a start or a
+        // completion (WS-144 section 9); a row's tasks change by their own events.
         case "sprint.changed":
           return;
       }
@@ -483,15 +488,13 @@ export function useBacklog({
     [setTasks],
   );
 
-  /** Moves a row to `index` of the backlog: shown at once, then saved (section 3). */
-  const drop = useCallback(
-    async (taskId: string, index: number) => {
-      const before = current.current;
-      const after = reorder(before, taskId, index);
-      const request = backlogMoveRequest(before, after, taskId);
-      const key = before.find((task) => task.id === taskId)?.key ?? "";
-      if (request === null) return;
-
+  /**
+   * Moves a row: `after` is the backlog as the move leaves it, shown at once, and `request`
+   * saves it. A failure loads the whole backlog again, so nothing unsaved stays shown.
+   */
+  const place = useCallback(
+    async (taskId: string, after: Rows, request: MoveTaskRequest) => {
+      const key = current.current.find((task) => task.id === taskId)?.key ?? "";
       supersede();
       setTasks(after);
       setMoving(true);
@@ -515,6 +518,18 @@ export function useBacklog({
       }
     },
     [announce, flush, load, onArchived, setTasks, supersede],
+  );
+
+  /** Moves a row to `index` of the backlog: shown at once, then saved (section 3). */
+  const drop = useCallback(
+    async (taskId: string, index: number) => {
+      const before = current.current;
+      const after = reorder(before, taskId, index);
+      const request = backlogMoveRequest(before, after, taskId);
+      if (request === null) return;
+      await place(taskId, after, request);
+    },
+    [place],
   );
 
   /**
@@ -561,6 +576,7 @@ export function useBacklog({
     reload,
     added,
     drop,
+    place,
     moveToBoard,
     hold,
   };

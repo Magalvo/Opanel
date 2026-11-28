@@ -64,18 +64,21 @@ describe("the /projects/KEY layout and board page", () => {
   });
 
   it.each([
-    ["admin", true],
-    ["manager", true],
-    ["member", true],
-    ["viewer", false],
-  ] as const)("renders the board for a %s, with canWriteTasks %s", async (role, canWrite) => {
-    await createTestAccount({ role });
-    withCookie(await signInCookie());
+    ["admin", true, true],
+    ["manager", true, true],
+    ["member", true, false],
+    ["viewer", false, false],
+  ] as const)(
+    "renders the board for a %s, with canWriteTasks %s and canManageSprints %s (WS-144)",
+    async (role, canWrite, canManage) => {
+      await createTestAccount({ role });
+      withCookie(await signInCookie());
 
-    const board = await BoardRoute();
+      const board = await BoardRoute();
 
-    expect(board.props).toEqual({ canWriteTasks: canWrite });
-  });
+      expect(board.props).toEqual({ canWriteTasks: canWrite, canManageSprints: canManage });
+    },
+  );
 
   it("redirects the board page to /sign-in without a session", async () => {
     vi.mocked(headers).mockResolvedValue(new Headers());

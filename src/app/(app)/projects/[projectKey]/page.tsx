@@ -4,9 +4,15 @@ import { requireAccount } from "@/server/auth/session";
 
 /**
  * A project's board (WS-037). Everyone signed in reads it; people with `tasks:write` add
- * and move tasks. The layout has already checked the project key.
+ * and move tasks; with `sprints:manage`, complete the active sprint (WS-144). The layout has
+ * already checked the project key.
  */
 export default async function BoardRoute() {
   const { actor } = await requireAccount();
-  return <Board canWriteTasks={can(actor, "tasks:write")} />;
+  return (
+    <Board
+      canWriteTasks={can(actor, "tasks:write")}
+      canManageSprints={can(actor, "sprints:manage")}
+    />
+  );
 }

@@ -17,18 +17,21 @@ describe("the /projects/KEY/backlog page (WS-109)", () => {
   });
 
   it.each([
-    ["admin", true],
-    ["manager", true],
-    ["member", true],
-    ["viewer", false],
-  ] as const)("renders for a %s with canWriteTasks %s", async (role, canWrite) => {
-    await createTestAccount({ role });
-    withCookie(await signInCookie());
+    ["admin", true, true],
+    ["manager", true, true],
+    ["member", true, false],
+    ["viewer", false, false],
+  ] as const)(
+    "renders for a %s with canWriteTasks %s and canManageSprints %s (WS-144)",
+    async (role, canWrite, canManage) => {
+      await createTestAccount({ role });
+      withCookie(await signInCookie());
 
-    const page = await BacklogRoute();
+      const page = await BacklogRoute();
 
-    expect(page.props).toEqual({ canWriteTasks: canWrite });
-  });
+      expect(page.props).toEqual({ canWriteTasks: canWrite, canManageSprints: canManage });
+    },
+  );
 
   it("redirects to /sign-in without a session", async () => {
     vi.mocked(headers).mockResolvedValue(new Headers());

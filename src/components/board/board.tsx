@@ -18,7 +18,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { BOARD_KEYS, fullIndex } from "@/components/filters/task-filter";
 import { TaskFilterBar } from "@/components/filters/task-filter-bar";
@@ -27,6 +27,10 @@ import { useUrlTaskFilter } from "@/components/filters/use-url-task-filter";
 import { getProject } from "@/components/projects/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
+import { CompleteSprintDialog } from "@/components/sprints/complete-sprint-dialog";
+import { SPRINT_NOT_ACTIVE } from "@/components/sprints/messages";
+import { NoActiveSprint, SprintHeader } from "@/components/sprints/sprint-header";
+import { useOpenSprints } from "@/components/sprints/use-open-sprints";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -69,9 +73,13 @@ function dropResult(shown: BoardState, activeId: string, overId: string): BoardS
 /**
  * A project's kanban board (WS-037): columns in board order with their cards, "Add task"
  * per column, and drag and drop by pointer, touch and keyboard for people who may change
- * tasks while the project is not archived.
+ * tasks while the project is not archived. In a project with sprints it shows the active
+ * sprint above the columns, or an empty state when none is active (WS-144 section 7).
  */
-export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
+export function Board({
+  canWriteTasks,
+  canManageSprints = false,
+}: Readonly<{ canWriteTasks: boolean; canManageSprints?: boolean }>) {
   const dndId = useId();
   const { project, setProject } = useProject();
   const projectKey = project.key;
@@ -92,6 +100,25 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
     announce: setMessage,
     onArchived: refreshProject,
   });
+
+  // The active sprint (WS-144 sections 7 and 9). A start or a completion changes which tasks
+  // the board lists, so it is read again whole; so is turning sprints on or off.
+  const sprintsOn = project.sprintsEnabled;
+  const sprints = useOpenSprints({
+    projectKey,
+    enabled: sprintsOn,
+    onActiveChanged: () => void reload(),
+  });
+  const sprint = sprintsOn ? sprints.active : null;
+  const noSprint = sprintsOn && sprints.phase === "ready" && sprints.active === null;
+  const sprintsOnBefore = useRef(sprintsOn);
+  useEffect(() => {
+    if (sprintsOnBefore.current === sprintsOn) return;
+    sprintsOnBefore.current = sprintsOn;
+    void reload();
+  }, [sprintsOn, reload]);
+  // "Complete sprint" is open, with the button that gets the focus back.
+  const [completing, setCompleting] = useState<HTMLButtonElement | null>(null);
 
   // The filter (WS-120): the board shows the tasks the filtered list returns, in its order.
   const { filter, ignored, setFilter } = useUrlTaskFilter(BOARD_KEYS);
@@ -311,7 +338,38 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
         </p>
       )}
 
-      {phase === "ready" && (
+      {sprint !== null && (
+        <SprintHeader
+          sprint={sprint}
+          actions={
+            canManageSprints &&
+            !archived && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(event) => {
+                  setCompleting(event.currentTarget);
+                }}
+              >
+                Complete sprint
+              </Button>
+            )
+          }
+        />
+      )}
+      {sprintsOn && sprints.phase === "error" && (
+        <div className="flex items-center gap-2">
+          <p role="alert" className="text-sm text-destructive">
+            Could not load the sprint.
+          </p>
+          <Button variant="outline" size="sm" onClick={() => void sprints.reload()}>
+            Retry
+          </Button>
+        </div>
+      )}
+      {noSprint && <NoActiveSprint projectKey={projectKey} />}
+
+      {phase === "ready" && !noSprint && (
         <TaskFilterBar
           filter={filter}
           onChange={setFilter}
@@ -344,7 +402,7 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
         </div>
       )}
 
-      {phase === "ready" && (
+      {phase === "ready" && !noSprint && (
         <div
           role="region"
           aria-label="Board"
@@ -411,12 +469,40 @@ export function Board({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>) {
           }}
           onCreated={(task) => {
             added(task);
-            setMessage(`${task.key} was added to ${adding.column.name}.`);
+            // In a project with sprints the task joins the active sprint (WS-141 section 4).
+            const into = sprint === null ? "" : `${sprint.name}, `;
+            setMessage(`${task.key} was added to ${into}${adding.column.name}.`);
           }}
           onArchived={() => {
             setMessage("The project is archived.");
             refreshProject();
           }}
+        />
+      )}
+
+      {completing !== null && sprint !== null && (
+        <CompleteSprintDialog
+          projectKey={projectKey}
+          sprint={sprint}
+          board={board}
+          columns={columns}
+          planned={sprints.planned}
+          returnFocusTo={completing}
+          onOpenChange={(open) => {
+            if (!open) setCompleting(null);
+          }}
+          onCompleted={(text) => {
+            setMessage(text);
+            void sprints.reload();
+            void reload();
+          }}
+          onCreated={sprints.put}
+          onNoLongerActive={() => {
+            setMessage(SPRINT_NOT_ACTIVE);
+            void sprints.reload();
+            void reload();
+          }}
+          onStale={() => void sprints.reload()}
         />
       )}
     </div>

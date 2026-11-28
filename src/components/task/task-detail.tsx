@@ -8,6 +8,7 @@ import { listLabels } from "@/components/labels/api";
 import { getProject } from "@/components/projects/api";
 import { useProjectEventListener } from "@/components/projects/project-events";
 import { useProject } from "@/components/projects/project-frame";
+import { sprintRuleSentence } from "@/components/sprints/messages";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,14 +84,6 @@ const CHANGED = "Someone else changed this task.";
 const CHANGED_WHILE_EDITING =
   "Someone else changed this task. Saving will show their version first.";
 const DELETED = "This task was deleted.";
-
-/** What to do about each refusal of the sprint rules (WS-143 section 3). */
-const SPRINT_SENTENCES: Readonly<Record<string, string>> = {
-  no_active_sprint: "No sprint is active. Start one from the backlog to put tasks on the board.",
-  subtask_follows_parent: "A sub-task stays where its parent is. Move the parent instead.",
-  sprint_completed: "This task belongs to a completed sprint's record.",
-  sprints_disabled: "This project does not use sprints.",
-};
 
 /**
  * A task: its fields, description, column, comments and deletion (WS-038). The same screen
@@ -268,8 +261,9 @@ export function TaskDetail({
         setMessage("That task already has 100 sub-tasks.");
         return;
       }
-      const sentence = failure.code === null ? undefined : SPRINT_SENTENCES[failure.code];
-      if (sentence !== undefined) {
+      // The sprint rules read the same on the board and the backlog (WS-144 section 9).
+      const sentence = sprintRuleSentence(failure);
+      if (sentence !== null) {
         setMessage(sentence);
         return;
       }
