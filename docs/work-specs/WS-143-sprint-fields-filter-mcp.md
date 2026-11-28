@@ -1,6 +1,7 @@
 # WS-143 — The task's sprint in the UI, the sprint filter, the MCP tool
 
-- Status: Approved (approved by the owner on 2026-11-28, questions 1 to 3 as recommended)
+- Status: Done (approved by the owner on 2026-11-28, questions 1 to 3 as recommended; done on
+  2026-11-28)
 - Work-item: [WI-143](../work-items/WI-143-sprint-fields-filter-mcp.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 6 and 8;
   [0005](../canonical/0005-mcp-server.md) section 4 (amended here by WT-10 proposal P4);
@@ -160,3 +161,50 @@ Risks:
 - **Sprints are loaded with every page of them** for the select and the menu; a project's
   planned and active sprints are few, and completed ones are loaded only when the menu
   opens.
+
+## Implementation record
+
+- Red (2d8e032): tests 1 to 10 written first, in the files the plan names, plus the
+  backlog, board and list view checks of test 7 and the tool lists of `read-tools.test.ts`,
+  `planning-search-tools.test.ts` and `mcp/e2e/mcp.spec.ts`. 46 unit tests failed for the
+  missing piece: no "Sprint" row or select, the codes shown as "Could not move the task",
+  the timeline's "changed the sprintId", `sprintId` not among the filter keys, no Sprint
+  menu or chip, no list column, no `opanel_list_sprints`; the end-to-end test failed at
+  the missing select. The checks of a project without sprints passed, as they should.
+- Green (1d02078, 244757e): `mcp/src/tools/sprints.ts`, registered after
+  `opanel_list_epics`, with doc 0005's P4 row, `mcp/README.md`'s table and `docs/mcp.md`;
+  `listSprints` and `listOpenSprints` in `src/components/task/api.ts`; the "Sprint" row and
+  `SprintField` in `details-section.tsx`; in `task-detail.tsx` the open sprints read for an
+  editor in a sprint project, `changeSprint`, the four sentences and `sprint.changed`;
+  `sprintId` in `activity-text.tsx`; `sprintId` and its chip in `task-filter.ts`; the
+  Sprint menu (`sprints` prop) in `task-filter-bar.tsx`, passed by the backlog of a sprint
+  project and by the list view; the "Sprint" column in `task-list-table.tsx`.
+- Refactor (5e70e86): one `everyPage` helper reads every page of epics and of sprints.
+- Gate on 2026-11-28:
+  - `pnpm check` (typecheck, lint, Prettier) passes; `pnpm openapi:generate` leaves no
+    diff (no contract changed);
+  - Vitest 2891 of 2891 (250 files), the MCP package's tests included;
+  - `pnpm test:e2e` 147 of 147 (6.2 minutes), the MCP package's end-to-end tests
+    included. Two earlier full runs each had one different failure in a spec this item
+    does not touch (`triage-flow.spec.ts` on a `read ECONNRESET` of an API call,
+    `links-flow.spec.ts` on a 30-second timeout); each passed alone at once;
+  - Windows 11, Node 24.18.0, pnpm 10.28.0, Compose PostgreSQL 18.7 on port 5433, no other
+    worktree's gate running.
+
+## Deviations
+
+1. **Three header tests of `task-list-table.test.tsx` changed in the green commit**, not the
+   red one: they count headers by position ("marks only the sorted header", "reverses the
+   default order", "marks the Points header"), and the new "Sprint" column shifts them by
+   one. The red commit had updated the other position-based checks of that file.
+2. **A sprint change is sent at once**, as the column select moves at once, not with "Save
+   changes"; the page says "Moved to Sprint 4." or "Taken out of the sprint.". Section 2
+   said "choosing sends `PATCH`" and named no message.
+3. **The task page reads the open sprints again on `sprint.changed`**, as it reads the open
+   epics again on `epic.changed`, so a sprint created, started or completed elsewhere is
+   offered at once (test 2).
+4. **The board still reads `sprintId` from its link.** Section 5 leaves the menu off the
+   board (question 1); its link keys keep every filter key, as `columnId`, which has no
+   menu either, so a link with `sprintId` still filters the board and shows its chip.
+5. **The list view's table is wider** (`min-w-[62rem]`, from 56) for the new column; it
+   still scrolls in its own box on a narrow screen.
