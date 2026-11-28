@@ -1,6 +1,6 @@
 # WS-143 — The task's sprint in the UI, the sprint filter, the MCP tool
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-28, questions 1 to 3 as recommended)
 - Work-item: [WI-143](../work-items/WI-143-sprint-fields-filter-mcp.md)
 - Canonical docs: [0003](../canonical/0003-task-management.md) sections 3, 6 and 8;
   [0005](../canonical/0005-mcp-server.md) section 4 (amended here by WT-10 proposal P4);

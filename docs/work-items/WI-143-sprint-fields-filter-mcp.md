@@ -1,6 +1,6 @@
 # WI-143 — The task's sprint in the UI, the sprint filter, the MCP tool
 
-- Status: Proposed
+- Status: Approved (approved by the owner on 2026-11-28, with WS-143)
 - Work-track: [WT-10](../work-tracks/WT-10-sprints-and-story-points.md) (item F)
 - Depends on: WI-141 (tasks in sprints) and WI-142 (starting and completing), both done
 - Work-spec: [WS-143](../work-specs/WS-143-sprint-fields-filter-mcp.md)
