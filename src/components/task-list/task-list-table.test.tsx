@@ -61,6 +61,7 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
       "Title",
       "Type",
       "Status",
+      "Sprint",
       "Priority",
       "Assignee",
       "Due",
@@ -73,6 +74,7 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
       "Login fails",
       "Bug",
       "In progress",
+      "",
       "High",
       "Ada Lovelace",
       "Due Dec 1, 2026",
@@ -109,7 +111,7 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
     ]);
 
     const rows = bodyRows();
-    expect(rows.map((row) => cells(row)[5])).toEqual([
+    expect(rows.map((row) => cells(row)[6])).toEqual([
       "Ada Lovelace",
       "Frontend",
       "Unassigned",
@@ -127,7 +129,7 @@ describe("TaskListTable: the rows (WS-130 test 5)", () => {
     ]);
 
     const rows = bodyRows();
-    expect(rows.map((row) => cells(row)[6])).toEqual([
+    expect(rows.map((row) => cells(row)[7])).toEqual([
       "Overdue, due Nov 24, 2026",
       "Due Nov 24, 2026",
       "Overdue, due Nov 24, 2026",
@@ -208,7 +210,7 @@ describe("TaskListTable: story points (WS-139 test 12)", () => {
       item(3, todo),
     ]);
 
-    expect(bodyRows().map((row) => cells(row)[7])).toEqual(["3", "0.5", ""]);
+    expect(bodyRows().map((row) => cells(row)[8])).toEqual(["3", "0.5", ""]);
   });
 
   it("sorts by storyPoints from the Points header, ascending first, then reversed", async () => {
@@ -224,5 +226,20 @@ describe("TaskListTable: story points (WS-139 test 12)", () => {
     expect(screen.getAllByRole("columnheader")[7]).toHaveAttribute("aria-sort", "ascending");
     await user.click(screen.getByRole("button", { name: "Sort by Points" }));
     expect(onSort).toHaveBeenLastCalledWith("-storyPoints");
+  });
+});
+
+describe("TaskListTable: the sprint (WS-143 test 8)", () => {
+  it("shows the sprint's name after the status, empty for none, and does not sort by it", () => {
+    renderTable([
+      item(1, todo, {
+        sprint: { id: "bbbb0000-0000-4000-8000-000000000004", name: "Sprint 4", state: "active" },
+      }),
+      item(2, null),
+    ]);
+
+    expect(bodyRows().map((row) => cells(row)[4])).toEqual(["Sprint 4", ""]);
+    expect(screen.getByRole("columnheader", { name: "Sprint" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sort by Sprint" })).not.toBeInTheDocument();
   });
 });

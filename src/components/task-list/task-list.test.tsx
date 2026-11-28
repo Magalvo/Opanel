@@ -208,3 +208,18 @@ describe("TaskList: empty and failed (WS-130 test 8)", () => {
     expect(await screen.findByRole("button", { name: "Remove Project: OPS" })).toBeVisible();
   });
 });
+
+describe("TaskList: the Sprint filter (WS-143 test 7)", () => {
+  it("offers it, and reads the list with it", async () => {
+    navigation.search = new URLSearchParams("sprintId=active");
+    on(listUrl("-updated", "sprintId=active"), page([item(1, todo)]));
+    render(<TaskList />);
+
+    await waitFor(() => {
+      expect(rowKeys()).toEqual(["OPA-1"]);
+    });
+    const bar = screen.getByRole("search", { name: "Filter tasks" });
+    expect(within(bar).getByRole("button", { name: "Sprint" })).toBeVisible();
+    expect(within(bar).getByRole("button", { name: "Remove Sprint: Active sprint" })).toBeVisible();
+  });
+});

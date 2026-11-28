@@ -34,7 +34,8 @@ test("an agent's assistant lists its tools and asks who it is, then a revoked to
   const { client, stderr } = await startServer(agent.token);
   try {
     // E1: the tools of a qa_agent (WS-100 adds the read tools, WS-104 the comment, WS-105
-    // the bug report, WS-132 the reads of the backlog, labels, epics, search and activity).
+    // the bug report, WS-132 the reads of the backlog, labels, epics, search and activity,
+    // WS-143 the sprints).
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name)).toEqual([
       "opanel_whoami",
@@ -43,6 +44,7 @@ test("an agent's assistant lists its tools and asks who it is, then a revoked to
       "opanel_get_backlog",
       "opanel_list_labels",
       "opanel_list_epics",
+      "opanel_list_sprints",
       "opanel_list_teams",
       "opanel_find_people",
       "opanel_search_tasks",

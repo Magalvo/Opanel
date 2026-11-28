@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bugLabel, json, LABELS, opa, page, PROJECT, uiLabel } from "@/components/board/test-data";
-import { fetchMock, installFetch, on, urlOf } from "@/components/fake-api";
+import { calls, fetchMock, installFetch, on, urlOf } from "@/components/fake-api";
 
 import type { TaskFilter } from "./task-filter";
 
@@ -235,5 +235,113 @@ describe("TaskFilterBar: names of a link's filters (WS-130 deviation 1)", () => 
     expect(
       fetchMock.mock.calls.map(([url]) => urlOf(url)).filter((url) => !url.endsWith("/OPA")),
     ).toEqual([]);
+  });
+});
+
+describe("TaskFilterBar: the Sprint menu (WS-143 test 7)", () => {
+  const SPRINTS = "GET /api/v1/projects/OPA/sprints?limit=100";
+
+  function sprint(n: number, name: string, state: "planned" | "active" | "completed") {
+    return {
+      id: `bbbb0000-0000-4000-8000-${String(n).padStart(12, "0")}`,
+      projectId: opa.id,
+      name,
+      goal: "",
+      startDate: `2026-12-${String(n).padStart(2, "0")}`,
+      endDate: `2026-12-${String(n + 13).padStart(2, "0")}`,
+      state,
+      startedAt: state === "planned" ? null : "2026-11-20T10:00:00.000Z",
+      completedAt: state === "completed" ? "2026-11-21T10:00:00.000Z" : null,
+      progress: { doneTasks: 0, totalTasks: 0, donePoints: 0, totalPoints: 0, unestimated: 0 },
+      version: 1,
+      createdAt: "2026-11-12T10:00:00.000Z",
+      updatedAt: "2026-11-12T10:00:00.000Z",
+    };
+  }
+
+  const s3 = sprint(3, "Sprint 3", "completed");
+  const s4 = sprint(4, "Sprint 4", "active");
+  const s5 = sprint(5, "Sprint 5", "planned");
+
+  function renderSprintBar(
+    filter: TaskFilter,
+    projectKey: string | null,
+    sprints: boolean,
+    onChange = vi.fn(),
+  ) {
+    const user = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) });
+    render(
+      <TaskFilterBar
+        filter={filter}
+        onChange={onChange}
+        projectKey={projectKey}
+        sprints={sprints}
+        people={[]}
+        ignored={[]}
+      />,
+    );
+    return { user, onChange };
+  }
+
+  it("comes after Epic, and offers the active sprint, none and every sprint of the project", async () => {
+    on(SPRINTS, page([s3, s4], "next"));
+    on(`${SPRINTS}&cursor=next`, page([s5]));
+    const { user, onChange } = renderSprintBar({}, "OPA", true);
+    const bar = screen.getByRole("search", { name: "Filter tasks" });
+    const names = within(bar)
+      .getAllByRole("button")
+      .map((button) => button.getAttribute("aria-label"));
+    expect(names.indexOf("Sprint")).toBe(names.indexOf("Epic") + 1);
+
+    await user.click(within(bar).getByRole("button", { name: "Sprint" }));
+    await screen.findByRole("menuitemcheckbox", { name: "Sprint 5 (planned)" });
+    expect(screen.getAllByRole("menuitemcheckbox").map((item) => item.textContent)).toEqual([
+      "Active sprint",
+      "No sprint",
+      "Sprint 3 (completed)",
+      "Sprint 4 (active)",
+      "Sprint 5 (planned)",
+    ]);
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Active sprint" }));
+    expect(onChange).toHaveBeenLastCalledWith({ sprintId: ["active"] });
+  });
+
+  it("writes a named sprint's id", async () => {
+    on(SPRINTS, page([s4]));
+    const { user, onChange } = renderSprintBar({ sprintId: ["none"] }, "OPA", true);
+
+    await user.click(screen.getByRole("button", { name: "Sprint" }));
+    await user.click(await screen.findByRole("menuitemcheckbox", { name: "Sprint 4 (active)" }));
+
+    expect(onChange).toHaveBeenLastCalledWith({ sprintId: ["none", s4.id] });
+  });
+
+  it("offers only the active sprint and none across projects, and says why", async () => {
+    const { user } = renderSprintBar({}, null, true);
+
+    await user.click(screen.getByRole("button", { name: "Sprint" }));
+
+    expect(screen.getAllByRole("menuitemcheckbox").map((item) => item.textContent)).toEqual([
+      "Active sprint",
+      "No sprint",
+    ]);
+    expect(
+      screen.getByRole("menuitem", { name: "Choose one project to filter by a named sprint" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    expect(calls("GET")).toEqual([]);
+  });
+
+  it("names a link's sprint in its chip without opening the menu", async () => {
+    on(SPRINTS, page([s4]));
+    renderSprintBar({ sprintId: [s4.id, "active"] }, "OPA", true);
+
+    expect(await screen.findByRole("button", { name: "Remove Sprint: Sprint 4" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Remove Sprint: Active sprint" })).toBeVisible();
+  });
+
+  it("is left out when the page does not ask for it", () => {
+    renderSprintBar({}, "OPA", false);
+
+    expect(screen.queryByRole("button", { name: "Sprint" })).not.toBeInTheDocument();
   });
 });

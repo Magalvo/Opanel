@@ -334,3 +334,19 @@ describe("Backlog: filtered (WS-120 test 7)", () => {
     );
   });
 });
+
+describe("Backlog: the Sprint filter (WS-143 test 7)", () => {
+  it("offers it in a project with sprints", async () => {
+    await renderBacklog({ project: { ...opa, sprintsEnabled: true } });
+
+    const bar = await screen.findByRole("search", { name: "Filter tasks" });
+    expect(within(bar).getByRole("button", { name: "Sprint" })).toBeVisible();
+  });
+
+  it("leaves it out of a project without sprints", async () => {
+    await renderBacklog();
+
+    const bar = await screen.findByRole("search", { name: "Filter tasks" });
+    expect(within(bar).queryByRole("button", { name: "Sprint" })).not.toBeInTheDocument();
+  });
+});

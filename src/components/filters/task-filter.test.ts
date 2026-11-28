@@ -218,3 +218,40 @@ describe("readSort and writeSort (WS-130 test 2)", () => {
     });
   });
 });
+
+describe("the sprint filter (WS-143 test 6)", () => {
+  const SPRINT = "bbbb0000-0000-4000-8000-000000000004";
+
+  it("reads active, none and a sprint's id on the backlog and the list, written after epicId", () => {
+    const query = `sprintId=active&priority=high&sprintId=none&epicId=none&sprintId=${SPRINT}`;
+
+    for (const keys of [BACKLOG_KEYS, LIST_KEYS]) {
+      const { filter, ignored } = readFilter(new URLSearchParams(query), keys);
+
+      expect(ignored).toEqual([]);
+      expect(filter.sprintId).toEqual(["active", "none", SPRINT]);
+      expect(writeFilter(filter)).toBe(
+        `epicId=none&sprintId=active&sprintId=none&sprintId=${SPRINT}&priority=high`,
+      );
+    }
+  });
+
+  it("ignores a value the API would refuse", () => {
+    const { filter, ignored } = readFilter(new URLSearchParams("sprintId=soon"), BACKLOG_KEYS);
+
+    expect(filter).toEqual({});
+    expect(ignored).toEqual(["sprintId"]);
+  });
+
+  it("names each chip", () => {
+    const filter = { sprintId: ["active", "none", SPRINT, "bbbb0000-0000-4000-8000-000000000009"] };
+    const names = { sprints: new Map([[SPRINT, "Sprint 4"]]) };
+
+    expect(chipsOf(filter, names).map((chip) => chip.label)).toEqual([
+      "Sprint: Active sprint",
+      "Sprint: No sprint",
+      "Sprint: Sprint 4",
+      "Sprint: an unknown sprint",
+    ]);
+  });
+});
