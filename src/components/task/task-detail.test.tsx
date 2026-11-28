@@ -28,6 +28,7 @@ import type { Comment } from "@/lib/schemas/comments";
 import type { Epic } from "@/lib/schemas/epics";
 import type { ProjectEvent } from "@/lib/schemas/events";
 import type { Project } from "@/lib/schemas/projects";
+import type { Sprint } from "@/lib/schemas/sprints";
 import type { Task } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
 
@@ -2320,5 +2321,280 @@ describe("TaskDetail: links (WS-136)", () => {
       expect(calls("PATCH")).toHaveLength(1);
     });
     expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ title: "Write the board!", version: 3 });
+  });
+});
+
+// The task's sprint on its page (WS-143 tests 1 to 4).
+
+describe("TaskDetail: the sprint (WS-143)", () => {
+  const withSprints: Project = { ...opa, sprintsEnabled: true };
+  const SPRINTS = "GET /api/v1/projects/OPA/sprints?limit=100&state=active&state=planned";
+
+  function sprint(n: number, name: string, state: Sprint["state"]): Sprint {
+    return {
+      id: `bbbb0000-0000-4000-8000-${String(n).padStart(12, "0")}`,
+      projectId: opa.id,
+      name,
+      goal: "",
+      startDate: `2026-12-${String(n).padStart(2, "0")}`,
+      endDate: `2026-12-${String(n + 13).padStart(2, "0")}`,
+      state,
+      startedAt: state === "planned" ? null : "2026-11-20T10:00:00.000Z",
+      completedAt: state === "completed" ? "2026-11-21T10:00:00.000Z" : null,
+      progress: { doneTasks: 0, totalTasks: 0, donePoints: 0, totalPoints: 0, unestimated: 0 },
+      version: 1,
+      createdAt: "2026-11-12T10:00:00.000Z",
+      updatedAt: "2026-11-12T10:00:00.000Z",
+    };
+  }
+
+  const s3 = sprint(3, "Sprint 3", "completed");
+  const s4 = sprint(4, "Sprint 4", "active");
+  const s5 = sprint(5, "Sprint 5", "planned");
+  const refOf = (each: Sprint) => ({ id: each.id, name: each.name, state: each.state });
+  const inBacklog: Task = { ...base, columnId: null };
+
+  function value(term: string) {
+    return within(details()).getByText(term).nextElementSibling;
+  }
+
+  function sprintSelect() {
+    return within(details()).getByRole("combobox", { name: "Sprint" });
+  }
+
+  function sentConflict(current: Task) {
+    return () =>
+      Response.json(
+        {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          code: "version_conflict",
+          detail: "A problem.",
+          requestId: "0f8b6c1e-3a52-4d7b-9a51-0c1f1c2d3e4f",
+          current,
+        },
+        { status: 409, headers: { "Content-Type": "application/problem+json" } },
+      );
+  }
+
+  beforeEach(() => {
+    on(SPRINTS, page([s4, s5]));
+  });
+
+  describe("what it shows (test 1)", () => {
+    it("reads the sprint's name and state, after the epic", async () => {
+      await renderTask({
+        project: withSprints,
+        current: { ...base, sprint: refOf(s4) },
+        canWriteTasks: false,
+      });
+
+      const shown = value("Sprint") as HTMLElement;
+      expect(shown).toHaveTextContent("Sprint 4");
+      expect(within(shown).getByText("active")).toBeInTheDocument();
+      const terms = within(details())
+        .getAllByRole("term")
+        .map((term) => term.textContent);
+      expect(terms.indexOf("Sprint")).toBe(terms.indexOf("Epic") + 1);
+    });
+
+    it("reads No sprint for an unscheduled task", async () => {
+      await renderTask({ project: withSprints, current: inBacklog, canWriteTasks: false });
+
+      expect(value("Sprint")).toHaveTextContent("No sprint");
+    });
+
+    it("shows no sprint to a reader in a project without sprints", async () => {
+      await renderTask({ canWriteTasks: false });
+
+      expect(within(details()).queryByText("Sprint")).toBeNull();
+    });
+
+    it("offers no select, and reads no sprints, in a project without sprints", async () => {
+      await renderTask();
+
+      expect(within(details()).queryByRole("combobox", { name: "Sprint" })).toBeNull();
+      expect(calls("GET").some(([url]) => url.includes("/sprints"))).toBe(false);
+    });
+  });
+
+  describe("changing it (test 2)", () => {
+    it("offers No sprint, the active sprint and the planned ones, by start date", async () => {
+      await renderTask({ project: withSprints, current: inBacklog });
+
+      const select = sprintSelect();
+      expect(select).toHaveValue("");
+      expect(
+        within(select)
+          .getAllByRole("option")
+          .map((option) => option.textContent),
+      ).toEqual(["No sprint", "Sprint 4 (active)", "Sprint 5 (planned)"]);
+    });
+
+    it("puts the task in a planned sprint, then the active one, and shows the answer's column", async () => {
+      on("PATCH /api/v1/tasks/OPA-1", json({ ...inBacklog, sprint: refOf(s5), version: 4 }));
+      const user = await renderTask({ project: withSprints, current: inBacklog });
+
+      await user.selectOptions(sprintSelect(), s5.id);
+
+      expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ sprintId: s5.id, version: 3 });
+      expect(status()).toHaveTextContent("Moved to Sprint 5.");
+      expect(sprintSelect()).toHaveValue(s5.id);
+      expect(within(details()).getByLabelText("Column")).toHaveValue("");
+
+      on(
+        "PATCH /api/v1/tasks/OPA-1",
+        json({ ...base, columnId: todo.id, sprint: refOf(s4), version: 5 }),
+      );
+      await user.selectOptions(sprintSelect(), s4.id);
+
+      expect(bodyOf(calls("PATCH")[1]?.[1])).toEqual({ sprintId: s4.id, version: 4 });
+      expect(status()).toHaveTextContent("Moved to Sprint 4.");
+      expect(within(details()).getByLabelText("Column")).toHaveValue(todo.id);
+    });
+
+    it("takes the task out of its sprint with null, follows it to the backlog, tells the board", async () => {
+      const changed = vi.fn<(event: Event) => void>();
+      window.addEventListener("opanel:task-changed", changed);
+      const answer: Task = { ...base, columnId: null, sprint: null, version: 4 };
+      on("PATCH /api/v1/tasks/OPA-1", json(answer));
+      const user = await renderTask({
+        project: withSprints,
+        current: { ...base, sprint: refOf(s4) },
+      });
+
+      await user.selectOptions(sprintSelect(), "");
+
+      expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ sprintId: null, version: 3 });
+      expect(status()).toHaveTextContent("Taken out of the sprint.");
+      expect(within(details()).getByLabelText("Column")).toHaveValue("");
+      expect((changed.mock.calls[0]?.[0] as CustomEvent).detail).toEqual(answer);
+      window.removeEventListener("opanel:task-changed", changed);
+    });
+
+    it("keeps unsaved edits when the sprint changes", async () => {
+      on("PATCH /api/v1/tasks/OPA-1", json({ ...inBacklog, sprint: refOf(s5), version: 4 }));
+      const user = await renderTask({ project: withSprints, current: inBacklog });
+
+      await user.clear(within(details()).getByLabelText("Title"));
+      await user.type(within(details()).getByLabelText("Title"), "Edited");
+      await user.selectOptions(sprintSelect(), s5.id);
+      await screen.findByText("Moved to Sprint 5.");
+
+      expect(bodyOf(calls("PATCH")[0]?.[1])).toEqual({ sprintId: s5.id, version: 3 });
+      expect(within(details()).getByLabelText("Title")).toHaveValue("Edited");
+    });
+
+    it("shows the current task after a version conflict", async () => {
+      on(
+        "PATCH /api/v1/tasks/OPA-1",
+        sentConflict({ ...inBacklog, title: "Their title", version: 4 }),
+      );
+      const user = await renderTask({ project: withSprints, current: inBacklog });
+
+      await user.selectOptions(sprintSelect(), s5.id);
+
+      expect(status()).toHaveTextContent("Someone else changed this task.");
+      expect(within(details()).getByLabelText("Title")).toHaveValue("Their title");
+      expect(sprintSelect()).toHaveValue("");
+    });
+
+    it("reads the sprints again when they change", async () => {
+      await renderTask({ project: withSprints, current: inBacklog });
+      act(() => {
+        FakeSource.latest().open();
+      });
+      on(SPRINTS, page([s4, s5, sprint(6, "Sprint 6", "planned")]));
+
+      act(() => {
+        FakeSource.latest().send("sprint.changed", {
+          id: crypto.randomUUID(),
+          type: "sprint.changed",
+          projectId: opa.id,
+          entity: "sprint",
+          entityId: s5.id,
+          version: 1,
+          actorAccountId: ada.id,
+          at: "2026-11-28T10:00:00.000Z",
+        });
+      });
+
+      expect(
+        await within(details()).findByRole("option", { name: "Sprint 6 (planned)" }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("when it cannot change (test 3)", () => {
+    it("disables a sub-task's select and says it follows its parent", async () => {
+      await renderTask({
+        project: withSprints,
+        current: {
+          ...base,
+          sprint: refOf(s4),
+          parent: { id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000009", key: "OPA-9", title: "Parent" },
+        },
+      });
+
+      expect(sprintSelect()).toBeDisabled();
+      expect(sprintSelect()).toHaveValue(s4.id);
+      expect(sprintSelect()).toHaveAccessibleDescription("A sub-task's sprint is its parent's.");
+    });
+
+    it("shows a completed sprint's task's sprint as text, and what a move does", async () => {
+      await renderTask({
+        project: withSprints,
+        current: { ...base, columnId: done.id, sprint: refOf(s3) },
+      });
+
+      expect(within(details()).queryByRole("combobox", { name: "Sprint" })).toBeNull();
+      expect(within(details()).getByText("Sprint 3")).toBeInTheDocument();
+      expect(
+        within(details()).getByText("Moving this task takes it out of the sprint's record."),
+      ).toBeInTheDocument();
+    });
+
+    it("gives a Viewer no select, and reads no sprints", async () => {
+      await renderTask({
+        project: withSprints,
+        current: { ...base, sprint: refOf(s4) },
+        canWriteTasks: false,
+      });
+
+      expect(within(details()).queryByRole("combobox", { name: "Sprint" })).toBeNull();
+      expect(value("Sprint")).toHaveTextContent("Sprint 4");
+      expect(calls("GET").some(([url]) => url.includes("/sprints"))).toBe(false);
+    });
+  });
+
+  describe("the refusals (test 4)", () => {
+    const SENTENCES = [
+      [
+        "no_active_sprint",
+        "No sprint is active. Start one from the backlog to put tasks on the board.",
+      ],
+      ["subtask_follows_parent", "A sub-task stays where its parent is. Move the parent instead."],
+      ["sprint_completed", "This task belongs to a completed sprint's record."],
+      ["sprints_disabled", "This project does not use sprints."],
+    ] as const;
+
+    it.each(SENTENCES)("explains %s from the sprint select", async (code, sentence) => {
+      on("PATCH /api/v1/tasks/OPA-1", problem(409, code));
+      const user = await renderTask({ project: withSprints, current: inBacklog });
+
+      await user.selectOptions(sprintSelect(), s4.id);
+
+      expect(status()).toHaveTextContent(sentence);
+    });
+
+    it.each(SENTENCES)("explains %s from the column select", async (code, sentence) => {
+      on("POST /api/v1/tasks/OPA-1/move", problem(409, code));
+      const user = await renderTask({ project: withSprints, current: inBacklog });
+
+      await user.selectOptions(within(details()).getByLabelText("Column"), "Done");
+
+      expect(status()).toHaveTextContent(sentence);
+    });
   });
 });

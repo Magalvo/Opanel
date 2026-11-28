@@ -24,6 +24,7 @@ export const FILTER_KEYS = [
   "reporterKind",
   "labelId",
   "epicId",
+  "sprintId",
   "priority",
   "severity",
   "dueFrom",
@@ -148,6 +149,7 @@ export interface FilterNames {
   projects?: ReadonlyMap<string, string>;
   labels?: ReadonlyMap<string, string>;
   epics?: ReadonlyMap<string, string>;
+  sprints?: ReadonlyMap<string, string>;
   teams?: ReadonlyMap<string, string>;
   people?: ReadonlyMap<string, string>;
   columns?: ReadonlyMap<string, string>;
@@ -207,6 +209,14 @@ function chipLabel(key: FilterKey, value: string, names: FilterNames): string {
       return `Label: ${named(names.labels, value, "an unknown label")}`;
     case "epicId":
       return `Epic: ${value === "none" ? "No epic" : named(names.epics, value, "an unknown epic")}`;
+    case "sprintId":
+      return `Sprint: ${
+        value === "active"
+          ? "Active sprint"
+          : value === "none"
+            ? "No sprint"
+            : named(names.sprints, value, "an unknown sprint")
+      }`;
     case "priority":
       return `Priority: ${PRIORITY_LABELS[value as Priority]}`;
     case "severity":

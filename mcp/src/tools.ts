@@ -17,6 +17,7 @@ import { moveTask } from "./tools/move-task";
 import { findPeople } from "./tools/people";
 import { listProjects } from "./tools/projects";
 import { searchTasks } from "./tools/search";
+import { listSprints } from "./tools/sprints";
 import { getTask } from "./tools/task";
 import { listTeams } from "./tools/teams";
 import { updateTask } from "./tools/update-task";
@@ -46,6 +47,7 @@ export const TOOLS: readonly ToolDefinition[] = [
   getBacklog,
   listLabels,
   listEpics,
+  listSprints, // WS-143
   listTeams,
   findPeople,
   searchTasks,

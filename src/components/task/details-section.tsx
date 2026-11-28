@@ -18,6 +18,7 @@ import type { Column } from "@/lib/schemas/columns";
 import type { Epic } from "@/lib/schemas/epics";
 import type { Label } from "@/lib/schemas/labels";
 import type { Person } from "@/lib/schemas/people";
+import type { Sprint, SprintRef } from "@/lib/schemas/sprints";
 import {
   PRIORITIES,
   type Priority,
@@ -44,6 +45,15 @@ const SELECT =
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleString();
+}
+
+/** A sprint's name, then its state in muted text (WS-143 section 2). */
+function SprintName({ sprint }: Readonly<{ sprint: SprintRef }>) {
+  return (
+    <>
+      {sprint.name} <span className="text-muted-foreground">{sprint.state}</span>
+    </>
+  );
 }
 
 function Row({ term, children }: Readonly<{ term: string; children: React.ReactNode }>) {
@@ -166,6 +176,12 @@ export interface DetailsProps {
   onFailure: (failure: unknown, fallback: string) => void;
   /** A column, or `null` for the backlog (WS-109 section 5). */
   onMove: (columnId: string | null) => void;
+  /** Whether the project works in sprints: the "Sprint" field shows only then (WS-143). */
+  sprintsEnabled: boolean;
+  /** The active and planned sprints the select offers, by start date. */
+  sprints: readonly Sprint[];
+  /** A sprint, or `null` for none: sent at once, as a move is (WS-143 section 2). */
+  onSprint: (sprintId: string | null) => void;
   setBusy: (busy: boolean) => void;
   /**
    * The version a save is based on, when it is not the task's: the version the viewer
@@ -226,6 +242,11 @@ export function DetailsSection(props: Readonly<DetailsProps>) {
               {task.assignee === null ? "No one" : personLabel(task.assignee)}
             </Row>
             <Row term="Epic">{task.epic?.title ?? "No epic"}</Row>
+            {props.sprintsEnabled && (
+              <Row term="Sprint">
+                {task.sprint === null ? "No sprint" : <SprintName sprint={task.sprint} />}
+              </Row>
+            )}
             <Row term="Priority">
               <span className="inline-flex items-center gap-1.5">
                 <PriorityIcon priority={task.priority} />
@@ -278,6 +299,9 @@ function DetailsForm({
   onConflict,
   onFailure,
   onMove,
+  sprintsEnabled,
+  sprints,
+  onSprint,
   setBusy,
   saveVersion = null,
   onDirtyChange,
@@ -504,6 +528,15 @@ function DetailsForm({
             </p>
           )}
         </div>
+        {sprintsEnabled && (
+          <SprintField
+            id={`${id}-sprint`}
+            task={task}
+            sprints={sprints}
+            busy={busy}
+            onSprint={onSprint}
+          />
+        )}
         <div className="grid min-w-0 gap-1.5">
           <label htmlFor={`${id}-priority`} className="text-sm font-medium">
             Priority
@@ -626,5 +659,78 @@ function DetailsForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * The task's sprint, in a project with sprints (WS-143 section 2): a select of "No sprint",
+ * the active and the planned sprints; disabled for a sub-task, which follows its parent;
+ * text for a task of a completed sprint, which only a move takes out of the record.
+ */
+function SprintField({
+  id,
+  task,
+  sprints,
+  busy,
+  onSprint,
+}: Readonly<{
+  id: string;
+  task: Task;
+  sprints: readonly Sprint[];
+  busy: boolean;
+  onSprint: (sprintId: string | null) => void;
+}>) {
+  const own = task.sprint;
+  if (own?.state === "completed") {
+    return (
+      <div className="grid min-w-0 gap-1.5">
+        <span id={`${id}-term`} className="text-sm font-medium">
+          Sprint
+        </span>
+        <p aria-labelledby={`${id}-term`} className="text-sm">
+          <SprintName sprint={own} />
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Moving this task takes it out of the sprint&apos;s record.
+        </p>
+      </div>
+    );
+  }
+  const subtask = task.parent !== null;
+  const ownMissing = own !== null && !sprints.some((sprint) => sprint.id === own.id);
+  return (
+    <div className="grid min-w-0 gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium">
+        Sprint
+      </label>
+      <select
+        id={id}
+        value={own?.id ?? ""}
+        className={SELECT}
+        disabled={busy || subtask}
+        aria-describedby={subtask ? `${id}-note` : undefined}
+        onChange={(event) => {
+          const value = event.target.value;
+          onSprint(value === "" ? null : value);
+        }}
+      >
+        <option value="">No sprint</option>
+        {sprints.map((sprint) => (
+          <option key={sprint.id} value={sprint.id}>
+            {sprint.name} ({sprint.state})
+          </option>
+        ))}
+        {ownMissing && (
+          <option value={own.id}>
+            {own.name} ({own.state})
+          </option>
+        )}
+      </select>
+      {subtask && (
+        <p id={`${id}-note`} className="text-xs text-muted-foreground">
+          A sub-task&apos;s sprint is its parent&apos;s.
+        </p>
+      )}
+    </div>
   );
 }

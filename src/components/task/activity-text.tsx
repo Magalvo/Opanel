@@ -139,7 +139,7 @@ function changedValue(field: string, oldValue: unknown, newValue: unknown): Reac
   return `changed the ${name} from ${before ?? ""} to ${after}`;
 }
 
-/** Assignee, team or epic: "assigned it to", "changed … from … to …", "unassigned". */
+/** Assignee, team, epic, sprint or parent: "assigned it to", "changed … from … to …", "unassigned". */
 function changedRef(field: string, oldValue: unknown, newValue: unknown): ReactNode {
   if (field === "assigneeAccountId") {
     const person = accountRefSchema.nullable();
@@ -184,14 +184,21 @@ function changedRef(field: string, oldValue: unknown, newValue: unknown): ReactN
             noun: "epic",
             deleted: "a deleted epic",
           }
-        : field === "parentId"
+        : field === "sprintId"
           ? {
-              set: "made it a sub-task of",
-              clear: "removed it from",
-              noun: "parent",
-              deleted: "a deleted task",
+              set: "put it in the sprint",
+              clear: "took it out of the sprint",
+              noun: "sprint",
+              deleted: "a deleted sprint",
             }
-          : undefined;
+          : field === "parentId"
+            ? {
+                set: "made it a sub-task of",
+                clear: "removed it from",
+                noun: "parent",
+                deleted: "a deleted task",
+              }
+            : undefined;
   if (words === undefined) return undefined;
   const ref = namedSchema.nullable();
   const before = ref.safeParse(oldValue);

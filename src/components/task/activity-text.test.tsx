@@ -264,3 +264,32 @@ describe("ActivityLine: a parent change (WS-135)", () => {
     expect(sentence(fields)).toContain(words);
   });
 });
+
+describe("ActivityLine: the sprint (WS-143 test 5)", () => {
+  const sprint = (name: string | null) => ({ id: "bbbb0000-0000-4000-8000-000000000004", name });
+
+  it.each([
+    [
+      { field: "sprintId", oldValue: null, newValue: sprint("Sprint 4") },
+      "put it in the sprint Sprint 4",
+    ],
+    [
+      { field: "sprintId", oldValue: sprint("Sprint 4"), newValue: null },
+      "took it out of the sprint Sprint 4",
+    ],
+    [
+      { field: "sprintId", oldValue: sprint("Sprint 4"), newValue: sprint("Sprint 5") },
+      "changed the sprint from Sprint 4 to Sprint 5",
+    ],
+    [
+      { field: "sprintId", oldValue: sprint(null), newValue: null },
+      "took it out of the sprint a deleted sprint",
+    ],
+    [
+      { field: "sprintId", oldValue: sprint(null), newValue: sprint("Sprint 5") },
+      "changed the sprint from a deleted sprint to Sprint 5",
+    ],
+  ] as [Partial<ActivityEvent>, string][])("%o reads “%s”", (fields, text) => {
+    expect(sentence(fields)).toBe(`Ada Lovelace ${text}`);
+  });
+});

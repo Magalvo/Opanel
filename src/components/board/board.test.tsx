@@ -651,3 +651,13 @@ describe("Board: filtered (WS-120 test 6)", () => {
     });
   });
 });
+
+describe("Board: no Sprint filter (WS-143 test 7, question 1)", () => {
+  it("leaves the menu out, even in a project with sprints", async () => {
+    await renderBoard({ project: { ...opa, sprintsEnabled: true } });
+
+    const bar = await screen.findByRole("search", { name: "Filter tasks" });
+    expect(within(bar).getByRole("button", { name: "Epic" })).toBeVisible();
+    expect(within(bar).queryByRole("button", { name: "Sprint" })).not.toBeInTheDocument();
+  });
+});

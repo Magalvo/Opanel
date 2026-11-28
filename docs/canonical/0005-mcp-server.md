@@ -71,7 +71,8 @@ already is (doc 0001 section 2). This doc makes no assumption about it.
 
 Named `opanel_<verb>_<thing>`. Each tool's description names its permission. The first
 set follows the scopes of doc 0001 section 3; WI-132 added the reads of WT-07 and WT-08
-(the backlog, labels, epics, search and activity), and WI-137 the links of WT-09:
+(the backlog, labels, epics, search and activity), WI-137 the links of WT-09, and
+WI-143 the sprints of WT-10 (proposal P4):
 
 | Tool                       | API                                                       | Permission                    |
 | -------------------------- | --------------------------------------------------------- | ----------------------------- |
@@ -81,6 +82,7 @@ set follows the scopes of doc 0001 section 3; WI-132 added the reads of WT-07 an
 | `opanel_get_backlog`       | `GET /projects/{id}/backlog` (one page, with the filters) | `tasks:read`                  |
 | `opanel_list_labels`       | `GET /projects/{id}/labels`                               | `tasks:read`                  |
 | `opanel_list_epics`        | `GET /projects/{id}/epics`                                | `tasks:read`                  |
+| `opanel_list_sprints`      | `GET /projects/{id}/sprints`                              | `tasks:read`                  |
 | `opanel_list_teams`        | `GET /teams`                                              | `projects:read`               |
 | `opanel_find_people`       | `GET /people?q=`                                          | `projects:read`               |
 | `opanel_search_tasks`      | `GET /tasks` (search, filters, projects, sort)            | `tasks:read`                  |

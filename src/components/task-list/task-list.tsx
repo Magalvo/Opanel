@@ -159,6 +159,7 @@ export function TaskList() {
         onChange={setFilter}
         projectKey={oneProjectKey(filter, projects)}
         projects={projects}
+        sprints
         people={uniquePeople(items)}
         ignored={ignored}
       />

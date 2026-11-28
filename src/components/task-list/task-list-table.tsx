@@ -10,7 +10,7 @@ import { DueDateText, formatPoints, PRIORITY_LABELS } from "@/components/task/ta
 import type { TaskListItem, TaskSort, TaskSortField } from "@/lib/schemas/tasks";
 
 // The table of the list view (WS-130 section 4): one row per task, the sortable headers
-// each a button that sets the order; "Points" since WS-139.
+// each a button that sets the order; "Points" since WS-139, "Sprint" since WS-143.
 
 interface ColumnSpec {
   name: string;
@@ -24,6 +24,8 @@ const COLUMNS: readonly ColumnSpec[] = [
   { name: "Title", sort: "title" },
   { name: "Type" },
   { name: "Status" },
+  // Not sortable (WS-143 section 6, question 2).
+  { name: "Sprint" },
   { name: "Priority", sort: "priority" },
   { name: "Assignee" },
   { name: "Due", sort: "dueDate" },
@@ -69,7 +71,7 @@ export function TaskListTable({
   return (
     // The table scrolls inside its own box on a narrow screen, so the page never does.
     <div className="overflow-x-auto rounded-md border">
-      <table className="w-full min-w-[56rem] text-sm">
+      <table className="w-full min-w-[62rem] text-sm">
         <caption className="sr-only">Tasks</caption>
         <thead className="bg-muted/50 text-left text-muted-foreground">
           <tr>
@@ -121,6 +123,7 @@ export function TaskListTable({
                 <td className="px-3 py-2 break-words">{item.title}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{TYPE_LABELS[item.type]}</td>
                 <td className="px-3 py-2">{item.column?.name ?? "Backlog"}</td>
+                <td className="px-3 py-2">{item.sprint?.name ?? ""}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{PRIORITY_LABELS[item.priority]}</td>
                 <td className="px-3 py-2">{assigneeOf(item)}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
