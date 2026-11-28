@@ -302,6 +302,7 @@ export function Backlog({ canWriteTasks }: Readonly<{ canWriteTasks: boolean }>)
           onChange={setFilter}
           people={people}
           projectKey={project.key}
+          sprints={project.sprintsEnabled}
           status={`${String(tasks.length)} of ${String(allTasks.length)} tasks match.`}
           ignored={ignored}
         />

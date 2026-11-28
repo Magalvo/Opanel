@@ -3,6 +3,7 @@ import { activityPageSchema } from "@/lib/schemas/activity";
 import { commentSchema } from "@/lib/schemas/comments";
 import { type Epic, epicPageSchema } from "@/lib/schemas/epics";
 import { MAX_PAGE_LIMIT } from "@/lib/schemas/pagination";
+import { type Sprint, sprintPageSchema } from "@/lib/schemas/sprints";
 import { bugReportPageSchema } from "@/lib/schemas/task-bug-reports";
 import type { TaskLinkRequest } from "@/lib/schemas/task-links";
 import { taskListItemPageSchema, taskSchema, type UpdateTaskRequest } from "@/lib/schemas/tasks";
@@ -81,6 +82,31 @@ export async function listOpenEpics(projectKey: string): Promise<Epic[]> {
     cursor = page.nextCursor ?? undefined;
   } while (cursor !== undefined);
   return epics;
+}
+
+/**
+ * Every sprint of the project, by start date (WS-143): the active and planned ones for the
+ * task page's select, or all of them for the filter's menu.
+ */
+export async function listSprints(projectKey: string, open = false): Promise<Sprint[]> {
+  const sprints: Sprint[] = [];
+  const states = open ? "&state=active&state=planned" : "";
+  let cursor: string | undefined;
+  do {
+    const page = await call(
+      `/api/v1/projects/${projectKey}/sprints?limit=${String(MAX_PAGE_LIMIT)}${states}${cursorQuery(cursor)}`,
+      {},
+      sprintPageSchema,
+    );
+    sprints.push(...page.items);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor !== undefined);
+  return sprints;
+}
+
+/** The active and planned sprints, for the task page's select (WS-143 section 2). */
+export function listOpenSprints(projectKey: string): Promise<Sprint[]> {
+  return listSprints(projectKey, true);
 }
 
 /** How many tasks "Set parent" and "Add link" offer at a time (WS-135, WS-136). */

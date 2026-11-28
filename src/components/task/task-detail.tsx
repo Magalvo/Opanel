@@ -27,6 +27,7 @@ import type { ActivityPage } from "@/lib/schemas/activity";
 import type { Column } from "@/lib/schemas/columns";
 import type { Epic } from "@/lib/schemas/epics";
 import type { Label } from "@/lib/schemas/labels";
+import type { Sprint } from "@/lib/schemas/sprints";
 import type { BugReport } from "@/lib/schemas/task-bug-reports";
 import type { Task } from "@/lib/schemas/tasks";
 import type { TeamSummary } from "@/lib/schemas/teams";
@@ -40,7 +41,9 @@ import {
   listBugReports,
   listColumns,
   listOpenEpics,
+  listOpenSprints,
   moveTaskTo,
+  updateTask,
 } from "./api";
 import { BugSection } from "./bug-section";
 import { currentOf, DetailsSection } from "./details-section";
@@ -64,6 +67,8 @@ interface Loaded {
   columns: Column[];
   teams: TeamSummary[];
   epics: Epic[];
+  /** The active and planned sprints, read only for someone who edits in a sprint project. */
+  sprints: Sprint[];
   /** The project's labels, read only for someone who edits (WS-108). */
   labels: Label[];
   activity: ActivityPage;
@@ -78,6 +83,14 @@ const CHANGED = "Someone else changed this task.";
 const CHANGED_WHILE_EDITING =
   "Someone else changed this task. Saving will show their version first.";
 const DELETED = "This task was deleted.";
+
+/** What to do about each refusal of the sprint rules (WS-143 section 3). */
+const SPRINT_SENTENCES: Readonly<Record<string, string>> = {
+  no_active_sprint: "No sprint is active. Start one from the backlog to put tasks on the board.",
+  subtask_follows_parent: "A sub-task stays where its parent is. Move the parent instead.",
+  sprint_completed: "This task belongs to a completed sprint's record.",
+  sprints_disabled: "This project does not use sprints.",
+};
 
 /**
  * A task: its fields, description, column, comments and deletion (WS-038). The same screen
@@ -117,6 +130,7 @@ export function TaskDetail({
 
   const archived = project.archivedAt !== null;
   const editable = canWriteTasks && !archived && !deleted;
+  const readsSprints = canWriteTasks && project.sprintsEnabled;
 
   const load = useCallback(async (): Promise<Loaded | "missing"> => {
     let task: Task;
@@ -127,11 +141,12 @@ export function TaskDetail({
       throw failure;
     }
     if (task.projectId !== project.id) return "missing";
-    const [columns, activity, teams, epics, labels, reports] = await Promise.all([
+    const [columns, activity, teams, epics, sprints, labels, reports] = await Promise.all([
       listColumns(project.key),
       listActivity(taskKey),
       canWriteTasks ? listAllTeams() : Promise.resolve([]),
       canWriteTasks ? listOpenEpics(project.key) : Promise.resolve([]),
+      readsSprints ? listOpenSprints(project.key) : Promise.resolve([]),
       canWriteTasks ? listLabels(project.key).then((list) => list.items) : Promise.resolve([]),
       task.occurrences > 0 ? listBugReports(taskKey) : Promise.resolve(null),
     ]);
@@ -140,11 +155,12 @@ export function TaskDetail({
       columns: columns.items,
       teams,
       epics,
+      sprints,
       labels,
       activity,
       reports,
     };
-  }, [taskKey, project.id, project.key, canWriteTasks]);
+  }, [taskKey, project.id, project.key, canWriteTasks, readsSprints]);
 
   const show = useCallback((loaded: Loaded | "missing") => {
     if (loaded === "missing") {
@@ -250,6 +266,11 @@ export function TaskDetail({
       }
       if (failure.code === "too_many_subtasks") {
         setMessage("That task already has 100 sub-tasks.");
+        return;
+      }
+      const sentence = failure.code === null ? undefined : SPRINT_SENTENCES[failure.code];
+      if (sentence !== undefined) {
+        setMessage(sentence);
         return;
       }
       if (failure.status === 400) {
@@ -432,6 +453,15 @@ export function TaskDetail({
             () => undefined,
           );
           return;
+        case "sprint.changed":
+          if (!readsSprints) return;
+          listOpenSprints(project.key).then(
+            (sprints) => {
+              setData((current) => (current === null ? current : { ...current, sprints }));
+            },
+            () => undefined,
+          );
+          return;
         default:
           return;
       }
@@ -453,6 +483,27 @@ export function TaskDetail({
     } catch (failure) {
       const current = failure instanceof ApiFailure ? currentOf(failure) : null;
       if (current === null) failed(failure, "Could not move the task. Try again.");
+      else conflict(current);
+    } finally {
+      setWriting(false);
+    }
+  }
+
+  /**
+   * Puts the task in a sprint, or in none (WS-143 section 2). The answer may have a new
+   * column or none, which the page then shows, as after a move.
+   */
+  async function changeSprint(task: Task, sprintId: string | null) {
+    setWriting(true);
+    try {
+      const answer = await updateTask(task.key, { sprintId, version: task.version });
+      saved(
+        answer,
+        answer.sprint === null ? "Taken out of the sprint." : `Moved to ${answer.sprint.name}.`,
+      );
+    } catch (failure) {
+      const current = failure instanceof ApiFailure ? currentOf(failure) : null;
+      if (current === null) failed(failure, "Could not change the sprint. Try again.");
       else conflict(current);
     } finally {
       setWriting(false);
@@ -566,6 +617,9 @@ export function TaskDetail({
         onConflict={conflict}
         onFailure={failed}
         onMove={(columnId) => void move(task, columnId, data.columns)}
+        sprintsEnabled={project.sprintsEnabled}
+        sprints={data.sprints}
+        onSprint={(sprintId) => void changeSprint(task, sprintId)}
         setBusy={setWriting}
         saveVersion={saveVersion}
         onDirtyChange={setDirty}

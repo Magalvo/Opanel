@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { TYPE_LABELS } from "@/components/board/task-card";
 import { listLabels } from "@/components/labels/api";
-import { listOpenEpics } from "@/components/task/api";
+import { listOpenEpics, listSprints } from "@/components/task/api";
 import { SEVERITY_LABELS } from "@/components/task/bug-labels";
 import { localDate } from "@/components/task/due-date";
 import { PRIORITY_LABELS } from "@/components/task/task-meta";
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import type { Sprint } from "@/lib/schemas/sprints";
 import { PRIORITIES } from "@/lib/schemas/tasks";
 
 import {
@@ -122,6 +123,12 @@ function FilterMenu({
   );
 }
 
+/** What the Sprint menu offers with no project, or before its sprints are read (WS-143). */
+const SPRINT_CHOICES: readonly Option[] = [
+  { value: "active", label: "Active sprint" },
+  { value: "none", label: "No sprint" },
+];
+
 /**
  * The filter bar of the board, the backlog (WS-120 section 3) and the list view (WS-130
  * section 3): a search box, a menu per field, the active filters as chips, and a status.
@@ -131,6 +138,7 @@ export function TaskFilterBar({
   onChange,
   projectKey,
   projects,
+  sprints = false,
   people,
   status,
   ignored,
@@ -141,6 +149,11 @@ export function TaskFilterBar({
   projectKey: string | null;
   /** The projects to choose from, by key: only the list across projects has this menu. */
   projects?: readonly ProjectOption[];
+  /**
+   * Whether the page offers the Sprint menu: the backlog of a project with sprints and the
+   * list view, not the board (WS-143 section 5).
+   */
+  sprints?: boolean;
   /** The people assigned to a task on the page. */
   people: readonly Person[];
   /** Shown with the active filters, such as "12 of 140 tasks match.". */
@@ -153,6 +166,8 @@ export function TaskFilterBar({
   const [epicsOf, setEpics] = useState<{ key: string; options: Option[] } | null>(null);
   const labels = labelsOf !== null && labelsOf.key === projectKey ? labelsOf.options : null;
   const epics = epicsOf !== null && epicsOf.key === projectKey ? epicsOf.options : null;
+  const [sprintsOf, setSprints] = useState<{ key: string; list: Sprint[] } | null>(null);
+  const sprintList = sprintsOf !== null && sprintsOf.key === projectKey ? sprintsOf.list : null;
   const [teams, setTeams] = useState<Option[] | null>(null);
 
   const [text, setText] = useState(filter.q?.[0] ?? "");
@@ -223,6 +238,17 @@ export function TaskFilterBar({
     );
   }
 
+  function loadSprints() {
+    if (sprintList !== null || projectKey === null || !once(`sprints:${projectKey}`)) return;
+    const key = projectKey;
+    listSprints(key).then(
+      (list) => {
+        setSprints({ key, list });
+      },
+      () => undefined,
+    );
+  }
+
   function loadTeams() {
     if (teams !== null || !once("teams")) return;
     listAllTeams().then(
@@ -239,9 +265,12 @@ export function TaskFilterBar({
   const needsLabels = named("labelId");
   const needsEpics = named("epicId");
   const needsTeams = named("assigneeTeamId");
+  const needsSprints =
+    sprints && (filter.sprintId ?? []).some((value) => value !== "none" && value !== "active");
   useEffect(() => {
     if (needsLabels) loadLabels();
     if (needsEpics) loadEpics();
+    if (needsSprints) loadSprints();
     if (needsTeams) loadTeams();
   });
 
@@ -253,6 +282,7 @@ export function TaskFilterBar({
     ),
     labels: new Map((labels ?? []).map((option) => [option.value, option.label])),
     epics: new Map((epics ?? []).map((option) => [option.value, option.label])),
+    sprints: new Map((sprintList ?? []).map((sprint) => [sprint.id, sprint.name])),
     teams: new Map((teams ?? []).map((option) => [option.value, option.label])),
     people: new Map(people.map((person) => [person.id, person.name])),
   };
@@ -344,6 +374,25 @@ export function TaskFilterBar({
           options={[{ value: "none", label: "No epic" }, ...(epics ?? [])]}
           unavailable={projectKey === null ? "Choose one project to filter by epic" : undefined}
         />
+        {sprints && (
+          <FilterMenu
+            name="Sprint"
+            filterKey="sprintId"
+            filter={filter}
+            onChange={onChange}
+            onOpen={loadSprints}
+            options={[
+              ...SPRINT_CHOICES,
+              ...(sprintList ?? []).map((sprint) => ({
+                value: sprint.id,
+                label: `${sprint.name} (${sprint.state})`,
+              })),
+            ]}
+            unavailable={
+              projectKey === null ? "Choose one project to filter by a named sprint" : undefined
+            }
+          />
+        )}
         <FilterMenu
           name="Team"
           filterKey="assigneeTeamId"

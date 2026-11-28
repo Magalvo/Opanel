@@ -149,6 +149,7 @@ describe("TaskListTable: sorting (WS-130 test 6)", () => {
       null,
       null,
       null,
+      null,
       "descending",
       null,
       null,
@@ -188,7 +189,7 @@ describe("TaskListTable: sorting (WS-130 test 6)", () => {
   it("reverses the default order from the Updated header", async () => {
     const { user, onSort } = renderTable([item(1, todo)], "-updated");
 
-    expect(screen.getAllByRole("columnheader")[8]).toHaveAttribute("aria-sort", "descending");
+    expect(screen.getAllByRole("columnheader")[9]).toHaveAttribute("aria-sort", "descending");
     await user.click(screen.getByRole("button", { name: "Sort by Updated" }));
     expect(onSort).toHaveBeenLastCalledWith("updated");
   });
@@ -223,7 +224,7 @@ describe("TaskListTable: story points (WS-139 test 12)", () => {
   it("marks the Points header when the order is by points, and reverses it", async () => {
     const { user, onSort } = renderTable([item(1, todo)], "storyPoints");
 
-    expect(screen.getAllByRole("columnheader")[7]).toHaveAttribute("aria-sort", "ascending");
+    expect(screen.getAllByRole("columnheader")[8]).toHaveAttribute("aria-sort", "ascending");
     await user.click(screen.getByRole("button", { name: "Sort by Points" }));
     expect(onSort).toHaveBeenLastCalledWith("-storyPoints");
   });
